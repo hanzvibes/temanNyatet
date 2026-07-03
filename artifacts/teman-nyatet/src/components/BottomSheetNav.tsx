@@ -35,8 +35,8 @@ export default function BottomSheetNav() {
   };
 
   // Animate HEIGHT — pill grows upward since it's bottom-anchored
-  const h = useMotionValue(SNAP.collapsed);
-  const [snapState, setSnapState] = useState<SnapState>('collapsed');
+  const h = useMotionValue(SNAP.half);
+  const [snapState, setSnapState] = useState<SnapState>('half');
 
   useEffect(() => { h.set(SNAP[snapState]); }, [screenH]);
 

@@ -1,12 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { NotebookPen, LogOut } from 'lucide-react';
 
 export default function PaymentPage() {
   const paymentUrl = import.meta.env.VITE_MAYAR_PAYMENT_URL || '#';
+  const { user, refreshProfile } = useAuthContext();
+  const [skipping, setSkipping] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+  };
+
+  const handleSkip = async () => {
+    if (!user) return;
+    setSkipping(true);
+    try {
+      await supabase
+        .from('profiles')
+        .update({ subscription_status: 'active' })
+        .eq('id', user.id);
+      await refreshProfile();
+    } finally {
+      setSkipping(false);
+    }
   };
 
   return (
@@ -56,9 +73,17 @@ export default function PaymentPage() {
         </p>
       </div>
 
+      <button
+        onClick={handleSkip}
+        disabled={skipping}
+        className="mt-6 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+      >
+        {skipping ? 'Memproses...' : 'Lewati untuk sekarang →'}
+      </button>
+
       <button 
         onClick={handleLogout}
-        className="mt-8 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
+        className="mt-4 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
       >
         <LogOut size={16} /> Keluar
       </button>

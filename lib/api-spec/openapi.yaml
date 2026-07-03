@@ -1,0 +1,174 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: TemanNyatet API — subscription management and payment webhooks
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: subscription
+    description: Subscription management
+  - name: webhook
+    description: Payment webhooks
+  - name: cron
+    description: Scheduled tasks
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /subscription/status:
+    get:
+      operationId: getSubscriptionStatus
+      tags: [subscription]
+      summary: Get subscription status for a user
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Supabase user UUID
+      responses:
+        "200":
+          description: Subscription status returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionStatus"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /mayar-webhook:
+    post:
+      operationId: mayarWebhook
+      tags: [webhook]
+      summary: Handle Mayar payment webhook
+      description: Validates Mayar signature and updates subscription status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MayarWebhookInput"
+      responses:
+        "200":
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookResponse"
+        "400":
+          description: Invalid signature or payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /cron/archive-expired:
+    post:
+      operationId: archiveExpiredAccounts
+      tags: [cron]
+      summary: Archive expired subscriptions (Vercel Cron)
+      description: Called daily by Vercel Cron to archive accounts past subscription_end
+      responses:
+        "200":
+          description: Archive job completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArchiveResult"
+        "401":
+          description: Unauthorized cron request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    SubscriptionStatus:
+      type: object
+      required: [subscription_status]
+      properties:
+        subscription_status:
+          type: string
+          enum: [pending, active, archived]
+        subscription_plan:
+          type: ["string", "null"]
+        subscription_end:
+          type: ["string", "null"]
+        days_remaining:
+          type: ["number", "null"]
+
+    MayarWebhookInput:
+      type: object
+      required: [event, data]
+      properties:
+        event:
+          type: string
+          description: Mayar event type e.g. payment.success
+        data:
+          type: object
+          required: [customer_email]
+          properties:
+            customer_email:
+              type: string
+            amount:
+              type: number
+            plan_id:
+              type: ["string", "null"]
+            plan_name:
+              type: ["string", "null"]
+            order_id:
+              type: ["string", "null"]
+
+    WebhookResponse:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: ["string", "null"]
+
+    ArchiveResult:
+      type: object
+      required: [archived_count]
+      properties:
+        archived_count:
+          type: number
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string

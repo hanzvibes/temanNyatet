@@ -40,12 +40,12 @@ export default function BottomSheetNav() {
 
   useEffect(() => { h.set(SNAP[snapState]); }, [screenH]);
 
-  // Re-collapse when navigating to a new tab
+  // Keep the nav open at half-height when navigating to a new tab
   const prevLocation = useRef(location);
   useEffect(() => {
     if (location !== prevLocation.current) {
       prevLocation.current = location;
-      snapTo('collapsed');
+      snapTo('half');
     }
   }, [location]);
 

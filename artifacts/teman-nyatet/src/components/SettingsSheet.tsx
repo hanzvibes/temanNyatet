@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Drawer } from 'vaul';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone } from 'lucide-react';
@@ -141,166 +142,167 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
 
             <div className="flex-1 overflow-y-auto px-[clamp(1rem,4vw,1.75rem)] pb-[clamp(1.5rem,5vw,2.5rem)]">
 
-              {/* ── Profile header (always visible) ── */}
-              {!activeSection && (
-                <>
-                  <div className="flex flex-col items-center pt-[clamp(0.25rem,1vw,0.5rem)] pb-[clamp(1rem,4vw,1.5rem)]">
-                    {/* Big avatar */}
-                    <div className="rounded-full bg-primary flex items-center justify-center text-primary-foreground font-extrabold shadow-md mb-[clamp(0.75rem,3vw,1.25rem)] w-[clamp(4rem,14vw,5.5rem)] h-[clamp(4rem,14vw,5.5rem)] text-[clamp(1.25rem,5vw,2rem)]">
-                      {initials}
-                    </div>
-
-                    {/* Subscription badge */}
-                    <span className={`font-extrabold uppercase tracking-widest rounded-full mb-[clamp(0.5rem,2vw,1rem)] text-[clamp(0.625rem,2vw,0.75rem)] px-[clamp(0.75rem,2.5vw,1rem)] py-[clamp(0.25rem,1vw,0.375rem)] ${
-                      isPro
-                        ? 'bg-primary/15 text-primary border border-primary/30'
-                        : 'bg-muted text-muted-foreground border border-border'
-                    }`}>
-                      {isPro ? '⭐ PRO' : 'FREE'}
-                    </span>
-
-                    {/* Name */}
-                    <p className="text-[clamp(1rem,3.5vw,1.5rem)] font-extrabold text-foreground leading-tight text-center">
-                      {profile?.name || <span className="text-muted-foreground font-bold italic text-[clamp(0.875rem,3vw,1.125rem)]">Nama belum diatur</span>}
-                    </p>
-
-                    {/* Email */}
-                    <p className="text-[clamp(0.75rem,2.5vw,1rem)] font-medium text-muted-foreground mt-[clamp(0.125rem,0.5vw,0.25rem)] text-center">
-                      {user?.email}
-                    </p>
-
-                    {/* Phone */}
-                    {profile?.phone && (
-                      <p className="text-[clamp(0.75rem,2.5vw,1rem)] font-medium text-muted-foreground mt-[clamp(0.125rem,0.5vw,0.25rem)] text-center">
-                        {profile.phone}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Divider */}
-                  <div className="h-px bg-border mb-[clamp(0.5rem,2vw,1rem)]" />
-
-                  {/* Menu items */}
-                  <div className="space-y-[clamp(0.25rem,1vw,0.5rem)]">
-                    {[
-                      { key: 'name' as const,     icon: User,  label: 'Ganti Nama' },
-                      { key: 'password' as const, icon: Lock,  label: 'Ganti Password' },
-                      { key: 'phone' as const,    icon: Phone, label: 'Ganti Nomor HP' },
-                    ].map(({ key, icon: Icon, label }) => (
-                      <button
-                        key={key}
-                        onClick={() => handleOpenSection(key)}
-                        className="w-full flex items-center gap-[clamp(0.75rem,3vw,1rem)] px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] hover:bg-secondary active:bg-secondary/80 transition-colors text-left"
-                      >
-                        <div className="rounded-xl bg-secondary border border-border flex items-center justify-center flex-shrink-0 w-[clamp(2rem,7vw,2.5rem)] h-[clamp(2rem,7vw,2.5rem)]">
-                          <Icon size={18} className="text-muted-foreground w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={activeSection ?? 'menu'}
+                  initial={{ x: activeSection ? 24 : -24, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: activeSection ? 24 : -24, opacity: 0 }}
+                  transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+                >
+                  {activeSection === null ? (
+                    <>
+                      {/* ── Profile header ── */}
+                      <div className="flex flex-col items-center pt-[clamp(0.25rem,1vw,0.5rem)] pb-[clamp(1rem,4vw,1.5rem)]">
+                        {/* Big avatar */}
+                        <div className="rounded-full bg-primary flex items-center justify-center text-primary-foreground font-extrabold shadow-md mb-[clamp(0.75rem,3vw,1.25rem)] w-[clamp(4rem,14vw,5.5rem)] h-[clamp(4rem,14vw,5.5rem)] text-[clamp(1.25rem,5vw,2rem)]">
+                          {initials}
                         </div>
-                        <span className="flex-1 font-bold text-foreground text-[clamp(0.875rem,3vw,1.125rem)]">{label}</span>
-                        <ChevronRight size={16} className="text-muted-foreground/50 w-[clamp(1rem,3vw,1.25rem)] h-[clamp(1rem,3vw,1.25rem)]" strokeWidth={2.5} />
+
+                        {/* Subscription badge */}
+                        <span className={`font-extrabold uppercase tracking-widest rounded-full mb-[clamp(0.5rem,2vw,1rem)] text-[clamp(0.625rem,2vw,0.75rem)] px-[clamp(0.75rem,2.5vw,1rem)] py-[clamp(0.25rem,1vw,0.375rem)] ${
+                          isPro
+                            ? 'bg-primary/15 text-primary border border-primary/30'
+                            : 'bg-muted text-muted-foreground border border-border'
+                        }`}>
+                          {isPro ? '⭐ PRO' : 'FREE'}
+                        </span>
+
+                        {/* Name */}
+                        <p className="text-[clamp(1rem,3.5vw,1.5rem)] font-extrabold text-foreground leading-tight text-center">
+                          {profile?.name || <span className="text-muted-foreground font-bold italic text-[clamp(0.875rem,3vw,1.125rem)]">Nama belum diatur</span>}
+                        </p>
+
+                        {/* Email */}
+                        <p className="text-[clamp(0.75rem,2.5vw,1rem)] font-medium text-muted-foreground mt-[clamp(0.125rem,0.5vw,0.25rem)] text-center">
+                          {user?.email}
+                        </p>
+
+                        {/* Phone */}
+                        {profile?.phone && (
+                          <p className="text-[clamp(0.75rem,2.5vw,1rem)] font-medium text-muted-foreground mt-[clamp(0.125rem,0.5vw,0.25rem)] text-center">
+                            {profile.phone}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Divider */}
+                      <div className="h-px bg-border mb-[clamp(0.5rem,2vw,1rem)]" />
+
+                      {/* Menu items */}
+                      <div className="space-y-[clamp(0.25rem,1vw,0.5rem)]">
+                        {[
+                          { key: 'name' as const,     icon: User,  label: 'Ganti Nama' },
+                          { key: 'password' as const, icon: Lock,  label: 'Ganti Password' },
+                          { key: 'phone' as const,    icon: Phone, label: 'Ganti Nomor HP' },
+                        ].map(({ key, icon: Icon, label }) => (
+                          <button
+                            key={key}
+                            onClick={() => handleOpenSection(key)}
+                            className="w-full flex items-center gap-[clamp(0.75rem,3vw,1rem)] px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] hover:bg-secondary active:bg-secondary/80 transition-colors text-left"
+                          >
+                            <div className="rounded-xl bg-secondary border border-border flex items-center justify-center flex-shrink-0 w-[clamp(2rem,7vw,2.5rem)] h-[clamp(2rem,7vw,2.5rem)]">
+                              <Icon size={18} className="text-muted-foreground w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
+                            </div>
+                            <span className="flex-1 font-bold text-foreground text-[clamp(0.875rem,3vw,1.125rem)]">{label}</span>
+                            <ChevronRight size={16} className="text-muted-foreground/50 w-[clamp(1rem,3vw,1.25rem)] h-[clamp(1rem,3vw,1.25rem)]" strokeWidth={2.5} />
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Divider */}
+                      <div className="h-px bg-border my-[clamp(0.5rem,2vw,1rem)]" />
+
+                      {/* Logout */}
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-[clamp(0.75rem,3vw,1rem)] px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] hover:bg-red-50 active:bg-red-100/80 transition-colors text-left group"
+                      >
+                        <div className="rounded-xl bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0 w-[clamp(2rem,7vw,2.5rem)] h-[clamp(2rem,7vw,2.5rem)]">
+                          <LogOut size={18} className="text-red-500 w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
+                        </div>
+                        <span className="flex-1 font-bold text-red-500 text-[clamp(0.875rem,3vw,1.125rem)]">Keluar</span>
                       </button>
-                    ))}
-                  </div>
-
-                  {/* Divider */}
-                  <div className="h-px bg-border my-[clamp(0.5rem,2vw,1rem)]" />
-
-                  {/* Logout */}
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-[clamp(0.75rem,3vw,1rem)] px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] hover:bg-red-50 active:bg-red-100/80 transition-colors text-left group"
-                  >
-                    <div className="rounded-xl bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0 w-[clamp(2rem,7vw,2.5rem)] h-[clamp(2rem,7vw,2.5rem)]">
-                      <LogOut size={18} className="text-red-500 w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
+                    </>
+                  ) : activeSection === 'name' ? (
+                    <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
+                      <div>
+                        <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Nama Baru</label>
+                        <input
+                          type="text"
+                          value={nameInput}
+                          onChange={e => setNameInput(e.target.value)}
+                          placeholder="Masukkan nama kamu"
+                          className={INP}
+                          autoFocus
+                          onKeyDown={e => e.key === 'Enter' && handleSaveName()}
+                        />
+                      </div>
+                      <button
+                        onClick={handleSaveName}
+                        disabled={saving}
+                        className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
+                      >
+                        {saving ? 'Menyimpan...' : 'Simpan Nama'}
+                      </button>
                     </div>
-                    <span className="flex-1 font-bold text-red-500 text-[clamp(0.875rem,3vw,1.125rem)]">Keluar</span>
-                  </button>
-                </>
-              )}
-
-              {/* ── Change Name ── */}
-              {activeSection === 'name' && (
-                <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
-                  <div>
-                    <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Nama Baru</label>
-                    <input
-                      type="text"
-                      value={nameInput}
-                      onChange={e => setNameInput(e.target.value)}
-                      placeholder="Masukkan nama kamu"
-                      className={INP}
-                      autoFocus
-                      onKeyDown={e => e.key === 'Enter' && handleSaveName()}
-                    />
-                  </div>
-                  <button
-                    onClick={handleSaveName}
-                    disabled={saving}
-                    className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
-                  >
-                    {saving ? 'Menyimpan...' : 'Simpan Nama'}
-                  </button>
-                </div>
-              )}
-
-              {/* ── Change Password ── */}
-              {activeSection === 'password' && (
-                <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
-                  <div>
-                    <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Password Baru</label>
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={e => setNewPassword(e.target.value)}
-                      placeholder="Minimal 6 karakter"
-                      className={INP}
-                      autoFocus
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Konfirmasi Password</label>
-                    <input
-                      type="password"
-                      value={confirmPassword}
-                      onChange={e => setConfirmPassword(e.target.value)}
-                      placeholder="Ulangi password baru"
-                      className={INP}
-                      onKeyDown={e => e.key === 'Enter' && handleSavePassword()}
-                    />
-                  </div>
-                  <button
-                    onClick={handleSavePassword}
-                    disabled={saving}
-                    className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
-                  >
-                    {saving ? 'Menyimpan...' : 'Simpan Password'}
-                  </button>
-                </div>
-              )}
-
-              {/* ── Change Phone ── */}
-              {activeSection === 'phone' && (
-                <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
-                  <div>
-                    <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Nomor HP</label>
-                    <input
-                      type="tel"
-                      value={phoneInput}
-                      onChange={e => setPhoneInput(e.target.value)}
-                      placeholder="Contoh: 08123456789"
-                      className={INP}
-                      autoFocus
-                      onKeyDown={e => e.key === 'Enter' && handleSavePhone()}
-                    />
-                  </div>
-                  <button
-                    onClick={handleSavePhone}
-                    disabled={saving}
-                    className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
-                  >
-                    {saving ? 'Menyimpan...' : 'Simpan Nomor HP'}
-                  </button>
-                </div>
-              )}
+                  ) : activeSection === 'password' ? (
+                    <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
+                      <div>
+                        <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Password Baru</label>
+                        <input
+                          type="password"
+                          value={newPassword}
+                          onChange={e => setNewPassword(e.target.value)}
+                          placeholder="Minimal 6 karakter"
+                          className={INP}
+                          autoFocus
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Konfirmasi Password</label>
+                        <input
+                          type="password"
+                          value={confirmPassword}
+                          onChange={e => setConfirmPassword(e.target.value)}
+                          placeholder="Ulangi password baru"
+                          className={INP}
+                          onKeyDown={e => e.key === 'Enter' && handleSavePassword()}
+                        />
+                      </div>
+                      <button
+                        onClick={handleSavePassword}
+                        disabled={saving}
+                        className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
+                      >
+                        {saving ? 'Menyimpan...' : 'Simpan Password'}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
+                      <div>
+                        <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Nomor HP</label>
+                        <input
+                          type="tel"
+                          value={phoneInput}
+                          onChange={e => setPhoneInput(e.target.value)}
+                          placeholder="Contoh: 08123456789"
+                          className={INP}
+                          autoFocus
+                          onKeyDown={e => e.key === 'Enter' && handleSavePhone()}
+                        />
+                      </div>
+                      <button
+                        onClick={handleSavePhone}
+                        disabled={saving}
+                        className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
+                      >
+                        {saving ? 'Menyimpan...' : 'Simpan Nomor HP'}
+                      </button>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
 
             </div>
           </Drawer.Content>

@@ -70,6 +70,7 @@ export function useLinks(userId?: string) {
         .single();
         
       if (error) throw error;
+      if (!data) throw new Error('Insert returned no data');
       setLinks(prev => prev.some(l => l.id === data.id) ? prev : [data, ...prev]);
       toast.success('Link disimpan!');
       return data;

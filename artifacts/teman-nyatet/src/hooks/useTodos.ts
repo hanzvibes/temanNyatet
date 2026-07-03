@@ -70,6 +70,7 @@ export function useTodos(userId?: string) {
         .single();
         
       if (error) throw error;
+      if (!data) throw new Error('Insert returned no data');
       setTodos(prev => prev.some(t => t.id === data.id) ? prev : [data, ...prev]);
       toast.success('To-do ditambahkan!');
       return data;
@@ -93,8 +94,9 @@ export function useTodos(userId?: string) {
         .single();
         
       if (error) throw error;
+      if (!data) throw new Error('Update returned no data');
       // Realtime will sync; also apply server response directly
-      setTodos(prev => prev.map(t => t.id === id ? data : t));
+      setTodos(curr => curr.map(t => t.id === id ? data : t));
       return data;
     } catch (err) {
       setTodos(prev);

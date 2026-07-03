@@ -84,6 +84,7 @@ export function useTransactions(userId?: string) {
         .single();
         
       if (error) throw error;
+      if (!data) throw new Error('Insert returned no data');
       setTransactions(prev =>
         prev.some(t => t.id === data.id) ? prev : sortTransactions([data, ...prev])
       );

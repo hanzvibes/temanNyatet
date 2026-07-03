@@ -103,7 +103,15 @@ router.post(
     const plan = resolvePlan(data);
     req.log.info({ email, plan }, 'Activating subscription');
 
-    const result = await activateSubscription(email, plan);
+    let result: { success: boolean; error?: string };
+    try {
+      result = await activateSubscription(email, plan);
+    } catch (err) {
+      req.log.error({ email, err }, 'Unexpected error calling activateSubscription');
+      // Return 500 so Mayar retries — this is a transient failure (network/DB), not a business-logic failure
+      res.status(500).json({ success: false, message: 'Internal server error' });
+      return;
+    }
 
     if (!result.success) {
       req.log.error({ email, error: result.error }, 'Failed to activate subscription');

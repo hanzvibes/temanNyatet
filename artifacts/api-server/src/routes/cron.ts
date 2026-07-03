@@ -37,19 +37,24 @@ router.post('/cron/archive-expired', async (req, res) => {
 
   req.log.info('Running archive-expired cron job');
 
-  const result = await archiveExpiredAccounts();
+  try {
+    const result = await archiveExpiredAccounts();
 
-  if (result.error) {
-    req.log.error({ error: result.error }, 'Cron archive-expired failed');
-    res.status(500).json({ error: result.error });
-    return;
+    if (result.error) {
+      req.log.error({ error: result.error }, 'Cron archive-expired failed');
+      res.status(500).json({ error: result.error });
+      return;
+    }
+
+    req.log.info({ archived_count: result.count }, 'Cron archive-expired completed');
+    res.status(200).json({
+      archived_count: result.count,
+      message: `Archived ${result.count} expired account(s)`,
+    });
+  } catch (err) {
+    req.log.error({ err }, 'Unexpected error in /cron/archive-expired');
+    res.status(500).json({ error: 'Internal server error' });
   }
-
-  req.log.info({ archived_count: result.count }, 'Cron archive-expired completed');
-  res.status(200).json({
-    archived_count: result.count,
-    message: `Archived ${result.count} expired account(s)`,
-  });
 });
 
 export default router;

@@ -70,6 +70,7 @@ export function useNotes(userId?: string) {
         .single();
         
       if (error) throw error;
+      if (!data) throw new Error('Insert returned no data');
       // Realtime will handle the state update; optimistically add if not yet present
       setNotes(prev => prev.some(n => n.id === data.id) ? prev : [data, ...prev]);
       toast.success('Catatan disimpan!');
@@ -90,6 +91,7 @@ export function useNotes(userId?: string) {
         .single();
         
       if (error) throw error;
+      if (!data) throw new Error('Update returned no data');
       setNotes(prev => prev.map(n => n.id === id ? data : n));
       toast.success('Catatan diperbarui!');
       return data;

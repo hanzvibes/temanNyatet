@@ -29,7 +29,35 @@ export function useLinks(userId?: string) {
   };
 
   useEffect(() => {
+    if (!userId) return;
+
     fetchLinks();
+
+    const channel = supabase
+      .channel(`links:${userId}:${Math.random().toString(36).slice(2)}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'links', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setLinks(prev => {
+              if (prev.some(l => l.id === (payload.new as Link).id)) return prev;
+              return [payload.new as Link, ...prev];
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            setLinks(prev =>
+              prev.map(l => l.id === (payload.new as Link).id ? payload.new as Link : l)
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setLinks(prev => prev.filter(l => l.id !== (payload.old as { id: string }).id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userId]);
 
   const createLink = async (link: Omit<LinkInsert, 'user_id'>) => {
@@ -42,7 +70,7 @@ export function useLinks(userId?: string) {
         .single();
         
       if (error) throw error;
-      setLinks([data, ...links]);
+      setLinks(prev => prev.some(l => l.id === data.id) ? prev : [data, ...prev]);
       toast.success('Link disimpan!');
       return data;
     } catch (err) {

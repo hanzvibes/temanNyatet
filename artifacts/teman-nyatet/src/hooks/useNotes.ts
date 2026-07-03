@@ -29,7 +29,35 @@ export function useNotes(userId?: string) {
   };
 
   useEffect(() => {
+    if (!userId) return;
+
     fetchNotes();
+
+    const channel = supabase
+      .channel(`notes:${userId}:${Math.random().toString(36).slice(2)}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'notes', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setNotes(prev => {
+              if (prev.some(n => n.id === (payload.new as Note).id)) return prev;
+              return [payload.new as Note, ...prev];
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            setNotes(prev =>
+              prev.map(n => n.id === (payload.new as Note).id ? payload.new as Note : n)
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setNotes(prev => prev.filter(n => n.id !== (payload.old as { id: string }).id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userId]);
 
   const createNote = async (note: Omit<NoteInsert, 'user_id'>) => {
@@ -42,7 +70,8 @@ export function useNotes(userId?: string) {
         .single();
         
       if (error) throw error;
-      setNotes([data, ...notes]);
+      // Realtime will handle the state update; optimistically add if not yet present
+      setNotes(prev => prev.some(n => n.id === data.id) ? prev : [data, ...prev]);
       toast.success('Catatan disimpan!');
       return data;
     } catch (err) {
@@ -61,7 +90,7 @@ export function useNotes(userId?: string) {
         .single();
         
       if (error) throw error;
-      setNotes(notes.map(n => n.id === id ? data : n));
+      setNotes(prev => prev.map(n => n.id === id ? data : n));
       toast.success('Catatan diperbarui!');
       return data;
     } catch (err) {

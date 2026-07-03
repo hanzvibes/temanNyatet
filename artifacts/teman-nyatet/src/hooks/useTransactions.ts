@@ -4,6 +4,14 @@ import type { Transaction, TransactionInsert, MonthlySummary } from '@/lib/datab
 import { toast } from 'sonner';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
 
+function sortTransactions(txs: Transaction[]): Transaction[] {
+  return [...txs].sort((a, b) => {
+    const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+    if (dateDiff !== 0) return dateDiff;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+}
+
 export function useTransactions(userId?: string) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +39,39 @@ export function useTransactions(userId?: string) {
   };
 
   useEffect(() => {
+    if (!userId) return;
+
     fetchTransactions();
+
+    const channel = supabase
+      .channel(`transactions:${userId}:${Math.random().toString(36).slice(2)}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'transactions', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setTransactions(prev => {
+              if (prev.some(t => t.id === (payload.new as Transaction).id)) return prev;
+              return sortTransactions([payload.new as Transaction, ...prev]);
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            setTransactions(prev =>
+              sortTransactions(
+                prev.map(t => t.id === (payload.new as Transaction).id ? payload.new as Transaction : t)
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setTransactions(prev =>
+              prev.filter(t => t.id !== (payload.old as { id: string }).id)
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userId]);
 
   const createTransaction = async (transaction: Omit<TransactionInsert, 'user_id'>) => {
@@ -44,12 +84,9 @@ export function useTransactions(userId?: string) {
         .single();
         
       if (error) throw error;
-      
-      // Update local state and sort
-      const newTx = [data, ...transactions];
-      newTx.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      setTransactions(newTx);
-      
+      setTransactions(prev =>
+        prev.some(t => t.id === data.id) ? prev : sortTransactions([data, ...prev])
+      );
       toast.success('Transaksi disimpan!');
       return data;
     } catch (err) {

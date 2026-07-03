@@ -29,7 +29,35 @@ export function useTodos(userId?: string) {
   };
 
   useEffect(() => {
+    if (!userId) return;
+
     fetchTodos();
+
+    const channel = supabase
+      .channel(`todos:${userId}:${Math.random().toString(36).slice(2)}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'todos', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setTodos(prev => {
+              if (prev.some(t => t.id === (payload.new as Todo).id)) return prev;
+              return [payload.new as Todo, ...prev];
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            setTodos(prev =>
+              prev.map(t => t.id === (payload.new as Todo).id ? payload.new as Todo : t)
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setTodos(prev => prev.filter(t => t.id !== (payload.old as { id: string }).id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userId]);
 
   const createTodo = async (todo: Omit<TodoInsert, 'user_id'>) => {
@@ -42,7 +70,7 @@ export function useTodos(userId?: string) {
         .single();
         
       if (error) throw error;
-      setTodos([data, ...todos]);
+      setTodos(prev => prev.some(t => t.id === data.id) ? prev : [data, ...prev]);
       toast.success('To-do ditambahkan!');
       return data;
     } catch (err) {
@@ -65,7 +93,7 @@ export function useTodos(userId?: string) {
         .single();
         
       if (error) throw error;
-      // Optional: replace with server data
+      // Realtime will sync; also apply server response directly
       setTodos(prev => prev.map(t => t.id === id ? data : t));
       return data;
     } catch (err) {

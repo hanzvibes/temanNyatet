@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
+import SettingsSheet from '@/components/SettingsSheet';
 import { useLinks } from '@/hooks/useLinks';
 import { useCreate } from '@/contexts/CreateContext';
 import { Loader2, Link2, Copy, ExternalLink, Compass } from 'lucide-react';
@@ -91,8 +92,6 @@ export default function LinkSaverPage() {
     if (pressTimer.current) clearTimeout(pressTimer.current);
   };
 
-  const userInitials = user?.email?.substring(0, 2).toUpperCase() || 'TN';
-
   return (
     <div className="flex flex-col h-full bg-background min-h-dvh pb-32">
       {/* Header Area */}
@@ -102,9 +101,7 @@ export default function LinkSaverPage() {
             <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">TEMAN NYATET</div>
             <h1 className="text-2xl font-extrabold text-foreground">Link Saver</h1>
           </div>
-          <div className="w-12 h-12 rounded-full bg-[#FFE4E1] border-2 border-white flex items-center justify-center text-[#E09898] font-bold shadow-sm">
-            {userInitials}
-          </div>
+          <SettingsSheet avatarBg="bg-[#FFE4E1]" avatarTextColor="text-[#E09898]" />
         </div>
         <SearchBar value={search} onChange={setSearch} placeholder="Cari link..." />
       </div>

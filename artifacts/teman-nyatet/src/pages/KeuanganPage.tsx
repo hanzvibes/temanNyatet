@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
+import SettingsSheet from '@/components/SettingsSheet';
 import { useCreate } from '@/contexts/CreateContext';
 import { useTransactions } from '@/hooks/useTransactions';
 import { format, isToday, isYesterday } from 'date-fns';
@@ -152,8 +153,6 @@ export default function KeuanganPage() {
     if (pressTimer.current) clearTimeout(pressTimer.current);
   };
 
-  const userInitials = user?.email?.substring(0, 2).toUpperCase() || 'TN';
-
   return (
     <div className="flex flex-col h-full bg-background min-h-dvh pb-32">
       {/* Header Area */}
@@ -163,9 +162,7 @@ export default function KeuanganPage() {
             <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">TEMAN NYATET</div>
             <h1 className="text-2xl font-extrabold text-foreground">Keuangan</h1>
           </div>
-          <div className="w-12 h-12 rounded-full bg-[#FFF8D6] border-2 border-white flex items-center justify-center text-[#F4C753] font-bold shadow-sm">
-            {userInitials}
-          </div>
+          <SettingsSheet avatarBg="bg-[#FFF8D6]" avatarTextColor="text-[#F4C753]" />
         </div>
       </div>
 

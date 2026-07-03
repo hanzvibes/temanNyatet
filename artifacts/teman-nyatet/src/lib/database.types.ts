@@ -12,6 +12,8 @@ export interface Database {
         Row: {
           id: string;
           email: string;
+          name: string | null;
+          phone: string | null;
           subscription_status: SubscriptionStatus;
           subscription_plan: SubscriptionPlan | null;
           subscription_end: string | null;
@@ -20,6 +22,8 @@ export interface Database {
         Insert: {
           id: string;
           email: string;
+          name?: string | null;
+          phone?: string | null;
           subscription_status?: SubscriptionStatus;
           subscription_plan?: SubscriptionPlan | null;
           subscription_end?: string | null;
@@ -28,6 +32,8 @@ export interface Database {
         Update: {
           id?: string;
           email?: string;
+          name?: string | null;
+          phone?: string | null;
           subscription_status?: SubscriptionStatus;
           subscription_plan?: SubscriptionPlan | null;
           subscription_end?: string | null;

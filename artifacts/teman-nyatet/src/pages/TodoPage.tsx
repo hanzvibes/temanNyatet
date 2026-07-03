@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
+import SettingsSheet from '@/components/SettingsSheet';
 import { useTodos } from '@/hooks/useTodos';
 import { useCreate } from '@/contexts/CreateContext';
 import { format } from 'date-fns';
@@ -132,8 +133,6 @@ export default function TodoPage() {
     }
   };
 
-  const userInitials = user?.email?.substring(0, 2).toUpperCase() || 'TN';
-
   // ── Todo card ────────────────────────────────────────────────────────────────
   const renderTodoItem = (todo: Todo) => (
     <div
@@ -197,9 +196,7 @@ export default function TodoPage() {
             <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">TEMAN NYATET</div>
             <h1 className="text-2xl font-extrabold text-foreground">To-Do List</h1>
           </div>
-          <div className="w-12 h-12 rounded-full bg-[#E1F0FF] border-2 border-white flex items-center justify-center text-[#9CB4D4] font-bold shadow-sm">
-            {userInitials}
-          </div>
+          <SettingsSheet avatarBg="bg-[#E1F0FF]" avatarTextColor="text-[#9CB4D4]" />
         </div>
         <SearchBar value={search} onChange={setSearch} placeholder="Cari to-do..." />
       </div>

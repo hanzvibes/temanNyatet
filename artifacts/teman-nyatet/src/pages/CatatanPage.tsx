@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Loader2, BookOpen, Trash2, X } from 'lucide-react';
 import SearchBar from '@/components/SearchBar';
+import SettingsSheet from '@/components/SettingsSheet';
 import { Drawer } from 'vaul';
 import { Note } from '@/lib/database.types';
 import { useForm } from 'react-hook-form';
@@ -125,8 +126,6 @@ export default function CatatanPage() {
     }
   };
 
-  const userInitials = user?.email?.substring(0, 2).toUpperCase() || 'TN';
-
   return (
     <div className="flex flex-col h-full bg-background min-h-dvh pb-32">
       {/* Header */}
@@ -136,9 +135,7 @@ export default function CatatanPage() {
             <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">TEMAN NYATET</div>
             <h1 className="text-2xl font-extrabold text-foreground">Catatan</h1>
           </div>
-          <div className="w-12 h-12 rounded-full bg-[#E8F2DF] border-2 border-white flex items-center justify-center text-primary font-bold shadow-sm">
-            {userInitials}
-          </div>
+          <SettingsSheet avatarBg="bg-[#E8F2DF]" avatarTextColor="text-primary" />
         </div>
         <SearchBar value={search} onChange={setSearch} placeholder="Cari catatan..." />
       </div>

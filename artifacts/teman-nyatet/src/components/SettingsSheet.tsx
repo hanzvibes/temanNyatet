@@ -107,14 +107,14 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
     setOpen(false);
   };
 
-  const INP = 'w-full bg-secondary border border-border rounded-xl py-3 px-4 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm font-bold text-foreground transition-all';
+  const INP = 'w-full bg-secondary border border-border rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 font-bold text-foreground transition-all py-[clamp(0.625rem,1.8vw,0.875rem)] px-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.75rem,2.5vw,1rem)]';
 
   return (
     <>
       {/* Avatar trigger */}
       <button
         onClick={handleOpen}
-        className={`w-12 h-12 rounded-full border-2 border-white flex items-center justify-center font-bold shadow-sm transition-transform active:scale-95 ${avatarBg} ${avatarTextColor}`}
+        className={`rounded-full border-2 border-white flex items-center justify-center font-bold shadow-sm transition-transform active:scale-95 w-[clamp(2.5rem,8vw,3.5rem)] h-[clamp(2.5rem,8vw,3.5rem)] text-[clamp(0.75rem,3vw,1rem)] ${avatarBg} ${avatarTextColor}`}
       >
         {initials}
       </button>
@@ -122,34 +122,36 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
       <Drawer.Root open={open} onOpenChange={setOpen}>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" />
-          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[88vh] z-50 outline-none">
-            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mt-4 mb-2" />
+          <Drawer.Content
+            className="bg-card flex flex-col rounded-t-[clamp(1.25rem,4vw,2rem)] fixed bottom-0 left-0 right-0 z-50 outline-none mx-auto w-full sm:max-w-[540px] md:max-w-[600px] lg:max-w-[640px] xl:max-w-[720px] max-h-[min(88vh,48rem)]"
+          >
+            <div className="mx-auto w-[clamp(2.5rem,8vw,3rem)] h-[clamp(0.25rem,0.8vw,0.375rem)] flex-shrink-0 rounded-full bg-muted-foreground/20 mt-[clamp(0.75rem,2vw,1rem)] mb-[clamp(0.25rem,1vw,0.5rem)]" />
 
             {/* Header row */}
-            <div className="flex items-center px-6 py-3 min-h-[52px]">
+            <div className="flex items-center px-[clamp(1rem,4vw,1.75rem)] py-[clamp(0.5rem,2vw,0.75rem)] min-h-[clamp(2.75rem,8vw,3.5rem)]">
               {activeSection ? (
-                <button onClick={handleBack} className="flex items-center gap-1.5 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors">
+                <button onClick={handleBack} className="flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] text-[clamp(0.8125rem,2.5vw,1rem)] font-bold text-muted-foreground hover:text-foreground transition-colors">
                   <ArrowLeft size={16} strokeWidth={2.5} />
                   Kembali
                 </button>
               ) : (
-                <h2 className="text-lg font-extrabold text-foreground">Pengaturan</h2>
+                <h2 className="text-[clamp(1rem,3.5vw,1.5rem)] font-extrabold text-foreground">Pengaturan</h2>
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-10">
+            <div className="flex-1 overflow-y-auto px-[clamp(1rem,4vw,1.75rem)] pb-[clamp(1.5rem,5vw,2.5rem)]">
 
               {/* ── Profile header (always visible) ── */}
               {!activeSection && (
                 <>
-                  <div className="flex flex-col items-center pt-2 pb-6">
+                  <div className="flex flex-col items-center pt-[clamp(0.25rem,1vw,0.5rem)] pb-[clamp(1rem,4vw,1.5rem)]">
                     {/* Big avatar */}
-                    <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-2xl font-extrabold shadow-md mb-4">
+                    <div className="rounded-full bg-primary flex items-center justify-center text-primary-foreground font-extrabold shadow-md mb-[clamp(0.75rem,3vw,1.25rem)] w-[clamp(4rem,14vw,5.5rem)] h-[clamp(4rem,14vw,5.5rem)] text-[clamp(1.25rem,5vw,2rem)]">
                       {initials}
                     </div>
 
                     {/* Subscription badge */}
-                    <span className={`text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full mb-3 ${
+                    <span className={`font-extrabold uppercase tracking-widest rounded-full mb-[clamp(0.5rem,2vw,1rem)] text-[clamp(0.625rem,2vw,0.75rem)] px-[clamp(0.75rem,2.5vw,1rem)] py-[clamp(0.25rem,1vw,0.375rem)] ${
                       isPro
                         ? 'bg-primary/15 text-primary border border-primary/30'
                         : 'bg-muted text-muted-foreground border border-border'
@@ -158,28 +160,28 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                     </span>
 
                     {/* Name */}
-                    <p className="text-lg font-extrabold text-foreground leading-tight">
-                      {profile?.name || <span className="text-muted-foreground font-bold italic text-base">Nama belum diatur</span>}
+                    <p className="text-[clamp(1rem,3.5vw,1.5rem)] font-extrabold text-foreground leading-tight text-center">
+                      {profile?.name || <span className="text-muted-foreground font-bold italic text-[clamp(0.875rem,3vw,1.125rem)]">Nama belum diatur</span>}
                     </p>
 
                     {/* Email */}
-                    <p className="text-sm font-medium text-muted-foreground mt-0.5">
+                    <p className="text-[clamp(0.75rem,2.5vw,1rem)] font-medium text-muted-foreground mt-[clamp(0.125rem,0.5vw,0.25rem)] text-center">
                       {user?.email}
                     </p>
 
                     {/* Phone */}
                     {profile?.phone && (
-                      <p className="text-sm font-medium text-muted-foreground mt-0.5">
+                      <p className="text-[clamp(0.75rem,2.5vw,1rem)] font-medium text-muted-foreground mt-[clamp(0.125rem,0.5vw,0.25rem)] text-center">
                         {profile.phone}
                       </p>
                     )}
                   </div>
 
                   {/* Divider */}
-                  <div className="h-px bg-border mb-4" />
+                  <div className="h-px bg-border mb-[clamp(0.5rem,2vw,1rem)]" />
 
                   {/* Menu items */}
-                  <div className="space-y-1">
+                  <div className="space-y-[clamp(0.25rem,1vw,0.5rem)]">
                     {[
                       { key: 'name' as const,     icon: User,  label: 'Ganti Nama' },
                       { key: 'password' as const, icon: Lock,  label: 'Ganti Password' },
@@ -188,38 +190,38 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                       <button
                         key={key}
                         onClick={() => handleOpenSection(key)}
-                        className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl hover:bg-secondary active:bg-secondary/80 transition-colors text-left"
+                        className="w-full flex items-center gap-[clamp(0.75rem,3vw,1rem)] px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] hover:bg-secondary active:bg-secondary/80 transition-colors text-left"
                       >
-                        <div className="w-9 h-9 rounded-xl bg-secondary border border-border flex items-center justify-center flex-shrink-0">
-                          <Icon size={17} className="text-muted-foreground" strokeWidth={2.2} />
+                        <div className="rounded-xl bg-secondary border border-border flex items-center justify-center flex-shrink-0 w-[clamp(2rem,7vw,2.5rem)] h-[clamp(2rem,7vw,2.5rem)]">
+                          <Icon size={18} className="text-muted-foreground w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
                         </div>
-                        <span className="flex-1 font-bold text-foreground">{label}</span>
-                        <ChevronRight size={16} className="text-muted-foreground/50" strokeWidth={2.5} />
+                        <span className="flex-1 font-bold text-foreground text-[clamp(0.875rem,3vw,1.125rem)]">{label}</span>
+                        <ChevronRight size={16} className="text-muted-foreground/50 w-[clamp(1rem,3vw,1.25rem)] h-[clamp(1rem,3vw,1.25rem)]" strokeWidth={2.5} />
                       </button>
                     ))}
                   </div>
 
                   {/* Divider */}
-                  <div className="h-px bg-border my-4" />
+                  <div className="h-px bg-border my-[clamp(0.5rem,2vw,1rem)]" />
 
                   {/* Logout */}
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl hover:bg-red-50 active:bg-red-100/80 transition-colors text-left group"
+                    className="w-full flex items-center gap-[clamp(0.75rem,3vw,1rem)] px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] hover:bg-red-50 active:bg-red-100/80 transition-colors text-left group"
                   >
-                    <div className="w-9 h-9 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0">
-                      <LogOut size={17} className="text-red-500" strokeWidth={2.2} />
+                    <div className="rounded-xl bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0 w-[clamp(2rem,7vw,2.5rem)] h-[clamp(2rem,7vw,2.5rem)]">
+                      <LogOut size={18} className="text-red-500 w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
                     </div>
-                    <span className="flex-1 font-bold text-red-500">Keluar</span>
+                    <span className="flex-1 font-bold text-red-500 text-[clamp(0.875rem,3vw,1.125rem)]">Keluar</span>
                   </button>
                 </>
               )}
 
               {/* ── Change Name ── */}
               {activeSection === 'name' && (
-                <div className="pt-2 space-y-5">
+                <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
                   <div>
-                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Nama Baru</label>
+                    <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Nama Baru</label>
                     <input
                       type="text"
                       value={nameInput}
@@ -233,7 +235,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                   <button
                     onClick={handleSaveName}
                     disabled={saving}
-                    className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-[1.25rem] shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+                    className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
                   >
                     {saving ? 'Menyimpan...' : 'Simpan Nama'}
                   </button>
@@ -242,9 +244,9 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
 
               {/* ── Change Password ── */}
               {activeSection === 'password' && (
-                <div className="pt-2 space-y-5">
+                <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
                   <div>
-                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Password Baru</label>
+                    <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Password Baru</label>
                     <input
                       type="password"
                       value={newPassword}
@@ -255,7 +257,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Konfirmasi Password</label>
+                    <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Konfirmasi Password</label>
                     <input
                       type="password"
                       value={confirmPassword}
@@ -268,7 +270,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                   <button
                     onClick={handleSavePassword}
                     disabled={saving}
-                    className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-[1.25rem] shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+                    className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
                   >
                     {saving ? 'Menyimpan...' : 'Simpan Password'}
                   </button>
@@ -277,9 +279,9 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
 
               {/* ── Change Phone ── */}
               {activeSection === 'phone' && (
-                <div className="pt-2 space-y-5">
+                <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
                   <div>
-                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Nomor HP</label>
+                    <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Nomor HP</label>
                     <input
                       type="tel"
                       value={phoneInput}
@@ -293,7 +295,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                   <button
                     onClick={handleSavePhone}
                     disabled={saving}
-                    className="w-full bg-primary text-primary-foreground font-bold py-4 rounded-[1.25rem] shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+                    className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
                   >
                     {saving ? 'Menyimpan...' : 'Simpan Nomor HP'}
                   </button>

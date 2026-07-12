@@ -1,0 +1,1 @@
+- [Secrets pasted in chat](secrets-pasted-in-chat.md) — if a user pastes real key values directly in chat, still route them through `requestSecrets` rather than echoing/using the pasted text.

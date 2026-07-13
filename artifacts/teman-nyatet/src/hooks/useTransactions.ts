@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/lib/supabase';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { apiGet, apiPost, apiDelete } from '@/lib/apiClient';
 import type { Transaction, TransactionInsert, MonthlySummary } from '@/lib/database.types';
 import { toast } from 'sonner';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
+
+const POLL_INTERVAL_MS = 15000;
 
 function sortTransactions(txs: Transaction[]): Transaction[] {
   return [...txs].sort((a, b) => {
@@ -16,78 +18,37 @@ export function useTransactions(userId?: string) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const firstLoad = useRef(true);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     if (!userId) return;
-    setLoading(true);
+    if (firstLoad.current) setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', userId)
-        .order('date', { ascending: false })
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setTransactions(data || []);
+      const data = await apiGet<Transaction[]>('/transactions');
+      setTransactions(sortTransactions(data || []));
+      setError(null);
     } catch (err) {
       setError(err as Error);
-      toast.error('Gagal mengambil transaksi');
+      if (firstLoad.current) toast.error('Gagal mengambil transaksi');
     } finally {
       setLoading(false);
+      firstLoad.current = false;
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     if (!userId) return;
-
+    firstLoad.current = true;
     fetchTransactions();
-
-    const channel = supabase
-      .channel(`transactions:${userId}:${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'transactions', filter: `user_id=eq.${userId}` },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setTransactions(prev => {
-              if (prev.some(t => t.id === (payload.new as Transaction).id)) return prev;
-              return sortTransactions([payload.new as Transaction, ...prev]);
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            setTransactions(prev =>
-              sortTransactions(
-                prev.map(t => t.id === (payload.new as Transaction).id ? payload.new as Transaction : t)
-              )
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setTransactions(prev =>
-              prev.filter(t => t.id !== (payload.old as { id: string }).id)
-            );
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId]);
+    const interval = setInterval(fetchTransactions, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [userId, fetchTransactions]);
 
   const createTransaction = async (transaction: Omit<TransactionInsert, 'user_id'>) => {
     if (!userId) return;
     try {
-      const { data, error } = await supabase
-        .from('transactions')
-        .insert({ ...transaction, user_id: userId })
-        .select()
-        .single();
-        
-      if (error) throw error;
-      if (!data) throw new Error('Insert returned no data');
-      setTransactions(prev =>
-        prev.some(t => t.id === data.id) ? prev : sortTransactions([data, ...prev])
-      );
+      const data = await apiPost<Transaction>('/transactions', transaction);
+      setTransactions(prev => sortTransactions([data, ...prev]));
       toast.success('Transaksi disimpan!');
       return data;
     } catch (err) {
@@ -97,22 +58,13 @@ export function useTransactions(userId?: string) {
   };
 
   const deleteTransaction = async (id: string) => {
+    const prev = [...transactions];
+    setTransactions(transactions.filter(t => t.id !== id));
     try {
-      // Optimistic
-      const prev = [...transactions];
-      setTransactions(transactions.filter(t => t.id !== id));
-      
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', id);
-        
-      if (error) {
-        setTransactions(prev);
-        throw error;
-      }
+      await apiDelete(`/transactions/${id}`);
       toast.success('Transaksi dihapus');
     } catch (err) {
+      setTransactions(prev);
       toast.error('Gagal menghapus transaksi');
       throw err;
     }
@@ -122,7 +74,7 @@ export function useTransactions(userId?: string) {
     const now = new Date();
     const start = startOfMonth(now);
     const end = endOfMonth(now);
-    
+
     let income = 0;
     let expense = 0;
     let balance = 0; // Balance is all-time, not just monthly
@@ -147,7 +99,7 @@ export function useTransactions(userId?: string) {
   const monthlyChartData = useMemo(() => {
     const months: Record<string, { income: number, expense: number, name: string }> = {};
     const now = new Date();
-    
+
     // Initialize last 6 months
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);

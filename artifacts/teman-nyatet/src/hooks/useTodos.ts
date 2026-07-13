@@ -1,77 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/apiClient';
 import type { Todo, TodoInsert, TodoUpdate } from '@/lib/database.types';
 import { toast } from 'sonner';
+
+const POLL_INTERVAL_MS = 15000;
 
 export function useTodos(userId?: string) {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const firstLoad = useRef(true);
 
-  const fetchTodos = async () => {
+  const fetchTodos = useCallback(async () => {
     if (!userId) return;
-    setLoading(true);
+    if (firstLoad.current) setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('todos')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setTodos(data || []);
+      const data = await apiGet<Todo[]>('/todos');
+      setTodos((data || []).slice().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+      setError(null);
     } catch (err) {
       setError(err as Error);
-      toast.error('Gagal mengambil To-do');
+      if (firstLoad.current) toast.error('Gagal mengambil To-do');
     } finally {
       setLoading(false);
+      firstLoad.current = false;
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     if (!userId) return;
-
+    firstLoad.current = true;
     fetchTodos();
-
-    const channel = supabase
-      .channel(`todos:${userId}:${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'todos', filter: `user_id=eq.${userId}` },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setTodos(prev => {
-              if (prev.some(t => t.id === (payload.new as Todo).id)) return prev;
-              return [payload.new as Todo, ...prev];
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            setTodos(prev =>
-              prev.map(t => t.id === (payload.new as Todo).id ? payload.new as Todo : t)
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setTodos(prev => prev.filter(t => t.id !== (payload.old as { id: string }).id));
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId]);
+    const interval = setInterval(fetchTodos, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [userId, fetchTodos]);
 
   const createTodo = async (todo: Omit<TodoInsert, 'user_id'>) => {
     if (!userId) return;
     try {
-      const { data, error } = await supabase
-        .from('todos')
-        .insert({ ...todo, user_id: userId })
-        .select()
-        .single();
-        
-      if (error) throw error;
-      if (!data) throw new Error('Insert returned no data');
-      setTodos(prev => prev.some(t => t.id === data.id) ? prev : [data, ...prev]);
+      const data = await apiPost<Todo>('/todos', todo);
+      setTodos(prev => [data, ...prev]);
       toast.success('To-do ditambahkan!');
       return data;
     } catch (err) {
@@ -81,21 +49,10 @@ export function useTodos(userId?: string) {
   };
 
   const updateTodo = async (id: string, updates: TodoUpdate) => {
-    // Optimistic
     const prev = [...todos];
     setTodos(todos.map(t => t.id === id ? { ...t, ...updates } : t));
-
     try {
-      const { data, error } = await supabase
-        .from('todos')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-        
-      if (error) throw error;
-      if (!data) throw new Error('Update returned no data');
-      // Realtime will sync; also apply server response directly
+      const data = await apiPut<Todo>(`/todos/${id}`, updates);
       setTodos(curr => curr.map(t => t.id === id ? data : t));
       return data;
     } catch (err) {
@@ -106,21 +63,13 @@ export function useTodos(userId?: string) {
   };
 
   const deleteTodo = async (id: string) => {
+    const prev = [...todos];
+    setTodos(todos.filter(t => t.id !== id));
     try {
-      const prev = [...todos];
-      setTodos(todos.filter(t => t.id !== id));
-      
-      const { error } = await supabase
-        .from('todos')
-        .delete()
-        .eq('id', id);
-        
-      if (error) {
-        setTodos(prev);
-        throw error;
-      }
+      await apiDelete(`/todos/${id}`);
       toast.success('To-do dihapus');
     } catch (err) {
+      setTodos(prev);
       toast.error('Gagal menghapus To-do');
       throw err;
     }

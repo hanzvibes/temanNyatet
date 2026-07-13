@@ -1,78 +1,48 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/apiClient';
 import type { Note, NoteInsert, NoteUpdate } from '@/lib/database.types';
 import { toast } from 'sonner';
+
+// Data now lives in a Google Sheet (via the api-server), which has no
+// realtime push. We poll instead so edits made directly in the sheet still
+// show up without a manual refresh.
+const POLL_INTERVAL_MS = 15000;
 
 export function useNotes(userId?: string) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const firstLoad = useRef(true);
 
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     if (!userId) return;
-    setLoading(true);
+    if (firstLoad.current) setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('notes')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setNotes(data || []);
+      const data = await apiGet<Note[]>('/notes');
+      setNotes((data || []).slice().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+      setError(null);
     } catch (err) {
       setError(err as Error);
-      toast.error('Gagal mengambil catatan');
+      if (firstLoad.current) toast.error('Gagal mengambil catatan');
     } finally {
       setLoading(false);
+      firstLoad.current = false;
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     if (!userId) return;
-
+    firstLoad.current = true;
     fetchNotes();
-
-    const channel = supabase
-      .channel(`notes:${userId}:${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'notes', filter: `user_id=eq.${userId}` },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setNotes(prev => {
-              if (prev.some(n => n.id === (payload.new as Note).id)) return prev;
-              return [payload.new as Note, ...prev];
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            setNotes(prev =>
-              prev.map(n => n.id === (payload.new as Note).id ? payload.new as Note : n)
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setNotes(prev => prev.filter(n => n.id !== (payload.old as { id: string }).id));
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId]);
+    const interval = setInterval(fetchNotes, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [userId, fetchNotes]);
 
   const createNote = async (note: Omit<NoteInsert, 'user_id'>) => {
     if (!userId) return;
     try {
-      const { data, error } = await supabase
-        .from('notes')
-        .insert({ ...note, user_id: userId })
-        .select()
-        .single();
-        
-      if (error) throw error;
-      if (!data) throw new Error('Insert returned no data');
-      // Realtime will handle the state update; optimistically add if not yet present
-      setNotes(prev => prev.some(n => n.id === data.id) ? prev : [data, ...prev]);
+      const data = await apiPost<Note>('/notes', note);
+      setNotes(prev => [data, ...prev]);
       toast.success('Catatan disimpan!');
       return data;
     } catch (err) {
@@ -83,15 +53,7 @@ export function useNotes(userId?: string) {
 
   const updateNote = async (id: string, updates: NoteUpdate) => {
     try {
-      const { data, error } = await supabase
-        .from('notes')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-        
-      if (error) throw error;
-      if (!data) throw new Error('Update returned no data');
+      const data = await apiPut<Note>(`/notes/${id}`, updates);
       setNotes(prev => prev.map(n => n.id === id ? data : n));
       toast.success('Catatan diperbarui!');
       return data;
@@ -102,22 +64,13 @@ export function useNotes(userId?: string) {
   };
 
   const deleteNote = async (id: string) => {
+    const prev = [...notes];
+    setNotes(notes.filter(n => n.id !== id));
     try {
-      // Optimistic delete
-      const prev = [...notes];
-      setNotes(notes.filter(n => n.id !== id));
-      
-      const { error } = await supabase
-        .from('notes')
-        .delete()
-        .eq('id', id);
-        
-      if (error) {
-        setNotes(prev);
-        throw error;
-      }
+      await apiDelete(`/notes/${id}`);
       toast.success('Catatan dihapus');
     } catch (err) {
+      setNotes(prev);
       toast.error('Gagal menghapus catatan');
       throw err;
     }

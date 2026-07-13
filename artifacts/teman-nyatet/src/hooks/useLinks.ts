@@ -1,77 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { apiGet, apiPost, apiDelete } from '@/lib/apiClient';
 import type { Link, LinkInsert } from '@/lib/database.types';
 import { toast } from 'sonner';
+
+const POLL_INTERVAL_MS = 15000;
 
 export function useLinks(userId?: string) {
   const [links, setLinks] = useState<Link[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const firstLoad = useRef(true);
 
-  const fetchLinks = async () => {
+  const fetchLinks = useCallback(async () => {
     if (!userId) return;
-    setLoading(true);
+    if (firstLoad.current) setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('links')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setLinks(data || []);
+      const data = await apiGet<Link[]>('/links');
+      setLinks((data || []).slice().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+      setError(null);
     } catch (err) {
       setError(err as Error);
-      toast.error('Gagal mengambil link');
+      if (firstLoad.current) toast.error('Gagal mengambil link');
     } finally {
       setLoading(false);
+      firstLoad.current = false;
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     if (!userId) return;
-
+    firstLoad.current = true;
     fetchLinks();
-
-    const channel = supabase
-      .channel(`links:${userId}:${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'links', filter: `user_id=eq.${userId}` },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setLinks(prev => {
-              if (prev.some(l => l.id === (payload.new as Link).id)) return prev;
-              return [payload.new as Link, ...prev];
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            setLinks(prev =>
-              prev.map(l => l.id === (payload.new as Link).id ? payload.new as Link : l)
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setLinks(prev => prev.filter(l => l.id !== (payload.old as { id: string }).id));
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId]);
+    const interval = setInterval(fetchLinks, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [userId, fetchLinks]);
 
   const createLink = async (link: Omit<LinkInsert, 'user_id'>) => {
     if (!userId) return;
     try {
-      const { data, error } = await supabase
-        .from('links')
-        .insert({ ...link, user_id: userId })
-        .select()
-        .single();
-        
-      if (error) throw error;
-      if (!data) throw new Error('Insert returned no data');
-      setLinks(prev => prev.some(l => l.id === data.id) ? prev : [data, ...prev]);
+      const data = await apiPost<Link>('/links', link);
+      setLinks(prev => [data, ...prev]);
       toast.success('Link disimpan!');
       return data;
     } catch (err) {
@@ -81,21 +49,13 @@ export function useLinks(userId?: string) {
   };
 
   const deleteLink = async (id: string) => {
+    const prev = [...links];
+    setLinks(links.filter(l => l.id !== id));
     try {
-      const prev = [...links];
-      setLinks(links.filter(l => l.id !== id));
-      
-      const { error } = await supabase
-        .from('links')
-        .delete()
-        .eq('id', id);
-        
-      if (error) {
-        setLinks(prev);
-        throw error;
-      }
+      await apiDelete(`/links/${id}`);
       toast.success('Link dihapus');
     } catch (err) {
+      setLinks(prev);
       toast.error('Gagal menghapus link');
       throw err;
     }

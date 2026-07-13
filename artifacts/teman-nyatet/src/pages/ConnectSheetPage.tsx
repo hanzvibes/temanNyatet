@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { apiGet, apiPost } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -34,6 +34,7 @@ export default function ConnectSheetPage() {
   const [showReconnect, setShowReconnect] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const loadStatus = async () => {
     try {
@@ -50,6 +51,22 @@ export default function ConnectSheetPage() {
   useEffect(() => {
     loadStatus();
   }, []);
+
+  // Keep the latest refreshProfile callback in a ref so the navigation timer
+  // doesn't restart every render (refreshProfile is recreated each render).
+  const refreshProfileRef = useRef(refreshProfile);
+  refreshProfileRef.current = refreshProfile;
+
+  // After a successful connect, show a brief success animation, then let
+  // AuthContext refresh the profile. AuthGuard will automatically redirect the
+  // user to the correct app screen based on their subscription status.
+  useEffect(() => {
+    if (!isNavigating) return;
+    const timer = setTimeout(() => {
+      refreshProfileRef.current();
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [isNavigating]);
 
   const handleCopyEmail = async () => {
     if (!status?.serviceAccountEmail) return;
@@ -75,7 +92,7 @@ export default function ConnectSheetPage() {
       setShowReconnect(false);
       setInput('');
       toast.success('Spreadsheet berhasil terhubung!');
-      await refreshProfile();
+      setIsNavigating(true);
     } catch (err) {
       const message = (err as Error).message || 'Gagal menghubungkan spreadsheet';
       setError(message);
@@ -106,134 +123,170 @@ export default function ConnectSheetPage() {
         <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.35, ease: 'easeOut' }}
-        className="relative w-full max-w-md bg-card/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-border p-6 sm:p-8"
-      >
-        {/* Header */}
-        <div className="flex flex-col items-center text-center mb-6">
-          <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg text-primary-foreground">
-            {connected ? <FileSpreadsheet size={28} /> : <NotebookPen size={28} />}
-          </div>
-          <h1 className="text-2xl font-bold text-foreground leading-tight">
-            {connected ? 'Spreadsheet Terhubung' : 'Hubungkan Spreadsheet'}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-2 max-w-xs">
-            {connected
-              ? 'Data kamu tersimpan aman di spreadsheet pribadi milikmu sendiri.'
-              : 'Data catatan, keuangan, todo, dan link kamu disimpan di Google Spreadsheet pribadi.'}
-          </p>
-        </div>
+      <AnimatePresence>
+        {!isNavigating && (
+          <motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.98 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="relative w-full max-w-md bg-card/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-border p-6 sm:p-8"
+          >
+            {/* Header */}
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg text-primary-foreground">
+                {connected ? <FileSpreadsheet size={28} /> : <NotebookPen size={28} />}
+              </div>
+              <h1 className="text-2xl font-bold text-foreground leading-tight">
+                {connected ? 'Spreadsheet Terhubung' : 'Hubungkan Spreadsheet'}
+              </h1>
+              <p className="text-muted-foreground text-sm mt-2 max-w-xs">
+                {connected
+                  ? 'Data kamu tersimpan aman di spreadsheet pribadi milikmu sendiri.'
+                  : 'Data catatan, keuangan, todo, dan link kamu disimpan di Google Spreadsheet pribadi.'}
+              </p>
+            </div>
 
-        {connected ? (
-          <div className="space-y-4">
-            <a
-              href={status.spreadsheetUrl ?? '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold py-3 px-4 rounded-2xl shadow-sm hover:opacity-90 transition-opacity"
-            >
-              Buka Spreadsheet <ExternalLink size={18} />
-            </a>
-
-            <button
-              onClick={() => setShowReconnect(true)}
-              className="w-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
-            >
-              Ganti spreadsheet
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* Steps */}
-            <div className="space-y-3 mb-5">
-              <Step number={1} icon={FileSpreadsheet}>
-                Buat spreadsheet baru di Google Drive kamu.
-              </Step>
-              <Step number={2} icon={ShieldCheck}>
-                <span className="block mb-2">Share dengan email service account ini:</span>
-                <button
-                  onClick={handleCopyEmail}
-                  disabled={!status?.serviceAccountEmail}
-                  className="w-full flex items-center justify-between gap-2 bg-secondary border border-border rounded-xl px-3 py-2.5 text-xs font-mono text-foreground hover:bg-secondary/70 transition-colors disabled:opacity-50"
+            {connected ? (
+              <div className="space-y-4">
+                <a
+                  href={status.spreadsheetUrl ?? '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold py-3 px-4 rounded-2xl shadow-sm hover:opacity-90 transition-opacity"
                 >
-                  <span className="truncate text-left">{status?.serviceAccountEmail ?? 'Belum dikonfigurasi'}</span>
-                  {copied ? (
-                    <Check size={14} className="text-primary flex-shrink-0" />
+                  Buka Spreadsheet <ExternalLink size={18} />
+                </a>
+
+                <button
+                  onClick={() => setShowReconnect(true)}
+                  className="w-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+                >
+                  Ganti spreadsheet
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Steps */}
+                <div className="space-y-3 mb-5">
+                  <Step number={1} icon={FileSpreadsheet}>
+                    Buat spreadsheet baru di Google Drive kamu.
+                  </Step>
+                  <Step number={2} icon={ShieldCheck}>
+                    <span className="block mb-2">Share dengan email service account ini:</span>
+                    <button
+                      onClick={handleCopyEmail}
+                      disabled={!status?.serviceAccountEmail}
+                      className="w-full flex items-center justify-between gap-2 bg-secondary border border-border rounded-xl px-3 py-2.5 text-xs font-mono text-foreground hover:bg-secondary/70 transition-colors disabled:opacity-50"
+                    >
+                      <span className="truncate text-left">{status?.serviceAccountEmail ?? 'Belum dikonfigurasi'}</span>
+                      {copied ? (
+                        <Check size={14} className="text-primary flex-shrink-0" />
+                      ) : (
+                        <Copy size={14} className="text-muted-foreground flex-shrink-0" />
+                      )}
+                    </button>
+                  </Step>
+                  <Step number={3} icon={ExternalLink}>
+                    Salin link spreadsheet-nya, lalu tempel di bawah ini.
+                  </Step>
+                </div>
+
+                {/* Input */}
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={e => { setInput(e.target.value); setError(null); }}
+                    placeholder="https://docs.google.com/spreadsheets/d/..."
+                    className="w-full bg-secondary border border-border rounded-2xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 font-medium text-foreground text-sm py-3.5 px-4 transition-all"
+                    onKeyDown={e => e.key === 'Enter' && handleConnect()}
+                  />
+                  <AnimatePresence>
+                    {error && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="flex items-start gap-2 mt-2 text-destructive text-xs"
+                      >
+                        <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
+                        <span>{error}</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <button
+                  onClick={handleConnect}
+                  disabled={connecting}
+                  className="w-full bg-primary text-primary-foreground font-semibold py-3.5 px-4 rounded-2xl shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {connecting ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" /> Menghubungkan...
+                    </>
                   ) : (
-                    <Copy size={14} className="text-muted-foreground flex-shrink-0" />
+                    <>
+                      Hubungkan Spreadsheet <ChevronRight size={18} />
+                    </>
                   )}
                 </button>
-              </Step>
-              <Step number={3} icon={ExternalLink}>
-                Salin link spreadsheet-nya, lalu tempel di bawah ini.
-              </Step>
-            </div>
 
-            {/* Input */}
-            <div className="mb-4">
-              <input
-                type="text"
-                value={input}
-                onChange={e => { setInput(e.target.value); setError(null); }}
-                placeholder="https://docs.google.com/spreadsheets/d/..."
-                className="w-full bg-secondary border border-border rounded-2xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 font-medium text-foreground text-sm py-3.5 px-4 transition-all"
-                onKeyDown={e => e.key === 'Enter' && handleConnect()}
-              />
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="flex items-start gap-2 mt-2 text-destructive text-xs"
+                {status?.connected && (
+                  <button
+                    onClick={() => setShowReconnect(false)}
+                    className="w-full mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
                   >
-                    <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
-                    <span>{error}</span>
-                  </motion.div>
+                    Batal
+                  </button>
                 )}
-              </AnimatePresence>
-            </div>
-
-            <button
-              onClick={handleConnect}
-              disabled={connecting}
-              className="w-full bg-primary text-primary-foreground font-semibold py-3.5 px-4 rounded-2xl shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {connecting ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" /> Menghubungkan...
-                </>
-              ) : (
-                <>
-                  Hubungkan Spreadsheet <ChevronRight size={18} />
-                </>
-              )}
-            </button>
-
-            {status?.connected && (
-              <button
-                onClick={() => setShowReconnect(false)}
-                className="w-full mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
-              >
-                Batal
-              </button>
+              </>
             )}
-          </>
-        )}
 
-        {/* Footer */}
-        <div className="mt-6 pt-5 border-t border-border flex items-center justify-center">
-          <button
-            onClick={handleLogout}
-            className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
+            {/* Footer */}
+            <div className="mt-6 pt-5 border-t border-border flex items-center justify-center">
+              <button
+                onClick={handleLogout}
+                className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
+              >
+                <LogOut size={16} /> Keluar
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Success overlay shown while transitioning to the app */}
+      <AnimatePresence>
+        {isNavigating && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+            className="absolute inset-0 flex flex-col items-center justify-center p-6"
           >
-            <LogOut size={16} /> Keluar
-          </button>
-        </div>
-      </motion.div>
+            <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mb-4 shadow-xl text-primary-foreground">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
+              >
+                <Check size={36} strokeWidth={3} />
+              </motion.div>
+            </div>
+            <h2 className="text-2xl font-bold text-foreground mb-1">Berhasil!</h2>
+            <p className="text-muted-foreground text-sm mb-4 text-center max-w-xs">
+              Spreadsheet kamu sudah terhubung.
+            </p>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 size={16} className="animate-spin" />
+              Mengalihkan ke aplikasi...
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

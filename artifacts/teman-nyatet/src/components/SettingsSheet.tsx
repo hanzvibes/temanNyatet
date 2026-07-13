@@ -1,10 +1,11 @@
 import React, { useRef, useState } from 'react';
 import { Drawer } from 'vaul';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'wouter';
 import { supabase } from '@/lib/supabase';
 import { apiUpload } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2 } from 'lucide-react';
+import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet } from 'lucide-react';
 import { toast } from 'sonner';
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
@@ -19,6 +20,7 @@ interface SettingsSheetProps {
 
 export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsSheetProps) {
   const { user, profile, refreshProfile } = useAuthContext();
+  const [, setLocation] = useLocation();
   const [open, setOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<ActiveSection>(null);
   const [saving, setSaving] = useState(false);
@@ -277,6 +279,16 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                             <ChevronRight size={16} className="text-muted-foreground/50 w-[clamp(1rem,3vw,1.25rem)] h-[clamp(1rem,3vw,1.25rem)]" strokeWidth={2.5} />
                           </button>
                         ))}
+                        <button
+                          onClick={() => { setOpen(false); setLocation('/connect-sheet'); }}
+                          className="w-full flex items-center gap-[clamp(0.75rem,3vw,1rem)] px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] hover:bg-secondary active:bg-secondary/80 transition-colors text-left"
+                        >
+                          <div className="rounded-xl bg-secondary border border-border flex items-center justify-center flex-shrink-0 w-[clamp(2rem,7vw,2.5rem)] h-[clamp(2rem,7vw,2.5rem)]">
+                            <Sheet size={18} className="text-muted-foreground w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
+                          </div>
+                          <span className="flex-1 font-bold text-foreground text-[clamp(0.875rem,3vw,1.125rem)]">Spreadsheet Saya</span>
+                          <ChevronRight size={16} className="text-muted-foreground/50 w-[clamp(1rem,3vw,1.25rem)] h-[clamp(1rem,3vw,1.25rem)]" strokeWidth={2.5} />
+                        </button>
                       </div>
 
                       {/* Divider */}

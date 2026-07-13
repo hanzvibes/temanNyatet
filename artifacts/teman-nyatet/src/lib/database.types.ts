@@ -18,6 +18,7 @@ export interface Database {
           subscription_status: SubscriptionStatus;
           subscription_plan: SubscriptionPlan | null;
           subscription_end: string | null;
+          spreadsheet_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -29,6 +30,7 @@ export interface Database {
           subscription_status?: SubscriptionStatus;
           subscription_plan?: SubscriptionPlan | null;
           subscription_end?: string | null;
+          spreadsheet_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -40,6 +42,7 @@ export interface Database {
           subscription_status?: SubscriptionStatus;
           subscription_plan?: SubscriptionPlan | null;
           subscription_end?: string | null;
+          spreadsheet_id?: string | null;
           created_at?: string;
         };
         Relationships: [];

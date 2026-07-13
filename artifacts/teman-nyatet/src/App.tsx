@@ -11,6 +11,7 @@ import React, { useEffect } from 'react';
 import AuthPage from '@/pages/AuthPage';
 import PaymentPage from '@/pages/PaymentPage';
 import ArchivedPage from '@/pages/ArchivedPage';
+import ConnectSheetPage from '@/pages/ConnectSheetPage';
 import CatatanPage from '@/pages/CatatanPage';
 import KeuanganPage from '@/pages/KeuanganPage';
 import TodoPage from '@/pages/TodoPage';
@@ -32,7 +33,11 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     }
 
     if (profile) {
-      if (profile.subscription_status === 'pending' && location !== '/payment') {
+      if (!profile.spreadsheet_id) {
+        // Every user (new or existing) must connect their own private Google
+        // Spreadsheet before using any of the app's features.
+        if (location !== '/connect-sheet') setLocation('/connect-sheet');
+      } else if (profile.subscription_status === 'pending' && location !== '/payment') {
         setLocation('/payment');
       } else if (profile.subscription_status === 'archived' && location !== '/archived') {
         setLocation('/archived');
@@ -74,6 +79,7 @@ function Router() {
       <Route path="/login" component={AuthPage} />
       <Route path="/payment" component={PaymentPage} />
       <Route path="/archived" component={ArchivedPage} />
+      <Route path="/connect-sheet" component={ConnectSheetPage} />
 
       <Route path="/catatan" component={CatatanPage} />
       <Route path="/keuangan" component={KeuanganPage} />

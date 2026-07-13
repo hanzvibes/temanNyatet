@@ -8,6 +8,7 @@ import transactionsRouter from './transactions';
 import todosRouter from './todos';
 import linksRouter from './links';
 import profileRouter from './profile';
+import spreadsheetRouter from './spreadsheet';
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(transactionsRouter);
 router.use(todosRouter);
 router.use(linksRouter);
 router.use(profileRouter);
+router.use(spreadsheetRouter);
 
 export default router;

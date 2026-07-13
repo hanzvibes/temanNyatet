@@ -19,7 +19,7 @@ These secrets are configured in Replit Secrets for the current environment (re-a
 - `SUPABASE_URL` — same value as `VITE_SUPABASE_URL` (API server)
 - `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key (API server)
 - `GOOGLE_SERVICE_ACCOUNT_KEY` — full JSON key file content for a Google Cloud service account with the Sheets API enabled
-- `GOOGLE_SHEETS_SPREADSHEET_ID` — the spreadsheet ID that stores notes/transactions/todos/links; share the sheet with the service account's `client_email` as Editor
+- `GOOGLE_SHEETS_SPREADSHEET_ID` — legacy shared spreadsheet from before the per-user-spreadsheet migration; no longer read by the app at runtime, kept only so old data isn't lost. See "App data" below.
 
 ### Optional / not configured
 - `VITE_MAYAR_PAYMENT_URL` — Mayar payment page URL (frontend falls back to `#` if unset)
@@ -31,18 +31,20 @@ These secrets are configured in Replit Secrets for the current environment (re-a
 - **Frontend:** React 19 + Vite 7, TypeScript, Tailwind CSS 4, Wouter, Vaul, Recharts
 - **Backend:** Express 5 (Mayar webhooks + cron jobs, and the notes/transactions/todos/links data API)
 - **Auth:** Supabase Auth (unchanged)
-- **App data (notes, transactions, todos, links):** Single shared Google Spreadsheet (`GOOGLE_SHEETS_SPREADSHEET_ID`), with all reads and writes filtered server-side by `user_id` per row. Data isolation is enforced in `sheet-store.ts` — users can never read or modify each other's rows.
-- **Subscription/profile data:** Supabase Postgres (`profiles` table).
+- **App data (notes, transactions, todos, links):** Each user connects their own private Google Spreadsheet (pasted URL/ID, shared with the service account as Editor) via a mandatory `/connect-sheet` step right after login. The ID is stored in `profiles.spreadsheet_id`. No auto-creation — the service account cannot create/own Drive files (0-byte quota on new service accounts), so "connect an existing sheet the user owns" replaces the earlier shared-spreadsheet model. Old shared-spreadsheet data (`GOOGLE_SHEETS_SPREADSHEET_ID`) is not auto-migrated.
+- **Subscription/profile data:** Supabase Postgres (`profiles` table, includes `spreadsheet_id`).
 - **Package manager:** pnpm 10.26.1 (monorepo)
 - **Node.js:** 22
 
 ## Project structure
 
-- `artifacts/teman-nyatet/` — React+Vite frontend SPA. `src/lib/apiClient.ts` calls the api-server (Bearer = Supabase access token) for notes/transactions/todos/links; `src/lib/supabase.ts` is used only for auth and the `profiles` table now.
+- `artifacts/teman-nyatet/` — React+Vite frontend SPA. `src/lib/apiClient.ts` calls the api-server (Bearer = Supabase access token) for notes/transactions/todos/links; `src/lib/supabase.ts` is used only for auth and the `profiles` table now. `src/pages/ConnectSheetPage.tsx` is the mandatory gate (route `/connect-sheet`) where users paste their spreadsheet link; also reachable from Settings to reconnect.
 - `artifacts/api-server/` — Express API. Key files:
-  - `src/lib/google-sheets.ts` — Sheets JWT client
-  - `src/lib/sheet-store.ts` — Generic CRUD with `user_id` row-level isolation; `listByUser` filters on server side
-  - `src/middleware/requireAuth.ts` — Verifies JWT, attaches `req.userId` + `req.spreadsheetId` (from env var)
+  - `src/lib/google-sheets.ts` — Sheets JWT client; `getServiceAccountEmail()` for the "share with this email" instructions
+  - `src/lib/user-sheet.ts` — cached lookup of `profiles.spreadsheet_id` per user (no auto-create)
+  - `src/lib/sheet-store.ts` — Generic CRUD with `user_id` row-level isolation; `listByUser` filters on server side; `ensureSheetsInitialized` creates tabs/headers on a newly connected spreadsheet
+  - `src/middleware/requireAuth.ts` — `requireUser` (token only) vs `requireAuth` (token + resolves `req.spreadsheetId`, responds 428 `SPREADSHEET_NOT_CONNECTED` if unset)
+  - `src/routes/spreadsheet.ts` — `GET /spreadsheet/status`, `POST /spreadsheet/connect` (validates access, rejects IDs already owned by another profile)
   - `src/routes/{notes,todos,links,transactions}.ts` — Data routes
 - `lib/api-spec/` — OpenAPI spec + generated API client
 - `lib/db/` — shared DB types

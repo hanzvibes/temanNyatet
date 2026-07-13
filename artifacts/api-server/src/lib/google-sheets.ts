@@ -5,6 +5,7 @@ import { logger } from './logger';
 const rawKey = process.env['GOOGLE_SERVICE_ACCOUNT_KEY'] ?? '';
 
 let sheetsClient: sheets_v4.Sheets | null = null;
+let serviceAccountEmail: string | null = null;
 let configError: string | null = null;
 
 if (!rawKey) {
@@ -14,6 +15,7 @@ if (!rawKey) {
 } else {
   try {
     const credentials = JSON.parse(rawKey) as { client_email: string; private_key: string };
+    serviceAccountEmail = credentials.client_email;
     const auth = new google.auth.JWT({
       email: credentials.client_email,
       key: credentials.private_key,
@@ -41,27 +43,15 @@ export function getSheets(): sheets_v4.Sheets {
   return sheetsClient;
 }
 
-export function newId(): string {
-  return crypto.randomUUID();
+// The service account's email — users must share their own spreadsheet with
+// this address (as Editor) so the backend can read/write it on their behalf.
+// See routes/spreadsheet.ts for the user-initiated "connect" flow. We never
+// create spreadsheets on the service account's own Drive — new service
+// accounts get 0 bytes of Drive storage quota, which makes that impossible.
+export function getServiceAccountEmail(): string | null {
+  return serviceAccountEmail;
 }
 
-// Creates a new Google Spreadsheet owned by the service account and returns
-// its spreadsheetId. The caller is responsible for sharing it with the user
-// afterwards (requires Drive API scope — see user-sheet.ts).
-export async function createUserSpreadsheet(
-  _userId: string,
-  email: string,
-): Promise<string> {
-  const sheets = getSheets();
-  const { data } = await sheets.spreadsheets.create({
-    requestBody: {
-      properties: { title: `TemanNyatet – ${email}` },
-    },
-  });
-  const spreadsheetId = data.spreadsheetId;
-  if (!spreadsheetId) {
-    throw new Error('[google-sheets] Sheets API did not return a spreadsheetId');
-  }
-  logger.info({ spreadsheetId, email }, '[google-sheets] Created new user spreadsheet');
-  return spreadsheetId;
+export function newId(): string {
+  return crypto.randomUUID();
 }

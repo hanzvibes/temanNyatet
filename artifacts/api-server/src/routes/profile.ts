@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { requireAuth } from '../middleware/requireAuth';
+import { requireUser } from '../middleware/requireAuth';
 import { supabaseAdmin } from '../lib/supabase-admin';
 
 const router = Router();
@@ -41,7 +41,7 @@ async function ensureAvatarBucket(): Promise<void> {
 // updates profiles.avatar_url. Uses the service role key server-side, so no
 // storage RLS policies are required — the caller can only ever touch their
 // own row/path because the path is derived from req.userId, never client input.
-router.post('/profile/avatar', requireAuth, upload.single('avatar'), async (req, res) => {
+router.post('/profile/avatar', requireUser, upload.single('avatar'), async (req, res) => {
   try {
     const file = req.file;
     if (!file) {

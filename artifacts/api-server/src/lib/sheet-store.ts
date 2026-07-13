@@ -149,7 +149,12 @@ export async function createRow(
     requestBody: { values: [row] },
   });
 
-  return decodeRow(headers, full);
+  // `full` already holds native types (array for tags, boolean for is_done,
+  // etc) — unlike sheet-read rows, it was never stringified, so it must NOT
+  // be passed through decodeRow (which expects raw sheet strings).
+  const result: Record<string, unknown> = {};
+  for (const h of headers) result[h] = full[h];
+  return result;
 }
 
 // Updates a row, but only if it belongs to `userId` — prevents one user from
@@ -164,8 +169,11 @@ export async function updateRow(
   const target = rows.find((r) => r.data['id'] === id && r.data['user_id'] === userId);
   if (!target) return null;
 
+  // target.data holds raw sheet strings; decode it first so unchanged fields
+  // keep their native types once merged with the (already-native) updates.
+  const currentDecoded = decodeRow(headers, target.data);
   const merged: Record<string, unknown> = {
-    ...target.data,
+    ...currentDecoded,
     ...updates,
     id: target.data['id'],
     user_id: target.data['user_id'],
@@ -181,7 +189,9 @@ export async function updateRow(
     requestBody: { values: [row] },
   });
 
-  return decodeRow(headers, merged);
+  const result: Record<string, unknown> = {};
+  for (const h of headers) result[h] = merged[h];
+  return result;
 }
 
 // Deletes a row, but only if it belongs to `userId`.

@@ -5,11 +5,13 @@
 2. Create a new project
 3. Note your project URL and API keys
 
-## 2. Run the Migration
+## 2. Run the Migrations
 1. Open your Supabase project dashboard
 2. Go to SQL Editor
-3. Copy the contents of `001_initial_schema.sql`
-4. Paste and run it
+3. Run `001_initial_schema.sql` first (creates the tables)
+4. Run `002_add_profile_fields.sql` second (adds `name`, `phone`, and `avatar_url` to the `profiles` table)
+
+If you already ran `001_initial_schema.sql` before these fields existed, run `002_add_profile_fields.sql` now to fix the "Gagal memperbarui nama" error.
 
 ## 3. Configure Auth
 1. Go to Authentication → Settings

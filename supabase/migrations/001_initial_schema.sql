@@ -10,6 +10,9 @@
 CREATE TABLE IF NOT EXISTS public.profiles (
   id                  UUID         PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email               TEXT         NOT NULL,
+  name                TEXT,
+  phone               TEXT,
+  avatar_url          TEXT,
   subscription_status TEXT         NOT NULL DEFAULT 'pending'
                                    CHECK (subscription_status IN ('pending', 'active', 'archived')),
   subscription_plan   TEXT         CHECK (subscription_plan IN ('monthly', 'yearly')),

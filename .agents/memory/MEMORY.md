@@ -1,2 +1,3 @@
 - [Secrets pasted in chat](secrets-pasted-in-chat.md) — if a user pastes real key values directly in chat, still route them through `requestSecrets` rather than echoing/using the pasted text.
 - [Google Sheets as app-data backend](google-sheets-as-db.md) — TemanNyatet: notes/transactions/todos/links live in Sheets, auth stays on Supabase; service-account key must be the full JSON, not just the private key.
+- [Supabase profiles missing columns](supabase-profiles-missing-columns.md) — TemanNyatet migration omitted `name`, `phone`, `avatar_url`; add them via `002_add_profile_fields.sql` when name/avatar updates fail.

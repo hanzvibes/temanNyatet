@@ -6,7 +6,7 @@ import { defineConfig } from 'vite';
 // PORT and BASE_PATH only matter for the local dev/preview server.
 // `vite build` (what Vercel runs) never touches them, so we fall back to
 // sane defaults instead of throwing and breaking the production build.
-const port = 5000;
+const port = parseInt(process.env.PORT || '5173', 10);
 const basePath = process.env.BASE_PATH || '/';
 
 const isProduction = process.env.NODE_ENV === 'production';

@@ -6,7 +6,7 @@ A note-taking SaaS PWA for Indonesian users. Four core modules: Catatan (Notes),
 
 Two services run in parallel — both are already configured as workflows:
 
-- **Frontend** (`artifacts/teman-nyatet: web`): `pnpm --filter @workspace/teman-nyatet run dev` — Vite dev server on port 5000
+- **Frontend** (`artifacts/teman-nyatet: web`): `pnpm --filter @workspace/teman-nyatet run dev` — Vite dev server (defaults to 5173; on Replit it runs on port 5000 via the `PORT` env var)
 - **API Server** (`artifacts/api-server: API Server`): `pnpm --filter @workspace/api-server run dev` — Express on port 8080
 
 ## Required secrets

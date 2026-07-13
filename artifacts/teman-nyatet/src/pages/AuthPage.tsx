@@ -53,8 +53,8 @@ export default function AuthPage() {
         if (error) throw error;
         toast.success('Pendaftaran berhasil!');
       }
-    } catch (err: any) {
-      toast.error(err.message || 'Terjadi kesalahan');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Terjadi kesalahan');
     } finally {
       setIsLoading(false);
     }
@@ -72,8 +72,8 @@ export default function AuthPage() {
       const { error } = await supabase.auth.resetPasswordForEmail(email);
       if (error) throw error;
       toast.success('Link reset password dikirim ke email!');
-    } catch (err: any) {
-      toast.error(err.message || 'Gagal reset password');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Gagal reset password');
     } finally {
       setIsLoading(false);
     }

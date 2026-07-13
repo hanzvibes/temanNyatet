@@ -31,10 +31,22 @@ export async function activateSubscription(
   }
 
   const now = new Date();
-  const subscriptionEnd =
-    plan === 'yearly'
-      ? new Date(now.getFullYear() + 1, now.getMonth(), now.getDate())
-      : new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+  const originalDay = now.getDate();
+
+  // Add 1 month or 1 year. JS Date arithmetic overflows on month-end dates
+  // (e.g. Jan 31 + 1 month = Mar 3). We clamp to the last valid day of the
+  // target month by detecting the overflow and stepping back to day 0 (which
+  // resolves to the last day of the preceding month).
+  const subscriptionEnd = new Date(now);
+  if (plan === 'yearly') {
+    subscriptionEnd.setFullYear(subscriptionEnd.getFullYear() + 1);
+  } else {
+    subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 1);
+  }
+  if (subscriptionEnd.getDate() !== originalDay) {
+    // Overflowed — clamp to last day of the intended month
+    subscriptionEnd.setDate(0);
+  }
 
   const { error } = await supabaseAdmin
     .from('profiles')

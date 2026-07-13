@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import express from 'express';
 import crypto from 'crypto';
 import { activateSubscription } from '../lib/supabase-admin';
 
@@ -38,8 +37,8 @@ function resolvePlan(payload: Record<string, unknown>): 'monthly' | 'yearly' {
 // Signature verification is mandatory — all unsigned requests are rejected.
 router.post(
   '/mayar-webhook',
-  // Re-apply raw body parser in case the route is mounted differently
-  express.raw({ type: 'application/json', limit: '1mb' }),
+  // express.raw() is already mounted for this path in app.ts before express.json()
+  // — do NOT re-apply it here or it will try to parse an already-decoded Buffer.
   async (req, res) => {
     const secret = process.env['MAYAR_WEBHOOK_SECRET'];
     if (!secret) {

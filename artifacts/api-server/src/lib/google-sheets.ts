@@ -44,3 +44,24 @@ export function getSheets(): sheets_v4.Sheets {
 export function newId(): string {
   return crypto.randomUUID();
 }
+
+// Creates a new Google Spreadsheet owned by the service account and returns
+// its spreadsheetId. The caller is responsible for sharing it with the user
+// afterwards (requires Drive API scope — see user-sheet.ts).
+export async function createUserSpreadsheet(
+  _userId: string,
+  email: string,
+): Promise<string> {
+  const sheets = getSheets();
+  const { data } = await sheets.spreadsheets.create({
+    requestBody: {
+      properties: { title: `TemanNyatet – ${email}` },
+    },
+  });
+  const spreadsheetId = data.spreadsheetId;
+  if (!spreadsheetId) {
+    throw new Error('[google-sheets] Sheets API did not return a spreadsheetId');
+  }
+  logger.info({ spreadsheetId, email }, '[google-sheets] Created new user spreadsheet');
+  return spreadsheetId;
+}

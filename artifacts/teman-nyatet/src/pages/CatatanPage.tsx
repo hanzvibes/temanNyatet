@@ -8,6 +8,7 @@ import { Loader2, BookOpen, Trash2, X } from 'lucide-react';
 import SearchBar from '@/components/SearchBar';
 import SettingsSheet from '@/components/SettingsSheet';
 import { Drawer } from 'vaul';
+import { toast } from 'sonner';
 import { Note } from '@/lib/database.types';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -119,11 +120,18 @@ export default function CatatanPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Hapus catatan ini?')) {
-      await deleteNote(id);
-      setIsDetailOpen(false);
-    }
+  const handleDelete = (id: string) => {
+    toast('Hapus catatan ini?', {
+      action: {
+        label: 'Hapus',
+        onClick: async () => {
+          await deleteNote(id);
+          setIsDetailOpen(false);
+        },
+      },
+      cancel: { label: 'Batal', onClick: () => {} },
+      duration: 5000,
+    });
   };
 
   return (

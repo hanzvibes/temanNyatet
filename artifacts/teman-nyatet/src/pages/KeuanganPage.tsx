@@ -6,6 +6,7 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { format, isToday, isYesterday } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Loader2, Wallet, ArrowDown, ArrowUp, Briefcase, Coffee, ShoppingBag, Car, HeartPulse, Laptop, Gamepad2, Gift, Receipt, Home, MoreHorizontal, BookOpen } from 'lucide-react';
+import { toast } from 'sonner';
 import { Drawer } from 'vaul';
 import { TransactionType, DEFAULT_INCOME_CATEGORIES, DEFAULT_EXPENSE_CATEGORIES, DEFAULT_PAYMENT_SOURCES } from '@/lib/database.types';
 import { useForm } from 'react-hook-form';
@@ -144,9 +145,11 @@ export default function KeuanganPage() {
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const handlePressStart = (id: string) => {
     pressTimer.current = setTimeout(() => {
-      if (confirm('Hapus transaksi ini?')) {
-        deleteTransaction(id);
-      }
+      toast('Hapus transaksi ini?', {
+        action: { label: 'Hapus', onClick: () => deleteTransaction(id) },
+        cancel: { label: 'Batal', onClick: () => {} },
+        duration: 5000,
+      });
     }, 800);
   };
   const handlePressEnd = () => {

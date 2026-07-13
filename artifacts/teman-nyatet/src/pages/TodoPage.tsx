@@ -126,11 +126,18 @@ export default function TodoPage() {
     await updateTodo(todoId, { is_done: !currentStatus });
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Hapus To-do ini?')) {
-      await deleteTodo(id);
-      setIsEditOpen(false);
-    }
+  const handleDelete = (id: string) => {
+    toast('Hapus To-do ini?', {
+      action: {
+        label: 'Hapus',
+        onClick: async () => {
+          await deleteTodo(id);
+          setIsEditOpen(false);
+        },
+      },
+      cancel: { label: 'Batal', onClick: () => {} },
+      duration: 5000,
+    });
   };
 
   // ── Todo card ────────────────────────────────────────────────────────────────

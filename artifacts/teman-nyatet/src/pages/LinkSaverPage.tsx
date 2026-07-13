@@ -83,9 +83,11 @@ export default function LinkSaverPage() {
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const handlePressStart = (id: string) => {
     pressTimer.current = setTimeout(() => {
-      if (confirm('Hapus link ini?')) {
-        deleteLink(id);
-      }
+      toast('Hapus link ini?', {
+        action: { label: 'Hapus', onClick: () => deleteLink(id) },
+        cancel: { label: 'Batal', onClick: () => {} },
+        duration: 5000,
+      });
     }, 800);
   };
   const handlePressEnd = () => {

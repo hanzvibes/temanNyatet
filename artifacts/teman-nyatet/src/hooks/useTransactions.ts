@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { apiGet, apiPost, apiDelete } from '@/lib/apiClient';
 import type { Transaction, TransactionInsert, MonthlySummary } from '@/lib/database.types';
 import { toast } from 'sonner';

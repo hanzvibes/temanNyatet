@@ -18,8 +18,13 @@ router.get('/transactions', requireAuth, async (req, res) => {
 router.post('/transactions', requireAuth, async (req, res) => {
   try {
     const { type, amount, category, source, note, date } = req.body ?? {};
-    if (!type || !amount || !category || !source || !date) {
+    const parsedAmount = Number(amount);
+    if (!type || !category || !source || !date) {
       res.status(400).json({ error: 'type, amount, category, source, and date are required' });
+      return;
+    }
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      res.status(400).json({ error: 'amount must be a positive number' });
       return;
     }
     const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, {

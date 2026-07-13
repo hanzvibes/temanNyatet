@@ -11,20 +11,20 @@ Two services run in parallel — both are already configured as workflows:
 
 ## Required secrets
 
-The app will not connect to Supabase or Mayar without these. Add them via Replit Secrets:
+These secrets are already configured in Replit Secrets for the current environment. The app is running without Mayar.
 
-### Frontend
-- `VITE_SUPABASE_URL` — your Supabase project URL (e.g. `https://xyz.supabase.co`)
-- `VITE_SUPABASE_ANON_KEY` — your Supabase anon/public key
-- `VITE_MAYAR_PAYMENT_URL` — your Mayar payment page URL
-
-### API Server
-- `SUPABASE_URL` — same value as `VITE_SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY` — your Supabase service role key (keep secret!)
-- `MAYAR_WEBHOOK_SECRET` — Mayar webhook signing secret
-- `CRON_SECRET` — any random string to secure the cron endpoint
-- `GOOGLE_SERVICE_ACCOUNT_KEY` — full JSON key file content for a Google Cloud service account with the Sheets API enabled (not just the private key)
+### Configured (required for core features)
+- `VITE_SUPABASE_URL` — Supabase project URL (frontend)
+- `VITE_SUPABASE_ANON_KEY` — Supabase anon/public key (frontend)
+- `SUPABASE_URL` — same value as `VITE_SUPABASE_URL` (API server)
+- `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key (API server)
+- `GOOGLE_SERVICE_ACCOUNT_KEY` — full JSON key file content for a Google Cloud service account with the Sheets API enabled
 - `GOOGLE_SHEETS_SPREADSHEET_ID` — the spreadsheet ID that stores notes/transactions/todos/links; share the sheet with the service account's `client_email` as Editor
+
+### Optional / not configured
+- `VITE_MAYAR_PAYMENT_URL` — Mayar payment page URL (frontend falls back to `#` if unset)
+- `MAYAR_WEBHOOK_SECRET` — Mayar webhook signing secret (`/api/mayar-webhook` fails closed if unset)
+- `CRON_SECRET` — any random string to secure the cron endpoint (`/api/cron/archive-expired` fails closed if unset)
 
 ## Stack
 

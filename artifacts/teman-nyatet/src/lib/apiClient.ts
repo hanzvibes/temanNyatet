@@ -1,20 +1,45 @@
-// Thin client for the api-server, which now owns notes/transactions/todos/links
+// Thin client for the api-server, which owns notes/transactions/todos/links
 // data (stored in Google Sheets). Auth still goes through Supabase directly —
-// we just forward the Supabase access token as a Bearer token.
+// we forward the Supabase access token as a Bearer token.
+//
+// Access tokens expire (default 1 hour). Supabase auto-refreshes them in many
+// cases, but the client-side `getSession()` can still hand back an expired
+// token if the refresh hasn't run yet (e.g. after the app has been idle). So
+// this client:
+//   1. Sends the current access token.
+//   2. On a 401, attempts to refresh the session once and retries the request.
+//   3. If refresh fails, signs the user out so AuthContext redirects to login.
 import { supabase } from './supabase';
 
-// In Replit dev, Vite proxies "/api" to the api-server (see vite.config.ts).
-// In production, set VITE_API_SERVER_URL to the api-server's deployed origin
-// if the frontend and api-server are not served from the same domain.
 const API_BASE = (import.meta.env.VITE_API_SERVER_URL as string | undefined)?.replace(/\/$/, '') ?? '';
 
-async function authHeaders(): Promise<HeadersInit> {
+let refreshPromise: Promise<string | null> | null = null;
+
+async function getToken(): Promise<string | null> {
   const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
+  return session?.access_token ?? null;
+}
+
+async function refreshToken(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    try {
+      const { data: { session }, error } = await supabase.auth.refreshSession();
+      if (error) {
+        console.warn('[apiClient] Session refresh failed:', error.message);
+        return null;
+      }
+      return session?.access_token ?? null;
+    } catch (err) {
+      console.warn('[apiClient] Session refresh threw:', err);
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
 }
 
 async function handle<T>(res: Response): Promise<T> {
@@ -26,46 +51,69 @@ async function handle<T>(res: Response): Promise<T> {
   return (body?.data ?? body) as T;
 }
 
-export async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}/api${path}`, { headers: await authHeaders() });
+async function fetchWithAuth<T>(path: string, init: RequestInit): Promise<T> {
+  const token = await getToken();
+  const url = `${API_BASE}/api${path}`;
+
+  const res = await fetch(url, {
+    ...init,
+    headers: {
+      ...init.headers,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (res.status === 401) {
+    const newToken = await refreshToken();
+    if (newToken) {
+      const retryRes = await fetch(url, {
+        ...init,
+        headers: {
+          ...init.headers,
+          Authorization: `Bearer ${newToken}`,
+        },
+      });
+      return handle<T>(retryRes);
+    }
+
+    // Refresh failed: clear the session so AuthContext sees the user as signed
+    // out and AuthGuard redirects to /login.
+    console.warn('[apiClient] Auth refresh failed, signing out');
+    await supabase.auth.signOut();
+  }
+
   return handle<T>(res);
+}
+
+export async function apiGet<T>(path: string): Promise<T> {
+  return fetchWithAuth<T>(path, { method: 'GET' });
 }
 
 export async function apiPost<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${API_BASE}/api${path}`, {
+  return fetchWithAuth<T>(path, {
     method: 'POST',
-    headers: await authHeaders(),
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  return handle<T>(res);
 }
 
 export async function apiPut<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${API_BASE}/api${path}`, {
+  return fetchWithAuth<T>(path, {
     method: 'PUT',
-    headers: await authHeaders(),
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  return handle<T>(res);
 }
 
 export async function apiDelete(path: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/api${path}`, {
-    method: 'DELETE',
-    headers: await authHeaders(),
-  });
-  return handle<void>(res);
+  return fetchWithAuth<void>(path, { method: 'DELETE' });
 }
 
 // For multipart uploads (e.g. profile photo) — do NOT set Content-Type here,
 // the browser needs to add its own multipart boundary.
 export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  const res = await fetch(`${API_BASE}/api${path}`, {
+  return fetchWithAuth<T>(path, {
     method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     body: formData,
   });
-  return handle<T>(res);
 }

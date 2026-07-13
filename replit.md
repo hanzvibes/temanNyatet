@@ -11,7 +11,7 @@ Two services run in parallel — both are already configured as workflows:
 
 ## Required secrets
 
-These secrets are already configured in Replit Secrets for the current environment. The app is running without Mayar.
+These secrets are configured in Replit Secrets for the current environment (re-added 2026-07-13 after project re-import). The app is running without Mayar.
 
 ### Configured (required for core features)
 - `VITE_SUPABASE_URL` — Supabase project URL (frontend)

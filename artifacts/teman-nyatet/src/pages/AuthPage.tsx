@@ -35,6 +35,14 @@ export default function AuthPage() {
     },
   });
 
+  const mapAuthError = (message: string): string => {
+    if (message.includes('Invalid login credentials')) return 'Email atau password salah';
+    if (message.includes('Email not confirmed')) return 'Email belum dikonfirmasi. Silakan cek inbox Anda.';
+    if (message.includes('User already registered')) return 'Email sudah terdaftar.';
+    if (message.includes('Password should be at least 6 characters')) return 'Password minimal 6 karakter.';
+    return message;
+  };
+
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
@@ -46,15 +54,19 @@ export default function AuthPage() {
         if (error) throw error;
         toast.success('Berhasil masuk!');
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email: data.email,
           password: data.password,
         });
         if (error) throw error;
-        toast.success('Pendaftaran berhasil!');
+        if (signUpData.session) {
+          toast.success('Pendaftaran berhasil!');
+        } else {
+          toast.success('Pendaftaran berhasil — silakan cek email Anda dan klik link konfirmasi sebelum masuk.');
+        }
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Terjadi kesalahan');
+      toast.error(mapAuthError(err instanceof Error ? err.message : 'Terjadi kesalahan'));
     } finally {
       setIsLoading(false);
     }

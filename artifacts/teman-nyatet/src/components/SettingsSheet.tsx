@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Drawer } from 'vaul';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import { apiUpload } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone } from 'lucide-react';
+import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 type ActiveSection = null | 'name' | 'password' | 'phone';
 
@@ -18,6 +22,8 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
   const [open, setOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<ActiveSection>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Form state
   const [nameInput, setNameInput] = useState('');
@@ -108,6 +114,38 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
     setOpen(false);
   };
 
+  const handlePickAvatar = () => {
+    avatarInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      toast.error('Format foto harus JPG, PNG, atau WebP');
+      return;
+    }
+    if (file.size > MAX_AVATAR_BYTES) {
+      toast.error('Ukuran foto maksimal 5MB');
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      await apiUpload('/profile/avatar', formData);
+      await refreshProfile();
+      toast.success('Foto profil berhasil diperbarui!');
+    } catch {
+      toast.error('Gagal mengunggah foto profil');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const INP = 'w-full bg-secondary border border-border rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 font-bold text-foreground transition-all py-[clamp(0.625rem,1.8vw,0.875rem)] px-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.75rem,2.5vw,1rem)]';
 
   return (
@@ -115,10 +153,22 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
       {/* Avatar trigger */}
       <button
         onClick={handleOpen}
-        className={`rounded-full border-2 border-white flex items-center justify-center font-bold shadow-sm transition-transform active:scale-95 w-[clamp(2.5rem,8vw,3.5rem)] h-[clamp(2.5rem,8vw,3.5rem)] text-[clamp(0.75rem,3vw,1rem)] ${avatarBg} ${avatarTextColor}`}
+        className={`rounded-full border-2 border-white flex items-center justify-center font-bold shadow-sm transition-transform active:scale-95 overflow-hidden w-[clamp(2.5rem,8vw,3.5rem)] h-[clamp(2.5rem,8vw,3.5rem)] text-[clamp(0.75rem,3vw,1rem)] ${avatarBg} ${avatarTextColor}`}
       >
-        {initials}
+        {profile?.avatar_url ? (
+          <img src={profile.avatar_url} alt="Foto profil" className="w-full h-full object-cover" />
+        ) : (
+          initials
+        )}
       </button>
+
+      <input
+        ref={avatarInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={handleAvatarChange}
+      />
 
       <Drawer.Root open={open} onOpenChange={setOpen}>
         <Drawer.Portal>
@@ -155,8 +205,27 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                       {/* ── Profile header ── */}
                       <div className="flex flex-col items-center pt-[clamp(0.25rem,1vw,0.5rem)] pb-[clamp(1rem,4vw,1.5rem)]">
                         {/* Big avatar */}
-                        <div className="rounded-full bg-primary flex items-center justify-center text-primary-foreground font-extrabold shadow-md mb-[clamp(0.75rem,3vw,1.25rem)] w-[clamp(4rem,14vw,5.5rem)] h-[clamp(4rem,14vw,5.5rem)] text-[clamp(1.25rem,5vw,2rem)]">
-                          {initials}
+                        <div className="relative mb-[clamp(0.75rem,3vw,1.25rem)]">
+                          <div className="rounded-full bg-primary flex items-center justify-center text-primary-foreground font-extrabold shadow-md overflow-hidden w-[clamp(4rem,14vw,5.5rem)] h-[clamp(4rem,14vw,5.5rem)] text-[clamp(1.25rem,5vw,2rem)]">
+                            {profile?.avatar_url ? (
+                              <img src={profile.avatar_url} alt="Foto profil" className="w-full h-full object-cover" />
+                            ) : (
+                              initials
+                            )}
+                            {uploadingAvatar && (
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                <Loader2 className="animate-spin text-white" size={20} />
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            onClick={handlePickAvatar}
+                            disabled={uploadingAvatar}
+                            aria-label="Ganti foto profil"
+                            className="absolute bottom-0 right-0 rounded-full bg-secondary border-2 border-card flex items-center justify-center shadow-sm transition-transform active:scale-95 disabled:opacity-50 w-[clamp(1.5rem,5vw,1.875rem)] h-[clamp(1.5rem,5vw,1.875rem)]"
+                          >
+                            <Camera size={13} className="text-foreground w-[clamp(0.75rem,2.5vw,0.875rem)] h-[clamp(0.75rem,2.5vw,0.875rem)]" strokeWidth={2.5} />
+                          </button>
                         </div>
 
                         {/* Subscription badge */}

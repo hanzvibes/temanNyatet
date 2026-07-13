@@ -14,6 +14,7 @@ export interface Database {
           email: string;
           name: string | null;
           phone: string | null;
+          avatar_url: string | null;
           subscription_status: SubscriptionStatus;
           subscription_plan: SubscriptionPlan | null;
           subscription_end: string | null;
@@ -24,6 +25,7 @@ export interface Database {
           email: string;
           name?: string | null;
           phone?: string | null;
+          avatar_url?: string | null;
           subscription_status?: SubscriptionStatus;
           subscription_plan?: SubscriptionPlan | null;
           subscription_end?: string | null;
@@ -34,6 +36,7 @@ export interface Database {
           email?: string;
           name?: string | null;
           phone?: string | null;
+          avatar_url?: string | null;
           subscription_status?: SubscriptionStatus;
           subscription_plan?: SubscriptionPlan | null;
           subscription_end?: string | null;

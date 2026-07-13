@@ -7,6 +7,7 @@ import notesRouter from './notes';
 import transactionsRouter from './transactions';
 import todosRouter from './todos';
 import linksRouter from './links';
+import profileRouter from './profile';
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(notesRouter);
 router.use(transactionsRouter);
 router.use(todosRouter);
 router.use(linksRouter);
+router.use(profileRouter);
 
 export default router;

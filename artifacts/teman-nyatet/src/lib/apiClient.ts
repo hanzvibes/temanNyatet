@@ -56,3 +56,16 @@ export async function apiDelete(path: string): Promise<void> {
   });
   return handle<void>(res);
 }
+
+// For multipart uploads (e.g. profile photo) — do NOT set Content-Type here,
+// the browser needs to add its own multipart boundary.
+export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  const res = await fetch(`${API_BASE}/api${path}`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: formData,
+  });
+  return handle<T>(res);
+}

@@ -54,8 +54,6 @@ export async function createUserSpreadsheet(userId: string, email: string): Prom
     requestBody: {
       properties: {
         title: `TemanNyatet — ${email}`,
-        locale: 'id_ID',
-        timeZone: 'Asia/Jakarta',
       },
       sheets: [
         { properties: { title: 'Notes' } },

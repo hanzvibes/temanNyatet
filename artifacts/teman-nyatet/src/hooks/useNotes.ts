@@ -8,6 +8,10 @@ import { toast } from 'sonner';
 // show up without a manual refresh.
 const POLL_INTERVAL_MS = 15000;
 
+// Custom event used to synchronise multiple hook instances (e.g. bottom-sheet
+// form vs. the page that displays the list) without a shared state layer.
+const REFETCH_EVENT = 'teman-nyatet:refetch:notes';
+
 export function useNotes(userId?: string) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +39,14 @@ export function useNotes(userId?: string) {
     firstLoad.current = true;
     fetchNotes();
     const interval = setInterval(fetchNotes, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    // Listen for creates from OTHER hook instances (e.g. bottom-sheet form)
+    // so the page list updates immediately without waiting for the poll.
+    const onExternalChange = () => fetchNotes();
+    window.addEventListener(REFETCH_EVENT, onExternalChange);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener(REFETCH_EVENT, onExternalChange);
+    };
   }, [userId, fetchNotes]);
 
   const createNote = async (note: Omit<NoteInsert, 'user_id'>) => {
@@ -44,6 +55,8 @@ export function useNotes(userId?: string) {
       const data = await apiPost<Note>('/notes', note);
       setNotes(prev => [data, ...prev]);
       toast.success('Catatan disimpan!');
+      // Notify other hook instances (e.g. on the page) to refetch immediately.
+      window.dispatchEvent(new CustomEvent(REFETCH_EVENT));
       return data;
     } catch (err) {
       toast.error('Gagal menyimpan catatan');

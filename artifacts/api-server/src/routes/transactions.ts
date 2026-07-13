@@ -29,7 +29,7 @@ router.post('/transactions', requireAuth, async (req, res) => {
     }
     const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, {
       type,
-      amount,
+      amount: parsedAmount, // use the validated number, not the raw body value
       category,
       source,
       note: note ?? null,

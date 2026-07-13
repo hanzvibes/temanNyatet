@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
 
 const POLL_INTERVAL_MS = 15000;
+const REFETCH_EVENT = 'teman-nyatet:refetch:transactions';
 
 function sortTransactions(txs: Transaction[]): Transaction[] {
   return [...txs].sort((a, b) => {
@@ -41,7 +42,12 @@ export function useTransactions(userId?: string) {
     firstLoad.current = true;
     fetchTransactions();
     const interval = setInterval(fetchTransactions, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    const onExternalChange = () => fetchTransactions();
+    window.addEventListener(REFETCH_EVENT, onExternalChange);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener(REFETCH_EVENT, onExternalChange);
+    };
   }, [userId, fetchTransactions]);
 
   const createTransaction = async (transaction: Omit<TransactionInsert, 'user_id'>) => {
@@ -50,6 +56,7 @@ export function useTransactions(userId?: string) {
       const data = await apiPost<Transaction>('/transactions', transaction);
       setTransactions(prev => sortTransactions([data, ...prev]));
       toast.success('Transaksi disimpan!');
+      window.dispatchEvent(new CustomEvent(REFETCH_EVENT));
       return data;
     } catch (err) {
       toast.error('Gagal menyimpan transaksi');

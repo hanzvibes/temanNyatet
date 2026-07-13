@@ -4,6 +4,7 @@ import type { Link, LinkInsert } from '@/lib/database.types';
 import { toast } from 'sonner';
 
 const POLL_INTERVAL_MS = 15000;
+const REFETCH_EVENT = 'teman-nyatet:refetch:links';
 
 export function useLinks(userId?: string) {
   const [links, setLinks] = useState<Link[]>([]);
@@ -32,7 +33,12 @@ export function useLinks(userId?: string) {
     firstLoad.current = true;
     fetchLinks();
     const interval = setInterval(fetchLinks, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    const onExternalChange = () => fetchLinks();
+    window.addEventListener(REFETCH_EVENT, onExternalChange);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener(REFETCH_EVENT, onExternalChange);
+    };
   }, [userId, fetchLinks]);
 
   const createLink = async (link: Omit<LinkInsert, 'user_id'>) => {
@@ -41,6 +47,7 @@ export function useLinks(userId?: string) {
       const data = await apiPost<Link>('/links', link);
       setLinks(prev => [data, ...prev]);
       toast.success('Link disimpan!');
+      window.dispatchEvent(new CustomEvent(REFETCH_EVENT));
       return data;
     } catch (err) {
       toast.error('Gagal menyimpan link');

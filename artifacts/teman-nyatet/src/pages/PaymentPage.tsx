@@ -16,10 +16,16 @@ export default function PaymentPage() {
     if (!user) return;
     setSkipping(true);
     try {
-      await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({ subscription_status: 'active' })
         .eq('id', user.id);
+      if (error) throw error;
+      await refreshProfile();
+    } catch (err) {
+      console.error('[PaymentPage] handleSkip failed:', err);
+      // Silently continue — refreshProfile will re-read the actual status.
+      // If the update failed, the user stays on this page (correct behavior).
       await refreshProfile();
     } finally {
       setSkipping(false);

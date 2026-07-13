@@ -179,7 +179,7 @@ export default function TodoPage() {
             {todo.due_date && (
               <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-md bg-[#9CB4D4]/10 text-[#7A9CC6] border border-[#9CB4D4]/20">
                 <Calendar size={12} strokeWidth={2.5} />
-                {format(new Date(todo.due_date), 'd MMM', { locale: id })}
+                {format(new Date(todo.due_date.length === 10 ? todo.due_date + 'T12:00:00' : todo.due_date), 'd MMM', { locale: id })}
               </span>
             )}
             {todo.due_time && (

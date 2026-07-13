@@ -18,10 +18,14 @@ router.get('/notes', requireAuth, async (req, res) => {
 router.post('/notes', requireAuth, async (req, res) => {
   try {
     const { title, content, tags } = req.body ?? {};
+    if (!content || typeof content !== 'string' || !content.trim()) {
+      res.status(400).json({ error: 'content is required and must be a non-empty string' });
+      return;
+    }
     const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, {
       title: title ?? null,
-      content: content ?? '',
-      tags: tags ?? [],
+      content: content.trim(),
+      tags: Array.isArray(tags) ? tags : [],
     });
     res.status(201).json({ data: row });
   } catch (err) {

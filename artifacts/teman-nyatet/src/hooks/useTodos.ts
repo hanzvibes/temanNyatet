@@ -4,6 +4,7 @@ import type { Todo, TodoInsert, TodoUpdate } from '@/lib/database.types';
 import { toast } from 'sonner';
 
 const POLL_INTERVAL_MS = 15000;
+const REFETCH_EVENT = 'teman-nyatet:refetch:todos';
 
 export function useTodos(userId?: string) {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -32,7 +33,12 @@ export function useTodos(userId?: string) {
     firstLoad.current = true;
     fetchTodos();
     const interval = setInterval(fetchTodos, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    const onExternalChange = () => fetchTodos();
+    window.addEventListener(REFETCH_EVENT, onExternalChange);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener(REFETCH_EVENT, onExternalChange);
+    };
   }, [userId, fetchTodos]);
 
   const createTodo = async (todo: Omit<TodoInsert, 'user_id'>) => {
@@ -41,6 +47,7 @@ export function useTodos(userId?: string) {
       const data = await apiPost<Todo>('/todos', todo);
       setTodos(prev => [data, ...prev]);
       toast.success('To-do ditambahkan!');
+      window.dispatchEvent(new CustomEvent(REFETCH_EVENT));
       return data;
     } catch (err) {
       toast.error('Gagal menambah To-do');

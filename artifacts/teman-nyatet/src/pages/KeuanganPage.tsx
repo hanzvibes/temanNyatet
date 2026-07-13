@@ -136,7 +136,10 @@ export default function KeuanganPage() {
   const sortedDates = Object.keys(groupedTx).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
   const getFormatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+    // Append local noon time so `new Date()` parses the string as local time
+    // instead of UTC midnight, which would shift the date by one day for
+    // timezones behind UTC (e.g. UTC-8 reads "2026-07-13" as July 12).
+    const date = new Date(dateStr.length === 10 ? dateStr + 'T12:00:00' : dateStr);
     if (isToday(date)) return 'Hari Ini';
     if (isYesterday(date)) return 'Kemarin';
     return format(date, 'd MMMM yyyy', { locale: id });

@@ -52,6 +52,9 @@ Add to `vercel.json` at project root:
 }
 ```
 
+## 7. Profile Photos (optional, already applied if you ran `002_add_avatar_url.sql`)
+Photos are uploaded through the api-server and stored in a Supabase Storage bucket called `avatars` (created automatically on first upload). No extra storage RLS setup is needed — uploads always go through the service role key server-side.
+
 ## Table Summary
 
 | Table | Purpose |

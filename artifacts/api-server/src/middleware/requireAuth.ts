@@ -1,6 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
 import { supabaseAdmin } from '../lib/supabase-admin';
-import { getOrCreateUserSpreadsheet } from '../lib/user-sheet';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -12,8 +11,10 @@ declare global {
   }
 }
 
+const SPREADSHEET_ID = process.env['GOOGLE_SHEETS_SPREADSHEET_ID'] ?? '';
+
 // Verifies the caller's Supabase access token, attaches req.userId and
-// req.spreadsheetId. The spreadsheet is created automatically on first login.
+// req.spreadsheetId (the single shared spreadsheet, isolated by user_id per row).
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const authHeader = String(req.headers['authorization'] ?? '');
   const token = authHeader.replace(/^Bearer\s+/i, '');
@@ -29,15 +30,13 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     return;
   }
 
-  req.userId = user.id;
-
-  try {
-    req.spreadsheetId = await getOrCreateUserSpreadsheet(user.id);
-  } catch (err) {
-    req.log.error({ err, userId: user.id }, 'Failed to resolve user spreadsheet');
-    res.status(503).json({ error: 'Could not access your data store. Please try again.' });
+  if (!SPREADSHEET_ID) {
+    res.status(503).json({ error: 'GOOGLE_SHEETS_SPREADSHEET_ID is not configured on the server.' });
     return;
   }
+
+  req.userId = user.id;
+  req.spreadsheetId = SPREADSHEET_ID;
 
   next();
 }

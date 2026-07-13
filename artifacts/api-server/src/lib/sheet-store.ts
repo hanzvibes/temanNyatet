@@ -1,6 +1,6 @@
 // Generic CRUD helper backing app data (notes, transactions, todos, links) with
-// a per-user Google Sheet acting as the database. Each sheet tab has a header
-// row; rows are addressed by an `id` (UUID) column.
+// a shared Google Sheet acting as the database. Each sheet tab has a header
+// row; rows are addressed by an `id` (UUID) column and isolated by `user_id`.
 import { getSheets, newId } from './google-sheets';
 import { logger } from './logger';
 
@@ -11,10 +11,10 @@ export const SHEET_SCHEMAS: Record<string, string[]> = {
   Links: ['id', 'user_id', 'title', 'url', 'note', 'created_at'],
 };
 
-// Per-spreadsheet init cache — each user's sheet only gets the header setup once per process lifetime.
+// Per-spreadsheet init cache — sheet headers only written once per process lifetime.
 const initializedSheets = new Set<string>();
 
-// Ensures every required tab exists with the correct header row for a given spreadsheet.
+// Ensures every required tab exists with the correct header row.
 export async function ensureSheetsInitialized(spreadsheetId: string): Promise<void> {
   if (initializedSheets.has(spreadsheetId)) return;
   const sheets = getSheets();
@@ -89,8 +89,6 @@ function decodeRow(headers: string[], data: Record<string, unknown>): Record<str
   return decoded;
 }
 
-// Returns all rows for a sheet (all rows belong to the owning user since the
-// spreadsheet is private per-user).
 async function readAllRows(
   spreadsheetId: string,
   sheetName: string,
@@ -105,16 +103,22 @@ async function readAllRows(
   });
   const values = res.data.values ?? [];
   const rows = values.map((row, idx) => ({
-    sheetRow: idx + 2, // +2: header is row 1, data starts row 2
+    sheetRow: idx + 2,
     data: rowToObject(headers, row as string[]),
   }));
   return { headers, rows };
 }
 
-// Returns all rows in the user's private spreadsheet tab (no in-memory user_id filter needed).
-export async function listAll(spreadsheetId: string, sheetName: string): Promise<Record<string, unknown>[]> {
+// Returns only the rows belonging to the given user (server-side user_id filter).
+export async function listByUser(
+  spreadsheetId: string,
+  sheetName: string,
+  userId: string,
+): Promise<Record<string, unknown>[]> {
   const { headers, rows } = await readAllRows(spreadsheetId, sheetName);
-  return rows.map((r) => decodeRow(headers, r.data));
+  return rows
+    .filter((r) => r.data['user_id'] === userId)
+    .map((r) => decodeRow(headers, r.data));
 }
 
 export async function createRow(
@@ -134,7 +138,6 @@ export async function createRow(
     created_at: now,
     ...(headers.includes('updated_at') ? { updated_at: now } : {}),
     ...fields,
-    // Identity/ownership fields can never be overridden by caller.
   };
   full['id'] = full['id'] ?? newId();
   full['user_id'] = userId;
@@ -154,16 +157,16 @@ export async function createRow(
   return result;
 }
 
-// Updates a row identified by its id. Since the spreadsheet is per-user no
-// cross-user check is needed, but we still return null if the row isn't found.
+// Updates a row identified by id — only if it belongs to the caller's userId.
 export async function updateRow(
   spreadsheetId: string,
   sheetName: string,
   id: string,
+  userId: string,
   updates: Record<string, unknown>,
 ): Promise<Record<string, unknown> | null> {
   const { headers, rows } = await readAllRows(spreadsheetId, sheetName);
-  const target = rows.find((r) => r.data['id'] === id);
+  const target = rows.find((r) => r.data['id'] === id && r.data['user_id'] === userId);
   if (!target) return null;
 
   const currentDecoded = decodeRow(headers, target.data);
@@ -171,7 +174,7 @@ export async function updateRow(
     ...currentDecoded,
     ...updates,
     id: target.data['id'],
-    user_id: target.data['user_id'],
+    user_id: userId,
     ...(headers.includes('updated_at') ? { updated_at: new Date().toISOString() } : {}),
   };
 
@@ -189,10 +192,15 @@ export async function updateRow(
   return result;
 }
 
-// Deletes a row identified by its id.
-export async function deleteRow(spreadsheetId: string, sheetName: string, id: string): Promise<boolean> {
+// Deletes a row by id — only if it belongs to the caller's userId.
+export async function deleteRow(
+  spreadsheetId: string,
+  sheetName: string,
+  id: string,
+  userId: string,
+): Promise<boolean> {
   const { rows } = await readAllRows(spreadsheetId, sheetName);
-  const target = rows.find((r) => r.data['id'] === id);
+  const target = rows.find((r) => r.data['id'] === id && r.data['user_id'] === userId);
   if (!target) return false;
 
   const sheets = getSheets();

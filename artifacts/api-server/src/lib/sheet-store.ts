@@ -1,8 +1,7 @@
 // Generic CRUD helper backing app data (notes, transactions, todos, links) with
-// a Google Sheet acting as the database. Each sheet tab has a header row; rows
-// are addressed by an `id` (UUID) column. This trades transactional guarantees
-// and scale for the ability to open the spreadsheet and edit data by hand.
-import { getSheets, getSpreadsheetId, newId } from './google-sheets';
+// a per-user Google Sheet acting as the database. Each sheet tab has a header
+// row; rows are addressed by an `id` (UUID) column.
+import { getSheets, newId } from './google-sheets';
 import { logger } from './logger';
 
 export const SHEET_SCHEMAS: Record<string, string[]> = {
@@ -12,15 +11,13 @@ export const SHEET_SCHEMAS: Record<string, string[]> = {
   Links: ['id', 'user_id', 'title', 'url', 'note', 'created_at'],
 };
 
-let initialized = false;
+// Per-spreadsheet init cache — each user's sheet only gets the header setup once per process lifetime.
+const initializedSheets = new Set<string>();
 
-// Ensures every required tab exists with the correct header row. Safe to call
-// repeatedly; only mutates the spreadsheet the first time or when a tab/header
-// is missing.
-export async function ensureSheetsInitialized(): Promise<void> {
-  if (initialized) return;
+// Ensures every required tab exists with the correct header row for a given spreadsheet.
+export async function ensureSheetsInitialized(spreadsheetId: string): Promise<void> {
+  if (initializedSheets.has(spreadsheetId)) return;
   const sheets = getSheets();
-  const spreadsheetId = getSpreadsheetId();
 
   const meta = await sheets.spreadsheets.get({ spreadsheetId });
   const existingTitles = new Set((meta.data.sheets ?? []).map((s) => s.properties?.title));
@@ -33,7 +30,7 @@ export async function ensureSheetsInitialized(): Promise<void> {
         requests: missing.map((title) => ({ addSheet: { properties: { title } } })),
       },
     });
-    logger.info({ missing }, '[sheet-store] Created missing sheet tabs');
+    logger.info({ missing, spreadsheetId }, '[sheet-store] Created missing sheet tabs');
   }
 
   for (const [title, headers] of Object.entries(SHEET_SCHEMAS)) {
@@ -45,7 +42,7 @@ export async function ensureSheetsInitialized(): Promise<void> {
     });
   }
 
-  initialized = true;
+  initializedSheets.add(spreadsheetId);
 }
 
 function columnLetter(n: number): string {
@@ -86,15 +83,24 @@ function decodeValue(header: string, value: unknown): unknown {
   return value;
 }
 
-// Returns all rows for a sheet along with their 1-based sheet row numbers
-// (accounting for the header row), so callers can target updates/deletes.
-async function readAllRows(sheetName: string): Promise<{ headers: string[]; rows: { sheetRow: number; data: Record<string, unknown> }[] }> {
+function decodeRow(headers: string[], data: Record<string, unknown>): Record<string, unknown> {
+  const decoded: Record<string, unknown> = {};
+  for (const h of headers) decoded[h] = decodeValue(h, data[h]);
+  return decoded;
+}
+
+// Returns all rows for a sheet (all rows belong to the owning user since the
+// spreadsheet is private per-user).
+async function readAllRows(
+  spreadsheetId: string,
+  sheetName: string,
+): Promise<{ headers: string[]; rows: { sheetRow: number; data: Record<string, unknown> }[] }> {
   const headers = SHEET_SCHEMAS[sheetName];
   if (!headers) throw new Error(`Unknown sheet: ${sheetName}`);
-  await ensureSheetsInitialized();
+  await ensureSheetsInitialized(spreadsheetId);
   const sheets = getSheets();
   const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: getSpreadsheetId(),
+    spreadsheetId,
     range: `${sheetName}!A2:${columnLetter(headers.length)}`,
   });
   const values = res.data.values ?? [];
@@ -105,27 +111,21 @@ async function readAllRows(sheetName: string): Promise<{ headers: string[]; rows
   return { headers, rows };
 }
 
-export async function listByUser(sheetName: string, userId: string): Promise<Record<string, unknown>[]> {
-  const { headers, rows } = await readAllRows(sheetName);
-  return rows
-    .filter((r) => r.data['user_id'] === userId)
-    .map((r) => decodeRow(headers, r.data));
-}
-
-function decodeRow(headers: string[], data: Record<string, unknown>): Record<string, unknown> {
-  const decoded: Record<string, unknown> = {};
-  for (const h of headers) decoded[h] = decodeValue(h, data[h]);
-  return decoded;
+// Returns all rows in the user's private spreadsheet tab (no in-memory user_id filter needed).
+export async function listAll(spreadsheetId: string, sheetName: string): Promise<Record<string, unknown>[]> {
+  const { headers, rows } = await readAllRows(spreadsheetId, sheetName);
+  return rows.map((r) => decodeRow(headers, r.data));
 }
 
 export async function createRow(
+  spreadsheetId: string,
   sheetName: string,
   userId: string,
   fields: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
   const headers = SHEET_SCHEMAS[sheetName];
   if (!headers) throw new Error(`Unknown sheet: ${sheetName}`);
-  await ensureSheetsInitialized();
+  await ensureSheetsInitialized(spreadsheetId);
 
   const now = new Date().toISOString();
   const full: Record<string, unknown> = {
@@ -134,43 +134,38 @@ export async function createRow(
     created_at: now,
     ...(headers.includes('updated_at') ? { updated_at: now } : {}),
     ...fields,
+    // Identity/ownership fields can never be overridden by caller.
   };
-  // Never let caller-supplied fields override identity/ownership.
   full['id'] = full['id'] ?? newId();
   full['user_id'] = userId;
 
   const row = headers.map((h) => coerceValue(h, full[h]));
   const sheets = getSheets();
   await sheets.spreadsheets.values.append({
-    spreadsheetId: getSpreadsheetId(),
+    spreadsheetId,
     range: `${sheetName}!A:A`,
     valueInputOption: 'RAW',
     insertDataOption: 'INSERT_ROWS',
     requestBody: { values: [row] },
   });
 
-  // `full` already holds native types (array for tags, boolean for is_done,
-  // etc) — unlike sheet-read rows, it was never stringified, so it must NOT
-  // be passed through decodeRow (which expects raw sheet strings).
   const result: Record<string, unknown> = {};
   for (const h of headers) result[h] = full[h];
   return result;
 }
 
-// Updates a row, but only if it belongs to `userId` — prevents one user from
-// mutating another user's data by guessing an id.
+// Updates a row identified by its id. Since the spreadsheet is per-user no
+// cross-user check is needed, but we still return null if the row isn't found.
 export async function updateRow(
+  spreadsheetId: string,
   sheetName: string,
   id: string,
-  userId: string,
   updates: Record<string, unknown>,
 ): Promise<Record<string, unknown> | null> {
-  const { headers, rows } = await readAllRows(sheetName);
-  const target = rows.find((r) => r.data['id'] === id && r.data['user_id'] === userId);
+  const { headers, rows } = await readAllRows(spreadsheetId, sheetName);
+  const target = rows.find((r) => r.data['id'] === id);
   if (!target) return null;
 
-  // target.data holds raw sheet strings; decode it first so unchanged fields
-  // keep their native types once merged with the (already-native) updates.
   const currentDecoded = decodeRow(headers, target.data);
   const merged: Record<string, unknown> = {
     ...currentDecoded,
@@ -183,7 +178,7 @@ export async function updateRow(
   const row = headers.map((h) => coerceValue(h, merged[h]));
   const sheets = getSheets();
   await sheets.spreadsheets.values.update({
-    spreadsheetId: getSpreadsheetId(),
+    spreadsheetId,
     range: `${sheetName}!A${target.sheetRow}:${columnLetter(headers.length)}${target.sheetRow}`,
     valueInputOption: 'RAW',
     requestBody: { values: [row] },
@@ -194,19 +189,21 @@ export async function updateRow(
   return result;
 }
 
-// Deletes a row, but only if it belongs to `userId`.
-export async function deleteRow(sheetName: string, id: string, userId: string): Promise<boolean> {
-  const { rows } = await readAllRows(sheetName);
-  const target = rows.find((r) => r.data['id'] === id && r.data['user_id'] === userId);
+// Deletes a row identified by its id.
+export async function deleteRow(spreadsheetId: string, sheetName: string, id: string): Promise<boolean> {
+  const { rows } = await readAllRows(spreadsheetId, sheetName);
+  const target = rows.find((r) => r.data['id'] === id);
   if (!target) return false;
 
   const sheets = getSheets();
-  const meta = await sheets.spreadsheets.get({ spreadsheetId: getSpreadsheetId() });
-  const sheetId = meta.data.sheets?.find((s) => s.properties?.title === sheetName)?.properties?.sheetId;
+  const meta = await sheets.spreadsheets.get({ spreadsheetId });
+  const sheetId = meta.data.sheets?.find(
+    (s) => s.properties?.title === sheetName,
+  )?.properties?.sheetId;
   if (sheetId === undefined || sheetId === null) throw new Error(`Sheet tab not found: ${sheetName}`);
 
   await sheets.spreadsheets.batchUpdate({
-    spreadsheetId: getSpreadsheetId(),
+    spreadsheetId,
     requestBody: {
       requests: [
         {
@@ -214,7 +211,7 @@ export async function deleteRow(sheetName: string, id: string, userId: string): 
             range: {
               sheetId,
               dimension: 'ROWS',
-              startIndex: target.sheetRow - 1, // 0-based
+              startIndex: target.sheetRow - 1,
               endIndex: target.sheetRow,
             },
           },

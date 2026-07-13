@@ -1,17 +1,19 @@
 import type { NextFunction, Request, Response } from 'express';
 import { supabaseAdmin } from '../lib/supabase-admin';
+import { getOrCreateUserSpreadsheet } from '../lib/user-sheet';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       userId?: string;
+      spreadsheetId?: string;
     }
   }
 }
 
-// Verifies the caller's Supabase access token and attaches req.userId.
-// Auth stays on Supabase even though app data lives in Google Sheets.
+// Verifies the caller's Supabase access token, attaches req.userId and
+// req.spreadsheetId. The spreadsheet is created automatically on first login.
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const authHeader = String(req.headers['authorization'] ?? '');
   const token = authHeader.replace(/^Bearer\s+/i, '');
@@ -28,5 +30,14 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   }
 
   req.userId = user.id;
+
+  try {
+    req.spreadsheetId = await getOrCreateUserSpreadsheet(user.id);
+  } catch (err) {
+    req.log.error({ err, userId: user.id }, 'Failed to resolve user spreadsheet');
+    res.status(503).json({ error: 'Could not access your data store. Please try again.' });
+    return;
+  }
+
   next();
 }

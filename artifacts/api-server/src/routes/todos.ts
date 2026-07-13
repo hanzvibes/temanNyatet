@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/requireAuth';
-import { createRow, deleteRow, listByUser, updateRow } from '../lib/sheet-store';
+import { createRow, deleteRow, listAll, updateRow } from '../lib/sheet-store';
 
 const router = Router();
 const SHEET = 'Todos';
 
 router.get('/todos', requireAuth, async (req, res) => {
   try {
-    const rows = await listByUser(SHEET, req.userId!);
+    const rows = await listAll(req.spreadsheetId!, SHEET);
     res.status(200).json({ data: rows });
   } catch (err) {
     req.log.error({ err }, 'Failed to list todos');
@@ -22,7 +22,7 @@ router.post('/todos', requireAuth, async (req, res) => {
       res.status(400).json({ error: 'title is required' });
       return;
     }
-    const row = await createRow(SHEET, req.userId!, {
+    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, {
       title,
       description: description ?? null,
       due_date: due_date ?? null,
@@ -42,7 +42,7 @@ router.put('/todos/:id', requireAuth, async (req, res) => {
     for (const key of ['title', 'description', 'due_date', 'due_time', 'is_done']) {
       if (key in (req.body ?? {})) updates[key] = req.body[key];
     }
-    const row = await updateRow(SHEET, req.params.id as string, req.userId!, updates);
+    const row = await updateRow(req.spreadsheetId!, SHEET, req.params.id as string, updates);
     if (!row) {
       res.status(404).json({ error: 'Todo not found' });
       return;
@@ -56,7 +56,7 @@ router.put('/todos/:id', requireAuth, async (req, res) => {
 
 router.delete('/todos/:id', requireAuth, async (req, res) => {
   try {
-    const ok = await deleteRow(SHEET, req.params.id as string, req.userId!);
+    const ok = await deleteRow(req.spreadsheetId!, SHEET, req.params.id as string);
     if (!ok) {
       res.status(404).json({ error: 'Todo not found' });
       return;

@@ -3,14 +3,13 @@ import crypto from 'crypto';
 import { logger } from './logger';
 
 const rawKey = process.env['GOOGLE_SERVICE_ACCOUNT_KEY'] ?? '';
-const spreadsheetId = process.env['GOOGLE_SHEETS_SPREADSHEET_ID'] ?? '';
 
 let sheetsClient: sheets_v4.Sheets | null = null;
 let configError: string | null = null;
 
-if (!rawKey || !spreadsheetId) {
+if (!rawKey) {
   configError =
-    'GOOGLE_SERVICE_ACCOUNT_KEY or GOOGLE_SHEETS_SPREADSHEET_ID is not set. Data endpoints will fail until configured.';
+    'GOOGLE_SERVICE_ACCOUNT_KEY is not set. Data endpoints will fail until configured.';
   logger.warn(`[google-sheets] ${configError}`);
 } else {
   try {
@@ -42,10 +41,34 @@ export function getSheets(): sheets_v4.Sheets {
   return sheetsClient;
 }
 
-export function getSpreadsheetId(): string {
-  return spreadsheetId;
-}
-
 export function newId(): string {
   return crypto.randomUUID();
+}
+
+// Creates a brand-new Google Spreadsheet for a user and returns its ID.
+// The service account is the owner — it can read/write on behalf of the user.
+export async function createUserSpreadsheet(userId: string, email: string): Promise<string> {
+  const sheets = getSheets();
+
+  const response = await sheets.spreadsheets.create({
+    requestBody: {
+      properties: {
+        title: `TemanNyatet — ${email}`,
+        locale: 'id_ID',
+        timeZone: 'Asia/Jakarta',
+      },
+      sheets: [
+        { properties: { title: 'Notes' } },
+        { properties: { title: 'Transactions' } },
+        { properties: { title: 'Todos' } },
+        { properties: { title: 'Links' } },
+      ],
+    },
+  });
+
+  const spreadsheetId = response.data.spreadsheetId;
+  if (!spreadsheetId) throw new Error('Spreadsheet created but no ID returned');
+
+  logger.info({ userId, spreadsheetId }, '[google-sheets] Created user spreadsheet');
+  return spreadsheetId;
 }

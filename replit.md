@@ -29,20 +29,25 @@ The app will not connect to Supabase or Mayar without these. Add them via Replit
 ## Stack
 
 - **Frontend:** React 19 + Vite 7, TypeScript, Tailwind CSS 4, Wouter, Vaul, Recharts
-- **Backend:** Express 5 (Mayar webhooks + cron jobs, and now the notes/transactions/todos/links data API)
+- **Backend:** Express 5 (Mayar webhooks + cron jobs, and the notes/transactions/todos/links data API)
 - **Auth:** Supabase Auth (unchanged)
-- **App data (notes, transactions, todos, links):** Google Sheets, accessed only through the api-server (never directly from the browser) — one tab per entity, rows keyed by a UUID `id` column. Chosen over Supabase for those tables so the user can open the spreadsheet and edit data by hand; trades off realtime push (replaced by 15s polling in the frontend hooks) and Sheets API rate limits.
-- **Subscription/profile data:** stays in Supabase Postgres (`profiles` table), since it's tied to auth
+- **App data (notes, transactions, todos, links):** Each user gets their own private Google Spreadsheet, created automatically on first login. The spreadsheet ID is stored in `profiles.spreadsheet_id`. The service account creates and manages all user spreadsheets. Data is fully isolated — no shared spreadsheet.
+- **Subscription/profile data:** Supabase Postgres (`profiles` table) — includes `spreadsheet_id` column added in migration 002.
 - **Package manager:** pnpm 10.26.1 (monorepo)
 - **Node.js:** 22
 
 ## Project structure
 
 - `artifacts/teman-nyatet/` — React+Vite frontend SPA. `src/lib/apiClient.ts` calls the api-server (Bearer = Supabase access token) for notes/transactions/todos/links; `src/lib/supabase.ts` is used only for auth and the `profiles` table now.
-- `artifacts/api-server/` — Express API (Mayar webhook, subscription status, cron, and REST routes for notes/transactions/todos/links backed by `src/lib/sheet-store.ts` + `src/lib/google-sheets.ts`)
+- `artifacts/api-server/` — Express API. Key files:
+  - `src/lib/google-sheets.ts` — Sheets client + `createUserSpreadsheet()`
+  - `src/lib/user-sheet.ts` — `getOrCreateUserSpreadsheet()` with in-memory TTL cache; called by requireAuth
+  - `src/lib/sheet-store.ts` — Generic CRUD over a per-user spreadsheet ID
+  - `src/middleware/requireAuth.ts` — Verifies JWT, attaches `req.userId` + `req.spreadsheetId`
+  - `src/routes/{notes,todos,links,transactions}.ts` — Data routes, each uses `req.spreadsheetId`
 - `lib/api-spec/` — OpenAPI spec + generated API client
 - `lib/db/` — shared DB types
-- `supabase/migrations/` — DB schema for `profiles` (and the now-unused notes/transactions/todos/links tables, kept for reference/rollback)
+- `supabase/migrations/` — DB schema (migration 002 adds `spreadsheet_id` to `profiles`)
 
 ## Replit setup notes
 

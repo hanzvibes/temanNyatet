@@ -37,6 +37,15 @@ app.use("/api/mayar-webhook", express.raw({ type: "application/json", limit: "1m
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.get("/", (_req, res) => {
+  res.json({
+    name: "TemanNyatet API",
+    status: "running",
+    health: "/api/healthz",
+    endpoints: "/api/...",
+  });
+});
+
 app.use("/api", router);
 
 export default app;

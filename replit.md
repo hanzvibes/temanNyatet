@@ -9,6 +9,8 @@ Two services run in parallel — both are already configured as workflows:
 - **Frontend** (`artifacts/teman-nyatet: web`): `pnpm --filter @workspace/teman-nyatet run dev` — Vite dev server (defaults to 5173; on Replit it runs on port 5000 via the `PORT` env var)
 - **API Server** (`artifacts/api-server: API Server`): `pnpm --filter @workspace/api-server run dev` — Express on port 8080
 
+Replit normally remembers the last workflow state, so if the workflows were running when you left the project they should auto-start when you reopen it. If they ever appear stopped, restart them from the Workflows panel (or ask the agent to restart them).
+
 ## Required secrets
 
 These secrets are configured in Replit Secrets for the current environment (re-added 2026-07-13 after project re-import). The app is running without Mayar.

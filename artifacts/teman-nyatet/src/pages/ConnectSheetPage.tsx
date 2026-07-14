@@ -177,14 +177,18 @@ export default function ConnectSheetPage() {
                     <button
                       onClick={handleCopyEmail}
                       disabled={!status?.serviceAccountEmail}
-                      className="w-full flex items-center justify-between gap-2 bg-secondary border border-border rounded-xl px-3 py-2.5 text-xs font-mono text-foreground hover:bg-secondary/70 transition-colors disabled:opacity-50"
+                      className="w-full flex items-start justify-between gap-2 bg-secondary border border-border rounded-xl px-3 py-2.5 text-xs font-mono text-foreground hover:bg-secondary/70 transition-colors disabled:opacity-50 text-left"
                     >
-                      <span className="truncate text-left">{status?.serviceAccountEmail ?? 'Belum dikonfigurasi'}</span>
-                      {copied ? (
-                        <Check size={14} className="text-primary flex-shrink-0" />
-                      ) : (
-                        <Copy size={14} className="text-muted-foreground flex-shrink-0" />
-                      )}
+                      <span className="break-all leading-relaxed">
+                        {status?.serviceAccountEmail ?? 'Belum dikonfigurasi'}
+                      </span>
+                      <span className="flex-shrink-0 mt-0.5">
+                        {copied ? (
+                          <Check size={14} className="text-primary" />
+                        ) : (
+                          <Copy size={14} className="text-muted-foreground" />
+                        )}
+                      </span>
                     </button>
                   </Step>
                   <Step number={3} icon={ExternalLink}>

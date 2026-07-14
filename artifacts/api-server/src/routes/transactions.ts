@@ -1,9 +1,22 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/requireAuth';
 import { createRow, deleteRow, listByUser, updateRow } from '../lib/sheet-store';
+import { optionalString, requireEnum, requireString, ValidationError } from '../lib/validate';
 
 const router = Router();
 const SHEET = 'Transactions';
+const FIELD_MAX = 200;
+const NOTE_MAX = 5_000;
+const DATE_MAX = 32;
+const TRANSACTION_TYPES = ['income', 'expense'] as const;
+
+function parseAmount(value: unknown): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new ValidationError('amount must be a positive number');
+  }
+  return parsed;
+}
 
 router.get('/transactions', requireAuth, async (req, res) => {
   try {
@@ -17,26 +30,27 @@ router.get('/transactions', requireAuth, async (req, res) => {
 
 router.post('/transactions', requireAuth, async (req, res) => {
   try {
-    const { type, amount, category, source, note, date } = req.body ?? {};
-    const parsedAmount = Number(amount);
-    if (!type || !category || !source || !date) {
-      res.status(400).json({ error: 'type, amount, category, source, and date are required' });
-      return;
-    }
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      res.status(400).json({ error: 'amount must be a positive number' });
-      return;
-    }
+    const body = req.body ?? {};
+    const type = requireEnum(body.type, 'type', TRANSACTION_TYPES);
+    const amount = parseAmount(body.amount);
+    const category = requireString(body.category, 'category', FIELD_MAX);
+    const source = requireString(body.source, 'source', FIELD_MAX);
+    const date = requireString(body.date, 'date', DATE_MAX);
+    const note = optionalString(body.note, 'note', NOTE_MAX);
     const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, {
       type,
-      amount: parsedAmount, // use the validated number, not the raw body value
+      amount,
       category,
       source,
-      note: note ?? null,
+      note,
       date,
     });
     res.status(201).json({ data: row });
   } catch (err) {
+    if (err instanceof ValidationError) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to create transaction');
     res.status(500).json({ error: 'Failed to create transaction' });
   }
@@ -44,10 +58,14 @@ router.post('/transactions', requireAuth, async (req, res) => {
 
 router.put('/transactions/:id', requireAuth, async (req, res) => {
   try {
+    const body = req.body ?? {};
     const updates: Record<string, unknown> = {};
-    for (const key of ['type', 'amount', 'category', 'source', 'note', 'date']) {
-      if (key in (req.body ?? {})) updates[key] = req.body[key];
-    }
+    if ('type' in body) updates.type = requireEnum(body.type, 'type', TRANSACTION_TYPES);
+    if ('amount' in body) updates.amount = parseAmount(body.amount);
+    if ('category' in body) updates.category = requireString(body.category, 'category', FIELD_MAX);
+    if ('source' in body) updates.source = requireString(body.source, 'source', FIELD_MAX);
+    if ('date' in body) updates.date = requireString(body.date, 'date', DATE_MAX);
+    if ('note' in body) updates.note = optionalString(body.note, 'note', NOTE_MAX);
     const row = await updateRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, updates);
     if (!row) {
       res.status(404).json({ error: 'Transaction not found' });
@@ -55,6 +73,10 @@ router.put('/transactions/:id', requireAuth, async (req, res) => {
     }
     res.status(200).json({ data: row });
   } catch (err) {
+    if (err instanceof ValidationError) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to update transaction');
     res.status(500).json({ error: 'Failed to update transaction' });
   }

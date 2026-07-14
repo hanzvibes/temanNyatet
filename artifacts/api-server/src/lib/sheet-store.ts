@@ -1,7 +1,7 @@
 // Generic CRUD helper backing app data (notes, transactions, todos, links) with
 // a shared Google Sheet acting as the database. Each sheet tab has a header
 // row; rows are addressed by an `id` (UUID) column and isolated by `user_id`.
-import { getSheets, newId } from './google-sheets';
+import { getSheets, newId, withGoogleRetry } from './google-sheets';
 import { logger } from './logger';
 
 export const SHEET_SCHEMAS: Record<string, string[]> = {
@@ -14,32 +14,63 @@ export const SHEET_SCHEMAS: Record<string, string[]> = {
 // Per-spreadsheet init cache — sheet headers only written once per process lifetime.
 const initializedSheets = new Set<string>();
 
+// Serializes mutating operations (create/update/delete) against the same
+// sheet tab so two concurrent requests can't interleave a read-then-write
+// span — e.g. two quick taps on "delete" for adjacent rows racing on the
+// row-index math, or an update reading stale data because a delete shifted
+// row numbers underneath it mid-flight. Google Sheets has no transactions
+// of its own, so this in-process async queue is the concurrency guard.
+// Scope: correct for a single server instance (fine at this app's scale);
+// if the API server is ever horizontally scaled this would need to move to
+// a shared lock (e.g. a Postgres advisory lock keyed by spreadsheet+sheet).
+const sheetLocks = new Map<string, Promise<unknown>>();
+
+function withSheetLock<T>(spreadsheetId: string, sheetName: string, fn: () => Promise<T>): Promise<T> {
+  const key = `${spreadsheetId}:${sheetName}`;
+  const previous = sheetLocks.get(key) ?? Promise.resolve();
+  const run = previous.then(fn, fn);
+  // Always leave a settled (non-throwing) marker behind so one failed
+  // operation doesn't permanently jam the queue for this sheet.
+  sheetLocks.set(
+    key,
+    run.then(
+      () => undefined,
+      () => undefined,
+    ),
+  );
+  return run;
+}
+
 // Ensures every required tab exists with the correct header row.
 export async function ensureSheetsInitialized(spreadsheetId: string): Promise<void> {
   if (initializedSheets.has(spreadsheetId)) return;
   const sheets = getSheets();
 
-  const meta = await sheets.spreadsheets.get({ spreadsheetId });
+  const meta = await withGoogleRetry(() => sheets.spreadsheets.get({ spreadsheetId }));
   const existingTitles = new Set((meta.data.sheets ?? []).map((s) => s.properties?.title));
 
   const missing = Object.keys(SHEET_SCHEMAS).filter((title) => !existingTitles.has(title));
   if (missing.length > 0) {
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId,
-      requestBody: {
-        requests: missing.map((title) => ({ addSheet: { properties: { title } } })),
-      },
-    });
+    await withGoogleRetry(() =>
+      sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: missing.map((title) => ({ addSheet: { properties: { title } } })),
+        },
+      }),
+    );
     logger.info({ missing, spreadsheetId }, '[sheet-store] Created missing sheet tabs');
   }
 
   for (const [title, headers] of Object.entries(SHEET_SCHEMAS)) {
-    await sheets.spreadsheets.values.update({
-      spreadsheetId,
-      range: `${title}!A1:${columnLetter(headers.length)}1`,
-      valueInputOption: 'RAW',
-      requestBody: { values: [headers] },
-    });
+    await withGoogleRetry(() =>
+      sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${title}!A1:${columnLetter(headers.length)}1`,
+        valueInputOption: 'RAW',
+        requestBody: { values: [headers] },
+      }),
+    );
   }
 
   initializedSheets.add(spreadsheetId);
@@ -64,9 +95,31 @@ function rowToObject(headers: string[], row: string[]): Record<string, unknown> 
   return obj;
 }
 
+// Characters that Excel/Sheets/LibreOffice treat as the start of a formula
+// when a cell's text is (re)parsed — the classic "CSV/formula injection"
+// class (OWASP). `RAW` value input option means the Sheets API itself never
+// evaluates these as live formulas, but the spreadsheet is *owned by the
+// user* — they may export it to CSV/XLSX and open it in Excel, or manually
+// re-type/confirm the cell in the Sheets UI, either of which re-parses the
+// text and would execute a payload like `=HYPERLINK(...)` or a DDE call.
+// Prefixing with a single quote is the standard mitigation: Excel's CSV
+// importer and the Sheets UI both honor a leading `'` as "force text".
+const FORMULA_TRIGGER_CHARS = new Set(['=', '+', '-', '@', '\t', '\r']);
+
+function sanitizeForSpreadsheet(value: string): string {
+  if (value.length > 0 && FORMULA_TRIGGER_CHARS.has(value[0] as string)) {
+    return `'${value}`;
+  }
+  return value;
+}
+
 function coerceValue(header: string, value: unknown): string {
   if (value === null || value === undefined) return '';
   if (header === 'tags' && Array.isArray(value)) return JSON.stringify(value);
+  // Only sanitize values that were actually strings before coercion — numbers
+  // (e.g. `amount`) and booleans (e.g. `is_done`) can't carry a formula
+  // payload and shouldn't be mangled.
+  if (typeof value === 'string') return sanitizeForSpreadsheet(value);
   return String(value);
 }
 
@@ -97,10 +150,12 @@ async function readAllRows(
   if (!headers) throw new Error(`Unknown sheet: ${sheetName}`);
   await ensureSheetsInitialized(spreadsheetId);
   const sheets = getSheets();
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId,
-    range: `${sheetName}!A2:${columnLetter(headers.length)}`,
-  });
+  const res = await withGoogleRetry(() =>
+    sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${sheetName}!A2:${columnLetter(headers.length)}`,
+    }),
+  );
   const values = res.data.values ?? [];
   const rows = values.map((row, idx) => ({
     sheetRow: idx + 2,
@@ -129,32 +184,37 @@ export async function createRow(
 ): Promise<Record<string, unknown>> {
   const headers = SHEET_SCHEMAS[sheetName];
   if (!headers) throw new Error(`Unknown sheet: ${sheetName}`);
-  await ensureSheetsInitialized(spreadsheetId);
 
-  const now = new Date().toISOString();
-  const full: Record<string, unknown> = {
-    id: newId(),
-    user_id: userId,
-    created_at: now,
-    ...(headers.includes('updated_at') ? { updated_at: now } : {}),
-    ...fields,
-  };
-  full['id'] = full['id'] ?? newId();
-  full['user_id'] = userId;
+  return withSheetLock(spreadsheetId, sheetName, async () => {
+    await ensureSheetsInitialized(spreadsheetId);
 
-  const row = headers.map((h) => coerceValue(h, full[h]));
-  const sheets = getSheets();
-  await sheets.spreadsheets.values.append({
-    spreadsheetId,
-    range: `${sheetName}!A:A`,
-    valueInputOption: 'RAW',
-    insertDataOption: 'INSERT_ROWS',
-    requestBody: { values: [row] },
+    const now = new Date().toISOString();
+    const full: Record<string, unknown> = {
+      id: newId(),
+      user_id: userId,
+      created_at: now,
+      ...(headers.includes('updated_at') ? { updated_at: now } : {}),
+      ...fields,
+    };
+    full['id'] = full['id'] ?? newId();
+    full['user_id'] = userId;
+
+    const row = headers.map((h) => coerceValue(h, full[h]));
+    const sheets = getSheets();
+    await withGoogleRetry(() =>
+      sheets.spreadsheets.values.append({
+        spreadsheetId,
+        range: `${sheetName}!A:A`,
+        valueInputOption: 'RAW',
+        insertDataOption: 'INSERT_ROWS',
+        requestBody: { values: [row] },
+      }),
+    );
+
+    const result: Record<string, unknown> = {};
+    for (const h of headers) result[h] = full[h];
+    return result;
   });
-
-  const result: Record<string, unknown> = {};
-  for (const h of headers) result[h] = full[h];
-  return result;
 }
 
 // Updates a row identified by id — only if it belongs to the caller's userId.
@@ -165,31 +225,35 @@ export async function updateRow(
   userId: string,
   updates: Record<string, unknown>,
 ): Promise<Record<string, unknown> | null> {
-  const { headers, rows } = await readAllRows(spreadsheetId, sheetName);
-  const target = rows.find((r) => r.data['id'] === id && r.data['user_id'] === userId);
-  if (!target) return null;
+  return withSheetLock(spreadsheetId, sheetName, async () => {
+    const { headers, rows } = await readAllRows(spreadsheetId, sheetName);
+    const target = rows.find((r) => r.data['id'] === id && r.data['user_id'] === userId);
+    if (!target) return null;
 
-  const currentDecoded = decodeRow(headers, target.data);
-  const merged: Record<string, unknown> = {
-    ...currentDecoded,
-    ...updates,
-    id: target.data['id'],
-    user_id: userId,
-    ...(headers.includes('updated_at') ? { updated_at: new Date().toISOString() } : {}),
-  };
+    const currentDecoded = decodeRow(headers, target.data);
+    const merged: Record<string, unknown> = {
+      ...currentDecoded,
+      ...updates,
+      id: target.data['id'],
+      user_id: userId,
+      ...(headers.includes('updated_at') ? { updated_at: new Date().toISOString() } : {}),
+    };
 
-  const row = headers.map((h) => coerceValue(h, merged[h]));
-  const sheets = getSheets();
-  await sheets.spreadsheets.values.update({
-    spreadsheetId,
-    range: `${sheetName}!A${target.sheetRow}:${columnLetter(headers.length)}${target.sheetRow}`,
-    valueInputOption: 'RAW',
-    requestBody: { values: [row] },
+    const row = headers.map((h) => coerceValue(h, merged[h]));
+    const sheets = getSheets();
+    await withGoogleRetry(() =>
+      sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${sheetName}!A${target.sheetRow}:${columnLetter(headers.length)}${target.sheetRow}`,
+        valueInputOption: 'RAW',
+        requestBody: { values: [row] },
+      }),
+    );
+
+    const result: Record<string, unknown> = {};
+    for (const h of headers) result[h] = merged[h];
+    return result;
   });
-
-  const result: Record<string, unknown> = {};
-  for (const h of headers) result[h] = merged[h];
-  return result;
 }
 
 // Deletes a row by id — only if it belongs to the caller's userId.
@@ -199,34 +263,38 @@ export async function deleteRow(
   id: string,
   userId: string,
 ): Promise<boolean> {
-  const { rows } = await readAllRows(spreadsheetId, sheetName);
-  const target = rows.find((r) => r.data['id'] === id && r.data['user_id'] === userId);
-  if (!target) return false;
+  return withSheetLock(spreadsheetId, sheetName, async () => {
+    const { rows } = await readAllRows(spreadsheetId, sheetName);
+    const target = rows.find((r) => r.data['id'] === id && r.data['user_id'] === userId);
+    if (!target) return false;
 
-  const sheets = getSheets();
-  const meta = await sheets.spreadsheets.get({ spreadsheetId });
-  const sheetId = meta.data.sheets?.find(
-    (s) => s.properties?.title === sheetName,
-  )?.properties?.sheetId;
-  if (sheetId === undefined || sheetId === null) throw new Error(`Sheet tab not found: ${sheetName}`);
+    const sheets = getSheets();
+    const meta = await withGoogleRetry(() => sheets.spreadsheets.get({ spreadsheetId }));
+    const sheetId = meta.data.sheets?.find(
+      (s) => s.properties?.title === sheetName,
+    )?.properties?.sheetId;
+    if (sheetId === undefined || sheetId === null) throw new Error(`Sheet tab not found: ${sheetName}`);
 
-  await sheets.spreadsheets.batchUpdate({
-    spreadsheetId,
-    requestBody: {
-      requests: [
-        {
-          deleteDimension: {
-            range: {
-              sheetId,
-              dimension: 'ROWS',
-              startIndex: target.sheetRow - 1,
-              endIndex: target.sheetRow,
+    await withGoogleRetry(() =>
+      sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: [
+            {
+              deleteDimension: {
+                range: {
+                  sheetId,
+                  dimension: 'ROWS',
+                  startIndex: target.sheetRow - 1,
+                  endIndex: target.sheetRow,
+                },
+              },
             },
-          },
+          ],
         },
-      ],
-    },
-  });
+      }),
+    );
 
-  return true;
+    return true;
+  });
 }

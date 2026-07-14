@@ -1,9 +1,12 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/requireAuth';
 import { createRow, deleteRow, listByUser, updateRow } from '../lib/sheet-store';
+import { optionalString, requireHttpUrl, requireString, ValidationError } from '../lib/validate';
 
 const router = Router();
 const SHEET = 'Links';
+const TITLE_MAX = 200;
+const NOTE_MAX = 5_000;
 
 router.get('/links', requireAuth, async (req, res) => {
   try {
@@ -17,18 +20,17 @@ router.get('/links', requireAuth, async (req, res) => {
 
 router.post('/links', requireAuth, async (req, res) => {
   try {
-    const { title, url, note } = req.body ?? {};
-    if (!title || !url) {
-      res.status(400).json({ error: 'title and url are required' });
-      return;
-    }
-    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, {
-      title,
-      url,
-      note: note ?? null,
-    });
+    const body = req.body ?? {};
+    const title = requireString(body.title, 'title', TITLE_MAX);
+    const url = requireHttpUrl(body.url, 'url');
+    const note = optionalString(body.note, 'note', NOTE_MAX);
+    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, { title, url, note });
     res.status(201).json({ data: row });
   } catch (err) {
+    if (err instanceof ValidationError) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to create link');
     res.status(500).json({ error: 'Failed to create link' });
   }
@@ -36,10 +38,11 @@ router.post('/links', requireAuth, async (req, res) => {
 
 router.put('/links/:id', requireAuth, async (req, res) => {
   try {
+    const body = req.body ?? {};
     const updates: Record<string, unknown> = {};
-    for (const key of ['title', 'url', 'note']) {
-      if (key in (req.body ?? {})) updates[key] = req.body[key];
-    }
+    if ('title' in body) updates.title = requireString(body.title, 'title', TITLE_MAX);
+    if ('url' in body) updates.url = requireHttpUrl(body.url, 'url');
+    if ('note' in body) updates.note = optionalString(body.note, 'note', NOTE_MAX);
     const row = await updateRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, updates);
     if (!row) {
       res.status(404).json({ error: 'Link not found' });
@@ -47,6 +50,10 @@ router.put('/links/:id', requireAuth, async (req, res) => {
     }
     res.status(200).json({ data: row });
   } catch (err) {
+    if (err instanceof ValidationError) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to update link');
     res.status(500).json({ error: 'Failed to update link' });
   }

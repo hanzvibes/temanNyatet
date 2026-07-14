@@ -1,9 +1,13 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/requireAuth';
 import { createRow, deleteRow, listByUser, updateRow } from '../lib/sheet-store';
+import { optionalBoolean, optionalString, requireString, ValidationError } from '../lib/validate';
 
 const router = Router();
 const SHEET = 'Todos';
+const TITLE_MAX = 200;
+const DESCRIPTION_MAX = 5_000;
+const DATE_MAX = 32;
 
 router.get('/todos', requireAuth, async (req, res) => {
   try {
@@ -17,20 +21,25 @@ router.get('/todos', requireAuth, async (req, res) => {
 
 router.post('/todos', requireAuth, async (req, res) => {
   try {
-    const { title, description, due_date, due_time, is_done } = req.body ?? {};
-    if (!title) {
-      res.status(400).json({ error: 'title is required' });
-      return;
-    }
+    const body = req.body ?? {};
+    const title = requireString(body.title, 'title', TITLE_MAX);
+    const description = optionalString(body.description, 'description', DESCRIPTION_MAX);
+    const due_date = optionalString(body.due_date, 'due_date', DATE_MAX);
+    const due_time = optionalString(body.due_time, 'due_time', DATE_MAX);
+    const is_done = optionalBoolean(body.is_done, 'is_done');
     const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, {
       title,
-      description: description ?? null,
-      due_date: due_date ?? null,
-      due_time: due_time ?? null,
-      is_done: is_done ?? false,
+      description,
+      due_date,
+      due_time,
+      is_done,
     });
     res.status(201).json({ data: row });
   } catch (err) {
+    if (err instanceof ValidationError) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to create todo');
     res.status(500).json({ error: 'Failed to create todo' });
   }
@@ -38,10 +47,13 @@ router.post('/todos', requireAuth, async (req, res) => {
 
 router.put('/todos/:id', requireAuth, async (req, res) => {
   try {
+    const body = req.body ?? {};
     const updates: Record<string, unknown> = {};
-    for (const key of ['title', 'description', 'due_date', 'due_time', 'is_done']) {
-      if (key in (req.body ?? {})) updates[key] = req.body[key];
-    }
+    if ('title' in body) updates.title = requireString(body.title, 'title', TITLE_MAX);
+    if ('description' in body) updates.description = optionalString(body.description, 'description', DESCRIPTION_MAX);
+    if ('due_date' in body) updates.due_date = optionalString(body.due_date, 'due_date', DATE_MAX);
+    if ('due_time' in body) updates.due_time = optionalString(body.due_time, 'due_time', DATE_MAX);
+    if ('is_done' in body) updates.is_done = optionalBoolean(body.is_done, 'is_done');
     const row = await updateRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, updates);
     if (!row) {
       res.status(404).json({ error: 'Todo not found' });
@@ -49,6 +61,10 @@ router.put('/todos/:id', requireAuth, async (req, res) => {
     }
     res.status(200).json({ data: row });
   } catch (err) {
+    if (err instanceof ValidationError) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to update todo');
     res.status(500).json({ error: 'Failed to update todo' });
   }

@@ -55,3 +55,39 @@ export function getServiceAccountEmail(): string | null {
 export function newId(): string {
   return crypto.randomUUID();
 }
+
+// Retries transient Google API failures (429 rate-limit, 5xx server errors)
+// with exponential backoff + jitter. The googleapis client already retries
+// GET/PUT/DELETE internally via gaxios, but POST calls (values.append,
+// spreadsheets.batchUpdate) are not retried by default even though they're
+// idempotent in our usage (append always adds a new row; batchUpdate calls
+// here are also safe to repeat), so a burst of Sheets API rate-limiting
+// would otherwise surface directly as a 500 to the user.
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
+const MAX_RETRIES = 3;
+
+function getStatusCode(err: unknown): number | undefined {
+  const anyErr = err as { code?: number; status?: number; response?: { status?: number } };
+  return anyErr?.response?.status ?? anyErr?.code ?? anyErr?.status;
+}
+
+export async function withGoogleRetry<T>(fn: () => Promise<T>): Promise<T> {
+  let attempt = 0;
+  for (;;) {
+    try {
+      return await fn();
+    } catch (err) {
+      const status = getStatusCode(err);
+      attempt += 1;
+      if (!status || !RETRYABLE_STATUS.has(status) || attempt > MAX_RETRIES) {
+        throw err;
+      }
+      const backoffMs = Math.min(2 ** attempt * 250, 4000) + Math.random() * 250;
+      logger.warn(
+        { status, attempt, backoffMs },
+        '[google-sheets] Retrying after transient Google Sheets API error',
+      );
+      await new Promise((resolve) => setTimeout(resolve, backoffMs));
+    }
+  }
+}

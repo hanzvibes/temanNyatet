@@ -1,10 +1,51 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
+
+// Sets standard security headers (HSTS, no-sniff, frameguard, etc). CSP is
+// left to the frontend's own hosting since this is a JSON API, not an HTML
+// renderer.
+app.use(helmet({ contentSecurityPolicy: false }));
+
+// Cross-origin allowlist. Unset by default (matches the previous permissive
+// `cors()` behavior) since the frontend calls this API with a Bearer token
+// it reads from Supabase — not a cookie — so a wildcard origin can't be
+// leveraged for cookie-based CSRF. Set ALLOWED_ORIGINS (comma-separated) in
+// production if the frontend is ever served from a fixed, known origin to
+// lock this down further.
+const allowedOrigins = (process.env["ALLOWED_ORIGINS"] ?? "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error(`Origin ${origin} is not allowed`));
+    },
+  }),
+);
+
+// General abuse/DoS guardrail across the whole API. Generous enough for
+// normal polling/CRUD use by a single user's devices.
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+  }),
+);
 
 app.use(
   pinoHttp({
@@ -26,16 +67,15 @@ app.use(
   }),
 );
 
-app.use(cors());
-
 // The Mayar webhook route must receive the raw body so we can verify the
 // HMAC-SHA256 signature against exact bytes. Mount express.raw() for that
 // specific path BEFORE the global express.json() parser consumes the body.
 app.use("/api/mayar-webhook", express.raw({ type: "application/json", limit: "1mb" }));
 
-// All other routes get JSON-parsed bodies.
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// All other routes get JSON-parsed bodies. 256kb comfortably covers even a
+// long-form note while still bounding request size against abuse.
+app.use(express.json({ limit: "256kb" }));
+app.use(express.urlencoded({ extended: true, limit: "256kb" }));
 
 app.get("/", (_req, res) => {
   res.json({

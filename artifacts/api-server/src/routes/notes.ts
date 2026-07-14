@@ -1,9 +1,12 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/requireAuth';
 import { createRow, deleteRow, listByUser, updateRow } from '../lib/sheet-store';
+import { optionalString, optionalTags, requireString, ValidationError } from '../lib/validate';
 
 const router = Router();
 const SHEET = 'Notes';
+const TITLE_MAX = 200;
+const CONTENT_MAX = 50_000;
 
 router.get('/notes', requireAuth, async (req, res) => {
   try {
@@ -17,18 +20,17 @@ router.get('/notes', requireAuth, async (req, res) => {
 
 router.post('/notes', requireAuth, async (req, res) => {
   try {
-    const { title, content, tags } = req.body ?? {};
-    if (!content || typeof content !== 'string' || !content.trim()) {
-      res.status(400).json({ error: 'content is required and must be a non-empty string' });
-      return;
-    }
-    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, {
-      title: title ?? null,
-      content: content.trim(),
-      tags: Array.isArray(tags) ? tags : [],
-    });
+    const body = req.body ?? {};
+    const content = requireString(body.content, 'content', CONTENT_MAX);
+    const title = optionalString(body.title, 'title', TITLE_MAX);
+    const tags = optionalTags(body.tags);
+    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, { title, content, tags });
     res.status(201).json({ data: row });
   } catch (err) {
+    if (err instanceof ValidationError) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to create note');
     res.status(500).json({ error: 'Failed to create note' });
   }
@@ -36,10 +38,11 @@ router.post('/notes', requireAuth, async (req, res) => {
 
 router.put('/notes/:id', requireAuth, async (req, res) => {
   try {
+    const body = req.body ?? {};
     const updates: Record<string, unknown> = {};
-    for (const key of ['title', 'content', 'tags']) {
-      if (key in (req.body ?? {})) updates[key] = req.body[key];
-    }
+    if ('title' in body) updates.title = optionalString(body.title, 'title', TITLE_MAX);
+    if ('content' in body) updates.content = requireString(body.content, 'content', CONTENT_MAX);
+    if ('tags' in body) updates.tags = optionalTags(body.tags);
     const row = await updateRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, updates);
     if (!row) {
       res.status(404).json({ error: 'Note not found' });
@@ -47,6 +50,10 @@ router.put('/notes/:id', requireAuth, async (req, res) => {
     }
     res.status(200).json({ data: row });
   } catch (err) {
+    if (err instanceof ValidationError) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to update note');
     res.status(500).json({ error: 'Failed to update note' });
   }

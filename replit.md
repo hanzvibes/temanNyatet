@@ -25,6 +25,7 @@ These secrets are configured in Replit Secrets for the current environment (re-a
 - `VITE_MAYAR_PAYMENT_URL` — Mayar payment page URL (frontend falls back to `#` if unset)
 - `MAYAR_WEBHOOK_SECRET` — Mayar webhook signing secret (`/api/mayar-webhook` fails closed if unset)
 - `CRON_SECRET` — any random string to secure the cron endpoint (`/api/cron/archive-expired` fails closed if unset)
+- `ALLOWED_ORIGINS` (api-server) — comma-separated list of allowed CORS origins. Unset = allow any origin (fine here since auth is a Bearer token, not a cookie). Set this if the frontend is ever served from a fixed, known production origin.
 
 ## Stack
 
@@ -42,10 +43,11 @@ These secrets are configured in Replit Secrets for the current environment (re-a
 - `artifacts/api-server/` — Express API. Key files:
   - `src/lib/google-sheets.ts` — Sheets JWT client; `getServiceAccountEmail()` for the "share with this email" instructions
   - `src/lib/user-sheet.ts` — cached lookup of `profiles.spreadsheet_id` per user (no auto-create)
-  - `src/lib/sheet-store.ts` — Generic CRUD with `user_id` row-level isolation; `listByUser` filters on server side; `ensureSheetsInitialized` creates tabs/headers on a newly connected spreadsheet
+  - `src/lib/sheet-store.ts` — Generic CRUD with `user_id` row-level isolation; `listByUser` filters on server side; `ensureSheetsInitialized` creates tabs/headers on a newly connected spreadsheet. Also sanitizes formula-injection payloads before writing, serializes create/update/delete per spreadsheet+tab (`withSheetLock`) to prevent read-then-write races, and retries transient Google API errors (`withGoogleRetry`, from `google-sheets.ts`)
   - `src/middleware/requireAuth.ts` — `requireUser` (token only) vs `requireAuth` (token + resolves `req.spreadsheetId`, responds 428 `SPREADSHEET_NOT_CONNECTED` if unset)
-  - `src/routes/spreadsheet.ts` — `GET /spreadsheet/status`, `POST /spreadsheet/connect` (validates access, rejects IDs already owned by another profile)
-  - `src/routes/{notes,todos,links,transactions}.ts` — Data routes
+  - `src/routes/spreadsheet.ts` — `GET /spreadsheet/status`, `POST /spreadsheet/connect` (validates access, rejects IDs already owned by another profile, rate-limited to 10 attempts/15min)
+  - `src/routes/{notes,todos,links,transactions}.ts` — Data routes; validate/bound all input via `src/lib/validate.ts` (required/optional strings with max length, enums, http(s)-only URLs)
+  - `src/app.ts` — `helmet()` security headers, configurable CORS allowlist (`ALLOWED_ORIGINS`), global rate limiting (300 req/15min/IP), 256kb JSON body limit
 - `lib/api-spec/` — OpenAPI spec + generated API client
 - `lib/db/` — shared DB types
 - `supabase/migrations/` — DB schema for `profiles`

@@ -16,6 +16,8 @@ TemanNyatet stores notes/transactions/todos/links in **each user's own private G
 - This was tried and reverted once already (first as create-in-shared-sheet, then per-user auto-create) before landing on "user connects their own sheet" — if a future attempt reconsiders auto-creation, check whether Google has changed this Drive quota policy first; as of 2026-07-13 it still applies.
 - Connecting a user-owned sheet sidesteps the quota entirely because the file lives in the *user's* Drive, not the service account's.
 
+**Security hardening (2026-07-14):** since each sheet is a real file the user opens/exports themselves, `sheet-store.ts` now prefixes any user-supplied string starting with `=+-@`/tab/CR with `'` before writing (defense against CSV/formula injection if the user later exports to Excel/LibreOffice — `RAW` value input option means Sheets itself never executes it, but a downstream export/reopen or manual re-edit can). `createRow`/`updateRow`/`deleteRow` are also serialized per spreadsheet+sheet-tab via an in-process async lock (`withSheetLock`) since they're read-row-index-then-write and Sheets has no transactions — sufficient for a single server instance only; revisit with a shared lock if ever scaled horizontally.
+
 **Gotchas:**
 - Google service account key must be the **full JSON** (`{"type":"service_account",...}`), not just the PEM private key field.
 - `id_ID` locale is not supported by the Sheets API — omit locale/timeZone when creating spreadsheets.

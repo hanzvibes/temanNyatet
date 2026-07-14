@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import { requireUser } from '../middleware/requireAuth';
 import { supabaseAdmin } from '../lib/supabase-admin';
 import {
@@ -6,11 +7,22 @@ import {
   getSheets,
   getSheetsConfigError,
   isSheetsConfigured,
+  withGoogleRetry,
 } from '../lib/google-sheets';
 import { ensureSheetsInitialized } from '../lib/sheet-store';
 import { invalidateUserSheetCache } from '../lib/user-sheet';
 
 const router = Router();
+
+// This endpoint makes an outbound call to Google (spreadsheets.get) and does
+// a Supabase ownership lookup per attempt — cheap enough to abuse for
+// enumeration/DoS without a tighter limit than the global one.
+const connectLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 function spreadsheetUrl(spreadsheetId: string): string {
   return `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
@@ -54,7 +66,7 @@ router.get('/spreadsheet/status', requireUser, async (req, res) => {
 
 // POST /api/spreadsheet/connect  { input: string }
 // `input` may be a full Google Sheets URL or a bare spreadsheet ID.
-router.post('/spreadsheet/connect', requireUser, async (req, res) => {
+router.post('/spreadsheet/connect', requireUser, connectLimiter, async (req, res) => {
   try {
     if (!isSheetsConfigured()) {
       res.status(503).json({ error: getSheetsConfigError() ?? 'Google Sheets belum dikonfigurasi di server.' });
@@ -83,7 +95,7 @@ router.post('/spreadsheet/connect', requireUser, async (req, res) => {
     // Verify the service account can actually reach it before saving anything.
     const sheets = getSheets();
     try {
-      await sheets.spreadsheets.get({ spreadsheetId });
+      await withGoogleRetry(() => sheets.spreadsheets.get({ spreadsheetId }));
     } catch (err) {
       req.log.warn({ err, spreadsheetId }, 'Spreadsheet not accessible to service account');
       res.status(400).json({

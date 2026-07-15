@@ -24,6 +24,21 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuthContext();
   const [location, setLocation] = useLocation();
 
+  // Listen for spreadsheet access errors dispatched by data hooks.
+  // When the API server returns SPREADSHEET_NOT_FOUND or
+  // SPREADSHEET_ACCESS_DENIED, the hook fires this event and we redirect
+  // the user to the connect/recovery page immediately.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const code = (e as CustomEvent<{ code: string }>).detail?.code ?? 'SPREADSHEET_NOT_FOUND';
+      if (location !== '/connect-sheet') {
+        setLocation(`/connect-sheet?error=${code}`);
+      }
+    };
+    window.addEventListener('teman-nyatet:spreadsheet-error', handler);
+    return () => window.removeEventListener('teman-nyatet:spreadsheet-error', handler);
+  }, [location, setLocation]);
+
   useEffect(() => {
     if (loading) return;
 

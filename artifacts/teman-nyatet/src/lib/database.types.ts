@@ -1,5 +1,11 @@
 // TypeScript types for TemanNyatet Supabase schema
 // Structured to match @supabase/supabase-js v2 GenericSchema constraints
+//
+// Note: notes, transactions, todos, and links tables exist in the initial
+// Supabase migration but are NOT used — all app data lives in each user's
+// private Google Spreadsheet. The types below (Note, Transaction, etc.) are
+// kept for compatibility with the data hooks that use them as shapes for
+// API responses from the api-server (which reads from Google Sheets).
 
 export type SubscriptionStatus = 'pending' | 'active' | 'archived';
 export type SubscriptionPlan = 'monthly' | 'yearly';
@@ -19,6 +25,7 @@ export interface Database {
           subscription_plan: SubscriptionPlan | null;
           subscription_end: string | null;
           spreadsheet_id: string | null;
+          template_version: string | null;
           created_at: string;
         };
         Insert: {
@@ -31,6 +38,7 @@ export interface Database {
           subscription_plan?: SubscriptionPlan | null;
           subscription_end?: string | null;
           spreadsheet_id?: string | null;
+          template_version?: string | null;
           created_at?: string;
         };
         Update: {
@@ -43,10 +51,13 @@ export interface Database {
           subscription_plan?: SubscriptionPlan | null;
           subscription_end?: string | null;
           spreadsheet_id?: string | null;
+          template_version?: string | null;
           created_at?: string;
         };
         Relationships: [];
       };
+      // Legacy tables — exist in Supabase but data lives in Google Sheets.
+      // Kept here so shared type imports don't break.
       notes: {
         Row: {
           id: string;

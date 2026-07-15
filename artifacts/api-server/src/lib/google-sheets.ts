@@ -45,9 +45,6 @@ export function getSheets(): sheets_v4.Sheets {
 
 // The service account's email — users must share their own spreadsheet with
 // this address (as Editor) so the backend can read/write it on their behalf.
-// See routes/spreadsheet.ts for the user-initiated "connect" flow. We never
-// create spreadsheets on the service account's own Drive — new service
-// accounts get 0 bytes of Drive storage quota, which makes that impossible.
 export function getServiceAccountEmail(): string | null {
   return serviceAccountEmail;
 }
@@ -56,13 +53,30 @@ export function newId(): string {
   return crypto.randomUUID();
 }
 
-// Retries transient Google API failures (429 rate-limit, 5xx server errors)
-// with exponential backoff + jitter. The googleapis client already retries
-// GET/PUT/DELETE internally via gaxios, but POST calls (values.append,
-// spreadsheets.batchUpdate) are not retried by default even though they're
-// idempotent in our usage (append always adds a new row; batchUpdate calls
-// here are also safe to repeat), so a burst of Sheets API rate-limiting
-// would otherwise surface directly as a 500 to the user.
+// ─── Typed Sheets access errors ────────────────────────────────────────────
+// Thrown when Google returns a definitive non-retryable error that the
+// frontend needs to handle with a specific recovery UX rather than a
+// generic "something went wrong" message.
+
+export type SheetsAccessErrorCode =
+  | 'SPREADSHEET_NOT_FOUND'
+  | 'SPREADSHEET_ACCESS_DENIED';
+
+export class SheetsAccessError extends Error {
+  constructor(
+    public readonly code: SheetsAccessErrorCode,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'SheetsAccessError';
+  }
+}
+
+// ─── Retry helper ──────────────────────────────────────────────────────────
+// Retries transient Google API failures (429, 5xx) with exponential backoff +
+// jitter. 403 and 404 are NOT retried — they are rethrown immediately as
+// SheetsAccessError so route handlers can return actionable error codes.
+
 const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
 const MAX_RETRIES = 3;
 
@@ -78,6 +92,21 @@ export async function withGoogleRetry<T>(fn: () => Promise<T>): Promise<T> {
       return await fn();
     } catch (err) {
       const status = getStatusCode(err);
+
+      // Non-retryable access errors — surface immediately with typed errors.
+      if (status === 404) {
+        throw new SheetsAccessError(
+          'SPREADSHEET_NOT_FOUND',
+          'Spreadsheet tidak ditemukan. Mungkin sudah dihapus atau dipindahkan.',
+        );
+      }
+      if (status === 403) {
+        throw new SheetsAccessError(
+          'SPREADSHEET_ACCESS_DENIED',
+          'Akses ke spreadsheet ditolak. Share ulang spreadsheet ke email service account sebagai Editor.',
+        );
+      }
+
       attempt += 1;
       if (!status || !RETRYABLE_STATUS.has(status) || attempt > MAX_RETRIES) {
         throw err;

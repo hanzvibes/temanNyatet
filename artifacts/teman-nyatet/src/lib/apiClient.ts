@@ -15,6 +15,24 @@ const API_BASE = (import.meta.env.VITE_API_SERVER_URL as string | undefined)?.re
 
 let refreshPromise: Promise<string | null> | null = null;
 
+// ─── Typed error for spreadsheet access failures ────────────────────────────
+// Thrown when the API server returns a 503 with a specific error code
+// (SPREADSHEET_NOT_FOUND or SPREADSHEET_ACCESS_DENIED). Data hooks catch
+// this and dispatch a global 'teman-nyatet:spreadsheet-error' event so the
+// AuthGuard can redirect the user to the recovery / reconnect page.
+
+export class SpreadsheetApiError extends Error {
+  constructor(
+    public readonly code: 'SPREADSHEET_NOT_FOUND' | 'SPREADSHEET_ACCESS_DENIED',
+    message: string,
+  ) {
+    super(message);
+    this.name = 'SpreadsheetApiError';
+  }
+}
+
+// ─── Internal helpers ────────────────────────────────────────────────────────
+
 async function getToken(): Promise<string | null> {
   const { data: { session } } = await supabase.auth.getSession();
   return session?.access_token ?? null;
@@ -46,7 +64,16 @@ async function handle<T>(res: Response): Promise<T> {
   if (res.status === 204) return undefined as T;
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(body?.error ?? `Request failed with status ${res.status}`);
+    const code = body?.error as string | undefined;
+    // Spreadsheet access errors get a typed error so hooks can trigger
+    // the global recovery flow instead of just showing a toast.
+    if (
+      res.status === 503 &&
+      (code === 'SPREADSHEET_NOT_FOUND' || code === 'SPREADSHEET_ACCESS_DENIED')
+    ) {
+      throw new SpreadsheetApiError(code, body?.message ?? code);
+    }
+    throw new Error(code ?? `Request failed with status ${res.status}`);
   }
   return (body?.data ?? body) as T;
 }
@@ -84,6 +111,8 @@ async function fetchWithAuth<T>(path: string, init: RequestInit): Promise<T> {
 
   return handle<T>(res);
 }
+
+// ─── Public API ──────────────────────────────────────────────────────────────
 
 export async function apiGet<T>(path: string): Promise<T> {
   return fetchWithAuth<T>(path, { method: 'GET' });

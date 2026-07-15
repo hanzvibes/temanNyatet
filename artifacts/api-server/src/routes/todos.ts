@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/requireAuth';
 import { createRow, deleteRow, listByUser, updateRow } from '../lib/sheet-store';
+import { SheetsAccessError } from '../lib/google-sheets';
 import { optionalBoolean, optionalString, requireString, ValidationError } from '../lib/validate';
 
 const router = Router();
@@ -14,6 +15,10 @@ router.get('/todos', requireAuth, async (req, res) => {
     const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!);
     res.status(200).json({ data: rows });
   } catch (err) {
+    if (err instanceof SheetsAccessError) {
+      res.status(503).json({ error: err.code, message: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to list todos');
     res.status(500).json({ error: 'Failed to load todos' });
   }
@@ -38,6 +43,10 @@ router.post('/todos', requireAuth, async (req, res) => {
   } catch (err) {
     if (err instanceof ValidationError) {
       res.status(400).json({ error: err.message });
+      return;
+    }
+    if (err instanceof SheetsAccessError) {
+      res.status(503).json({ error: err.code, message: err.message });
       return;
     }
     req.log.error({ err }, 'Failed to create todo');
@@ -65,6 +74,10 @@ router.put('/todos/:id', requireAuth, async (req, res) => {
       res.status(400).json({ error: err.message });
       return;
     }
+    if (err instanceof SheetsAccessError) {
+      res.status(503).json({ error: err.code, message: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to update todo');
     res.status(500).json({ error: 'Failed to update todo' });
   }
@@ -79,6 +92,10 @@ router.delete('/todos/:id', requireAuth, async (req, res) => {
     }
     res.status(204).send();
   } catch (err) {
+    if (err instanceof SheetsAccessError) {
+      res.status(503).json({ error: err.code, message: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to delete todo');
     res.status(500).json({ error: 'Failed to delete todo' });
   }

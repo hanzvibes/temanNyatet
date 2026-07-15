@@ -3,7 +3,6 @@ import { supabase } from '@/lib/supabase';
 import { apiGet, apiPost } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
 import {
-  NotebookPen,
   LogOut,
   Copy,
   Check,
@@ -13,9 +12,19 @@ import {
   ShieldCheck,
   AlertCircle,
   ChevronRight,
+  AlertTriangle,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// The master template spreadsheet that users copy to their own Drive.
+// Set VITE_SPREADSHEET_TEMPLATE_ID in the environment to enable the
+// one-click "Copy Template" button. If unset, a generic link is shown.
+const TEMPLATE_ID = import.meta.env.VITE_SPREADSHEET_TEMPLATE_ID as string | undefined;
+const TEMPLATE_COPY_URL = TEMPLATE_ID
+  ? `https://docs.google.com/spreadsheets/d/${TEMPLATE_ID}/copy`
+  : 'https://docs.google.com/spreadsheets/';
 
 interface SpreadsheetStatus {
   connected: boolean;
@@ -23,7 +32,21 @@ interface SpreadsheetStatus {
   spreadsheetUrl: string | null;
   serviceAccountEmail: string | null;
   sheetsConfigured: boolean;
+  templateVersion: string | null;
 }
+
+// Error codes surfaced via ?error= query param (set by the global error
+// handler in App.tsx when a spreadsheet access error fires mid-session).
+const ERROR_MESSAGES: Record<string, { title: string; body: string }> = {
+  SPREADSHEET_NOT_FOUND: {
+    title: 'Spreadsheet tidak ditemukan',
+    body: 'Spreadsheet yang terhubung tidak dapat ditemukan — mungkin sudah dihapus atau dipindahkan. Hubungkan spreadsheet baru untuk melanjutkan.',
+  },
+  SPREADSHEET_ACCESS_DENIED: {
+    title: 'Akses spreadsheet dicabut',
+    body: 'TemanNyatet tidak lagi punya akses ke spreadsheet kamu. Share ulang ke email service account sebagai Editor.',
+  },
+};
 
 export default function ConnectSheetPage() {
   const { refreshProfile } = useAuthContext();
@@ -32,15 +55,21 @@ export default function ConnectSheetPage() {
   const [input, setInput] = useState('');
   const [connecting, setConnecting] = useState(false);
   const [showReconnect, setShowReconnect] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
+  const [templateOpened, setTemplateOpened] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
+
+  // Error code from query param (set when redirected after a mid-session
+  // spreadsheet error — see App.tsx's AuthGuard).
+  const recoveryError = new URLSearchParams(window.location.search).get('error');
+  const recoveryInfo = recoveryError ? ERROR_MESSAGES[recoveryError] ?? null : null;
 
   const loadStatus = async () => {
     try {
       const data = await apiGet<SpreadsheetStatus>('/spreadsheet/status');
       setStatus(data);
-      setShowReconnect(!data.connected);
+      setShowReconnect(!data.connected || !!recoveryError);
     } catch (err) {
       console.warn('[ConnectSheetPage] Failed to load status:', err);
     } finally {
@@ -50,16 +79,12 @@ export default function ConnectSheetPage() {
 
   useEffect(() => {
     loadStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Keep the latest refreshProfile callback in a ref so the navigation timer
-  // doesn't restart every render (refreshProfile is recreated each render).
   const refreshProfileRef = useRef(refreshProfile);
   refreshProfileRef.current = refreshProfile;
 
-  // After a successful connect, show a brief success animation, then let
-  // AuthContext refresh the profile. AuthGuard will automatically redirect the
-  // user to the correct app screen based on their subscription status.
   useEffect(() => {
     if (!isNavigating) return;
     const timer = setTimeout(() => {
@@ -72,8 +97,9 @@ export default function ConnectSheetPage() {
     if (!status?.serviceAccountEmail) return;
     try {
       await navigator.clipboard.writeText(status.serviceAccountEmail);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedEmail(true);
+      setTimeout(() => setCopiedEmail(false), 2000);
+      toast.success('Email disalin!');
     } catch {
       toast.error('Gagal menyalin email');
     }
@@ -132,10 +158,25 @@ export default function ConnectSheetPage() {
             transition={{ duration: 0.35, ease: 'easeOut' }}
             className="relative w-full max-w-md bg-card/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-border p-6 sm:p-8"
           >
+            {/* Recovery alert — shown when redirected after a mid-session error */}
+            {recoveryInfo && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="mb-5 flex gap-3 bg-destructive/10 border border-destructive/20 rounded-2xl p-4"
+              >
+                <AlertTriangle size={18} className="flex-shrink-0 text-destructive mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-destructive">{recoveryInfo.title}</p>
+                  <p className="text-xs text-destructive/80 mt-0.5 leading-relaxed">{recoveryInfo.body}</p>
+                </div>
+              </motion.div>
+            )}
+
             {/* Header */}
             <div className="flex flex-col items-center text-center mb-6">
               <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg text-primary-foreground">
-                {connected ? <FileSpreadsheet size={28} /> : <NotebookPen size={28} />}
+                <FileSpreadsheet size={28} />
               </div>
               <h1 className="text-2xl font-bold text-foreground leading-tight">
                 {connected ? 'Spreadsheet Terhubung' : 'Hubungkan Spreadsheet'}
@@ -143,11 +184,12 @@ export default function ConnectSheetPage() {
               <p className="text-muted-foreground text-sm mt-2 max-w-xs">
                 {connected
                   ? 'Data kamu tersimpan aman di spreadsheet pribadi milikmu sendiri.'
-                  : 'Data catatan, keuangan, todo, dan link kamu disimpan di Google Spreadsheet pribadi.'}
+                  : 'Data catatan, keuangan, todo, dan link kamu disimpan di Google Spreadsheet pribadimu.'}
               </p>
             </div>
 
             {connected ? (
+              // ── Connected state ────────────────────────────────────────────
               <div className="space-y-4">
                 <a
                   href={status.spreadsheetUrl ?? '#'}
@@ -158,22 +200,57 @@ export default function ConnectSheetPage() {
                   Buka Spreadsheet <ExternalLink size={18} />
                 </a>
 
+                {status.templateVersion && (
+                  <p className="text-center text-xs text-muted-foreground">
+                    Template v{status.templateVersion}
+                  </p>
+                )}
+
                 <button
                   onClick={() => setShowReconnect(true)}
-                  className="w-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+                  className="w-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2 flex items-center justify-center gap-1.5"
                 >
-                  Ganti spreadsheet
+                  <RefreshCw size={14} /> Ganti spreadsheet
                 </button>
               </div>
             ) : (
+              // ── Onboarding / reconnect flow ────────────────────────────────
               <>
-                {/* Steps */}
-                <div className="space-y-3 mb-5">
-                  <Step number={1} icon={FileSpreadsheet}>
-                    Buat spreadsheet baru di Google Drive kamu.
-                  </Step>
-                  <Step number={2} icon={ShieldCheck}>
-                    <span className="block mb-2">Share dengan email service account ini:</span>
+                <div className="space-y-4 mb-5">
+                  {/* Step 1 — Copy template */}
+                  <OnboardingStep
+                    number={1}
+                    icon={FileSpreadsheet}
+                    done={templateOpened}
+                    title="Salin Template"
+                  >
+                    <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
+                      Buka template resmi TemanNyatet, lalu pilih{' '}
+                      <span className="font-medium text-foreground">File → Buat salinan</span>.
+                    </p>
+                    <a
+                      href={TEMPLATE_COPY_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setTemplateOpened(true)}
+                      className="inline-flex items-center gap-2 bg-primary text-primary-foreground text-sm font-semibold px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity shadow-sm"
+                    >
+                      {TEMPLATE_ID ? 'Salin Template →' : 'Buka Google Sheets →'}
+                      <ExternalLink size={14} />
+                    </a>
+                  </OnboardingStep>
+
+                  {/* Step 2 — Share to service account */}
+                  <OnboardingStep
+                    number={2}
+                    icon={ShieldCheck}
+                    done={copiedEmail}
+                    title="Share ke TemanNyatet"
+                  >
+                    <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
+                      Di spreadsheet salinанmu, klik <span className="font-medium text-foreground">Share</span> dan
+                      tambahkan email ini sebagai <span className="font-medium text-foreground">Editor</span>:
+                    </p>
                     <button
                       onClick={handleCopyEmail}
                       disabled={!status?.serviceAccountEmail}
@@ -183,42 +260,47 @@ export default function ConnectSheetPage() {
                         {status?.serviceAccountEmail ?? 'Belum dikonfigurasi'}
                       </span>
                       <span className="flex-shrink-0 mt-0.5">
-                        {copied ? (
+                        {copiedEmail ? (
                           <Check size={14} className="text-primary" />
                         ) : (
                           <Copy size={14} className="text-muted-foreground" />
                         )}
                       </span>
                     </button>
-                  </Step>
-                  <Step number={3} icon={ExternalLink}>
-                    Salin link spreadsheet-nya, lalu tempel di bawah ini.
-                  </Step>
-                </div>
+                  </OnboardingStep>
 
-                {/* Input */}
-                <div className="mb-4">
-                  <input
-                    type="text"
-                    value={input}
-                    onChange={e => { setInput(e.target.value); setError(null); }}
-                    placeholder="https://docs.google.com/spreadsheets/d/..."
-                    className="w-full bg-secondary border border-border rounded-2xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 font-medium text-foreground text-sm py-3.5 px-4 transition-all"
-                    onKeyDown={e => e.key === 'Enter' && handleConnect()}
-                  />
-                  <AnimatePresence>
-                    {error && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="flex items-start gap-2 mt-2 text-destructive text-xs"
-                      >
-                        <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
-                        <span>{error}</span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {/* Step 3 — Paste URL */}
+                  <OnboardingStep
+                    number={3}
+                    icon={ExternalLink}
+                    done={false}
+                    title="Tempel Link Spreadsheet"
+                  >
+                    <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
+                      Salin link spreadsheet salinанmu dari address bar, lalu tempel di sini.
+                    </p>
+                    <input
+                      type="text"
+                      value={input}
+                      onChange={e => { setInput(e.target.value); setError(null); }}
+                      placeholder="https://docs.google.com/spreadsheets/d/..."
+                      className="w-full bg-secondary border border-border rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-foreground text-sm py-3 px-3.5 transition-all"
+                      onKeyDown={e => e.key === 'Enter' && handleConnect()}
+                    />
+                    <AnimatePresence>
+                      {error && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="flex items-start gap-2 mt-2 text-destructive text-xs"
+                        >
+                          <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
+                          <span>{error}</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </OnboardingStep>
                 </div>
 
                 <button
@@ -295,13 +377,39 @@ export default function ConnectSheetPage() {
   );
 }
 
-function Step({ number, icon: Icon, children }: { number: number; icon: React.ElementType; children: React.ReactNode }) {
+// ─── Onboarding step component ───────────────────────────────────────────────
+
+function OnboardingStep({
+  number,
+  icon: Icon,
+  done,
+  title,
+  children,
+}: {
+  number: number;
+  icon: React.ElementType;
+  done: boolean;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex gap-3 text-sm text-foreground">
-      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-secondary border border-border flex items-center justify-center text-xs font-bold">
-        {number}
+    <div className="rounded-2xl border border-border bg-secondary/30 p-4">
+      <div className="flex items-center gap-3 mb-3">
+        <div
+          className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+            done
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-secondary border border-border text-foreground'
+          }`}
+        >
+          {done ? <Check size={13} strokeWidth={3} /> : number}
+        </div>
+        <div className="flex items-center gap-2">
+          <Icon size={16} className="text-primary" />
+          <span className="text-sm font-semibold text-foreground">{title}</span>
+        </div>
       </div>
-      <div className="flex-1 pt-0.5 leading-relaxed">{children}</div>
+      <div className="pl-10">{children}</div>
     </div>
   );
 }

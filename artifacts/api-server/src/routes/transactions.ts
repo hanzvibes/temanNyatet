@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/requireAuth';
 import { createRow, deleteRow, listByUser, updateRow } from '../lib/sheet-store';
+import { SheetsAccessError } from '../lib/google-sheets';
 import { optionalString, requireEnum, requireString, ValidationError } from '../lib/validate';
 
 const router = Router();
@@ -23,6 +24,10 @@ router.get('/transactions', requireAuth, async (req, res) => {
     const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!);
     res.status(200).json({ data: rows });
   } catch (err) {
+    if (err instanceof SheetsAccessError) {
+      res.status(503).json({ error: err.code, message: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to list transactions');
     res.status(500).json({ error: 'Failed to load transactions' });
   }
@@ -51,6 +56,10 @@ router.post('/transactions', requireAuth, async (req, res) => {
       res.status(400).json({ error: err.message });
       return;
     }
+    if (err instanceof SheetsAccessError) {
+      res.status(503).json({ error: err.code, message: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to create transaction');
     res.status(500).json({ error: 'Failed to create transaction' });
   }
@@ -77,6 +86,10 @@ router.put('/transactions/:id', requireAuth, async (req, res) => {
       res.status(400).json({ error: err.message });
       return;
     }
+    if (err instanceof SheetsAccessError) {
+      res.status(503).json({ error: err.code, message: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to update transaction');
     res.status(500).json({ error: 'Failed to update transaction' });
   }
@@ -91,6 +104,10 @@ router.delete('/transactions/:id', requireAuth, async (req, res) => {
     }
     res.status(204).send();
   } catch (err) {
+    if (err instanceof SheetsAccessError) {
+      res.status(503).json({ error: err.code, message: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to delete transaction');
     res.status(500).json({ error: 'Failed to delete transaction' });
   }

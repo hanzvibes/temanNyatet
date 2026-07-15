@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/apiClient';
+import { apiGet, apiPost, apiPut, apiDelete, SpreadsheetApiError } from '@/lib/apiClient';
 import type { Note, NoteInsert, NoteUpdate } from '@/lib/database.types';
 import { toast } from 'sonner';
 
@@ -11,6 +11,12 @@ const POLL_INTERVAL_MS = 15000;
 // Custom event used to synchronise multiple hook instances (e.g. bottom-sheet
 // form vs. the page that displays the list) without a shared state layer.
 const REFETCH_EVENT = 'teman-nyatet:refetch:notes';
+
+function dispatchSheetError(code: string): void {
+  window.dispatchEvent(
+    new CustomEvent('teman-nyatet:spreadsheet-error', { detail: { code } }),
+  );
+}
 
 export function useNotes(userId?: string) {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -26,6 +32,10 @@ export function useNotes(userId?: string) {
       setNotes((data || []).slice().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
       setError(null);
     } catch (err) {
+      if (err instanceof SpreadsheetApiError) {
+        dispatchSheetError(err.code);
+        return;
+      }
       setError(err as Error);
       if (firstLoad.current) toast.error('Gagal mengambil catatan');
     } finally {
@@ -39,8 +49,6 @@ export function useNotes(userId?: string) {
     firstLoad.current = true;
     fetchNotes();
     const interval = setInterval(fetchNotes, POLL_INTERVAL_MS);
-    // Listen for creates from OTHER hook instances (e.g. bottom-sheet form)
-    // so the page list updates immediately without waiting for the poll.
     const onExternalChange = () => fetchNotes();
     window.addEventListener(REFETCH_EVENT, onExternalChange);
     return () => {
@@ -55,10 +63,10 @@ export function useNotes(userId?: string) {
       const data = await apiPost<Note>('/notes', note);
       setNotes(prev => [data, ...prev]);
       toast.success('Catatan disimpan!');
-      // Notify other hook instances (e.g. on the page) to refetch immediately.
       window.dispatchEvent(new CustomEvent(REFETCH_EVENT));
       return data;
     } catch (err) {
+      if (err instanceof SpreadsheetApiError) { dispatchSheetError(err.code); return; }
       toast.error('Gagal menyimpan catatan');
       throw err;
     }
@@ -71,6 +79,7 @@ export function useNotes(userId?: string) {
       toast.success('Catatan diperbarui!');
       return data;
     } catch (err) {
+      if (err instanceof SpreadsheetApiError) { dispatchSheetError(err.code); return; }
       toast.error('Gagal memperbarui catatan');
       throw err;
     }
@@ -84,6 +93,7 @@ export function useNotes(userId?: string) {
       toast.success('Catatan dihapus');
     } catch (err) {
       setNotes(prev);
+      if (err instanceof SpreadsheetApiError) { dispatchSheetError(err.code); return; }
       toast.error('Gagal menghapus catatan');
       throw err;
     }

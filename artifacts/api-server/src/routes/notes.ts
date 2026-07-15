@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/requireAuth';
 import { createRow, deleteRow, listByUser, updateRow } from '../lib/sheet-store';
+import { SheetsAccessError } from '../lib/google-sheets';
 import { optionalString, optionalTags, requireString, ValidationError } from '../lib/validate';
 
 const router = Router();
@@ -13,6 +14,10 @@ router.get('/notes', requireAuth, async (req, res) => {
     const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!);
     res.status(200).json({ data: rows });
   } catch (err) {
+    if (err instanceof SheetsAccessError) {
+      res.status(503).json({ error: err.code, message: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to list notes');
     res.status(500).json({ error: 'Failed to load notes' });
   }
@@ -29,6 +34,10 @@ router.post('/notes', requireAuth, async (req, res) => {
   } catch (err) {
     if (err instanceof ValidationError) {
       res.status(400).json({ error: err.message });
+      return;
+    }
+    if (err instanceof SheetsAccessError) {
+      res.status(503).json({ error: err.code, message: err.message });
       return;
     }
     req.log.error({ err }, 'Failed to create note');
@@ -54,6 +63,10 @@ router.put('/notes/:id', requireAuth, async (req, res) => {
       res.status(400).json({ error: err.message });
       return;
     }
+    if (err instanceof SheetsAccessError) {
+      res.status(503).json({ error: err.code, message: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to update note');
     res.status(500).json({ error: 'Failed to update note' });
   }
@@ -68,6 +81,10 @@ router.delete('/notes/:id', requireAuth, async (req, res) => {
     }
     res.status(204).send();
   } catch (err) {
+    if (err instanceof SheetsAccessError) {
+      res.status(503).json({ error: err.code, message: err.message });
+      return;
+    }
     req.log.error({ err }, 'Failed to delete note');
     res.status(500).json({ error: 'Failed to delete note' });
   }

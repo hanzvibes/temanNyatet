@@ -1,7 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/apiClient';
+import { apiGet, apiPost, apiPut, apiDelete, SpreadsheetApiError } from '@/lib/apiClient';
 import type { Todo, TodoInsert, TodoUpdate } from '@/lib/database.types';
 import { toast } from 'sonner';
+
+function dispatchSheetError(code: string): void {
+  window.dispatchEvent(
+    new CustomEvent('teman-nyatet:spreadsheet-error', { detail: { code } }),
+  );
+}
 
 const POLL_INTERVAL_MS = 15000;
 const REFETCH_EVENT = 'teman-nyatet:refetch:todos';
@@ -20,6 +26,7 @@ export function useTodos(userId?: string) {
       setTodos((data || []).slice().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
       setError(null);
     } catch (err) {
+      if (err instanceof SpreadsheetApiError) { dispatchSheetError(err.code); return; }
       setError(err as Error);
       if (firstLoad.current) toast.error('Gagal mengambil To-do');
     } finally {

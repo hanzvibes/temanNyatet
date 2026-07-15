@@ -1,36 +1,44 @@
-// Generic CRUD helper backing app data (notes, transactions, todos, links) with
-// a shared Google Sheet acting as the database. Each sheet tab has a header
-// row; rows are addressed by an `id` (UUID) column and isolated by `user_id`.
+// Generic CRUD helper backing app data (notes, transactions, todos, links,
+// journals) with a per-user Google Sheet as the database. Each sheet tab has
+// a header row; rows are addressed by an `id` (UUID) column and isolated by
+// `user_id`. Deleted rows are moved to `_Archive` before physical removal.
 import { getSheets, newId, withGoogleRetry } from './google-sheets';
 import { logger } from './logger';
+
+// ─── Sheet schemas ──────────────────────────────────────────────────────────
 
 export const SHEET_SCHEMAS: Record<string, string[]> = {
   Notes: ['id', 'user_id', 'title', 'content', 'tags', 'created_at', 'updated_at'],
   Transactions: ['id', 'user_id', 'type', 'amount', 'category', 'source', 'note', 'date', 'created_at'],
   Todos: ['id', 'user_id', 'title', 'description', 'due_date', 'due_time', 'is_done', 'created_at'],
   Links: ['id', 'user_id', 'title', 'url', 'note', 'created_at'],
+  Journal: ['id', 'user_id', 'content', 'mood', 'date', 'created_at'],
 };
 
-// Per-spreadsheet init cache — sheet headers only written once per process lifetime.
+// Archive tab stores soft-deleted rows from any data tab.
+const _ARCHIVE_HEADERS = ['id', 'source_sheet', 'archived_at', 'user_id', 'row_data'];
+
+// ─── Per-spreadsheet init cache ─────────────────────────────────────────────
+// Sheet headers are only written once per process lifetime per spreadsheet.
+
 const initializedSheets = new Set<string>();
 
+// ─── Async sheet lock ────────────────────────────────────────────────────────
 // Serializes mutating operations (create/update/delete) against the same
 // sheet tab so two concurrent requests can't interleave a read-then-write
 // span — e.g. two quick taps on "delete" for adjacent rows racing on the
 // row-index math, or an update reading stale data because a delete shifted
 // row numbers underneath it mid-flight. Google Sheets has no transactions
 // of its own, so this in-process async queue is the concurrency guard.
-// Scope: correct for a single server instance (fine at this app's scale);
-// if the API server is ever horizontally scaled this would need to move to
-// a shared lock (e.g. a Postgres advisory lock keyed by spreadsheet+sheet).
+// Scope: correct for a single server instance; horizontal scaling would
+// require a shared lock (e.g. Postgres advisory lock keyed by spreadsheet+sheet).
+
 const sheetLocks = new Map<string, Promise<unknown>>();
 
 function withSheetLock<T>(spreadsheetId: string, sheetName: string, fn: () => Promise<T>): Promise<T> {
   const key = `${spreadsheetId}:${sheetName}`;
   const previous = sheetLocks.get(key) ?? Promise.resolve();
   const run = previous.then(fn, fn);
-  // Always leave a settled (non-throwing) marker behind so one failed
-  // operation doesn't permanently jam the queue for this sheet.
   sheetLocks.set(
     key,
     run.then(
@@ -41,7 +49,10 @@ function withSheetLock<T>(spreadsheetId: string, sheetName: string, fn: () => Pr
   return run;
 }
 
-// Ensures every required tab exists with the correct header row.
+// ─── Initialization ──────────────────────────────────────────────────────────
+
+// Ensures every required tab (data tabs + _Archive) exists with the correct
+// header row. Called on the first request for each spreadsheet per process.
 export async function ensureSheetsInitialized(spreadsheetId: string): Promise<void> {
   if (initializedSheets.has(spreadsheetId)) return;
   const sheets = getSheets();
@@ -49,7 +60,10 @@ export async function ensureSheetsInitialized(spreadsheetId: string): Promise<vo
   const meta = await withGoogleRetry(() => sheets.spreadsheets.get({ spreadsheetId }));
   const existingTitles = new Set((meta.data.sheets ?? []).map((s) => s.properties?.title));
 
-  const missing = Object.keys(SHEET_SCHEMAS).filter((title) => !existingTitles.has(title));
+  // All tabs that must exist: data tabs + _Archive
+  const allRequiredTabs = [...Object.keys(SHEET_SCHEMAS), '_Archive'];
+  const missing = allRequiredTabs.filter((title) => !existingTitles.has(title));
+
   if (missing.length > 0) {
     await withGoogleRetry(() =>
       sheets.spreadsheets.batchUpdate({
@@ -62,6 +76,7 @@ export async function ensureSheetsInitialized(spreadsheetId: string): Promise<vo
     logger.info({ missing, spreadsheetId }, '[sheet-store] Created missing sheet tabs');
   }
 
+  // Write/repair header rows for all data tabs
   for (const [title, headers] of Object.entries(SHEET_SCHEMAS)) {
     await withGoogleRetry(() =>
       sheets.spreadsheets.values.update({
@@ -73,8 +88,33 @@ export async function ensureSheetsInitialized(spreadsheetId: string): Promise<vo
     );
   }
 
+  // Write/repair _Archive header row
+  await withGoogleRetry(() =>
+    sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `_Archive!A1:${columnLetter(_ARCHIVE_HEADERS.length)}1`,
+      valueInputOption: 'RAW',
+      requestBody: { values: [_ARCHIVE_HEADERS] },
+    }),
+  );
+
   initializedSheets.add(spreadsheetId);
 }
+
+// ─── Repair utility ──────────────────────────────────────────────────────────
+
+// Clears the init cache and re-runs initialization, effectively re-writing
+// correct headers to all tabs. Use via POST /api/spreadsheet/repair when a
+// user has accidentally renamed or deleted header columns.
+export async function repairHeaders(
+  spreadsheetId: string,
+): Promise<{ repaired: string[] }> {
+  initializedSheets.delete(spreadsheetId);
+  await ensureSheetsInitialized(spreadsheetId);
+  return { repaired: [...Object.keys(SHEET_SCHEMAS), '_Archive'] };
+}
+
+// ─── Column helpers ──────────────────────────────────────────────────────────
 
 function columnLetter(n: number): string {
   let s = '';
@@ -95,6 +135,7 @@ function rowToObject(headers: string[], row: string[]): Record<string, unknown> 
   return obj;
 }
 
+// ─── Formula injection guard ─────────────────────────────────────────────────
 // Characters that Excel/Sheets/LibreOffice treat as the start of a formula
 // when a cell's text is (re)parsed — the classic "CSV/formula injection"
 // class (OWASP). `RAW` value input option means the Sheets API itself never
@@ -102,8 +143,8 @@ function rowToObject(headers: string[], row: string[]): Record<string, unknown> 
 // user* — they may export it to CSV/XLSX and open it in Excel, or manually
 // re-type/confirm the cell in the Sheets UI, either of which re-parses the
 // text and would execute a payload like `=HYPERLINK(...)` or a DDE call.
-// Prefixing with a single quote is the standard mitigation: Excel's CSV
-// importer and the Sheets UI both honor a leading `'` as "force text".
+// Prefixing with a single quote is the standard mitigation.
+
 const FORMULA_TRIGGER_CHARS = new Set(['=', '+', '-', '@', '\t', '\r']);
 
 function sanitizeForSpreadsheet(value: string): string {
@@ -116,9 +157,6 @@ function sanitizeForSpreadsheet(value: string): string {
 function coerceValue(header: string, value: unknown): string {
   if (value === null || value === undefined) return '';
   if (header === 'tags' && Array.isArray(value)) return JSON.stringify(value);
-  // Only sanitize values that were actually strings before coercion — numbers
-  // (e.g. `amount`) and booleans (e.g. `is_done`) can't carry a formula
-  // payload and shouldn't be mangled.
   if (typeof value === 'string') return sanitizeForSpreadsheet(value);
   return String(value);
 }
@@ -142,6 +180,8 @@ function decodeRow(headers: string[], data: Record<string, unknown>): Record<str
   return decoded;
 }
 
+// ─── Internal read helper ────────────────────────────────────────────────────
+
 async function readAllRows(
   spreadsheetId: string,
   sheetName: string,
@@ -163,6 +203,36 @@ async function readAllRows(
   }));
   return { headers, rows };
 }
+
+// ─── Archive helper ──────────────────────────────────────────────────────────
+
+// Appends a row to the _Archive tab before physical deletion, preserving
+// the original data for recovery. row_data is stored as JSON.
+async function archiveDeletedRow(
+  spreadsheetId: string,
+  sourceSheet: string,
+  data: Record<string, unknown>,
+): Promise<void> {
+  const sheets = getSheets();
+  const archiveRow = [
+    String(data['id'] ?? ''),
+    sourceSheet,
+    new Date().toISOString(),
+    String(data['user_id'] ?? ''),
+    JSON.stringify(data),
+  ];
+  await withGoogleRetry(() =>
+    sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: '_Archive!A:A',
+      valueInputOption: 'RAW',
+      insertDataOption: 'INSERT_ROWS',
+      requestBody: { values: [archiveRow] },
+    }),
+  );
+}
+
+// ─── Public CRUD API ─────────────────────────────────────────────────────────
 
 // Returns only the rows belonging to the given user (server-side user_id filter).
 export async function listByUser(
@@ -256,7 +326,8 @@ export async function updateRow(
   });
 }
 
-// Deletes a row by id — only if it belongs to the caller's userId.
+// Moves the row to _Archive, then deletes it from the source tab.
+// Only operates on rows belonging to the caller's userId.
 export async function deleteRow(
   spreadsheetId: string,
   sheetName: string,
@@ -267,6 +338,18 @@ export async function deleteRow(
     const { rows } = await readAllRows(spreadsheetId, sheetName);
     const target = rows.find((r) => r.data['id'] === id && r.data['user_id'] === userId);
     if (!target) return false;
+
+    // Archive first so data is never permanently lost
+    try {
+      await archiveDeletedRow(spreadsheetId, sheetName, target.data);
+    } catch (archiveErr) {
+      // Log but don't block the delete — archive failure shouldn't prevent
+      // the user from deleting their data.
+      logger.warn(
+        { archiveErr, spreadsheetId, sheetName, id },
+        '[sheet-store] Failed to archive row before delete; proceeding with delete',
+      );
+    }
 
     const sheets = getSheets();
     const meta = await withGoogleRetry(() => sheets.spreadsheets.get({ spreadsheetId }));

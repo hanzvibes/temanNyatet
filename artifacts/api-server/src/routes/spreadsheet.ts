@@ -49,7 +49,7 @@ async function readTemplateMetadata(
     const res = await withGoogleRetry(() =>
       sheets.spreadsheets.values.get({
         spreadsheetId,
-        range: '_Metadata!A1:B10',
+        range: "'🔒 _Metadata'!A1:B10",
       }),
     );
     const values = res.data.values ?? [];

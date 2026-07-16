@@ -5,7 +5,7 @@ import { SheetsAccessError } from '../lib/google-sheets';
 import { optionalBoolean, optionalString, requireString, ValidationError } from '../lib/validate';
 
 const router = Router();
-const SHEET = 'Todos';
+const SHEET = '✅ Todos';
 const TITLE_MAX = 200;
 const DESCRIPTION_MAX = 5_000;
 const DATE_MAX = 32;

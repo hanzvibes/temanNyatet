@@ -8,14 +8,14 @@ import { logger } from './logger';
 // ─── Sheet schemas ──────────────────────────────────────────────────────────
 
 export const SHEET_SCHEMAS: Record<string, string[]> = {
-  Notes: ['id', 'user_id', 'title', 'content', 'tags', 'created_at', 'updated_at'],
-  Transactions: ['id', 'user_id', 'type', 'amount', 'category', 'source', 'note', 'date', 'created_at'],
-  Todos: ['id', 'user_id', 'title', 'description', 'due_date', 'due_time', 'is_done', 'created_at'],
-  Links: ['id', 'user_id', 'title', 'url', 'note', 'created_at'],
-  Journal: ['id', 'user_id', 'content', 'mood', 'date', 'created_at'],
+  '📝 Notes':        ['id', 'user_id', 'title', 'content', 'tags', 'created_at', 'updated_at'],
+  '💰 Transactions': ['id', 'user_id', 'type', 'amount', 'category', 'source', 'note', 'date', 'created_at'],
+  '✅ Todos':        ['id', 'user_id', 'title', 'description', 'due_date', 'due_time', 'is_done', 'created_at'],
+  '🔗 Links':        ['id', 'user_id', 'title', 'url', 'note', 'created_at'],
 };
 
 // Archive tab stores soft-deleted rows from any data tab.
+const _ARCHIVE_TAB = '📦 _Archive';
 const _ARCHIVE_HEADERS = ['id', 'source_sheet', 'archived_at', 'user_id', 'row_data'];
 
 // ─── Per-spreadsheet init cache ─────────────────────────────────────────────
@@ -61,7 +61,7 @@ export async function ensureSheetsInitialized(spreadsheetId: string): Promise<vo
   const existingTitles = new Set((meta.data.sheets ?? []).map((s) => s.properties?.title));
 
   // All tabs that must exist: data tabs + _Archive
-  const allRequiredTabs = [...Object.keys(SHEET_SCHEMAS), '_Archive'];
+  const allRequiredTabs = [...Object.keys(SHEET_SCHEMAS), _ARCHIVE_TAB];
   const missing = allRequiredTabs.filter((title) => !existingTitles.has(title));
 
   if (missing.length > 0) {
@@ -92,7 +92,7 @@ export async function ensureSheetsInitialized(spreadsheetId: string): Promise<vo
   await withGoogleRetry(() =>
     sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: `_Archive!A1:${columnLetter(_ARCHIVE_HEADERS.length)}1`,
+      range: `'${_ARCHIVE_TAB}'!A1:${columnLetter(_ARCHIVE_HEADERS.length)}1`,
       valueInputOption: 'RAW',
       requestBody: { values: [_ARCHIVE_HEADERS] },
     }),
@@ -111,7 +111,7 @@ export async function repairHeaders(
 ): Promise<{ repaired: string[] }> {
   initializedSheets.delete(spreadsheetId);
   await ensureSheetsInitialized(spreadsheetId);
-  return { repaired: [...Object.keys(SHEET_SCHEMAS), '_Archive'] };
+  return { repaired: [...Object.keys(SHEET_SCHEMAS), _ARCHIVE_TAB] };
 }
 
 // ─── Column helpers ──────────────────────────────────────────────────────────
@@ -224,7 +224,7 @@ async function archiveDeletedRow(
   await withGoogleRetry(() =>
     sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: '_Archive!A:A',
+      range: `'${_ARCHIVE_TAB}'!A:A`,
       valueInputOption: 'RAW',
       insertDataOption: 'INSERT_ROWS',
       requestBody: { values: [archiveRow] },

@@ -5,7 +5,7 @@ import { SheetsAccessError } from '../lib/google-sheets';
 import { optionalString, requireEnum, requireString, ValidationError } from '../lib/validate';
 
 const router = Router();
-const SHEET = 'Transactions';
+const SHEET = '💰 Transactions';
 const FIELD_MAX = 200;
 const NOTE_MAX = 5_000;
 const DATE_MAX = 32;

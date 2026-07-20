@@ -11,7 +11,7 @@ const CONTENT_MAX = 50_000;
 
 router.get('/notes', requireAuth, async (req, res) => {
   try {
-    const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!);
+    const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!, req.sheetsClient!);
     res.status(200).json({ data: rows });
   } catch (err) {
     if (err instanceof SheetsAccessError) {
@@ -29,7 +29,7 @@ router.post('/notes', requireAuth, async (req, res) => {
     const content = requireString(body.content, 'content', CONTENT_MAX);
     const title = optionalString(body.title, 'title', TITLE_MAX);
     const tags = optionalTags(body.tags);
-    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, { title, content, tags });
+    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, { title, content, tags }, req.sheetsClient!);
     res.status(201).json({ data: row });
   } catch (err) {
     if (err instanceof ValidationError) {
@@ -52,7 +52,7 @@ router.put('/notes/:id', requireAuth, async (req, res) => {
     if ('title' in body) updates.title = optionalString(body.title, 'title', TITLE_MAX);
     if ('content' in body) updates.content = requireString(body.content, 'content', CONTENT_MAX);
     if ('tags' in body) updates.tags = optionalTags(body.tags);
-    const row = await updateRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, updates);
+    const row = await updateRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, updates, req.sheetsClient!);
     if (!row) {
       res.status(404).json({ error: 'Note not found' });
       return;
@@ -74,7 +74,7 @@ router.put('/notes/:id', requireAuth, async (req, res) => {
 
 router.delete('/notes/:id', requireAuth, async (req, res) => {
   try {
-    const ok = await deleteRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!);
+    const ok = await deleteRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, req.sheetsClient!);
     if (!ok) {
       res.status(404).json({ error: 'Note not found' });
       return;

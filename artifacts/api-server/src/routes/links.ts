@@ -11,7 +11,7 @@ const NOTE_MAX = 5_000;
 
 router.get('/links', requireAuth, async (req, res) => {
   try {
-    const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!);
+    const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!, req.sheetsClient!);
     res.status(200).json({ data: rows });
   } catch (err) {
     if (err instanceof SheetsAccessError) {
@@ -29,7 +29,7 @@ router.post('/links', requireAuth, async (req, res) => {
     const title = requireString(body.title, 'title', TITLE_MAX);
     const url = requireHttpUrl(body.url, 'url');
     const note = optionalString(body.note, 'note', NOTE_MAX);
-    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, { title, url, note });
+    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, { title, url, note }, req.sheetsClient!);
     res.status(201).json({ data: row });
   } catch (err) {
     if (err instanceof ValidationError) {
@@ -52,7 +52,7 @@ router.put('/links/:id', requireAuth, async (req, res) => {
     if ('title' in body) updates.title = requireString(body.title, 'title', TITLE_MAX);
     if ('url' in body) updates.url = requireHttpUrl(body.url, 'url');
     if ('note' in body) updates.note = optionalString(body.note, 'note', NOTE_MAX);
-    const row = await updateRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, updates);
+    const row = await updateRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, updates, req.sheetsClient!);
     if (!row) {
       res.status(404).json({ error: 'Link not found' });
       return;
@@ -74,7 +74,7 @@ router.put('/links/:id', requireAuth, async (req, res) => {
 
 router.delete('/links/:id', requireAuth, async (req, res) => {
   try {
-    const ok = await deleteRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!);
+    const ok = await deleteRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, req.sheetsClient!);
     if (!ok) {
       res.status(404).json({ error: 'Link not found' });
       return;

@@ -13,29 +13,34 @@ Replit normally remembers the last workflow state, so if the workflows were runn
 
 ## Required secrets
 
-These secrets are configured in Replit Secrets for the current environment (re-added 2026-07-13 after project re-import). The app is running without Mayar.
-
 ### Configured (required for core features)
 - `VITE_SUPABASE_URL` — Supabase project URL (frontend)
 - `VITE_SUPABASE_ANON_KEY` — Supabase anon/public key (frontend)
 - `SUPABASE_URL` — same value as `VITE_SUPABASE_URL` (API server)
 - `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key (API server)
-- `GOOGLE_SERVICE_ACCOUNT_KEY` — full JSON key file content for a Google Cloud service account with the Sheets API enabled
-- `GOOGLE_SHEETS_SPREADSHEET_ID` — legacy shared spreadsheet from before the per-user-spreadsheet migration; no longer read by the app at runtime, kept only so old data isn't lost. See "App data" below.
+- `GOOGLE_CLIENT_ID` — OAuth2 client ID from Google Cloud Console
+- `GOOGLE_CLIENT_SECRET` — OAuth2 client secret from Google Cloud Console
+- `GOOGLE_OAUTH_STATE_SECRET` — random hex string for HMAC-signing OAuth state params (prevents CSRF)
+- `CRON_SECRET` — random string securing `/api/cron/archive-expired`
+
+### Configured as env vars (non-secret)
+- `GOOGLE_REDIRECT_URI` — OAuth callback URL registered in Google Cloud Console (`https://<dev-domain>/api/auth/google/callback`)
+- `PORT` — `5000` (frontend Vite dev server)
 
 ### Optional / not configured
 - `VITE_MAYAR_PAYMENT_URL` — Mayar payment page URL (frontend falls back to `#` if unset)
 - `MAYAR_WEBHOOK_SECRET` — Mayar webhook signing secret (`/api/mayar-webhook` fails closed if unset)
-- `CRON_SECRET` — any random string to secure the cron endpoint (`/api/cron/archive-expired` fails closed if unset)
-- `ALLOWED_ORIGINS` (api-server) — comma-separated list of allowed CORS origins. Unset = allow any origin (fine here since auth is a Bearer token, not a cookie). Set this if the frontend is ever served from a fixed, known production origin.
+
+### ⚠️ Pending action: Supabase migration
+Run `supabase/migrations/004_add_google_oauth.sql` in the Supabase SQL Editor to add the `google_refresh_token` column to the `profiles` table. OAuth will fail without this.
 
 ## Stack
 
 - **Frontend:** React 19 + Vite 7, TypeScript, Tailwind CSS 4, Wouter, Vaul, Recharts
 - **Backend:** Express 5 (Mayar webhooks + cron jobs, and the notes/transactions/todos/links data API)
-- **Auth:** Supabase Auth (unchanged)
-- **App data (notes, transactions, todos, links):** Each user connects their own private Google Spreadsheet (pasted URL/ID, shared with the service account as Editor) via a mandatory `/connect-sheet` step right after login. The ID is stored in `profiles.spreadsheet_id`. No auto-creation — the service account cannot create/own Drive files (0-byte quota on new service accounts), so "connect an existing sheet the user owns" replaces the earlier shared-spreadsheet model. Old shared-spreadsheet data (`GOOGLE_SHEETS_SPREADSHEET_ID`) is not auto-migrated.
-- **Subscription/profile data:** Supabase Postgres (`profiles` table, includes `spreadsheet_id`).
+- **Auth:** Supabase Auth
+- **App data (notes, transactions, todos, links):** Each user connects their Google Drive via OAuth. The backend auto-creates a Google Spreadsheet in the user's own Drive (using `drive.file` scope — least privilege). The spreadsheet ID is stored in `profiles.spreadsheet_id`; the OAuth refresh token in `profiles.google_refresh_token`. No service account needed — each API call uses the user's own OAuth token.
+- **Subscription/profile data:** Supabase Postgres (`profiles` table).
 - **Package manager:** pnpm 10.26.1 (monorepo)
 - **Node.js:** 22
 

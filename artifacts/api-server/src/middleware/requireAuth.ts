@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
+import type { sheets_v4 } from 'googleapis';
 import { supabaseAdmin } from '../lib/supabase-admin';
-import { getUserSpreadsheetId } from '../lib/user-sheet';
+import { getUserSheetConnection } from '../lib/user-sheet';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -8,12 +9,12 @@ declare global {
     interface Request {
       userId?: string;
       spreadsheetId?: string;
+      sheetsClient?: sheets_v4.Sheets;
     }
   }
 }
 
-// Verifies the Supabase access token in the Authorization header and returns
-// the caller's user id, or null after writing an error response.
+// Verifies the Supabase access token in the Authorization header.
 async function verifyToken(req: Request, res: Response): Promise<string | null> {
   const authHeader = String(req.headers['authorization'] ?? '');
   const token = authHeader.replace(/^Bearer\s+/i, '');
@@ -32,8 +33,8 @@ async function verifyToken(req: Request, res: Response): Promise<string | null> 
   return user.id;
 }
 
-// Verifies the caller's token and attaches req.userId. Use for endpoints that
-// don't need the caller's spreadsheet (profile, spreadsheet connect/status).
+// Verifies the caller's token and attaches req.userId.
+// Use for endpoints that don't need the Sheets client (profile, auth/google).
 export async function requireUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   const userId = await verifyToken(req, res);
   if (!userId) return;
@@ -41,33 +42,33 @@ export async function requireUser(req: Request, res: Response, next: NextFunctio
   next();
 }
 
-// Verifies the caller's token AND resolves their connected private spreadsheet.
-// Use for every notes/transactions/todos/links data endpoint. Responds 428 if
-// the user hasn't connected a spreadsheet yet — the frontend should never hit
-// this in practice (it gates those routes behind /connect-sheet first), but
-// the API enforces it independently too.
+// Verifies the caller's token AND resolves their per-user Google Sheets client.
+// Responds 428 if the user hasn't connected Google OAuth yet, or hasn't had a
+// spreadsheet created. The frontend should never hit this in practice (it gates
+// routes behind /connect-sheet), but the API enforces it independently.
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const userId = await verifyToken(req, res);
   if (!userId) return;
 
-  let spreadsheetId: string | null;
+  let connection: { spreadsheetId: string; sheets: sheets_v4.Sheets } | null;
   try {
-    spreadsheetId = await getUserSpreadsheetId(userId);
+    connection = await getUserSheetConnection(userId);
   } catch (err) {
-    req.log.error({ err, userId }, 'Failed to resolve spreadsheet for user');
-    res.status(500).json({ error: 'Failed to resolve your spreadsheet' });
+    req.log.error({ err, userId }, 'Failed to resolve Google Sheets connection for user');
+    res.status(500).json({ error: 'Failed to resolve your spreadsheet connection' });
     return;
   }
 
-  if (!spreadsheetId) {
+  if (!connection) {
     res.status(428).json({
-      error: 'SPREADSHEET_NOT_CONNECTED',
-      message: 'Hubungkan Google Spreadsheet pribadi kamu sebelum menggunakan fitur ini.',
+      error: 'GOOGLE_NOT_CONNECTED',
+      message: 'Hubungkan Google Drive kamu terlebih dahulu untuk menggunakan fitur ini.',
     });
     return;
   }
 
   req.userId = userId;
-  req.spreadsheetId = spreadsheetId;
+  req.spreadsheetId = connection.spreadsheetId;
+  req.sheetsClient = connection.sheets;
   next();
 }

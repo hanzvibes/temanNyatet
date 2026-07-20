@@ -157,3 +157,6 @@ overrides:
   # drizzle-kit uses esbuild internally on an older version that's vulnerable, this overrides it
   "@esbuild-kit/esm-loader": "npm:tsx@^4.21.0"
   esbuild: "0.27.3"
+  # Deduplicate google-auth-library to resolve type conflicts between the version
+  # bundled inside googleapis and any transitive version installed elsewhere.
+  google-auth-library: "^10.9.0"

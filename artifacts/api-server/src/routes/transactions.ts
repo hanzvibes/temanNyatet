@@ -21,7 +21,7 @@ function parseAmount(value: unknown): number {
 
 router.get('/transactions', requireAuth, async (req, res) => {
   try {
-    const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!);
+    const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!, req.sheetsClient!);
     res.status(200).json({ data: rows });
   } catch (err) {
     if (err instanceof SheetsAccessError) {
@@ -42,14 +42,7 @@ router.post('/transactions', requireAuth, async (req, res) => {
     const source = requireString(body.source, 'source', FIELD_MAX);
     const date = requireString(body.date, 'date', DATE_MAX);
     const note = optionalString(body.note, 'note', NOTE_MAX);
-    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, {
-      type,
-      amount,
-      category,
-      source,
-      note,
-      date,
-    });
+    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, { type, amount, category, source, note, date }, req.sheetsClient!);
     res.status(201).json({ data: row });
   } catch (err) {
     if (err instanceof ValidationError) {
@@ -75,7 +68,7 @@ router.put('/transactions/:id', requireAuth, async (req, res) => {
     if ('source' in body) updates.source = requireString(body.source, 'source', FIELD_MAX);
     if ('date' in body) updates.date = requireString(body.date, 'date', DATE_MAX);
     if ('note' in body) updates.note = optionalString(body.note, 'note', NOTE_MAX);
-    const row = await updateRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, updates);
+    const row = await updateRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, updates, req.sheetsClient!);
     if (!row) {
       res.status(404).json({ error: 'Transaction not found' });
       return;
@@ -97,7 +90,7 @@ router.put('/transactions/:id', requireAuth, async (req, res) => {
 
 router.delete('/transactions/:id', requireAuth, async (req, res) => {
   try {
-    const ok = await deleteRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!);
+    const ok = await deleteRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, req.sheetsClient!);
     if (!ok) {
       res.status(404).json({ error: 'Transaction not found' });
       return;

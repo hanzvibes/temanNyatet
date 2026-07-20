@@ -1,77 +1,87 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { apiGet, apiPost } from '@/lib/apiClient';
+import { apiDelete, apiGet, apiPost } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
 import {
   LogOut,
-  Copy,
   Check,
   ExternalLink,
   Loader2,
-  FileSpreadsheet,
+  Chrome,
   ShieldCheck,
   AlertCircle,
-  ChevronRight,
   AlertTriangle,
   RefreshCw,
+  Unlink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// The master template spreadsheet that users copy to their own Drive.
-// Set VITE_SPREADSHEET_TEMPLATE_ID in the environment to enable the
-// one-click "Copy Template" button. If unset, a generic link is shown.
-const TEMPLATE_ID = import.meta.env.VITE_SPREADSHEET_TEMPLATE_ID as string | undefined;
-const TEMPLATE_COPY_URL = TEMPLATE_ID
-  ? `https://docs.google.com/spreadsheets/d/${TEMPLATE_ID}/copy`
-  : 'https://docs.google.com/spreadsheets/';
-
-interface SpreadsheetStatus {
+interface GoogleStatus {
   connected: boolean;
   spreadsheetId: string | null;
   spreadsheetUrl: string | null;
-  serviceAccountEmail: string | null;
-  sheetsConfigured: boolean;
-  templateVersion: string | null;
 }
 
-// Error codes surfaced via ?error= query param (set by the global error
-// handler in App.tsx when a spreadsheet access error fires mid-session).
+// Error messages surfaced via ?error= query param from the OAuth callback.
 const ERROR_MESSAGES: Record<string, { title: string; body: string }> = {
+  GOOGLE_NOT_CONNECTED: {
+    title: 'Google Drive belum terhubung',
+    body: 'Hubungkan Google Drive kamu untuk menggunakan fitur ini.',
+  },
+  SPREADSHEET_NOT_CONNECTED: {
+    title: 'Spreadsheet belum siap',
+    body: 'Terjadi masalah saat menyiapkan spreadsheet. Coba hubungkan ulang Google Drive.',
+  },
+  OAUTH_DENIED: {
+    title: 'Izin ditolak',
+    body: 'Kamu membatalkan proses koneksi Google. Coba lagi dan pilih "Izinkan" untuk melanjutkan.',
+  },
+  OAUTH_STATE_INVALID: {
+    title: 'Sesi kedaluwarsa',
+    body: 'Link otorisasi sudah tidak valid. Mulai ulang proses koneksi dari awal.',
+  },
+  NO_REFRESH_TOKEN: {
+    title: 'Perlu izin ulang',
+    body: 'Google tidak mengirim token akses. Klik tombol di bawah dan pilih akun Google-mu, lalu klik "Lanjutkan" di halaman izin.',
+  },
+  OAUTH_FAILED: {
+    title: 'Koneksi gagal',
+    body: 'Terjadi kesalahan saat menghubungkan Google Drive. Coba lagi dalam beberapa saat.',
+  },
   SPREADSHEET_NOT_FOUND: {
     title: 'Spreadsheet tidak ditemukan',
-    body: 'Spreadsheet yang terhubung tidak dapat ditemukan — mungkin sudah dihapus atau dipindahkan. Hubungkan spreadsheet baru untuk melanjutkan.',
+    body: 'Spreadsheet yang tersimpan tidak dapat ditemukan — mungkin sudah dihapus. Hubungkan ulang Google Drive untuk membuat yang baru.',
   },
   SPREADSHEET_ACCESS_DENIED: {
-    title: 'Akses spreadsheet dicabut',
-    body: 'TemanNyatet tidak lagi punya akses ke spreadsheet kamu. Share ulang ke email service account sebagai Editor.',
+    title: 'Akses dicabut',
+    body: 'TemanNyatet tidak lagi memiliki akses ke Google Drive kamu. Hubungkan ulang untuk memulihkan akses.',
   },
 };
 
 export default function ConnectSheetPage() {
   const { refreshProfile } = useAuthContext();
-  const [status, setStatus] = useState<SpreadsheetStatus | null>(null);
+  const [status, setStatus] = useState<GoogleStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
-  const [input, setInput] = useState('');
   const [connecting, setConnecting] = useState(false);
-  const [showReconnect, setShowReconnect] = useState(false);
-  const [copiedEmail, setCopiedEmail] = useState(false);
-  const [templateOpened, setTemplateOpened] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [showDisconnect, setShowDisconnect] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
-  // Error code from query param (set when redirected after a mid-session
-  // spreadsheet error — see App.tsx's AuthGuard).
-  const recoveryError = new URLSearchParams(window.location.search).get('error');
-  const recoveryInfo = recoveryError ? ERROR_MESSAGES[recoveryError] ?? null : null;
+  const params = new URLSearchParams(window.location.search);
+  const connectedParam = params.get('connected');
+  const errorParam = params.get('error');
+  const recoveryInfo = errorParam ? ERROR_MESSAGES[errorParam] ?? null : null;
+
+  const refreshProfileRef = useRef(refreshProfile);
+  refreshProfileRef.current = refreshProfile;
 
   const loadStatus = async () => {
     try {
-      const data = await apiGet<SpreadsheetStatus>('/spreadsheet/status');
+      const data = await apiGet<GoogleStatus>('/auth/google/status');
       setStatus(data);
-      setShowReconnect(!data.connected || !!recoveryError);
-    } catch (err) {
-      console.warn('[ConnectSheetPage] Failed to load status:', err);
+    } catch {
+      // Silently ignore — show connect UI
     } finally {
       setLoadingStatus(false);
     }
@@ -82,48 +92,45 @@ export default function ConnectSheetPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const refreshProfileRef = useRef(refreshProfile);
-  refreshProfileRef.current = refreshProfile;
+  // If redirected back from OAuth with ?connected=true, refresh profile and
+  // navigate into the app.
+  useEffect(() => {
+    if (connectedParam === 'true') {
+      setIsNavigating(true);
+    }
+  }, [connectedParam]);
 
   useEffect(() => {
     if (!isNavigating) return;
     const timer = setTimeout(() => {
       refreshProfileRef.current();
-    }, 1500);
+    }, 1200);
     return () => clearTimeout(timer);
   }, [isNavigating]);
 
-  const handleCopyEmail = async () => {
-    if (!status?.serviceAccountEmail) return;
+  const handleConnect = async () => {
+    setConnecting(true);
     try {
-      await navigator.clipboard.writeText(status.serviceAccountEmail);
-      setCopiedEmail(true);
-      setTimeout(() => setCopiedEmail(false), 2000);
-      toast.success('Email disalin!');
+      // Get the OAuth URL from the backend, then redirect the browser there.
+      const data = await apiGet<{ url: string }>('/auth/google/initiate');
+      window.location.href = data.url;
     } catch {
-      toast.error('Gagal menyalin email');
+      toast.error('Gagal memulai koneksi Google. Coba lagi.');
+      setConnecting(false);
     }
   };
 
-  const handleConnect = async () => {
-    setError(null);
-    if (!input.trim()) {
-      setError('Tempel link atau ID spreadsheet dulu.');
-      return;
-    }
-    setConnecting(true);
+  const handleDisconnect = async () => {
+    setDisconnecting(true);
     try {
-      const data = await apiPost<SpreadsheetStatus>('/spreadsheet/connect', { input: input.trim() });
-      setStatus(data);
-      setShowReconnect(false);
-      setInput('');
-      toast.success('Spreadsheet berhasil terhubung!');
-      setIsNavigating(true);
-    } catch (err) {
-      const message = (err as Error).message || 'Gagal menghubungkan spreadsheet';
-      setError(message);
+      await apiDelete('/auth/google/disconnect');
+      setStatus({ connected: false, spreadsheetId: null, spreadsheetUrl: null });
+      setShowDisconnect(false);
+      toast.success('Google Drive berhasil diputus.');
+    } catch {
+      toast.error('Gagal memutus koneksi. Coba lagi.');
     } finally {
-      setConnecting(false);
+      setDisconnecting(false);
     }
   };
 
@@ -133,17 +140,15 @@ export default function ConnectSheetPage() {
 
   if (loadingStatus) {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-background p-6">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  const connected = status?.connected && !showReconnect;
-
   return (
     <div className="min-h-dvh flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-background to-secondary/30 relative overflow-hidden">
-      {/* Decorative backdrop blobs */}
+      {/* Decorative blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-primary/5 blur-3xl" />
         <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
@@ -158,155 +163,122 @@ export default function ConnectSheetPage() {
             transition={{ duration: 0.35, ease: 'easeOut' }}
             className="relative w-full max-w-md bg-card/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-border p-6 sm:p-8"
           >
-            {/* Recovery alert — shown when redirected after a mid-session error */}
-            {recoveryInfo && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="mb-5 flex gap-3 bg-destructive/10 border border-destructive/20 rounded-2xl p-4"
-              >
-                <AlertTriangle size={18} className="flex-shrink-0 text-destructive mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold text-destructive">{recoveryInfo.title}</p>
-                  <p className="text-xs text-destructive/80 mt-0.5 leading-relaxed">{recoveryInfo.body}</p>
-                </div>
-              </motion.div>
-            )}
+            {/* Error / recovery alert */}
+            <AnimatePresence>
+              {recoveryInfo && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-5 flex gap-3 bg-destructive/10 border border-destructive/20 rounded-2xl p-4"
+                >
+                  <AlertTriangle size={18} className="flex-shrink-0 text-destructive mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-destructive">{recoveryInfo.title}</p>
+                    <p className="text-xs text-destructive/80 mt-0.5 leading-relaxed">{recoveryInfo.body}</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Header */}
-            <div className="flex flex-col items-center text-center mb-6">
+            <div className="flex flex-col items-center text-center mb-7">
               <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg text-primary-foreground">
-                <FileSpreadsheet size={28} />
+                <ShieldCheck size={28} />
               </div>
               <h1 className="text-2xl font-bold text-foreground leading-tight">
-                {connected ? 'Spreadsheet Terhubung' : 'Hubungkan Spreadsheet'}
+                {status?.connected ? 'Google Drive Terhubung' : 'Hubungkan Google Drive'}
               </h1>
-              <p className="text-muted-foreground text-sm mt-2 max-w-xs">
-                {connected
-                  ? 'Data kamu tersimpan aman di spreadsheet pribadi milikmu sendiri.'
-                  : 'Data catatan, keuangan, todo, dan link kamu disimpan di Google Spreadsheet pribadimu.'}
+              <p className="text-muted-foreground text-sm mt-2 max-w-xs leading-relaxed">
+                {status?.connected
+                  ? 'Catatan, keuangan, todo, dan link-mu tersimpan aman di Google Spreadsheet pribadimu.'
+                  : 'Data kamu disimpan di Google Spreadsheet milikmu sendiri — bukan di server kami. Hubungkan Google Drive untuk memulai.'}
               </p>
             </div>
 
-            {connected ? (
-              // ── Connected state ────────────────────────────────────────────
-              <div className="space-y-4">
+            {status?.connected && !showDisconnect ? (
+              // ── Connected state ──────────────────────────────────────────────
+              <div className="space-y-3">
                 <a
                   href={status.spreadsheetUrl ?? '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold py-3 px-4 rounded-2xl shadow-sm hover:opacity-90 transition-opacity"
                 >
-                  Buka Spreadsheet <ExternalLink size={18} />
+                  Buka Spreadsheet <ExternalLink size={16} />
                 </a>
 
-                {status.templateVersion && (
-                  <p className="text-center text-xs text-muted-foreground">
-                    Template v{status.templateVersion}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleConnect}
+                    disabled={connecting}
+                    className="flex-1 flex items-center justify-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-xl py-2.5 transition-colors hover:bg-secondary/50 disabled:opacity-50"
+                  >
+                    {connecting ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                    Hubungkan Ulang
+                  </button>
+                  <button
+                    onClick={() => setShowDisconnect(true)}
+                    className="flex-1 flex items-center justify-center gap-1.5 text-sm font-medium text-destructive/70 hover:text-destructive border border-border rounded-xl py-2.5 transition-colors hover:bg-destructive/5"
+                  >
+                    <Unlink size={14} /> Putuskan
+                  </button>
+                </div>
+              </div>
+            ) : status?.connected && showDisconnect ? (
+              // ── Disconnect confirm ───────────────────────────────────────────
+              <div className="space-y-3">
+                <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-4 text-center">
+                  <AlertCircle size={20} className="mx-auto text-destructive mb-2" />
+                  <p className="text-sm font-semibold text-destructive">Putuskan Google Drive?</p>
+                  <p className="text-xs text-destructive/80 mt-1 leading-relaxed">
+                    Data di spreadsheet-mu tidak akan terhapus, tapi kamu perlu hubungkan ulang untuk mengakses app.
                   </p>
-                )}
-
+                </div>
                 <button
-                  onClick={() => setShowReconnect(true)}
-                  className="w-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2 flex items-center justify-center gap-1.5"
+                  onClick={handleDisconnect}
+                  disabled={disconnecting}
+                  className="w-full bg-destructive text-destructive-foreground font-semibold py-3 px-4 rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  <RefreshCw size={14} /> Ganti spreadsheet
+                  {disconnecting ? <Loader2 size={16} className="animate-spin" /> : <Unlink size={16} />}
+                  {disconnecting ? 'Memutus...' : 'Ya, Putuskan'}
+                </button>
+                <button
+                  onClick={() => setShowDisconnect(false)}
+                  className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+                >
+                  Batal
                 </button>
               </div>
             ) : (
-              // ── Onboarding / reconnect flow ────────────────────────────────
-              <>
-                <div className="space-y-4 mb-5">
-                  {/* Step 1 — Copy template */}
-                  <OnboardingStep
-                    number={1}
-                    icon={FileSpreadsheet}
-                    done={templateOpened}
-                    title="Salin Template"
-                  >
-                    <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
-                      Buka template resmi TemanNyatet, lalu pilih{' '}
-                      <span className="font-medium text-foreground">File → Buat salinan</span>.
+              // ── Not connected — main connect CTA ────────────────────────────
+              <div className="space-y-4">
+                {/* Privacy callout */}
+                <div className="bg-secondary/50 border border-border rounded-2xl p-4 space-y-2">
+                  <div className="flex items-start gap-2.5">
+                    <Check size={15} className="flex-shrink-0 text-primary mt-0.5" />
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Spreadsheet dibuat otomatis di <span className="font-medium text-foreground">Google Drive-mu sendiri</span>
                     </p>
-                    <a
-                      href={TEMPLATE_COPY_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setTemplateOpened(true)}
-                      className="inline-flex items-center gap-2 bg-primary text-primary-foreground text-sm font-semibold px-4 py-2.5 rounded-xl hover:opacity-90 transition-opacity shadow-sm"
-                    >
-                      {TEMPLATE_ID ? 'Salin Template →' : 'Buka Google Sheets →'}
-                      <ExternalLink size={14} />
-                    </a>
-                  </OnboardingStep>
-
-                  {/* Step 2 — Share to service account */}
-                  <OnboardingStep
-                    number={2}
-                    icon={ShieldCheck}
-                    done={copiedEmail}
-                    title="Share ke TemanNyatet"
-                  >
-                    <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
-                      Di spreadsheet salinанmu, klik <span className="font-medium text-foreground">Share</span> dan
-                      tambahkan email ini sebagai <span className="font-medium text-foreground">Editor</span>:
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <Check size={15} className="flex-shrink-0 text-primary mt-0.5" />
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Kami hanya minta akses ke file yang kami buat — bukan seluruh Drive-mu
                     </p>
-                    <button
-                      onClick={handleCopyEmail}
-                      disabled={!status?.serviceAccountEmail}
-                      className="w-full flex items-start justify-between gap-2 bg-secondary border border-border rounded-xl px-3 py-2.5 text-xs font-mono text-foreground hover:bg-secondary/70 transition-colors disabled:opacity-50 text-left"
-                    >
-                      <span className="break-all leading-relaxed">
-                        {status?.serviceAccountEmail ?? 'Belum dikonfigurasi'}
-                      </span>
-                      <span className="flex-shrink-0 mt-0.5">
-                        {copiedEmail ? (
-                          <Check size={14} className="text-primary" />
-                        ) : (
-                          <Copy size={14} className="text-muted-foreground" />
-                        )}
-                      </span>
-                    </button>
-                  </OnboardingStep>
-
-                  {/* Step 3 — Paste URL */}
-                  <OnboardingStep
-                    number={3}
-                    icon={ExternalLink}
-                    done={false}
-                    title="Tempel Link Spreadsheet"
-                  >
-                    <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
-                      Salin link spreadsheet salinанmu dari address bar, lalu tempel di sini.
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <Check size={15} className="flex-shrink-0 text-primary mt-0.5" />
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Data tidak pernah melewati server kami — langsung ke spreadsheet-mu
                     </p>
-                    <input
-                      type="text"
-                      value={input}
-                      onChange={e => { setInput(e.target.value); setError(null); }}
-                      placeholder="https://docs.google.com/spreadsheets/d/..."
-                      className="w-full bg-secondary border border-border rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-foreground text-sm py-3 px-3.5 transition-all"
-                      onKeyDown={e => e.key === 'Enter' && handleConnect()}
-                    />
-                    <AnimatePresence>
-                      {error && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="flex items-start gap-2 mt-2 text-destructive text-xs"
-                        >
-                          <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
-                          <span>{error}</span>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </OnboardingStep>
+                  </div>
                 </div>
 
                 <button
                   onClick={handleConnect}
                   disabled={connecting}
-                  className="w-full bg-primary text-primary-foreground font-semibold py-3.5 px-4 rounded-2xl shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full bg-primary text-primary-foreground font-semibold py-3.5 px-4 rounded-2xl shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2.5"
                 >
                   {connecting ? (
                     <>
@@ -314,20 +286,11 @@ export default function ConnectSheetPage() {
                     </>
                   ) : (
                     <>
-                      Hubungkan Spreadsheet <ChevronRight size={18} />
+                      <Chrome size={18} /> Hubungkan Google Drive
                     </>
                   )}
                 </button>
-
-                {status?.connected && (
-                  <button
-                    onClick={() => setShowReconnect(false)}
-                    className="w-full mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
-                  >
-                    Batal
-                  </button>
-                )}
-              </>
+              </div>
             )}
 
             {/* Footer */}
@@ -343,7 +306,7 @@ export default function ConnectSheetPage() {
         )}
       </AnimatePresence>
 
-      {/* Success overlay shown while transitioning to the app */}
+      {/* Success overlay — shown while profile is refreshing and routing to app */}
       <AnimatePresence>
         {isNavigating && (
           <motion.div
@@ -364,7 +327,7 @@ export default function ConnectSheetPage() {
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-1">Berhasil!</h2>
             <p className="text-muted-foreground text-sm mb-4 text-center max-w-xs">
-              Spreadsheet kamu sudah terhubung.
+              Google Drive terhubung. Spreadsheet pribadi kamu sudah siap.
             </p>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 size={16} className="animate-spin" />
@@ -373,43 +336,6 @@ export default function ConnectSheetPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
-
-// ─── Onboarding step component ───────────────────────────────────────────────
-
-function OnboardingStep({
-  number,
-  icon: Icon,
-  done,
-  title,
-  children,
-}: {
-  number: number;
-  icon: React.ElementType;
-  done: boolean;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-secondary/30 p-4">
-      <div className="flex items-center gap-3 mb-3">
-        <div
-          className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-            done
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-secondary border border-border text-foreground'
-          }`}
-        >
-          {done ? <Check size={13} strokeWidth={3} /> : number}
-        </div>
-        <div className="flex items-center gap-2">
-          <Icon size={16} className="text-primary" />
-          <span className="text-sm font-semibold text-foreground">{title}</span>
-        </div>
-      </div>
-      <div className="pl-10">{children}</div>
     </div>
   );
 }

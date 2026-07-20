@@ -12,7 +12,7 @@ const DATE_MAX = 32;
 
 router.get('/todos', requireAuth, async (req, res) => {
   try {
-    const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!);
+    const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!, req.sheetsClient!);
     res.status(200).json({ data: rows });
   } catch (err) {
     if (err instanceof SheetsAccessError) {
@@ -32,13 +32,7 @@ router.post('/todos', requireAuth, async (req, res) => {
     const due_date = optionalString(body.due_date, 'due_date', DATE_MAX);
     const due_time = optionalString(body.due_time, 'due_time', DATE_MAX);
     const is_done = optionalBoolean(body.is_done, 'is_done');
-    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, {
-      title,
-      description,
-      due_date,
-      due_time,
-      is_done,
-    });
+    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, { title, description, due_date, due_time, is_done }, req.sheetsClient!);
     res.status(201).json({ data: row });
   } catch (err) {
     if (err instanceof ValidationError) {
@@ -63,7 +57,7 @@ router.put('/todos/:id', requireAuth, async (req, res) => {
     if ('due_date' in body) updates.due_date = optionalString(body.due_date, 'due_date', DATE_MAX);
     if ('due_time' in body) updates.due_time = optionalString(body.due_time, 'due_time', DATE_MAX);
     if ('is_done' in body) updates.is_done = optionalBoolean(body.is_done, 'is_done');
-    const row = await updateRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, updates);
+    const row = await updateRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, updates, req.sheetsClient!);
     if (!row) {
       res.status(404).json({ error: 'Todo not found' });
       return;
@@ -85,7 +79,7 @@ router.put('/todos/:id', requireAuth, async (req, res) => {
 
 router.delete('/todos/:id', requireAuth, async (req, res) => {
   try {
-    const ok = await deleteRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!);
+    const ok = await deleteRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, req.sheetsClient!);
     if (!ok) {
       res.status(404).json({ error: 'Todo not found' });
       return;

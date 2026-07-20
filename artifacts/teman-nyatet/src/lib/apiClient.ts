@@ -23,7 +23,11 @@ let refreshPromise: Promise<string | null> | null = null;
 
 export class SpreadsheetApiError extends Error {
   constructor(
-    public readonly code: 'SPREADSHEET_NOT_FOUND' | 'SPREADSHEET_ACCESS_DENIED',
+    public readonly code:
+      | 'SPREADSHEET_NOT_FOUND'
+      | 'SPREADSHEET_ACCESS_DENIED'
+      | 'GOOGLE_NOT_CONNECTED'
+      | 'SPREADSHEET_NOT_CONNECTED',
     message: string,
   ) {
     super(message);
@@ -70,6 +74,13 @@ async function handle<T>(res: Response): Promise<T> {
     if (
       res.status === 503 &&
       (code === 'SPREADSHEET_NOT_FOUND' || code === 'SPREADSHEET_ACCESS_DENIED')
+    ) {
+      throw new SpreadsheetApiError(code, body?.message ?? code);
+    }
+    // 428 = precondition required — user hasn't connected Google OAuth yet.
+    if (
+      res.status === 428 &&
+      (code === 'GOOGLE_NOT_CONNECTED' || code === 'SPREADSHEET_NOT_CONNECTED')
     ) {
       throw new SpreadsheetApiError(code, body?.message ?? code);
     }

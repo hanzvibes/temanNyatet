@@ -21,3 +21,4 @@ externalPort = 80
 
 [userenv.shared]
 PORT = "5000"
+GOOGLE_REDIRECT_URI = "https://ecd769b2-1ba9-4a29-ad0a-d9985088ba20-00-2wv4i96msog93.pike.replit.dev/api/auth/google/callback"

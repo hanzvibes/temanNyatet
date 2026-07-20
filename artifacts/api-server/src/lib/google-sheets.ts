@@ -1,53 +1,8 @@
-import { google, type sheets_v4 } from 'googleapis';
+// Shared Google Sheets utilities: typed access errors and a retry helper.
+// The actual Sheets client is now per-user (see google-oauth.ts + user-sheet.ts).
+// This file no longer holds a global service-account client.
 import crypto from 'crypto';
 import { logger } from './logger';
-
-const rawKey = process.env['GOOGLE_SERVICE_ACCOUNT_KEY'] ?? '';
-
-let sheetsClient: sheets_v4.Sheets | null = null;
-let serviceAccountEmail: string | null = null;
-let configError: string | null = null;
-
-if (!rawKey) {
-  configError =
-    'GOOGLE_SERVICE_ACCOUNT_KEY is not set. Data endpoints will fail until configured.';
-  logger.warn(`[google-sheets] ${configError}`);
-} else {
-  try {
-    const credentials = JSON.parse(rawKey) as { client_email: string; private_key: string };
-    serviceAccountEmail = credentials.client_email;
-    const auth = new google.auth.JWT({
-      email: credentials.client_email,
-      key: credentials.private_key,
-      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-    });
-    sheetsClient = google.sheets({ version: 'v4', auth });
-  } catch (err) {
-    configError = `Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY: ${(err as Error).message}`;
-    logger.error(`[google-sheets] ${configError}`);
-  }
-}
-
-export function isSheetsConfigured(): boolean {
-  return sheetsClient !== null && !configError;
-}
-
-export function getSheetsConfigError(): string | null {
-  return configError;
-}
-
-export function getSheets(): sheets_v4.Sheets {
-  if (!sheetsClient) {
-    throw new Error(configError ?? 'Google Sheets client is not configured');
-  }
-  return sheetsClient;
-}
-
-// The service account's email — users must share their own spreadsheet with
-// this address (as Editor) so the backend can read/write it on their behalf.
-export function getServiceAccountEmail(): string | null {
-  return serviceAccountEmail;
-}
 
 export function newId(): string {
   return crypto.randomUUID();
@@ -103,7 +58,7 @@ export async function withGoogleRetry<T>(fn: () => Promise<T>): Promise<T> {
       if (status === 403) {
         throw new SheetsAccessError(
           'SPREADSHEET_ACCESS_DENIED',
-          'Akses ke spreadsheet ditolak. Share ulang spreadsheet ke email service account sebagai Editor.',
+          'Akses ke spreadsheet ditolak. Hubungkan ulang Google Drive kamu.',
         );
       }
 

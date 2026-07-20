@@ -37,6 +37,7 @@ router.get('/auth/google/initiate', requireUser, (req, res) => {
   try {
     const state = createState(req.userId!);
     const url = getAuthorizationUrl(state);
+    req.log.info({ userId: req.userId, redirectUri: getRedirectUri() }, '[auth-google] Generated authorization URL');
     res.json({ data: { url } });
   } catch (err) {
     req.log.error({ err }, '[auth-google] Failed to generate auth URL');
@@ -153,7 +154,7 @@ router.get('/auth/google/status', requireUser, async (req, res) => {
         spreadsheetUrl: spreadsheetId
           ? `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`
           : null,
-        // Expose the redirect URI so clients can tell users what to expect
+        // Expose the redirect URI so the user can verify it in Google Cloud Console
         redirectUri: getRedirectUri(),
       },
     });

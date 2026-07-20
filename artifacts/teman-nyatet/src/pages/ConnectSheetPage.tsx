@@ -21,6 +21,7 @@ interface GoogleStatus {
   connected: boolean;
   spreadsheetId: string | null;
   spreadsheetUrl: string | null;
+  redirectUri?: string | null;
 }
 
 // Error messages surfaced via ?error= query param from the OAuth callback.
@@ -290,6 +291,31 @@ export default function ConnectSheetPage() {
                     </>
                   )}
                 </button>
+
+                {status?.redirectUri && (
+                  <div className="bg-muted/50 border border-border rounded-2xl p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">
+                      Redirect URI untuk Google Cloud Console
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <code className="text-[10px] text-foreground break-all flex-1 bg-background rounded px-2 py-1">
+                        {status.redirectUri}
+                      </code>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(status.redirectUri || '');
+                          toast.success('URI disalin ke clipboard');
+                        }}
+                        className="text-[10px] font-medium text-primary hover:underline"
+                      >
+                        Salin
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">
+                      Pastikan URI di atas <strong>persis sama</strong> (termasuk https:// dan / di akhir) dengan yang didaftarkan di Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client IDs → Authorized redirect URIs.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

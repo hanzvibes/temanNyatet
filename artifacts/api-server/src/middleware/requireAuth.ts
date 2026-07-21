@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { sheets_v4 } from 'googleapis';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { supabaseAdmin } from '../lib/supabase-admin';
 import { getUserSheetConnection } from '../lib/user-sheet';
 
@@ -32,6 +33,26 @@ async function verifyToken(req: Request, res: Response): Promise<string | null> 
 
   return user.id;
 }
+
+// Per-user rate limiter for data mutations. Mounted after authentication so the
+// key is the authenticated userId rather than the IP (users may share IPs).
+export const userRateLimit = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  limit: 120, // generous for polling + normal CRUD; protect against abuse
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator(req) {
+    return req.userId ?? ipKeyGenerator(req.ip ?? 'unknown');
+  },
+  skip(req) {
+    // Only apply to authenticated requests; unauthenticated requests are handled
+    // by the global rate limiter in app.ts.
+    return !req.userId;
+  },
+  handler(_req, res) {
+    res.status(429).json({ error: 'Too many requests. Slow down.' });
+  },
+});
 
 // Verifies the caller's token and attaches req.userId.
 // Use for endpoints that don't need the Sheets client (profile, auth/google).

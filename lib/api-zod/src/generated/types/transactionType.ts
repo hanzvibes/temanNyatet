@@ -6,13 +6,10 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export type MayarWebhookInputData = {
-  customer_email: string;
-  amount?: number;
-  /** @nullable */
-  plan_id?: string | null;
-  /** @nullable */
-  plan_name?: string | null;
-  /** @nullable */
-  order_id?: string | null;
-};
+export type TransactionType = typeof TransactionType[keyof typeof TransactionType];
+
+
+export const TransactionType = {
+  income: 'income',
+  expense: 'expense',
+} as const;

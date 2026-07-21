@@ -6,13 +6,16 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export type MayarWebhookInputData = {
-  customer_email: string;
-  amount?: number;
+export interface Todo {
+  id: string;
+  user_id: string;
+  title: string;
   /** @nullable */
-  plan_id?: string | null;
+  description?: string | null;
   /** @nullable */
-  plan_name?: string | null;
+  due_date?: Date | null;
   /** @nullable */
-  order_id?: string | null;
-};
+  due_time?: string | null;
+  is_done: boolean;
+  created_at: Date;
+}

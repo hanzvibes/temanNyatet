@@ -5,14 +5,17 @@
  * TemanNyatet API — subscription, webhooks, Google OAuth, spreadsheet management, and app data (notes, transactions, todos, links) stored in each user's private Google Spreadsheet.
  * OpenAPI spec version: 0.2.0
  */
+import type { TransactionType } from './transactionType';
 
-export type MayarWebhookInputData = {
-  customer_email: string;
-  amount?: number;
+export interface Transaction {
+  id: string;
+  user_id: string;
+  type: TransactionType;
+  amount: number;
+  category: string;
+  source: string;
   /** @nullable */
-  plan_id?: string | null;
-  /** @nullable */
-  plan_name?: string | null;
-  /** @nullable */
-  order_id?: string | null;
-};
+  note?: string | null;
+  date: Date;
+  created_at: Date;
+}

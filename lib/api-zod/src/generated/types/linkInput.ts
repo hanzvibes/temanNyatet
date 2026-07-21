@@ -6,13 +6,11 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export type MayarWebhookInputData = {
-  customer_email: string;
-  amount?: number;
-  /** @nullable */
-  plan_id?: string | null;
-  /** @nullable */
-  plan_name?: string | null;
-  /** @nullable */
-  order_id?: string | null;
-};
+export interface LinkInput {
+  /** @maxLength 200 */
+  title: string;
+  /** @maxLength 2000 */
+  url: string;
+  /** @maxLength 5000 */
+  note?: string;
+}

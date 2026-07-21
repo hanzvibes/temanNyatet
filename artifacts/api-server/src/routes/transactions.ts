@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth } from '../middleware/requireAuth';
+import { requireAuth, userRateLimit } from '../middleware/requireAuth';
 import { createRow, deleteRow, listByUser, updateRow } from '../lib/sheet-store';
 import { SheetsAccessError } from '../lib/google-sheets';
 import { optionalString, requireEnum, requireString, ValidationError } from '../lib/validate';
@@ -19,7 +19,7 @@ function parseAmount(value: unknown): number {
   return parsed;
 }
 
-router.get('/transactions', requireAuth, async (req, res) => {
+router.get('/transactions', requireAuth, userRateLimit, async (req, res) => {
   try {
     const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!, req.sheetsClient!);
     res.status(200).json({ data: rows });
@@ -33,7 +33,7 @@ router.get('/transactions', requireAuth, async (req, res) => {
   }
 });
 
-router.post('/transactions', requireAuth, async (req, res) => {
+router.post('/transactions', requireAuth, userRateLimit, async (req, res) => {
   try {
     const body = req.body ?? {};
     const type = requireEnum(body.type, 'type', TRANSACTION_TYPES);
@@ -58,7 +58,7 @@ router.post('/transactions', requireAuth, async (req, res) => {
   }
 });
 
-router.put('/transactions/:id', requireAuth, async (req, res) => {
+router.put('/transactions/:id', requireAuth, userRateLimit, async (req, res) => {
   try {
     const body = req.body ?? {};
     const updates: Record<string, unknown> = {};
@@ -88,7 +88,7 @@ router.put('/transactions/:id', requireAuth, async (req, res) => {
   }
 });
 
-router.delete('/transactions/:id', requireAuth, async (req, res) => {
+router.delete('/transactions/:id', requireAuth, userRateLimit, async (req, res) => {
   try {
     const ok = await deleteRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, req.sheetsClient!);
     if (!ok) {

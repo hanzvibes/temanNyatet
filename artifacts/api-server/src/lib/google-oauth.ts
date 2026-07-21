@@ -6,13 +6,13 @@ import crypto from 'crypto';
 
 const CLIENT_ID = process.env['GOOGLE_CLIENT_ID'] ?? '';
 const CLIENT_SECRET = process.env['GOOGLE_CLIENT_SECRET'] ?? '';
-const STATE_SECRET = process.env['GOOGLE_OAUTH_STATE_SECRET'] ?? '';
+const STATE_SECRET = process.env['GOOGLE_OAUTH_STATE_SECRET'];
 
 if (!CLIENT_ID || !CLIENT_SECRET) {
   console.warn('[google-oauth] GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is not set.');
 }
 if (!STATE_SECRET) {
-  console.warn('[google-oauth] GOOGLE_OAUTH_STATE_SECRET is not set — OAuth state will be insecure!');
+  console.error('[google-oauth] GOOGLE_OAUTH_STATE_SECRET is not set — OAuth state is disabled.');
 }
 
 // The redirect URI must exactly match what is registered in Google Cloud Console.
@@ -73,24 +73,30 @@ interface OAuthState {
 }
 
 export function createState(userId: string): string {
+  if (!STATE_SECRET) {
+    throw new Error('GOOGLE_OAUTH_STATE_SECRET is not configured');
+  }
   const payload: OAuthState = { userId, expiresAt: Date.now() + 10 * 60 * 1000 }; // 10 min TTL
   const json = JSON.stringify(payload);
   const b64 = Buffer.from(json).toString('base64url');
   const sig = crypto
-    .createHmac('sha256', STATE_SECRET || 'insecure-dev-secret')
+    .createHmac('sha256', STATE_SECRET)
     .update(b64)
     .digest('hex');
   return `${b64}.${sig}`;
 }
 
 export function verifyState(state: string): OAuthState | null {
+  if (!STATE_SECRET) {
+    return null;
+  }
   try {
     const dotIdx = state.lastIndexOf('.');
     if (dotIdx === -1) return null;
     const b64 = state.slice(0, dotIdx);
     const sig = state.slice(dotIdx + 1);
     const expected = crypto
-      .createHmac('sha256', STATE_SECRET || 'insecure-dev-secret')
+      .createHmac('sha256', STATE_SECRET)
       .update(b64)
       .digest('hex');
     // Constant-time comparison to prevent timing attacks

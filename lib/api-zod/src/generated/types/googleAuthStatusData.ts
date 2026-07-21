@@ -6,13 +6,12 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export type MayarWebhookInputData = {
-  customer_email: string;
-  amount?: number;
+export type GoogleAuthStatusData = {
+  connected: boolean;
   /** @nullable */
-  plan_id?: string | null;
+  spreadsheetId: string | null;
   /** @nullable */
-  plan_name?: string | null;
+  spreadsheetUrl: string | null;
   /** @nullable */
-  order_id?: string | null;
+  redirectUri?: string | null;
 };

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth } from '../middleware/requireAuth';
+import { requireAuth, userRateLimit } from '../middleware/requireAuth';
 import { createRow, deleteRow, listByUser, updateRow } from '../lib/sheet-store';
 import { SheetsAccessError } from '../lib/google-sheets';
 import { optionalString, optionalTags, requireString, ValidationError } from '../lib/validate';
@@ -9,7 +9,7 @@ const SHEET = '📝 Notes';
 const TITLE_MAX = 200;
 const CONTENT_MAX = 50_000;
 
-router.get('/notes', requireAuth, async (req, res) => {
+router.get('/notes', requireAuth, userRateLimit, async (req, res) => {
   try {
     const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!, req.sheetsClient!);
     res.status(200).json({ data: rows });
@@ -23,7 +23,7 @@ router.get('/notes', requireAuth, async (req, res) => {
   }
 });
 
-router.post('/notes', requireAuth, async (req, res) => {
+router.post('/notes', requireAuth, userRateLimit, async (req, res) => {
   try {
     const body = req.body ?? {};
     const content = requireString(body.content, 'content', CONTENT_MAX);
@@ -45,7 +45,7 @@ router.post('/notes', requireAuth, async (req, res) => {
   }
 });
 
-router.put('/notes/:id', requireAuth, async (req, res) => {
+router.put('/notes/:id', requireAuth, userRateLimit, async (req, res) => {
   try {
     const body = req.body ?? {};
     const updates: Record<string, unknown> = {};
@@ -72,7 +72,7 @@ router.put('/notes/:id', requireAuth, async (req, res) => {
   }
 });
 
-router.delete('/notes/:id', requireAuth, async (req, res) => {
+router.delete('/notes/:id', requireAuth, userRateLimit, async (req, res) => {
   try {
     const ok = await deleteRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, req.sheetsClient!);
     if (!ok) {

@@ -26,6 +26,10 @@ export interface Database {
           subscription_end: string | null;
           spreadsheet_id: string | null;
           template_version: string | null;
+          google_refresh_token: string | null;
+          last_sync_at: string | null;
+          sync_status: 'unknown' | 'ok' | 'error' | 'repair_needed' | null;
+          recovery_metadata: Record<string, unknown> | null;
           created_at: string;
         };
         Insert: {
@@ -39,6 +43,10 @@ export interface Database {
           subscription_end?: string | null;
           spreadsheet_id?: string | null;
           template_version?: string | null;
+          google_refresh_token?: string | null;
+          last_sync_at?: string | null;
+          sync_status?: 'unknown' | 'ok' | 'error' | 'repair_needed' | null;
+          recovery_metadata?: Record<string, unknown> | null;
           created_at?: string;
         };
         Update: {
@@ -52,6 +60,10 @@ export interface Database {
           subscription_end?: string | null;
           spreadsheet_id?: string | null;
           template_version?: string | null;
+          google_refresh_token?: string | null;
+          last_sync_at?: string | null;
+          sync_status?: 'unknown' | 'ok' | 'error' | 'repair_needed' | null;
+          recovery_metadata?: Record<string, unknown> | null;
           created_at?: string;
         };
         Relationships: [];

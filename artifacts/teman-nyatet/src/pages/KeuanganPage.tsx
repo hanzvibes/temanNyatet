@@ -6,7 +6,6 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { format, isToday, isYesterday } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Loader2, Wallet, ArrowDown, ArrowUp, Briefcase, Coffee, ShoppingBag, Car, HeartPulse, Laptop, Gamepad2, Gift, Receipt, Home, MoreHorizontal, BookOpen } from 'lucide-react';
-import { toast } from 'sonner';
 import { Drawer } from 'vaul';
 import { TransactionType, DEFAULT_INCOME_CATEGORIES, DEFAULT_EXPENSE_CATEGORIES, DEFAULT_PAYMENT_SOURCES } from '@/lib/database.types';
 import { useForm } from 'react-hook-form';
@@ -65,6 +64,7 @@ export default function KeuanganPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [txType, setTxType] = useState<TransactionType>('expense');
   const [search, setSearch] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   
   const form = useForm<TxFormValues>({
     resolver: zodResolver(txSchema),
@@ -147,12 +147,13 @@ export default function KeuanganPage() {
 
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const handlePressStart = (id: string) => {
-    pressTimer.current = setTimeout(() => {
-      toast('Hapus transaksi ini?', {
-        action: { label: 'Hapus', onClick: () => deleteTransaction(id) },
-        cancel: { label: 'Batal', onClick: () => {} },
-        duration: 5000,
-      });
+    pressTimer.current = setTimeout(async () => {
+      setDeletingId(id);
+      try {
+        await deleteTransaction(id);
+      } finally {
+        setDeletingId(null);
+      }
     }, 800);
   };
   const handlePressEnd = () => {
@@ -223,7 +224,7 @@ export default function KeuanganPage() {
                     {groupedTx[dateStr].map(tx => (
                       <div 
                         key={tx.id} 
-                        className="bg-white rounded-[1.25rem] p-4 flex items-center justify-between shadow-sm border border-border/50 hover:bg-secondary/50 transition-colors active:scale-[0.98] select-none"
+                        className="relative bg-white rounded-[1.25rem] p-4 flex items-center justify-between shadow-sm border border-border/50 hover:bg-secondary/50 transition-colors active:scale-[0.98] select-none overflow-hidden"
                         onMouseDown={() => handlePressStart(tx.id)}
                         onMouseUp={handlePressEnd}
                         onMouseLeave={handlePressEnd}
@@ -231,6 +232,11 @@ export default function KeuanganPage() {
                         onTouchEnd={handlePressEnd}
                         onTouchMove={handlePressEnd}
                       >
+                        {deletingId === tx.id && (
+                          <div className="absolute inset-0 z-10 bg-white/90 backdrop-blur-[1px] flex items-center justify-center gap-2 text-red-500 font-bold text-sm">
+                            <Loader2 size={16} className="animate-spin" /> Menghapus...
+                          </div>
+                        )}
                         <div className="flex items-center gap-4">
                           <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${getCategoryColor(tx.category, tx.type)}`}>
                             {getCategoryIcon(tx.category)}

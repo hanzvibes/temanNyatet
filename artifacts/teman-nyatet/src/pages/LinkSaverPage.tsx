@@ -25,6 +25,7 @@ export default function LinkSaverPage() {
   const { pendingCreate, clearCreate } = useCreate();
   const [search, setSearch] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const form = useForm<LinkFormValues>({
     resolver: zodResolver(linkSchema),
@@ -79,15 +80,16 @@ export default function LinkSaverPage() {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  // Long press handling
+  // Long press handling: delete on long press without confirmation toast.
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const handlePressStart = (id: string) => {
-    pressTimer.current = setTimeout(() => {
-      toast('Hapus link ini?', {
-        action: { label: 'Hapus', onClick: () => deleteLink(id) },
-        cancel: { label: 'Batal', onClick: () => {} },
-        duration: 5000,
-      });
+    pressTimer.current = setTimeout(async () => {
+      setDeletingId(id);
+      try {
+        await deleteLink(id);
+      } finally {
+        setDeletingId(null);
+      }
     }, 800);
   };
   const handlePressEnd = () => {
@@ -136,8 +138,13 @@ export default function LinkSaverPage() {
                   onTouchStart={() => handlePressStart(link.id)}
                   onTouchEnd={handlePressEnd}
                   onTouchMove={handlePressEnd}
-                  className="bg-white rounded-[1.25rem] p-4 shadow-sm border border-border/50 flex items-center gap-4 cursor-pointer hover:border-[#E09898]/50 hover:bg-secondary/30 transition-all active:scale-[0.98]"
+                  className="relative bg-white rounded-[1.25rem] p-4 shadow-sm border border-border/50 flex items-center gap-4 cursor-pointer hover:border-[#E09898]/50 hover:bg-secondary/30 transition-all active:scale-[0.98] overflow-hidden"
                 >
+                  {deletingId === link.id && (
+                    <div className="absolute inset-0 z-10 bg-white/90 backdrop-blur-[1px] flex items-center justify-center gap-2 text-red-500 font-bold text-sm">
+                      <Loader2 size={16} className="animate-spin" /> Menghapus...
+                    </div>
+                  )}
                   <div className="w-14 h-14 bg-secondary rounded-[1rem] flex items-center justify-center flex-shrink-0 overflow-hidden border border-border">
                     {domain ? (
                       <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`} alt="" className="w-7 h-7 object-contain" onError={(e) => { e.currentTarget.style.display='none'; }} />

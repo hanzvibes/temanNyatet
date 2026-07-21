@@ -8,7 +8,6 @@ import { Loader2, BookOpen, Trash2, X } from 'lucide-react';
 import SearchBar from '@/components/SearchBar';
 import SettingsSheet from '@/components/SettingsSheet';
 import { Drawer } from 'vaul';
-import { toast } from 'sonner';
 import { Note } from '@/lib/database.types';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,6 +36,7 @@ export default function CatatanPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const form = useForm<NoteFormValues>({
     resolver: zodResolver(noteSchema),
@@ -120,18 +120,14 @@ export default function CatatanPage() {
     }
   };
 
-  const handleDelete = (id: string) => {
-    toast('Hapus catatan ini?', {
-      action: {
-        label: 'Hapus',
-        onClick: async () => {
-          await deleteNote(id);
-          setIsDetailOpen(false);
-        },
-      },
-      cancel: { label: 'Batal', onClick: () => {} },
-      duration: 5000,
-    });
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      await deleteNote(id);
+      setIsDetailOpen(false);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
@@ -325,9 +321,18 @@ export default function CatatanPage() {
                         </button>
                         <button
                           onClick={() => handleDelete(selectedNote.id)}
-                          className="flex-1 bg-red-100/70 text-red-600 font-bold py-3 rounded-2xl hover:bg-red-100 transition-colors flex items-center justify-center gap-1.5 text-sm shadow-sm"
+                          disabled={deletingId === selectedNote.id}
+                          className="flex-1 bg-red-100/70 text-red-600 font-bold py-3 rounded-2xl hover:bg-red-100 transition-colors flex items-center justify-center gap-1.5 text-sm shadow-sm disabled:opacity-70"
                         >
-                          <Trash2 size={16} /> Hapus
+                          {deletingId === selectedNote.id ? (
+                            <>
+                              <Loader2 size={16} className="animate-spin" /> Menghapus...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 size={16} /> Hapus
+                            </>
+                          )}
                         </button>
                       </div>
                     </>

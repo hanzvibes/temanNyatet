@@ -44,6 +44,7 @@ export default function TodoPage() {
   // Edit modal
   const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const editForm = useForm<TodoFormValues>({
     resolver: zodResolver(todoSchema),
     defaultValues: { title: '', description: '', due_date: '', due_time: '' },
@@ -126,18 +127,14 @@ export default function TodoPage() {
     await updateTodo(todoId, { is_done: !currentStatus });
   };
 
-  const handleDelete = (id: string) => {
-    toast('Hapus To-do ini?', {
-      action: {
-        label: 'Hapus',
-        onClick: async () => {
-          await deleteTodo(id);
-          setIsEditOpen(false);
-        },
-      },
-      cancel: { label: 'Batal', onClick: () => {} },
-      duration: 5000,
-    });
+  const handleDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      await deleteTodo(id);
+      setIsEditOpen(false);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   // ── Todo card ────────────────────────────────────────────────────────────────
@@ -329,9 +326,18 @@ export default function TodoPage() {
                       <button
                         type="button"
                         onClick={() => handleDelete(selectedTodo.id)}
-                        className="w-full flex items-center justify-center gap-2 text-red-500 font-bold text-sm py-2 rounded-2xl bg-red-50/70 hover:bg-red-100/80 transition-colors"
+                        disabled={deletingId === selectedTodo.id}
+                        className="w-full flex items-center justify-center gap-2 text-red-500 font-bold text-sm py-2 rounded-2xl bg-red-50/70 hover:bg-red-100/80 transition-colors disabled:opacity-70"
                       >
-                        <Trash2 size={15} /> Hapus To-Do
+                        {deletingId === selectedTodo.id ? (
+                          <>
+                            <Loader2 size={15} className="animate-spin" /> Menghapus...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 size={15} /> Hapus To-Do
+                          </>
+                        )}
                       </button>
                     </div>
                   </form>

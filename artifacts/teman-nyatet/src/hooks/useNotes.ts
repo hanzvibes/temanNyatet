@@ -90,11 +90,9 @@ export function useNotes(userId?: string) {
     setNotes(notes.filter(n => n.id !== id));
     try {
       await apiDelete(`/notes/${id}`);
-      toast.success('Catatan dihapus');
     } catch (err) {
       setNotes(prev);
       if (err instanceof SpreadsheetApiError) { dispatchSheetError(err.code); return; }
-      toast.error('Gagal menghapus catatan');
       throw err;
     }
   };

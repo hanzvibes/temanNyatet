@@ -76,10 +76,8 @@ export function useTransactions(userId?: string) {
     setTransactions(transactions.filter(t => t.id !== id));
     try {
       await apiDelete(`/transactions/${id}`);
-      toast.success('Transaksi dihapus');
     } catch (err) {
       setTransactions(prev);
-      toast.error('Gagal menghapus transaksi');
       throw err;
     }
   };

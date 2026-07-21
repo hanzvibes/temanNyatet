@@ -67,10 +67,8 @@ export function useLinks(userId?: string) {
     setLinks(links.filter(l => l.id !== id));
     try {
       await apiDelete(`/links/${id}`);
-      toast.success('Link dihapus');
     } catch (err) {
       setLinks(prev);
-      toast.error('Gagal menghapus link');
       throw err;
     }
   };

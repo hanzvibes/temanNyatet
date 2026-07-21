@@ -81,10 +81,8 @@ export function useTodos(userId?: string) {
     setTodos(todos.filter(t => t.id !== id));
     try {
       await apiDelete(`/todos/${id}`);
-      toast.success('To-do dihapus');
     } catch (err) {
       setTodos(prev);
-      toast.error('Gagal menghapus To-do');
       throw err;
     }
   };

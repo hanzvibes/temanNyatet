@@ -14,17 +14,17 @@ Replit normally remembers the last workflow state, so if the workflows were runn
 ## Required secrets
 
 ### Configured (required for core features)
-- `VITE_SUPABASE_URL` — Supabase project URL (frontend)
-- `VITE_SUPABASE_ANON_KEY` — Supabase anon/public key (frontend)
-- `SUPABASE_URL` — same value as `VITE_SUPABASE_URL` (API server)
-- `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key (API server)
-- `GOOGLE_CLIENT_ID` — OAuth2 client ID from Google Cloud Console
-- `GOOGLE_CLIENT_SECRET` — OAuth2 client secret from Google Cloud Console
-- `GOOGLE_OAUTH_STATE_SECRET` — random hex string for HMAC-signing OAuth state params (prevents CSRF). **Required** — OAuth will fail closed if unset.
-- `CRON_SECRET` — random string securing `/api/cron/archive-expired`
+- ✅ `VITE_SUPABASE_URL` — Supabase project URL (frontend)
+- ✅ `VITE_SUPABASE_ANON_KEY` — Supabase anon/public key (frontend)
+- ✅ `SUPABASE_URL` — same value as `VITE_SUPABASE_URL` (API server)
+- ✅ `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key (API server)
+- ✅ `GOOGLE_CLIENT_ID` — OAuth2 client ID from Google Cloud Console
+- ✅ `GOOGLE_CLIENT_SECRET` — OAuth2 client secret from Google Cloud Console
+- ✅ `GOOGLE_OAUTH_STATE_SECRET` — random hex string for HMAC-signing OAuth state params (prevents CSRF). **Required** — OAuth will fail closed if unset.
+- ✅ `CRON_SECRET` — random string securing `/api/cron/archive-expired`
 
 ### Configured as env vars (non-secret)
-- `GOOGLE_REDIRECT_URI` — OAuth callback URL registered in Google Cloud Console (`https://<dev-domain>/api/auth/google/callback`)
+- ✅ `GOOGLE_REDIRECT_URI` — OAuth callback URL registered in Google Cloud Console (`https://1ff676c6-37e0-4629-a8f7-15d4e4546a40-00-1gwr8wv8ub41m.sisko.replit.dev/api/auth/google/callback`)
 - `PORT` — `5000` (frontend Vite dev server)
 
 ### Optional / not configured

@@ -17,6 +17,9 @@ import KeuanganPage from '@/pages/KeuanganPage';
 import TodoPage from '@/pages/TodoPage';
 import LinkSaverPage from '@/pages/LinkSaverPage';
 import BottomSheetNav from '@/components/BottomSheetNav';
+import PwaInstallPrompt from '@/components/PwaInstallPrompt';
+import PwaUpdatePrompt from '@/components/PwaUpdatePrompt';
+import OfflineIndicator from '@/components/OfflineIndicator';
 
 const queryClient = new QueryClient();
 
@@ -116,7 +119,10 @@ function App() {
             <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
               <AuthGuard>
                 <MainLayout>
+                  <OfflineIndicator />
                   <Router />
+                  <PwaInstallPrompt />
+                  <PwaUpdatePrompt />
                 </MainLayout>
               </AuthGuard>
             </WouterRouter>

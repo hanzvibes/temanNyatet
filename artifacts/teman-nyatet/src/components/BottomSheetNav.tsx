@@ -34,18 +34,21 @@ export default function BottomSheetNav() {
     expanded:  Math.round(screenH * 0.88),
   };
 
-  // Animate HEIGHT — pill grows upward since it's bottom-anchored
-  const h = useMotionValue(SNAP.half);
-  const [snapState, setSnapState] = useState<SnapState>('half');
+  // Animate HEIGHT — pill grows upward since it's bottom-anchored.
+  // Start collapsed so the page content is visible. User can tap the handle
+  // or drag it up to open the sheet.
+  const h = useMotionValue(SNAP.collapsed);
+  const [snapState, setSnapState] = useState<SnapState>('collapsed');
 
   useEffect(() => { h.set(SNAP[snapState]); }, [screenH]);
 
-  // Keep the nav open at half-height when navigating to a new tab
+  // When navigating to a new tab, collapse the sheet so the page content is
+  // visible. The user can tap/drag the handle to reopen it if they want to create.
   const prevLocation = useRef(location);
   useEffect(() => {
     if (location !== prevLocation.current) {
       prevLocation.current = location;
-      snapTo('half');
+      snapTo('collapsed');
     }
   }, [location]);
 
@@ -54,29 +57,40 @@ export default function BottomSheetNav() {
     setSnapState(state);
   };
 
-  // Drag — pointer capture on the handle bar only
+  // Drag — pointer capture on the handle bar only. Also supports a tap on the
+  // handle to toggle between collapsed and half-open.
   const dragStartClientY = useRef(0);
   const dragStartH       = useRef(0);
   const samples          = useRef<{ t: number; y: number }[]>([]);
+  const isDragging       = useRef(false);
 
   const onPointerDown = (e: React.PointerEvent) => {
     e.currentTarget.setPointerCapture(e.pointerId);
     dragStartClientY.current = e.clientY;
     dragStartH.current       = h.get();
     samples.current = [{ t: Date.now(), y: e.clientY }];
+    isDragging.current = false;
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
     if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
-    // Upward finger movement (negative delta) → pill grows taller
     const delta = dragStartClientY.current - e.clientY;
+    if (Math.abs(delta) > 4) isDragging.current = true;
+
+    // Upward finger movement (negative delta) → pill grows taller
     const next  = Math.max(SNAP.collapsed, Math.min(SNAP.expanded, dragStartH.current + delta));
     h.set(next);
     samples.current.push({ t: Date.now(), y: e.clientY });
     if (samples.current.length > 8) samples.current.shift();
   };
 
-  const onPointerUp = () => {
+  const onPointerUp = (e: React.PointerEvent) => {
+    // Treat a tap on the handle as a click: toggle between collapsed and half-open.
+    if (!isDragging.current && Math.abs(dragStartClientY.current - e.clientY) < 4) {
+      snapTo(snapState === 'collapsed' ? 'half' : 'collapsed');
+      return;
+    }
+
     const cur = h.get();
     let vel = 0;
     if (samples.current.length >= 2) {

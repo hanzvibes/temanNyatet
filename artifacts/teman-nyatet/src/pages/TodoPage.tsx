@@ -288,7 +288,6 @@ export default function TodoPage() {
                       <input
                         {...editForm.register('title')}
                         placeholder="Apa yang harus dikerjakan?"
-                        autoFocus
                         className="w-full text-xl font-extrabold bg-transparent border-b-2 border-[#9CB4D4]/40 pb-2.5 outline-none focus:border-[#9CB4D4] transition-colors placeholder:text-[#9CB4D4]/50 text-[#2A4A6A]"
                       />
                       {editForm.formState.errors.title && (
@@ -375,7 +374,6 @@ export default function TodoPage() {
                     {...newForm.register('title')}
                     placeholder="Apa yang harus dikerjakan?"
                     className="w-full text-xl font-extrabold bg-transparent border-b-2 border-border py-3 outline-none focus:border-[#9CB4D4] transition-colors placeholder:text-muted-foreground/40 text-foreground"
-                    autoFocus
                   />
                   {newForm.formState.errors.title && (
                     <p className="text-destructive font-medium text-sm mt-2">{newForm.formState.errors.title.message}</p>

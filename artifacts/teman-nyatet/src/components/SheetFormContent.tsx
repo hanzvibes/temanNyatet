@@ -270,7 +270,6 @@ function TodoSheetForm({ onSuccess }: { onSuccess: () => void }) {
       <input
         {...form.register('title')}
         placeholder="Apa yang harus dikerjakan?"
-        autoFocus
         className="w-full text-lg font-extrabold bg-transparent border-b-2 border-border pb-2.5 outline-none focus:border-[#9CB4D4] transition-colors placeholder:text-muted-foreground/40"
       />
       {form.formState.errors.title && (

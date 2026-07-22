@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { AnimatePresence } from 'framer-motion';
+import { AnimatedListItem } from '@/components/AnimatedListItem';
 import SettingsSheet from '@/components/SettingsSheet';
 import { useCreate } from '@/contexts/CreateContext';
 import { useTransactions } from '@/hooks/useTransactions';
@@ -230,41 +232,43 @@ export default function KeuanganPage() {
                       {getFormatDate(dateStr)}
                     </h3>
                     <div className="space-y-3">
-                      {groupedTx[dateStr].map(tx => (
-                        <div
-                          key={tx.id}
-                          className="relative bg-white rounded-[1.25rem] p-4 flex items-center justify-between shadow-sm border border-border/50 hover:bg-secondary/50 transition-colors active:scale-[0.98] select-none overflow-hidden"
-                          onMouseDown={() => handlePressStart(tx.id)}
-                          onMouseUp={handlePressEnd}
-                          onMouseLeave={handlePressEnd}
-                          onTouchStart={() => handlePressStart(tx.id)}
-                          onTouchEnd={handlePressEnd}
-                          onTouchMove={handlePressEnd}
-                        >
-                          {deletingId === tx.id && (
-                            <div className="absolute inset-0 z-10 bg-white/90 backdrop-blur-[1px] flex items-center justify-center gap-2 text-red-500 font-bold text-sm">
-                              <Loader2 size={16} className="animate-spin" /> Menghapus...
-                            </div>
-                          )}
-                          <div className="flex items-center gap-4">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${getCategoryColor(tx.category, tx.type)}`}>
-                              {getCategoryIcon(tx.category)}
-                            </div>
-                            <div>
-                              <p className="font-extrabold text-foreground text-base mb-0.5">{tx.category}</p>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-secondary text-muted-foreground rounded-md border border-border">
-                                  {tx.source}
-                                </span>
-                                {tx.note && <span className="text-xs font-medium text-muted-foreground line-clamp-1">{tx.note}</span>}
+                      <AnimatePresence>
+                        {groupedTx[dateStr].map(tx => (
+                          <AnimatedListItem
+                            key={tx.id}
+                            className="relative bg-white rounded-[1.25rem] p-4 flex items-center justify-between shadow-sm border border-border/50 hover:bg-secondary/50 transition-colors active:scale-[0.98] select-none overflow-hidden"
+                            onMouseDown={() => handlePressStart(tx.id)}
+                            onMouseUp={handlePressEnd}
+                            onMouseLeave={handlePressEnd}
+                            onTouchStart={() => handlePressStart(tx.id)}
+                            onTouchEnd={handlePressEnd}
+                            onTouchMove={handlePressEnd}
+                          >
+                            {deletingId === tx.id && (
+                              <div className="absolute inset-0 z-10 bg-white/90 backdrop-blur-[1px] flex items-center justify-center gap-2 text-red-500 font-bold text-sm">
+                                <Loader2 size={16} className="animate-spin" /> Menghapus...
+                              </div>
+                            )}
+                            <div className="flex items-center gap-4">
+                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${getCategoryColor(tx.category, tx.type)}`}>
+                                {getCategoryIcon(tx.category)}
+                              </div>
+                              <div>
+                                <p className="font-extrabold text-foreground text-base mb-0.5">{tx.category}</p>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-secondary text-muted-foreground rounded-md border border-border">
+                                    {tx.source}
+                                  </span>
+                                  {tx.note && <span className="text-xs font-medium text-muted-foreground line-clamp-1">{tx.note}</span>}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <div className={`font-extrabold text-lg ${tx.type === 'income' ? 'text-[#4ADE80]' : 'text-foreground'}`}>
-                            {tx.type === 'income' ? '+' : '-'}{formatRupiah(tx.amount)}
-                          </div>
-                        </div>
-                      ))}
+                            <div className={`font-extrabold text-lg ${tx.type === 'income' ? 'text-[#4ADE80]' : 'text-foreground'}`}>
+                              {tx.type === 'income' ? '+' : '-'}{formatRupiah(tx.amount)}
+                            </div>
+                          </AnimatedListItem>
+                        ))}
+                      </AnimatePresence>
                     </div>
                   </div>
                 ))}

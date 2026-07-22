@@ -6,6 +6,7 @@ import { AuthProvider, useAuthContext } from '@/contexts/AuthContext';
 import { CreateProvider } from '@/contexts/CreateContext';
 import { Loader2 } from 'lucide-react';
 import React, { Suspense, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import BottomSheetNav from '@/components/BottomSheetNav';
 import SidebarNav from '@/components/SidebarNav';
@@ -123,23 +124,34 @@ function PageLoading() {
 }
 
 function Router() {
+  const [location] = useLocation();
   return (
-    <Suspense fallback={<PageLoading />}>
-      <Switch>
-        <Route path="/login" component={AuthPage} />
-        <Route path="/payment" component={PaymentPage} />
-        <Route path="/archived" component={ArchivedPage} />
-        <Route path="/connect-sheet" component={ConnectSheetPage} />
+    <AnimatePresence mode="popLayout" initial={false}>
+      <motion.div
+        key={location}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -12 }}
+        transition={{ duration: 0.22, ease: 'easeInOut' }}
+      >
+        <Suspense fallback={<PageLoading />}>
+          <Switch>
+            <Route path="/login" component={AuthPage} />
+            <Route path="/payment" component={PaymentPage} />
+            <Route path="/archived" component={ArchivedPage} />
+            <Route path="/connect-sheet" component={ConnectSheetPage} />
 
-        <Route path="/catatan" component={CatatanPage} />
-        <Route path="/keuangan" component={KeuanganPage} />
-        <Route path="/todo" component={TodoPage} />
-        <Route path="/linksaver" component={LinkSaverPage} />
+            <Route path="/catatan" component={CatatanPage} />
+            <Route path="/keuangan" component={KeuanganPage} />
+            <Route path="/todo" component={TodoPage} />
+            <Route path="/linksaver" component={LinkSaverPage} />
 
-        <Route path="/" component={() => null} />
-        <Route component={NotFound} />
-      </Switch>
-    </Suspense>
+            <Route path="/" component={() => null} />
+            <Route component={NotFound} />
+          </Switch>
+        </Suspense>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 

@@ -13,6 +13,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatedListItem } from '@/components/AnimatedListItem';
 
 const PALETTE = ['#FFF8D6', '#E8F2DF', '#FFE4E1', '#E1F0FF'];
 const AVAILABLE_TAGS = ['Kerja', 'Personal', 'Ide', 'Belajar', 'Lainnya'];
@@ -158,41 +159,45 @@ export default function CatatanPage() {
             <p className="font-medium">{search ? 'Tidak ada hasil pencarian.' : 'Belum ada catatan. Mulai catat sat-set!'}</p>
           </div>
         ) : (
-          <div className="columns-2 md:columns-3 lg:columns-3 xl:columns-4 gap-4 space-y-4">
-            {filteredNotes.map((note, idx) => {
-              const bgColor = PALETTE[idx % PALETTE.length];
-              return (
-                <div
-                  key={note.id}
-                  onClick={() => handleOpenDetail(note, bgColor)}
-                  className="break-inside-avoid rounded-[1.5rem] p-5 shadow-sm cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                  style={{ backgroundColor: bgColor }}
-                >
-                  {note.title && <h3 className="font-bold text-gray-900 mb-2 leading-tight text-lg">{note.title}</h3>}
-                  <p className="text-sm text-gray-800 line-clamp-5 whitespace-pre-wrap leading-relaxed font-medium">{note.content}</p>
+          <AnimatePresence>
+            <div className="columns-2 md:columns-3 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+              {filteredNotes.map((note, idx) => {
+                const bgColor = PALETTE[idx % PALETTE.length];
+                return (
+                  <AnimatedListItem
+                    key={note.id}
+                    index={idx}
+                    layout={false}
+                    onClick={() => handleOpenDetail(note, bgColor)}
+                    className="break-inside-avoid rounded-[1.5rem] p-5 shadow-sm cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                    style={{ backgroundColor: bgColor }}
+                  >
+                    {note.title && <h3 className="font-bold text-gray-900 mb-2 leading-tight text-lg">{note.title}</h3>}
+                    <p className="text-sm text-gray-800 line-clamp-5 whitespace-pre-wrap leading-relaxed font-medium">{note.content}</p>
 
-                  {note.tags && note.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-4">
-                      {note.tags.slice(0, 2).map(tag => (
-                        <span key={tag} className="text-[10px] px-2.5 py-1 rounded-full bg-white/60 text-gray-800 font-bold uppercase tracking-wider">
-                          {tag}
-                        </span>
-                      ))}
-                      {note.tags.length > 2 && (
-                        <span className="text-[10px] px-2 py-1 rounded-full bg-white/60 text-gray-800 font-bold">
-                          +{note.tags.length - 2}
-                        </span>
-                      )}
+                    {note.tags && note.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-4">
+                        {note.tags.slice(0, 2).map(tag => (
+                          <span key={tag} className="text-[10px] px-2.5 py-1 rounded-full bg-white/60 text-gray-800 font-bold uppercase tracking-wider">
+                            {tag}
+                          </span>
+                        ))}
+                        {note.tags.length > 2 && (
+                          <span className="text-[10px] px-2 py-1 rounded-full bg-white/60 text-gray-800 font-bold">
+                            +{note.tags.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-4 text-xs text-gray-600/80 font-bold">
+                      {format(new Date(note.created_at), 'd MMM yyyy', { locale: id })}
                     </div>
-                  )}
-
-                  <div className="mt-4 text-xs text-gray-600/80 font-bold">
-                    {format(new Date(note.created_at), 'd MMM yyyy', { locale: id })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                  </AnimatedListItem>
+                );
+              })}
+            </div>
+          </AnimatePresence>
         )}
       </div>
 

@@ -13,6 +13,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatedListItem } from '@/components/AnimatedListItem';
 
 const todoSchema = z.object({
   title:       z.string().min(1, 'Judul To-do wajib diisi'),
@@ -139,7 +140,7 @@ export default function TodoPage() {
 
   // ── Todo card ────────────────────────────────────────────────────────────────
   const renderTodoItem = (todo: Todo) => (
-    <div
+    <AnimatedListItem
       key={todo.id}
       onClick={() => handleOpenEdit(todo)}
       className={`bg-white rounded-[1.25rem] p-5 shadow-sm border border-border/50 flex items-start gap-4 transition-all cursor-pointer active:scale-[0.98] ${
@@ -188,7 +189,7 @@ export default function TodoPage() {
           </div>
         )}
       </div>
-    </div>
+    </AnimatedListItem>
   );
 
   return (
@@ -223,13 +224,17 @@ export default function TodoPage() {
             {pendingTodos.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1 mb-4">Belum Selesai</h3>
-                {pendingTodos.map(renderTodoItem)}
+                <AnimatePresence>
+                  {pendingTodos.map(renderTodoItem)}
+                </AnimatePresence>
               </div>
             )}
             {completedTodos.length > 0 && (
               <div className="space-y-3 mt-8 lg:mt-0">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1 mb-4">Selesai</h3>
-                {completedTodos.map(renderTodoItem)}
+                <AnimatePresence>
+                  {completedTodos.map(renderTodoItem)}
+                </AnimatePresence>
               </div>
             )}
           </div>

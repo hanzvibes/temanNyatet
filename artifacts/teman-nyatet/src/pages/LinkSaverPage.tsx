@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { AnimatePresence } from 'framer-motion';
+import { AnimatedListItem } from '@/components/AnimatedListItem';
 import SettingsSheet from '@/components/SettingsSheet';
 import { useLinks } from '@/hooks/useLinks';
 import { useCreate } from '@/contexts/CreateContext';
@@ -125,55 +127,57 @@ export default function LinkSaverPage() {
           </div>
         ) : (
           <div className="grid gap-4 pb-8 md:grid-cols-2 xl:grid-cols-3">
-            {filteredLinks.map(link => {
-              // Extract domain for favicon
-              let domain = '';
-              try { domain = new URL(link.url).hostname; } catch (e) {}
+            <AnimatePresence>
+              {filteredLinks.map(link => {
+                // Extract domain for favicon
+                let domain = '';
+                try { domain = new URL(link.url).hostname; } catch (e) {}
 
-              return (
-                <div 
-                  key={link.id}
-                  onClick={() => openLink(link.url)}
-                  onMouseDown={() => handlePressStart(link.id)}
-                  onMouseUp={handlePressEnd}
-                  onMouseLeave={handlePressEnd}
-                  onTouchStart={() => handlePressStart(link.id)}
-                  onTouchEnd={handlePressEnd}
-                  onTouchMove={handlePressEnd}
-                  className="relative bg-white rounded-[1.25rem] p-4 shadow-sm border border-border/50 flex items-center gap-4 cursor-pointer hover:border-[#E09898]/50 hover:bg-secondary/30 transition-all active:scale-[0.98] overflow-hidden"
-                >
-                  {deletingId === link.id && (
-                    <div className="absolute inset-0 z-10 bg-white/90 backdrop-blur-[1px] flex items-center justify-center gap-2 text-red-500 font-bold text-sm">
-                      <Loader2 size={16} className="animate-spin" /> Menghapus...
-                    </div>
-                  )}
-                  <div className="w-14 h-14 bg-secondary rounded-[1rem] flex items-center justify-center flex-shrink-0 overflow-hidden border border-border">
-                    {domain ? (
-                      <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`} alt="" className="w-7 h-7 object-contain" onError={(e) => { e.currentTarget.style.display='none'; }} />
-                    ) : (
-                      <Compass className="text-muted-foreground/50" size={24} strokeWidth={2.5} />
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-extrabold text-base text-foreground line-clamp-1 mb-1">{link.title}</h3>
-                    <div className="flex items-center text-xs font-bold text-muted-foreground gap-1">
-                      <span className="truncate">{link.url.replace(/^https?:\/\//, '')}</span>
-                    </div>
-                    {link.note && (
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#E09898] mt-2 line-clamp-1 bg-[#E09898]/10 px-2 py-1 rounded-md inline-block border border-[#E09898]/20">{link.note}</p>
-                    )}
-                  </div>
-
-                  <button 
-                    onClick={(e) => copyToClipboard(e, link.url)}
-                    className="w-10 h-10 rounded-full bg-secondary border border-border text-muted-foreground flex items-center justify-center hover:bg-[#E09898]/10 hover:text-[#E09898] hover:border-[#E09898]/30 transition-colors"
+                return (
+                  <AnimatedListItem 
+                    key={link.id}
+                    onClick={() => openLink(link.url)}
+                    onMouseDown={() => handlePressStart(link.id)}
+                    onMouseUp={handlePressEnd}
+                    onMouseLeave={handlePressEnd}
+                    onTouchStart={() => handlePressStart(link.id)}
+                    onTouchEnd={handlePressEnd}
+                    onTouchMove={handlePressEnd}
+                    className="relative bg-white rounded-[1.25rem] p-4 shadow-sm border border-border/50 flex items-center gap-4 cursor-pointer hover:border-[#E09898]/50 hover:bg-secondary/30 transition-all active:scale-[0.98] overflow-hidden"
                   >
-                    <Copy size={16} strokeWidth={2.5} />
-                  </button>
-                </div>
-              );
-            })}
+                    {deletingId === link.id && (
+                      <div className="absolute inset-0 z-10 bg-white/90 backdrop-blur-[1px] flex items-center justify-center gap-2 text-red-500 font-bold text-sm">
+                        <Loader2 size={16} className="animate-spin" /> Menghapus...
+                      </div>
+                    )}
+                    <div className="w-14 h-14 bg-secondary rounded-[1rem] flex items-center justify-center flex-shrink-0 overflow-hidden border border-border">
+                      {domain ? (
+                        <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`} alt="" className="w-7 h-7 object-contain" onError={(e) => { e.currentTarget.style.display='none'; }} />
+                      ) : (
+                        <Compass className="text-muted-foreground/50" size={24} strokeWidth={2.5} />
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-extrabold text-base text-foreground line-clamp-1 mb-1">{link.title}</h3>
+                      <div className="flex items-center text-xs font-bold text-muted-foreground gap-1">
+                        <span className="truncate">{link.url.replace(/^https?:\/\//, '')}</span>
+                      </div>
+                      {link.note && (
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-[#E09898] mt-2 line-clamp-1 bg-[#E09898]/10 px-2 py-1 rounded-md inline-block border border-[#E09898]/20">{link.note}</p>
+                      )}
+                    </div>
+
+                    <button 
+                      onClick={(e) => copyToClipboard(e, link.url)}
+                      className="w-10 h-10 rounded-full bg-secondary border border-border text-muted-foreground flex items-center justify-center hover:bg-[#E09898]/10 hover:text-[#E09898] hover:border-[#E09898]/30 transition-colors"
+                    >
+                      <Copy size={16} strokeWidth={2.5} />
+                    </button>
+                  </AnimatedListItem>
+                );
+              })}
+            </AnimatePresence>
           </div>
         )}
       </div>

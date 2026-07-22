@@ -5,13 +5,13 @@ import { useLocation } from 'wouter';
 import { supabase } from '@/lib/supabase';
 import { apiUpload } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet } from 'lucide-react';
+import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-type ActiveSection = null | 'name' | 'password' | 'phone';
+type ActiveSection = null | 'name' | 'password' | 'phone' | 'feedback';
 
 interface SettingsSheetProps {
   avatarBg: string;
@@ -32,6 +32,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
   const [phoneInput, setPhoneInput] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [feedbackInput, setFeedbackInput] = useState('');
 
   const initials = profile?.name
     ? profile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
@@ -50,11 +51,13 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
     setPhoneInput('');
     setNewPassword('');
     setConfirmPassword('');
+    setFeedbackInput('');
   };
 
   const handleOpenSection = (section: ActiveSection) => {
     if (section === 'name') setNameInput(profile?.name || '');
     if (section === 'phone') setPhoneInput(profile?.phone || '');
+    if (section === 'feedback') setFeedbackInput('');
     setNewPassword('');
     setConfirmPassword('');
     setActiveSection(section);
@@ -114,6 +117,23 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setOpen(false);
+  };
+
+  const handleSendFeedback = () => {
+    const trimmed = feedbackInput.trim();
+    if (!trimmed) {
+      toast.error('Feedback tidak boleh kosong');
+      return;
+    }
+
+    const subject = encodeURIComponent('[TemanNyatet] Laporan Bug');
+    const body = encodeURIComponent(
+      `Dari: ${user?.email || 'pengguna'}\n\n${trimmed}\n\n---\nUser agent: ${navigator.userAgent}`,
+    );
+
+    window.location.href = `mailto:rhn.rmdhniii@gmail.com?subject=${subject}&body=${body}`;
+    toast.success('Aplikasi email dibuka. Silakan kirim laporanmu.');
+    handleBack();
   };
 
   const handlePickAvatar = () => {
@@ -266,6 +286,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                           { key: 'name' as const,     icon: User,  label: 'Ganti Nama' },
                           { key: 'password' as const, icon: Lock,  label: 'Ganti Password' },
                           { key: 'phone' as const,    icon: Phone, label: 'Ganti Nomor HP' },
+                          { key: 'feedback' as const, icon: MessageSquare, label: 'Kirim Feedback' },
                         ].map(({ key, icon: Icon, label }) => (
                           <button
                             key={key}
@@ -359,7 +380,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                         {saving ? 'Menyimpan...' : 'Simpan Password'}
                       </button>
                     </div>
-                  ) : (
+                  ) : activeSection === 'phone' ? (
                     <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
                       <div>
                         <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Nomor HP</label>
@@ -380,6 +401,28 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                       >
                         {saving ? 'Menyimpan...' : 'Simpan Nomor HP'}
                       </button>
+                    </div>
+                  ) : (
+                    <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
+                      <div>
+                        <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Laporkan Bug / Saran</label>
+                        <textarea
+                          value={feedbackInput}
+                          onChange={e => setFeedbackInput(e.target.value)}
+                          placeholder="Jelaskan bug yang kamu temui atau saran kamu di sini..."
+                          className={`${INP} min-h-[8rem] resize-none`}
+                          autoFocus
+                        />
+                      </div>
+                      <button
+                        onClick={handleSendFeedback}
+                        className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
+                      >
+                        Kirim Feedback
+                      </button>
+                      <p className="text-[clamp(0.75rem,2.5vw,1rem)] text-muted-foreground text-center">
+                        Akan membuka aplikasi email dengan alamat tujuan <strong className="text-foreground">rhn.rmdhniii@gmail.com</strong>.
+                      </p>
                     </div>
                   )}
                 </motion.div>

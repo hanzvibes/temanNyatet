@@ -17,6 +17,7 @@ import KeuanganPage from '@/pages/KeuanganPage';
 import TodoPage from '@/pages/TodoPage';
 import LinkSaverPage from '@/pages/LinkSaverPage';
 import BottomSheetNav from '@/components/BottomSheetNav';
+import SidebarNav from '@/components/SidebarNav';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import PwaUpdatePrompt from '@/components/PwaUpdatePrompt';
 import OfflineIndicator from '@/components/OfflineIndicator';
@@ -83,10 +84,28 @@ function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuthContext();
   const showNav = user && profile?.subscription_status === 'active';
 
+  // Unauthenticated / onboarding pages (login, payment, connect-sheet, archived):
+  // narrow centered card — keeps the mobile-app feel on all screen sizes.
+  if (!showNav) {
+    return (
+      <div className="max-w-md mx-auto bg-background min-h-dvh sm:shadow-2xl relative overflow-hidden">
+        {children}
+      </div>
+    );
+  }
+
+  // Authenticated + active subscription: sidebar on desktop, full-width on mobile/tablet.
   return (
-    <div className="max-w-md mx-auto bg-background min-h-dvh shadow-2xl relative overflow-hidden">
-      {children}
-      {showNav && <BottomSheetNav />}
+    <div className="min-h-dvh bg-background lg:flex">
+      {/* Fixed left sidebar — only rendered (and visible) on lg+ */}
+      <SidebarNav />
+
+      {/* Main content area — takes remaining width on desktop */}
+      <main className="flex-1 min-w-0 relative overflow-x-hidden bg-background">
+        {children}
+        {/* Bottom sheet nav — hidden on desktop via lg:hidden inside the component */}
+        <BottomSheetNav />
+      </main>
     </div>
   );
 }

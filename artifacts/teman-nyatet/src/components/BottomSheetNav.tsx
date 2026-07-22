@@ -97,8 +97,9 @@ export default function BottomSheetNav() {
 
   const isOpen = snapState !== 'collapsed';
 
+  // Hidden on desktop (lg+) — SidebarNav handles navigation there.
   return (
-    <>
+    <div className="lg:hidden">
       {/* Dim backdrop */}
       <AnimatePresence>
         {isOpen && (
@@ -119,7 +120,7 @@ export default function BottomSheetNav() {
         Bottom-anchored so height growth goes UPWARD.
       */}
       <motion.div
-        className="fixed left-1/2 z-50 -translate-x-1/2 w-[calc(100%-2.5rem)] max-w-sm"
+        className="fixed left-1/2 z-50 -translate-x-1/2 w-[calc(100%-2.5rem)] max-w-sm md:max-w-md"
         style={{
           bottom: 20,
           height: h,
@@ -189,6 +190,6 @@ export default function BottomSheetNav() {
           </div>
         </div>
       </motion.div>
-    </>
+    </div>
   );
 }

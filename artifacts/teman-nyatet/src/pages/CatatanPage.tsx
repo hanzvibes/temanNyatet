@@ -131,21 +131,23 @@ export default function CatatanPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background min-h-dvh pb-32">
+    <div className="flex flex-col h-full bg-background min-h-dvh pb-32 lg:pb-16">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-md px-6 py-6 pb-4 border-b-0 space-y-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">TEMAN NYATET</div>
-            <h1 className="text-2xl font-extrabold text-foreground">Catatan</h1>
+      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b-0">
+        <div className="px-6 py-6 pb-4 space-y-5 lg:px-10 max-w-screen-xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 lg:hidden">TEMAN NYATET</div>
+              <h1 className="text-2xl font-extrabold text-foreground lg:text-3xl">Catatan</h1>
+            </div>
+            <SettingsSheet avatarBg="bg-[#E8F2DF]" avatarTextColor="text-primary" />
           </div>
-          <SettingsSheet avatarBg="bg-[#E8F2DF]" avatarTextColor="text-primary" />
+          <SearchBar value={search} onChange={setSearch} placeholder="Cari catatan..." />
         </div>
-        <SearchBar value={search} onChange={setSearch} placeholder="Cari catatan..." />
       </div>
 
       {/* Content */}
-      <div className="px-6 flex-1 pt-2">
+      <div className="px-6 lg:px-10 flex-1 pt-2 max-w-screen-xl mx-auto w-full">
         {loading ? (
           <div className="flex justify-center items-center h-40">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -156,7 +158,7 @@ export default function CatatanPage() {
             <p className="font-medium">{search ? 'Tidak ada hasil pencarian.' : 'Belum ada catatan. Mulai catat sat-set!'}</p>
           </div>
         ) : (
-          <div className="columns-2 gap-4 space-y-4">
+          <div className="columns-2 md:columns-3 lg:columns-3 xl:columns-4 gap-4 space-y-4">
             {filteredNotes.map((note, idx) => {
               const bgColor = PALETTE[idx % PALETTE.length];
               return (

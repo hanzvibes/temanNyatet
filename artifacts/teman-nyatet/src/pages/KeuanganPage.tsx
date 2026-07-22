@@ -161,106 +161,116 @@ export default function KeuanganPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background min-h-dvh pb-32">
+    <div className="flex flex-col h-full bg-background min-h-dvh pb-32 lg:pb-16">
       {/* Header Area */}
-      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-md px-6 py-6 pb-4 border-b-0 space-y-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">TEMAN NYATET</div>
-            <h1 className="text-2xl font-extrabold text-foreground">Keuangan</h1>
+      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b-0">
+        <div className="px-6 py-6 pb-4 space-y-5 lg:px-10 max-w-screen-xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 lg:hidden">TEMAN NYATET</div>
+              <h1 className="text-2xl font-extrabold text-foreground lg:text-3xl">Keuangan</h1>
+            </div>
+            <SettingsSheet avatarBg="bg-[#FFF8D6]" avatarTextColor="text-[#F4C753]" />
           </div>
-          <SettingsSheet avatarBg="bg-[#FFF8D6]" avatarTextColor="text-[#F4C753]" />
         </div>
       </div>
 
-      <div className="px-6 space-y-6">
-        {/* Balance Card */}
-        <div className="bg-card rounded-[1.5rem] p-6 shadow-sm border border-border">
-          <div className="flex flex-col items-center mb-6">
-             <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Total Saldo</p>
-             <h2 className="text-4xl font-extrabold text-foreground tracking-tight">{formatRupiah(monthlySummary.balance)}</h2>
-          </div>
-          
-          <div className="flex gap-4">
-            <div className="flex-1 bg-[#4ADE80]/10 rounded-2xl p-4 flex flex-col items-center border border-[#4ADE80]/20">
-              <div className="flex items-center gap-1.5 text-[#4ADE80] mb-2">
-                <ArrowUp size={16} strokeWidth={3} />
-                <span className="text-xs font-bold uppercase tracking-wider">Pemasukan</span>
-              </div>
-              <span className="font-extrabold text-[#4ADE80]">{formatRupiah(monthlySummary.income)}</span>
+      {/* Desktop: two-column (balance card left, list right). Mobile: stacked. */}
+      <div className="px-6 lg:px-10 max-w-screen-xl mx-auto w-full
+                      space-y-6 lg:space-y-0
+                      lg:grid lg:grid-cols-[360px_1fr] lg:gap-10 lg:items-start lg:pt-6 lg:pb-8">
+
+        {/* ── Left column: balance card (sticky on desktop) ── */}
+        <div className="space-y-6 lg:sticky lg:top-6 pt-4 lg:pt-0">
+          {/* Balance Card */}
+          <div className="bg-card rounded-[1.5rem] p-6 shadow-sm border border-border">
+            <div className="flex flex-col items-center mb-6">
+               <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Total Saldo</p>
+               <h2 className="text-4xl font-extrabold text-foreground tracking-tight">{formatRupiah(monthlySummary.balance)}</h2>
             </div>
-            
-            <div className="flex-1 bg-[#F87171]/10 rounded-2xl p-4 flex flex-col items-center border border-[#F87171]/20">
-              <div className="flex items-center gap-1.5 text-[#F87171] mb-2">
-                <ArrowDown size={16} strokeWidth={3} />
-                <span className="text-xs font-bold uppercase tracking-wider">Pengeluaran</span>
+            <div className="flex gap-4">
+              <div className="flex-1 bg-[#4ADE80]/10 rounded-2xl p-4 flex flex-col items-center border border-[#4ADE80]/20">
+                <div className="flex items-center gap-1.5 text-[#4ADE80] mb-2">
+                  <ArrowUp size={16} strokeWidth={3} />
+                  <span className="text-xs font-bold uppercase tracking-wider">Pemasukan</span>
+                </div>
+                <span className="font-extrabold text-[#4ADE80]">{formatRupiah(monthlySummary.income)}</span>
               </div>
-              <span className="font-extrabold text-[#F87171]">{formatRupiah(monthlySummary.expense)}</span>
+              <div className="flex-1 bg-[#F87171]/10 rounded-2xl p-4 flex flex-col items-center border border-[#F87171]/20">
+                <div className="flex items-center gap-1.5 text-[#F87171] mb-2">
+                  <ArrowDown size={16} strokeWidth={3} />
+                  <span className="text-xs font-bold uppercase tracking-wider">Pengeluaran</span>
+                </div>
+                <span className="font-extrabold text-[#F87171]">{formatRupiah(monthlySummary.expense)}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <SearchBar value={search} onChange={setSearch} placeholder="Cari transaksi..." />
+        {/* ── Right column: search + transaction list ── */}
+        <div className="space-y-6 pt-0 lg:pt-0 pb-8 lg:pb-0">
+          <SearchBar value={search} onChange={setSearch} placeholder="Cari transaksi..." />
 
-        {/* List */}
-        <div className="flex-1">
-          {loading ? (
-            <div className="flex justify-center items-center h-40">
-              <Loader2 className="w-8 h-8 animate-spin text-[#F4C753]" />
-            </div>
-          ) : sortedDates.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center h-40 text-muted-foreground">
-              <Wallet size={48} className="mb-4 text-muted-foreground/30" />
-              <p className="font-medium">{search ? 'Tidak ada hasil pencarian.' : 'Belum ada transaksi bulan ini.'}</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {sortedDates.map(dateStr => (
-                <div key={dateStr}>
-                  <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-3">
-                    {getFormatDate(dateStr)}
-                  </h3>
-                  <div className="space-y-3">
-                    {groupedTx[dateStr].map(tx => (
-                      <div 
-                        key={tx.id} 
-                        className="relative bg-white rounded-[1.25rem] p-4 flex items-center justify-between shadow-sm border border-border/50 hover:bg-secondary/50 transition-colors active:scale-[0.98] select-none overflow-hidden"
-                        onMouseDown={() => handlePressStart(tx.id)}
-                        onMouseUp={handlePressEnd}
-                        onMouseLeave={handlePressEnd}
-                        onTouchStart={() => handlePressStart(tx.id)}
-                        onTouchEnd={handlePressEnd}
-                        onTouchMove={handlePressEnd}
-                      >
-                        {deletingId === tx.id && (
-                          <div className="absolute inset-0 z-10 bg-white/90 backdrop-blur-[1px] flex items-center justify-center gap-2 text-red-500 font-bold text-sm">
-                            <Loader2 size={16} className="animate-spin" /> Menghapus...
-                          </div>
-                        )}
-                        <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${getCategoryColor(tx.category, tx.type)}`}>
-                            {getCategoryIcon(tx.category)}
-                          </div>
-                          <div>
-                            <p className="font-extrabold text-foreground text-base mb-0.5">{tx.category}</p>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-secondary text-muted-foreground rounded-md border border-border">
-                                {tx.source}
-                              </span>
-                              {tx.note && <span className="text-xs font-medium text-muted-foreground line-clamp-1">{tx.note}</span>}
+          {/* List */}
+          <div>
+            {loading ? (
+              <div className="flex justify-center items-center h-40">
+                <Loader2 className="w-8 h-8 animate-spin text-[#F4C753]" />
+              </div>
+            ) : sortedDates.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center h-40 text-muted-foreground">
+                <Wallet size={48} className="mb-4 text-muted-foreground/30" />
+                <p className="font-medium">{search ? 'Tidak ada hasil pencarian.' : 'Belum ada transaksi bulan ini.'}</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {sortedDates.map(dateStr => (
+                  <div key={dateStr}>
+                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-3">
+                      {getFormatDate(dateStr)}
+                    </h3>
+                    <div className="space-y-3">
+                      {groupedTx[dateStr].map(tx => (
+                        <div
+                          key={tx.id}
+                          className="relative bg-white rounded-[1.25rem] p-4 flex items-center justify-between shadow-sm border border-border/50 hover:bg-secondary/50 transition-colors active:scale-[0.98] select-none overflow-hidden"
+                          onMouseDown={() => handlePressStart(tx.id)}
+                          onMouseUp={handlePressEnd}
+                          onMouseLeave={handlePressEnd}
+                          onTouchStart={() => handlePressStart(tx.id)}
+                          onTouchEnd={handlePressEnd}
+                          onTouchMove={handlePressEnd}
+                        >
+                          {deletingId === tx.id && (
+                            <div className="absolute inset-0 z-10 bg-white/90 backdrop-blur-[1px] flex items-center justify-center gap-2 text-red-500 font-bold text-sm">
+                              <Loader2 size={16} className="animate-spin" /> Menghapus...
+                            </div>
+                          )}
+                          <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${getCategoryColor(tx.category, tx.type)}`}>
+                              {getCategoryIcon(tx.category)}
+                            </div>
+                            <div>
+                              <p className="font-extrabold text-foreground text-base mb-0.5">{tx.category}</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-secondary text-muted-foreground rounded-md border border-border">
+                                  {tx.source}
+                                </span>
+                                {tx.note && <span className="text-xs font-medium text-muted-foreground line-clamp-1">{tx.note}</span>}
+                              </div>
                             </div>
                           </div>
+                          <div className={`font-extrabold text-lg ${tx.type === 'income' ? 'text-[#4ADE80]' : 'text-foreground'}`}>
+                            {tx.type === 'income' ? '+' : '-'}{formatRupiah(tx.amount)}
+                          </div>
                         </div>
-                        <div className={`font-extrabold text-lg ${tx.type === 'income' ? 'text-[#4ADE80]' : 'text-foreground'}`}>
-                          {tx.type === 'income' ? '+' : '-'}{formatRupiah(tx.amount)}
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

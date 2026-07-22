@@ -192,21 +192,23 @@ export default function TodoPage() {
   );
 
   return (
-    <div className="flex flex-col h-full bg-background min-h-dvh pb-32">
+    <div className="flex flex-col h-full bg-background min-h-dvh pb-32 lg:pb-16">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-md px-6 py-6 pb-4 border-b-0 space-y-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">TEMAN NYATET</div>
-            <h1 className="text-2xl font-extrabold text-foreground">To-Do List</h1>
+      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b-0">
+        <div className="px-6 py-6 pb-4 space-y-5 lg:px-10 max-w-screen-xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 lg:hidden">TEMAN NYATET</div>
+              <h1 className="text-2xl font-extrabold text-foreground lg:text-3xl">To-Do List</h1>
+            </div>
+            <SettingsSheet avatarBg="bg-[#E1F0FF]" avatarTextColor="text-[#9CB4D4]" />
           </div>
-          <SettingsSheet avatarBg="bg-[#E1F0FF]" avatarTextColor="text-[#9CB4D4]" />
+          <SearchBar value={search} onChange={setSearch} placeholder="Cari to-do..." />
         </div>
-        <SearchBar value={search} onChange={setSearch} placeholder="Cari to-do..." />
       </div>
 
       {/* List */}
-      <div className="px-6 flex-1 space-y-6 pt-2">
+      <div className="px-6 lg:px-10 flex-1 space-y-6 pt-2 max-w-screen-xl mx-auto w-full">
         {loading ? (
           <div className="flex justify-center items-center h-40">
             <Loader2 className="w-8 h-8 animate-spin text-[#9CB4D4]" />
@@ -217,7 +219,7 @@ export default function TodoPage() {
             <p className="font-medium">{search ? 'Tidak ada hasil pencarian.' : 'Semua beres! Tambah to-do baru.'}</p>
           </div>
         ) : (
-          <div className="pb-8">
+          <div className="pb-8 lg:grid lg:grid-cols-2 lg:gap-8 lg:items-start">
             {pendingTodos.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1 mb-4">Belum Selesai</h3>
@@ -225,7 +227,7 @@ export default function TodoPage() {
               </div>
             )}
             {completedTodos.length > 0 && (
-              <div className="space-y-3 mt-8">
+              <div className="space-y-3 mt-8 lg:mt-0">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1 mb-4">Selesai</h3>
                 {completedTodos.map(renderTodoItem)}
               </div>

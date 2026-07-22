@@ -97,21 +97,23 @@ export default function LinkSaverPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background min-h-dvh pb-32">
+    <div className="flex flex-col h-full bg-background min-h-dvh pb-32 lg:pb-16">
       {/* Header Area */}
-      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-md px-6 py-6 pb-4 border-b-0 space-y-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">TEMAN NYATET</div>
-            <h1 className="text-2xl font-extrabold text-foreground">Link Saver</h1>
+      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b-0">
+        <div className="px-6 py-6 pb-4 space-y-5 lg:px-10 max-w-screen-xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 lg:hidden">TEMAN NYATET</div>
+              <h1 className="text-2xl font-extrabold text-foreground lg:text-3xl">Link Saver</h1>
+            </div>
+            <SettingsSheet avatarBg="bg-[#FFE4E1]" avatarTextColor="text-[#E09898]" />
           </div>
-          <SettingsSheet avatarBg="bg-[#FFE4E1]" avatarTextColor="text-[#E09898]" />
+          <SearchBar value={search} onChange={setSearch} placeholder="Cari link..." />
         </div>
-        <SearchBar value={search} onChange={setSearch} placeholder="Cari link..." />
       </div>
 
       {/* Content */}
-      <div className="px-6 mt-2 flex-1 space-y-4">
+      <div className="px-6 lg:px-10 mt-2 flex-1 max-w-screen-xl mx-auto w-full">
         {loading ? (
           <div className="flex justify-center items-center h-40">
             <Loader2 className="w-8 h-8 animate-spin text-[#E09898]" />
@@ -122,7 +124,7 @@ export default function LinkSaverPage() {
             <p className="font-medium">{search ? 'Tidak ada hasil pencarian.' : 'Belum ada link tersimpan.'}</p>
           </div>
         ) : (
-          <div className="space-y-4 pb-8">
+          <div className="grid gap-4 pb-8 md:grid-cols-2 xl:grid-cols-3">
             {filteredLinks.map(link => {
               // Extract domain for favicon
               let domain = '';

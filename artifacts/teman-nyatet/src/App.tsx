@@ -1,26 +1,30 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import NotFound from '@/pages/not-found';
 import { Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
 import { AuthProvider, useAuthContext } from '@/contexts/AuthContext';
 import { CreateProvider } from '@/contexts/CreateContext';
 import { Loader2 } from 'lucide-react';
-import React, { useEffect } from 'react';
+import React, { Suspense, useEffect } from 'react';
 
-import AuthPage from '@/pages/AuthPage';
-import PaymentPage from '@/pages/PaymentPage';
-import ArchivedPage from '@/pages/ArchivedPage';
-import ConnectSheetPage from '@/pages/ConnectSheetPage';
-import CatatanPage from '@/pages/CatatanPage';
-import KeuanganPage from '@/pages/KeuanganPage';
-import TodoPage from '@/pages/TodoPage';
-import LinkSaverPage from '@/pages/LinkSaverPage';
 import BottomSheetNav from '@/components/BottomSheetNav';
 import SidebarNav from '@/components/SidebarNav';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import PwaUpdatePrompt from '@/components/PwaUpdatePrompt';
 import OfflineIndicator from '@/components/OfflineIndicator';
+
+// Lazy load pages so the initial JS bundle stays small. This improves first
+// paint on slow mobile networks (especially iPhone on 3G/4G) and avoids a
+// long white screen during PWA launch.
+const AuthPage = React.lazy(() => import('@/pages/AuthPage'));
+const PaymentPage = React.lazy(() => import('@/pages/PaymentPage'));
+const ArchivedPage = React.lazy(() => import('@/pages/ArchivedPage'));
+const ConnectSheetPage = React.lazy(() => import('@/pages/ConnectSheetPage'));
+const CatatanPage = React.lazy(() => import('@/pages/CatatanPage'));
+const KeuanganPage = React.lazy(() => import('@/pages/KeuanganPage'));
+const TodoPage = React.lazy(() => import('@/pages/TodoPage'));
+const LinkSaverPage = React.lazy(() => import('@/pages/LinkSaverPage'));
+const NotFound = React.lazy(() => import('@/pages/not-found'));
 
 const queryClient = new QueryClient();
 
@@ -110,22 +114,32 @@ function MainLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
+function PageLoading() {
+  return (
+    <div className="min-h-dvh w-full flex items-center justify-center bg-background">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  );
+}
+
 function Router() {
   return (
-    <Switch>
-      <Route path="/login" component={AuthPage} />
-      <Route path="/payment" component={PaymentPage} />
-      <Route path="/archived" component={ArchivedPage} />
-      <Route path="/connect-sheet" component={ConnectSheetPage} />
+    <Suspense fallback={<PageLoading />}>
+      <Switch>
+        <Route path="/login" component={AuthPage} />
+        <Route path="/payment" component={PaymentPage} />
+        <Route path="/archived" component={ArchivedPage} />
+        <Route path="/connect-sheet" component={ConnectSheetPage} />
 
-      <Route path="/catatan" component={CatatanPage} />
-      <Route path="/keuangan" component={KeuanganPage} />
-      <Route path="/todo" component={TodoPage} />
-      <Route path="/linksaver" component={LinkSaverPage} />
+        <Route path="/catatan" component={CatatanPage} />
+        <Route path="/keuangan" component={KeuanganPage} />
+        <Route path="/todo" component={TodoPage} />
+        <Route path="/linksaver" component={LinkSaverPage} />
 
-      <Route path="/" component={() => null} />
-      <Route component={NotFound} />
-    </Switch>
+        <Route path="/" component={() => null} />
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 

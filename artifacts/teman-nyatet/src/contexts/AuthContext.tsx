@@ -68,6 +68,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
+    // On slow mobile networks (iPhone, 3G/4G) Supabase's session check or token
+    // refresh can take longer than expected. This timeout prevents the app from
+    // getting stuck on the loading spinner forever if something hangs.
+    const maxWaitTimeout = setTimeout(() => {
+      if (isMounted) setLoading(false);
+    }, 8000);
+
     const initialize = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -96,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(null);
         }
       } finally {
+        clearTimeout(maxWaitTimeout);
         if (isMounted) setLoading(false);
       }
     };

@@ -14,10 +14,20 @@
 If you already ran `001_initial_schema.sql` before these fields existed, run `002_add_profile_fields.sql` now to fix the "Gagal memperbarui nama" error.
 
 ## 3. Configure Auth
-1. Go to Authentication → Settings
-2. Set **Site URL** to your production domain (e.g. `https://temannyatet.id`)
-3. Add `http://localhost:5173` to **Redirect URLs** for local dev
-4. Email provider is enabled by default — no changes needed
+
+1. Go to **Authentication → Providers** and make sure **Email** is enabled.
+2. Go to **Authentication → Settings**.
+3. Enable **Confirm email**. This is required: new accounts cannot log in until they click the confirmation link.
+4. Set **Site URL** to your production domain, e.g. `https://temannyatet.id`.
+5. Add **Redirect URLs** so Supabase accepts the URLs the app sends:
+   - Production: `https://temannyatet.id/login`
+   - Vercel previews: `https://*.vercel.app/login`
+   - Vercel wildcard (if you want to allow any path): `https://*.vercel.app/**`
+   - Replit: `https://*.replit.dev/login` or `https://*.replit.dev/**`
+   - Local dev: `http://localhost:5173/login`
+
+   The app sends `emailRedirectTo: <SITE_URL>/login` for sign-up and resend-verification emails. That URL must match one of the allowed Redirect URLs.
+6. (Optional) Check **Authentication → Email Templates** → **Confirm signup**. Make sure the link uses the default `{{ .ConfirmationURL }}` variable instead of a hardcoded `http://localhost:3000` URL. The same applies to **Reset password** and **Magic link** templates if you use them.
 
 ## 4. Set Environment Variables
 
@@ -25,6 +35,10 @@ If you already ran `001_initial_schema.sql` before these fields existed, run `00
 ```
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
+
+# Optional: canonical domain for Supabase email confirmation links.
+# Leave unset for Replit and Vercel previews (the app uses the current origin).
+VITE_SITE_URL=https://temannyatet.id
 ```
 
 ### API Server — `.env.local` in `artifacts/api-server/`

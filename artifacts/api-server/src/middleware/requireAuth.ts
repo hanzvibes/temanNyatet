@@ -31,6 +31,14 @@ async function verifyToken(req: Request, res: Response): Promise<string | null> 
     return null;
   }
 
+  // Enforce email verification on the server side too. An unverified user should
+  // never be able to access protected resources, even if they somehow obtain a
+  // session token while their email is still pending.
+  if (!user.email_confirmed_at) {
+    res.status(401).json({ error: 'Email not confirmed. Silakan verifikasi email Anda terlebih dahulu sebelum login.' });
+    return null;
+  }
+
   return user.id;
 }
 

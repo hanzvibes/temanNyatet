@@ -74,8 +74,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!isMounted) return;
 
         if (session?.user) {
-          setUser(session.user);
-          await fetchProfile(session.user.id, session.user.email);
+          // Reject any existing session whose email has not been verified.
+          if (!session.user.email_confirmed_at) {
+            console.warn('[AuthContext] Existing session has unverified email, signing out');
+            await supabase.auth.signOut();
+            if (!isMounted) return;
+            setUser(null);
+            setProfile(null);
+          } else {
+            setUser(session.user);
+            await fetchProfile(session.user.id, session.user.email);
+          }
         } else {
           setUser(null);
           setProfile(null);
@@ -97,8 +106,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!isMounted) return;
 
       if (session?.user) {
-        setUser(session.user);
-        await fetchProfile(session.user.id, session.user.email);
+        if (!session.user.email_confirmed_at) {
+          console.warn('[AuthContext] Auth state changed to unverified email, signing out');
+          await supabase.auth.signOut();
+          if (!isMounted) return;
+          setUser(null);
+          setProfile(null);
+        } else {
+          setUser(session.user);
+          await fetchProfile(session.user.id, session.user.email);
+        }
       } else {
         setUser(null);
         setProfile(null);

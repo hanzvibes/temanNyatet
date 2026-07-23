@@ -25,22 +25,19 @@ import type { Note } from '@/lib/database.types';
 
 const PALETTE = ['#FFF8D6', '#E8F2DF', '#FFE4E1', '#E1F0FF'];
 
-// Keep each card's colour fixed even when the user reorders the list.
-// New notes get the next available palette slot based on their first render position.
-function useStableNoteColors(notes: Note[]) {
-  const colorMap = React.useRef(new Map<string, number>());
-  React.useMemo(() => {
-    notes.forEach((note, index) => {
-      if (!colorMap.current.has(note.id)) {
-        colorMap.current.set(note.id, index % PALETTE.length);
-      }
-    });
-  }, [notes]);
+// Deterministic, position-independent colour for a note id. Tying the colour
+// to the id means it never changes when the list is reordered or refetched,
+// so drag-and-drop only moves cards without repainting them.
+function colorForNoteId(noteId: string): string {
+  let hash = 0;
+  for (let i = 0; i < noteId.length; i++) {
+    hash = ((hash << 5) - hash + noteId.charCodeAt(i)) | 0;
+  }
+  return PALETTE[Math.abs(hash) % PALETTE.length];
+}
 
-  return React.useCallback((noteId: string) => {
-    const index = colorMap.current.get(noteId) ?? 0;
-    return PALETTE[index % PALETTE.length];
-  }, []);
+function useStableNoteColors(_notes: Note[]) {
+  return React.useCallback((noteId: string) => colorForNoteId(noteId), []);
 }
 
 type SortableNoteGridProps = {

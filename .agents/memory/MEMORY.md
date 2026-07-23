@@ -3,4 +3,3 @@
 - [Google Sheets as app-data backend](google-sheets-as-db.md) — TemanNyatet: users connect their own private spreadsheet (not auto-created — service accounts have 0 Drive quota). NOTE: now superseded by OAuth arch above.
 - [Supabase profiles missing columns](supabase-profiles-missing-columns.md) — TemanNyatet migration omitted `name`, `phone`, `avatar_url`; add them via `002_add_profile_fields.sql` when name/avatar updates fail.
 - [google-auth-library version conflict](gauth-version-conflict.md) — two versions (10.5.0 + 10.9.0) cause TS type errors; fixed with pnpm-workspace override + `as any` cast in google-oauth.ts.
-- [Supabase RLS recursion on profiles](supabase-rls-recursion-login.md) — login stuck because the frontend SELECT on profiles hit a recursive Supabase RLS policy; fixed by fetching the profile via the API server service role.

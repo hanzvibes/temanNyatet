@@ -9,22 +9,14 @@ declare global {
   namespace Express {
     interface Request {
       userId?: string;
-      userEmail?: string;
-      userEmailConfirmed?: boolean;
       spreadsheetId?: string;
       sheetsClient?: sheets_v4.Sheets;
     }
   }
 }
 
-type VerifiedUser = {
-  userId: string;
-  email: string;
-  emailConfirmed: boolean;
-};
-
 // Verifies the Supabase access token in the Authorization header.
-async function verifyToken(req: Request, res: Response): Promise<VerifiedUser | null> {
+async function verifyToken(req: Request, res: Response): Promise<string | null> {
   const authHeader = String(req.headers['authorization'] ?? '');
   const token = authHeader.replace(/^Bearer\s+/i, '');
 
@@ -47,7 +39,7 @@ async function verifyToken(req: Request, res: Response): Promise<VerifiedUser | 
     return null;
   }
 
-  return { userId: user.id, email: user.email ?? '', emailConfirmed: !!user.email_confirmed_at };
+  return user.id;
 }
 
 // Per-user rate limiter for data mutations. Mounted after authentication so the
@@ -73,11 +65,9 @@ export const userRateLimit = rateLimit({
 // Verifies the caller's token and attaches req.userId.
 // Use for endpoints that don't need the Sheets client (profile, auth/google).
 export async function requireUser(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const verified = await verifyToken(req, res);
-  if (!verified) return;
-  req.userId = verified.userId;
-  req.userEmail = verified.email;
-  req.userEmailConfirmed = verified.emailConfirmed;
+  const userId = await verifyToken(req, res);
+  if (!userId) return;
+  req.userId = userId;
   next();
 }
 
@@ -86,9 +76,8 @@ export async function requireUser(req: Request, res: Response, next: NextFunctio
 // spreadsheet created. The frontend should never hit this in practice (it gates
 // routes behind /connect-sheet), but the API enforces it independently.
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const verified = await verifyToken(req, res);
-  if (!verified) return;
-  const { userId } = verified;
+  const userId = await verifyToken(req, res);
+  if (!userId) return;
 
   let connection: { spreadsheetId: string; sheets: sheets_v4.Sheets } | null;
   try {
@@ -107,9 +96,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     return;
   }
 
-  req.userId = verified.userId;
-  req.userEmail = verified.email;
-  req.userEmailConfirmed = verified.emailConfirmed;
+  req.userId = userId;
   req.spreadsheetId = connection.spreadsheetId;
   req.sheetsClient = connection.sheets;
   next();

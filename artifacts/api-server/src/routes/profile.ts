@@ -41,48 +41,6 @@ async function ensureAvatarBucket(): Promise<void> {
 // updates profiles.avatar_url. Uses the service role key server-side, so no
 // storage RLS policies are required — the caller can only ever touch their
 // own row/path because the path is derived from req.userId, never client input.
-// GET /api/profile
-// Returns the caller's profile row. Uses the service role key so the lookup
-// bypasses any broken RLS policies on the profiles table. If the row is missing
-// (e.g. the auto-create trigger failed or was blocked), we create it on demand.
-router.get('/profile', requireUser, async (req, res) => {
-  try {
-    const userId = req.userId as string;
-    const email = req.userEmail as string;
-
-    let { data: profile, error } = await supabaseAdmin
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
-
-    if (error) {
-      req.log.error({ err: error }, 'Failed to fetch profile');
-      res.status(500).json({ error: 'Failed to fetch profile' });
-      return;
-    }
-
-    if (!profile) {
-      const { data: inserted, error: insertError } = await supabaseAdmin
-        .from('profiles')
-        .insert({ id: userId, email, subscription_status: 'pending' })
-        .select('*')
-        .maybeSingle();
-      if (insertError) {
-        req.log.error({ err: insertError }, 'Failed to create missing profile');
-        res.status(500).json({ error: 'Failed to create profile' });
-        return;
-      }
-      profile = inserted;
-    }
-
-    res.status(200).json({ data: profile });
-  } catch (err) {
-    req.log.error({ err }, 'Unexpected error in /api/profile');
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
 router.post('/profile/avatar', requireUser, upload.single('avatar'), async (req, res) => {
   try {
     const file = req.file;

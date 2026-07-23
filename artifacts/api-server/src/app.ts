@@ -8,11 +8,6 @@ import { logger } from "./lib/logger";
 
 const app: Express = express();
 
-// The API is often served behind a proxy (Replit preview, Vercel, etc.).
-// Trusting the first proxy hop lets express-rate-limit and other middleware
-// read X-Forwarded-For correctly without throwing validation errors.
-app.set('trust proxy', 1);
-
 // Sets standard security headers (HSTS, no-sniff, frameguard, etc). CSP is
 // left to the frontend's own hosting since this is a JSON API, not an HTML
 // renderer.

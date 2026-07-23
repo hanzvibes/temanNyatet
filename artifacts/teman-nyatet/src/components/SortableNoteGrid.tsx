@@ -25,6 +25,24 @@ import type { Note } from '@/lib/database.types';
 
 const PALETTE = ['#FFF8D6', '#E8F2DF', '#FFE4E1', '#E1F0FF'];
 
+// Keep each card's colour fixed even when the user reorders the list.
+// New notes get the next available palette slot based on their first render position.
+function useStableNoteColors(notes: Note[]) {
+  const colorMap = React.useRef(new Map<string, number>());
+  React.useMemo(() => {
+    notes.forEach((note, index) => {
+      if (!colorMap.current.has(note.id)) {
+        colorMap.current.set(note.id, index % PALETTE.length);
+      }
+    });
+  }, [notes]);
+
+  return React.useCallback((noteId: string) => {
+    const index = colorMap.current.get(noteId) ?? 0;
+    return PALETTE[index % PALETTE.length];
+  }, []);
+}
+
 type SortableNoteGridProps = {
   notes: Note[];
   onReorder: (orderedIds: string[]) => void;
@@ -32,64 +50,13 @@ type SortableNoteGridProps = {
   disabled?: boolean;
 };
 
-function NoteCardContent({
-  note,
-  color,
-  dragHandle,
-}: {
-  note: Note;
-  color: string;
-  dragHandle?: React.ReactNode;
-}) {
-  return (
-    <div
-      className="rounded-[1.5rem] p-5 shadow-sm h-full"
-      style={{ backgroundColor: color }}
-    >
-      <div className="flex justify-end mb-1 -mt-1 -mr-1">{dragHandle}</div>
-      {note.title && (
-        <h3 className="font-bold text-gray-900 mb-2 leading-tight text-lg">
-          {note.title}
-        </h3>
-      )}
-      <p className="text-sm text-gray-800 line-clamp-5 whitespace-pre-wrap leading-relaxed font-medium">
-        {note.content}
-      </p>
-
-      {note.tags && note.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-4">
-          {note.tags.slice(0, 2).map((tag) => (
-            <span
-              key={tag}
-              className="text-[10px] px-2.5 py-1 rounded-full bg-white/60 text-gray-800 font-bold uppercase tracking-wider"
-            >
-              {tag}
-            </span>
-          ))}
-          {note.tags.length > 2 && (
-            <span className="text-[10px] px-2 py-1 rounded-full bg-white/60 text-gray-800 font-bold">
-              +{note.tags.length - 2}
-            </span>
-          )}
-        </div>
-      )}
-
-      <div className="mt-4 text-xs text-gray-600/80 font-bold">
-        {format(new Date(note.created_at), 'd MMM yyyy', { locale: id })}
-      </div>
-    </div>
-  );
-}
-
 function SortableNoteCard({
   note,
-  index,
   color,
   onClick,
   disabled,
 }: {
   note: Note;
-  index: number;
   color: string;
   onClick: () => void;
   disabled?: boolean;
@@ -105,8 +72,8 @@ function SortableNoteCard({
 
   const dndStyle = {
     transform: CSS.Translate.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : undefined,
+    transition: transition ?? 'transform 220ms cubic-bezier(0.25, 0.1, 0.25, 1)',
+    opacity: isDragging ? 0.35 : undefined,
     zIndex: isDragging ? 50 : undefined,
   };
 
@@ -126,16 +93,17 @@ function SortableNoteCard({
   return (
     <motion.div
       ref={setNodeRef}
+      layout
       style={{ ...dndStyle, backgroundColor: color }}
       initial={{ opacity: 0, y: 16, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{
         duration: 0.25,
-        delay: Math.min(index * 0.03, 0.3),
         ease: [0.25, 0.1, 0.25, 1],
+        layout: { duration: 0.22, ease: [0.25, 0.1, 0.25, 1] },
       }}
       onClick={onClick}
-      className="rounded-[1.5rem] p-5 shadow-sm cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] relative"
+      className="rounded-[1.5rem] p-5 shadow-sm cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] relative select-none"
     >
       <div className="flex justify-end mb-1 -mt-1 -mr-1">{handle}</div>
       {note.title && (
@@ -179,6 +147,7 @@ export function SortableNoteGrid({
   disabled,
 }: SortableNoteGridProps) {
   const [activeId, setActiveId] = React.useState<string | null>(null);
+  const getColor = useStableNoteColors(notes);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -201,10 +170,6 @@ export function SortableNoteGrid({
   };
 
   const activeNote = activeId ? notes.find((n) => n.id === activeId) : null;
-  const activeIndex = activeNote
-    ? notes.findIndex((n) => n.id === activeNote.id)
-    : -1;
-  const activeColor = activeIndex >= 0 ? PALETTE[activeIndex % PALETTE.length] : PALETTE[0];
 
   return (
     <DndContext
@@ -220,13 +185,12 @@ export function SortableNoteGrid({
         disabled={disabled}
       >
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
-          {notes.map((note, idx) => (
+          {notes.map((note) => (
             <SortableNoteCard
               key={note.id}
               note={note}
-              index={idx}
-              color={PALETTE[idx % PALETTE.length]}
-              onClick={() => onClickNote(note, PALETTE[idx % PALETTE.length])}
+              color={getColor(note.id)}
+              onClick={() => onClickNote(note, getColor(note.id))}
               disabled={disabled}
             />
           ))}
@@ -236,7 +200,39 @@ export function SortableNoteGrid({
       <DragOverlay>
         {activeNote ? (
           <div className="rounded-[1.5rem] shadow-2xl scale-[1.03] rotate-1 opacity-95 cursor-grabbing">
-            <NoteCardContent note={activeNote} color={activeColor} />
+            <div
+              className="rounded-[1.5rem] p-5 shadow-sm h-full"
+              style={{ backgroundColor: getColor(activeNote.id) }}
+            >
+              {activeNote.title && (
+                <h3 className="font-bold text-gray-900 mb-2 leading-tight text-lg">
+                  {activeNote.title}
+                </h3>
+              )}
+              <p className="text-sm text-gray-800 line-clamp-5 whitespace-pre-wrap leading-relaxed font-medium">
+                {activeNote.content}
+              </p>
+              {activeNote.tags && activeNote.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-4">
+                  {activeNote.tags.slice(0, 2).map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-[10px] px-2.5 py-1 rounded-full bg-white/60 text-gray-800 font-bold uppercase tracking-wider"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                  {activeNote.tags.length > 2 && (
+                    <span className="text-[10px] px-2 py-1 rounded-full bg-white/60 text-gray-800 font-bold">
+                      +{activeNote.tags.length - 2}
+                    </span>
+                  )}
+                </div>
+              )}
+              <div className="mt-4 text-xs text-gray-600/80 font-bold">
+                {format(new Date(activeNote.created_at), 'd MMM yyyy', { locale: id })}
+              </div>
+            </div>
           </div>
         ) : null}
       </DragOverlay>

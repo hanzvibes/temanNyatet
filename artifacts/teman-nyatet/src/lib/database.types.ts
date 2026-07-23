@@ -79,6 +79,7 @@ export interface Database {
           tags: string[];
           created_at: string;
           updated_at: string;
+          position: number | null;
         };
         Insert: {
           id?: string;
@@ -88,6 +89,7 @@ export interface Database {
           tags?: string[];
           created_at?: string;
           updated_at?: string;
+          position?: number | null;
         };
         Update: {
           id?: string;
@@ -97,6 +99,7 @@ export interface Database {
           tags?: string[];
           created_at?: string;
           updated_at?: string;
+          position?: number | null;
         };
         Relationships: [];
       };

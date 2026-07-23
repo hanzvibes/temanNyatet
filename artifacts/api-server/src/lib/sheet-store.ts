@@ -12,7 +12,7 @@ import { logger } from './logger';
 // ─── Sheet schemas ──────────────────────────────────────────────────────────
 
 export const SHEET_SCHEMAS: Record<string, string[]> = {
-  '📝 Notes':        ['id', 'user_id', 'title', 'content', 'tags', 'created_at', 'updated_at'],
+  '📝 Notes':        ['id', 'user_id', 'title', 'content', 'tags', 'created_at', 'updated_at', 'position'],
   '💰 Transactions': ['id', 'user_id', 'type', 'amount', 'category', 'source', 'note', 'date', 'created_at'],
   '✅ Todos':        ['id', 'user_id', 'title', 'description', 'due_date', 'due_time', 'is_done', 'created_at'],
   '🔗 Links':        ['id', 'user_id', 'title', 'url', 'note', 'created_at'],
@@ -158,6 +158,7 @@ function decodeValue(header: string, value: unknown): unknown {
   }
   if (header === 'is_done') return value === 'true' || value === true;
   if (header === 'amount') return Number(value) || 0;
+  if (header === 'position') return Number(value) || 0;
   return value;
 }
 
@@ -250,6 +251,7 @@ export async function createRow(
       user_id: userId,
       created_at: now,
       ...(headers.includes('updated_at') ? { updated_at: now } : {}),
+      ...(headers.includes('position') ? { position: Date.now() } : {}),
       ...fields,
     };
     full['id'] = full['id'] ?? newId();
@@ -307,6 +309,48 @@ export async function updateRow(
     const result: Record<string, unknown> = {};
     for (const h of headers) result[h] = merged[h];
     return result;
+  });
+}
+
+// Batch update the position column for a list of ids in the given order.
+// Higher position = shown first in the UI. Existing rows without a position
+// cell will appear after the explicitly ordered ones until they are touched.
+export async function reorderRows(
+  spreadsheetId: string,
+  sheetName: string,
+  userId: string,
+  orderedIds: string[],
+  sheets: sheets_v4.Sheets,
+): Promise<void> {
+  return withSheetLock(spreadsheetId, sheetName, async () => {
+    const { headers, rows } = await readAllRows(spreadsheetId, sheetName, sheets);
+    if (!headers.includes('position')) throw new Error(`Sheet ${sheetName} does not support ordering`);
+
+    const positionCol = columnLetter(headers.indexOf('position') + 1);
+    const basePosition = 1_000_000_000;
+
+    const updates = orderedIds
+      .map((id, index) => {
+        const row = rows.find((r) => r.data['id'] === id && r.data['user_id'] === userId);
+        if (!row) return null;
+        const position = basePosition - index;
+        return {
+          range: `'${sheetName}'!${positionCol}${row.sheetRow}`,
+          values: [[String(position)]],
+        };
+      })
+      .filter((u): u is { range: string; values: string[][] } => u !== null);
+
+    for (const update of updates) {
+      await withGoogleRetry(() =>
+        sheets.spreadsheets.values.update({
+          spreadsheetId,
+          range: update.range,
+          valueInputOption: 'RAW',
+          requestBody: { values: update.values },
+        }),
+      );
+    }
   });
 }
 

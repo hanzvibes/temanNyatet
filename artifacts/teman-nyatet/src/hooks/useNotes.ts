@@ -29,7 +29,13 @@ export function useNotes(userId?: string) {
     if (firstLoad.current) setLoading(true);
     try {
       const data = await apiGet<Note[]>('/notes');
-      setNotes((data || []).slice().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+      // Notes are already sorted by the server (position desc, then created_at desc).
+      setNotes((data || []).slice().sort((a, b) => {
+        const posA = a.position ?? 0;
+        const posB = b.position ?? 0;
+        if (posA !== posB) return posB - posA;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }));
       setError(null);
     } catch (err) {
       if (err instanceof SpreadsheetApiError) {
@@ -97,6 +103,25 @@ export function useNotes(userId?: string) {
     }
   };
 
+  const reorderNotes = async (orderedIds: string[]) => {
+    // Optimistically reorder the local state so the UI feels instant.
+    const orderedSet = new Set(orderedIds);
+    const prev = [...notes];
+    const reordered = orderedIds
+      .map(id => prev.find(n => n.id === id))
+      .filter((n): n is Note => n !== undefined);
+    const unchanged = prev.filter(n => !orderedSet.has(n.id));
+    const next = [...reordered, ...unchanged];
+    setNotes(next);
+    try {
+      await apiPost('/notes/reorder', { orderedIds });
+    } catch (err) {
+      setNotes(prev);
+      if (err instanceof SpreadsheetApiError) { dispatchSheetError(err.code); return; }
+      throw err;
+    }
+  };
+
   return {
     notes,
     loading,
@@ -104,6 +129,7 @@ export function useNotes(userId?: string) {
     createNote,
     updateNote,
     deleteNote,
+    reorderNotes,
     refetch: fetchNotes
   };
 }

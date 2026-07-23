@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth, userRateLimit } from '../middleware/requireAuth';
-import { createRow, deleteRow, listByUser, updateRow } from '../lib/sheet-store';
+import { createRow, deleteRow, listByUser, reorderRows, updateRow } from '../lib/sheet-store';
 import { SheetsAccessError } from '../lib/google-sheets';
 import { optionalString, optionalTags, requireString, ValidationError } from '../lib/validate';
 
@@ -12,6 +12,12 @@ const CONTENT_MAX = 50_000;
 router.get('/notes', requireAuth, userRateLimit, async (req, res) => {
   try {
     const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!, req.sheetsClient!);
+    rows.sort((a, b) => {
+      const posA = Number(a.position) || 0;
+      const posB = Number(b.position) || 0;
+      if (posA !== posB) return posB - posA;
+      return new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime();
+    });
     res.status(200).json({ data: rows });
   } catch (err) {
     if (err instanceof SheetsAccessError) {
@@ -69,6 +75,25 @@ router.put('/notes/:id', requireAuth, userRateLimit, async (req, res) => {
     }
     req.log.error({ err }, 'Failed to update note');
     res.status(500).json({ error: 'Failed to update note' });
+  }
+});
+
+router.post('/notes/reorder', requireAuth, userRateLimit, async (req, res) => {
+  try {
+    const orderedIds = req.body?.orderedIds;
+    if (!Array.isArray(orderedIds) || orderedIds.some((id) => typeof id !== 'string')) {
+      res.status(400).json({ error: 'orderedIds must be an array of strings' });
+      return;
+    }
+    await reorderRows(req.spreadsheetId!, SHEET, req.userId!, orderedIds, req.sheetsClient!);
+    res.status(204).send();
+  } catch (err) {
+    if (err instanceof SheetsAccessError) {
+      res.status(503).json({ error: err.code, message: err.message });
+      return;
+    }
+    req.log.error({ err }, 'Failed to reorder notes');
+    res.status(500).json({ error: 'Failed to reorder notes' });
   }
 });
 

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { apiGet } from '@/lib/apiClient';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/database.types';
 
@@ -17,52 +18,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string, userEmail?: string): Promise<Profile | null> => {
+  const fetchProfile = async (userId: string): Promise<Profile | null> => {
     try {
-      let { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      if (error) {
-        console.warn('[AuthContext] Could not fetch profile:', error.message);
-        return null;
-      }
-
-      // If the trigger that auto-creates the profile row didn't run (or hasn't run
-      // yet), create the row ourselves so the user can actually log in.
-      if (!data && userEmail) {
-        const { error: upsertError } = await supabase
-          .from('profiles')
-          .upsert(
-            { id: userId, email: userEmail, subscription_status: 'pending' },
-            { onConflict: 'id', ignoreDuplicates: true },
-          );
-        if (upsertError) {
-          console.warn('[AuthContext] Could not create missing profile:', upsertError.message);
-          return null;
-        }
-        ({ data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .maybeSingle());
-        if (error) {
-          console.warn('[AuthContext] Could not refetch profile after creating it:', error.message);
-          return null;
-        }
-      }
-
+      const data = await apiGet<Profile>('/profile');
       setProfile(data);
       return data;
     } catch (err) {
-      console.warn('[AuthContext] Profile fetch threw:', err);
+      console.warn('[AuthContext] Could not fetch profile:', err instanceof Error ? err.message : err);
       return null;
     }
   };
 
   const refreshProfile = async () => {
-    if (user) await fetchProfile(user.id, user.email);
+    if (user) await fetchProfile(user.id);
   };
 
   useEffect(() => {
@@ -90,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setProfile(null);
           } else {
             setUser(session.user);
-            await fetchProfile(session.user.id, session.user.email);
+            await fetchProfile(session.user.id);
           }
         } else {
           setUser(null);
@@ -122,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(null);
         } else {
           setUser(session.user);
-          await fetchProfile(session.user.id, session.user.email);
+          await fetchProfile(session.user.id);
         }
       } else {
         setUser(null);

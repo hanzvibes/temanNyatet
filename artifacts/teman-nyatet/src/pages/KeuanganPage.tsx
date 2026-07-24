@@ -7,7 +7,7 @@ import { useCreate } from '@/contexts/CreateContext';
 import { useTransactions } from '@/hooks/useTransactions';
 import { format, isToday, isYesterday } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Loader2, Wallet, ArrowDown, ArrowUp, Briefcase, Coffee, ShoppingBag, Car, HeartPulse, Laptop, Gamepad2, Gift, Receipt, Home, MoreHorizontal, BookOpen } from 'lucide-react';
+import { Loader2, Wallet, ArrowDown, ArrowUp, Briefcase, Coffee, ShoppingBag, Car, HeartPulse, Laptop, Gamepad2, Gift, Receipt, Home, MoreHorizontal, BookOpen, Hand } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { Drawer } from 'vaul';
@@ -272,6 +272,10 @@ export default function KeuanganPage() {
                                   </span>
                                   {tx.note && <span className="text-xs font-medium text-muted-foreground line-clamp-1">{tx.note}</span>}
                                 </div>
+                                <p className="flex items-center gap-1 text-[10px] text-muted-foreground/45 mt-1 select-none" aria-hidden="true">
+                                  <Hand size={10} strokeWidth={2.5} />
+                                  Tahan untuk hapus
+                                </p>
                               </div>
                             </div>
                             <div className={`font-extrabold text-lg ${tx.type === 'income' ? 'text-[#4ADE80]' : 'text-foreground'}`}>

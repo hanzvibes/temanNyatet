@@ -188,9 +188,7 @@ function SortableNoteCard({
       tabIndex={0}
       role="listitem"
       aria-label={note.title ? `Catatan: ${note.title}. Tekan Enter untuk membuka.` : 'Catatan tanpa judul. Tekan Enter untuk membuka.'}
-      className="rounded-[1.5rem] p-5 shadow-sm hover:shadow-md cursor-pointer relative select-none
-                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
-                 focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-shadow duration-200"
+      className="rounded-[1.5rem] p-5 shadow-sm hover:shadow-md cursor-pointer relative select-none transition-shadow duration-200 will-change-transform active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
       <NoteCardBody note={note} handle={handle} />
     </div>

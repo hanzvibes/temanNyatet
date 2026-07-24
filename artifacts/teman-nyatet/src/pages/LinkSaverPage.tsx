@@ -5,7 +5,7 @@ import { AnimatedListItem } from '@/components/AnimatedListItem';
 import SettingsSheet from '@/components/SettingsSheet';
 import { useLinks } from '@/hooks/useLinks';
 import { useCreate } from '@/contexts/CreateContext';
-import { Loader2, Link2, Copy, ExternalLink, Compass } from 'lucide-react';
+import { Loader2, Link2, Copy, ExternalLink, Compass, Hand } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import SearchBar from '@/components/SearchBar';
@@ -178,6 +178,10 @@ export default function LinkSaverPage() {
                       {link.note && (
                         <p className="text-[11px] font-bold uppercase tracking-wider text-linksaver mt-2 line-clamp-1 bg-linksaver/10 px-2 py-1 rounded-md inline-block border border-linksaver/20">{link.note}</p>
                       )}
+                      <p className="flex items-center gap-1 text-[10px] text-muted-foreground/45 mt-1.5 select-none" aria-hidden="true">
+                        <Hand size={10} strokeWidth={2.5} />
+                        Tahan untuk hapus
+                      </p>
                     </div>
 
                     <button

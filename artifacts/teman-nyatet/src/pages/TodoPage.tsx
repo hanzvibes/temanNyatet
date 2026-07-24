@@ -200,7 +200,7 @@ export default function TodoPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 lg:hidden">TEMAN NYATET</div>
-              <h1 className="text-2xl font-extrabold text-foreground lg:text-3xl">To-Do List</h1>
+              <h1 className="text-page-title">To-Do List</h1>
             </div>
             <SettingsSheet avatarBg="bg-[#E1F0FF]" avatarTextColor="text-[#9CB4D4]" />
           </div>
@@ -372,13 +372,13 @@ export default function TodoPage() {
           <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] z-50 outline-none">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-6 mt-4" />
             <form onSubmit={newForm.handleSubmit(onSubmitNew)} className="flex flex-col px-6 pb-8 overflow-y-auto">
-              <h3 className="font-extrabold text-2xl mb-6 text-foreground">To-Do Baru</h3>
+              <h3 className="text-modal-title mb-6">To-Do Baru</h3>
               <div className="space-y-5 mb-8">
                 <div>
                   <input
                     {...newForm.register('title')}
                     placeholder="Apa yang harus dikerjakan?"
-                    className="w-full text-xl font-extrabold bg-transparent border-b-2 border-border py-3 outline-none focus:border-[#9CB4D4] transition-colors placeholder:text-muted-foreground/40 text-foreground"
+                    className="w-full text-xl font-extrabold bg-transparent border-b-2 border-border py-3 outline-none focus:border-[#9CB4D4] transition-colors placeholder:text-muted-foreground/50 text-foreground"
                   />
                   {newForm.formState.errors.title && (
                     <p className="text-destructive font-medium text-sm mt-2">{newForm.formState.errors.title.message}</p>

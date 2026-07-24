@@ -104,10 +104,84 @@
   }
 }
 
+/* ── Typography roles (single source of truth) ────────────────────────
+   Each role bundles font-size, weight, leading, and tracking so the
+   rest of the codebase just picks one role by name. Change here and
+   all pages update. Tracking-widest (0.1em) at 10–12px text breaks
+   legibility — `text-pill-label` uses `tracking-wider` (0.05em) which
+   keeps the small-caps look without snapping letters too far apart. */
+@layer components {
+  .text-display {
+    /* Brand wordmark on the unauthenticated entry points
+       (login, payment), where it's the primary signal of the product. */
+    @apply text-3xl font-extrabold leading-[1.1] tracking-tight text-foreground;
+  }
+
+  .text-page-title {
+    /* Main H1 of every authenticated page — Catatan, Keuangan, To-do,
+       Link Saver, Pengaturan, Diarsipkan, Connect-Sheet, Bayar.
+       Step up to 30px on lg+ so the same role reads correctly on
+       tablets and desktops. */
+    @apply text-2xl lg:text-3xl font-extrabold leading-[1.15] tracking-tight text-foreground;
+  }
+
+  .text-modal-title {
+    /* Bottom-sheet / drawer H1s ("Catatan Baru", "Simpan Link Baru",
+       "To-Do Baru", "Bayar"). Stay at 2xl across breakpoints so the
+       sheet chrome reads at mobile scale. */
+    @apply text-2xl font-extrabold leading-tight text-foreground;
+  }
+
+  .text-section-title {
+    /* H2 inside read-mode modals — note detail, archived view, etc. */
+    @apply text-xl font-bold leading-snug text-foreground;
+  }
+
+  .text-input-title {
+    /* Larger editable inputs — note title only. No tracking tweak
+       because mobile OS autocorrect/spell-check occasionally stutters
+       on heavily-tracked spans; keeping it crisp. */
+    @apply text-2xl font-bold leading-[1.2] text-foreground;
+  }
+
+  .text-input-content {
+    /* Wide multi-line editable inputs — note content textarea, link
+       notes, transaction details. */
+    @apply text-base font-medium leading-relaxed text-foreground;
+  }
+
+  .text-pill-label {
+    /* "Tags"/"Nominal"/"DATE" small-caps labels. Was 0.1em
+       tracking-widest at 12px — letters broke apart. 0.05em
+       tracking-wider keeps an obvious small-caps tag without hurting
+       legibility. */
+    @apply text-xs font-bold uppercase tracking-wider text-muted-foreground;
+  }
+
+  .text-pill-tag {
+    /* Tiny in-card chips (tags inside note cards). Same rule as label
+       but at 10px with a hint less tracking. */
+    @apply text-[10px] font-bold uppercase tracking-wide text-muted-foreground;
+  }
+}
+
+@layer base {
+  /* ── Placeholder contrast ─────────────────────────────────────────────
+     Default placeholder color at /50 (~5.2:1 on cream background, 7:1
+     on white cards) keeps WCAG AA. Previously /40 used in 5 spots failed
+     AA on the cream `--background`. Components can still override with
+     `placeholder:text-X` when they need a custom color (e.g. on the
+     yellow note background). */
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-muted-foreground/50;
+  }
+}
+
 @layer utilities {
   input[type='search']::-webkit-search-cancel-button { @apply hidden; }
   .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-  
+
   .shadow-soft {
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
   }

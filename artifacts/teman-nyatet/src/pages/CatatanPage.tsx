@@ -138,8 +138,8 @@ export default function CatatanPage() {
         <div className="px-6 py-6 pb-4 space-y-5 lg:px-10 max-w-screen-xl mx-auto">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 lg:hidden">TEMAN NYATET</div>
-              <h1 className="text-2xl font-extrabold text-foreground lg:text-3xl">Catatan</h1>
+              <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
+              <h1 className="text-page-title">Catatan</h1>
             </div>
             <SettingsSheet avatarBg="bg-[#E8F2DF]" avatarTextColor="text-primary" />
           </div>
@@ -211,7 +211,7 @@ export default function CatatanPage() {
                         >
                           Batal
                         </button>
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Edit Catatan</span>
+                        <span className="text-pill-label !text-gray-500">Edit Catatan</span>
                         <button
                           type="submit"
                           className="text-sm font-bold text-gray-800 bg-white/70 hover:bg-white/90 px-4 py-1.5 rounded-full transition-colors shadow-sm"
@@ -238,7 +238,7 @@ export default function CatatanPage() {
                         )}
                         {/* Tags */}
                         <div>
-                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 block">Tags</label>
+                          <label className="text-pill-tag !text-gray-500 mb-2 block">Tags</label>
                           <div className="flex flex-wrap gap-2">
                             {AVAILABLE_TAGS.map(tag => {
                               const currentTags = form.watch('tags');
@@ -265,7 +265,7 @@ export default function CatatanPage() {
                     <>
                       <div className="overflow-y-auto flex-1 p-7">
                         {selectedNote.title && (
-                          <h2 className="text-2xl font-extrabold text-gray-900 mb-3 leading-tight">
+                          <h2 className="text-modal-title !text-gray-900 mb-3">
                             {selectedNote.title}
                           </h2>
                         )}
@@ -338,7 +338,7 @@ export default function CatatanPage() {
 
             <form onSubmit={form.handleSubmit(onSubmitForm)} className="flex flex-col flex-1 px-6 pb-6 overflow-hidden">
               <div className="flex justify-between items-center mb-6 flex-shrink-0">
-                <h3 className="font-extrabold text-xl">{selectedNote ? 'Edit Catatan' : 'Catatan Baru'}</h3>
+                <h3 className="text-section-title">{selectedNote ? 'Edit Catatan' : 'Catatan Baru'}</h3>
                 <button type="submit" className="text-primary font-bold px-5 py-2 bg-primary/10 rounded-full hover:bg-primary/20 transition-colors">
                   Simpan
                 </button>
@@ -348,13 +348,13 @@ export default function CatatanPage() {
                 <input
                   {...form.register('title')}
                   placeholder="Judul (opsional)"
-                  className="w-full text-2xl font-bold bg-transparent outline-none placeholder:text-muted-foreground/40"
+                  className="w-full text-2xl font-bold bg-transparent outline-none placeholder:text-muted-foreground/50"
                 />
 
                 <textarea
                   {...form.register('content')}
                   placeholder="Apa yang ingin kamu catat?"
-                  className="w-full h-48 resize-none bg-transparent outline-none text-lg font-medium placeholder:text-muted-foreground/40 leading-relaxed"
+                  className="w-full h-48 resize-none bg-transparent outline-none text-lg font-medium placeholder:text-muted-foreground/50 leading-relaxed"
                   autoFocus
                 />
                 {form.formState.errors.content && (
@@ -362,7 +362,7 @@ export default function CatatanPage() {
                 )}
 
                 <div>
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 block">Tags</label>
+                  <label className="text-pill-label mb-3 block">Tags</label>
                   <div className="flex flex-wrap gap-2">
                     {AVAILABLE_TAGS.map(tag => {
                       const currentTags = form.watch('tags');

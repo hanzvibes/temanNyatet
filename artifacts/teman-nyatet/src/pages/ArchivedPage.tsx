@@ -16,7 +16,7 @@ export default function ArchivedPage() {
           <Lock className="text-muted-foreground" size={32} />
         </div>
         
-        <h1 className="text-2xl font-bold text-foreground mb-3">Akun Diarsipkan</h1>
+        <h1 className="text-page-title mb-3">Akun Diarsipkan</h1>
         <p className="text-muted-foreground text-sm mb-8 leading-relaxed">
           Subscription kamu sudah berakhir. Perpanjang untuk melanjutkan mencatat dengan TemanNyatet.
         </p>

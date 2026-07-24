@@ -38,7 +38,7 @@ export default function PaymentPage() {
         <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mb-3 shadow-sm text-primary-foreground">
           <NotebookPen size={24} />
         </div>
-        <h1 className="text-xl font-bold text-foreground">TemanNyatet</h1>
+        <h1 className="text-display">TemanNyatet</h1>
       </div>
 
       <div className="w-full max-w-sm bg-card rounded-2xl shadow-md p-6 border border-border">

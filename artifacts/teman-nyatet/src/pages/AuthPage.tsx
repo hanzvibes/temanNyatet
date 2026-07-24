@@ -157,7 +157,7 @@ export default function AuthPage() {
                 <BookOpen size={24} className="text-white" />
              </div>
           </div>
-          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">TemanNyatet</h1>
+          <h1 className="text-display">TemanNyatet</h1>
           <p className="text-muted-foreground text-base mt-2 font-medium">Catat sat-set, urusan beres.</p>
         </div>
 
@@ -167,7 +167,7 @@ export default function AuthPage() {
               <Mail size={32} className="text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-foreground">Verifikasi Email Diperlukan</h2>
+              <h2 className="text-section-title">Verifikasi Email Diperlukan</h2>
               <p className="text-muted-foreground mt-2 font-medium">
                 Silakan verifikasi email Anda terlebih dahulu sebelum login.
               </p>

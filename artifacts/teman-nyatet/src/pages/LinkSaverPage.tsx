@@ -106,7 +106,7 @@ export default function LinkSaverPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 lg:hidden">TEMAN NYATET</div>
-              <h1 className="text-2xl font-extrabold text-foreground lg:text-3xl">Link Saver</h1>
+              <h1 className="text-page-title">Link Saver</h1>
             </div>
             <SettingsSheet avatarBg="bg-[#FFE4E1]" avatarTextColor="text-[#E09898]" />
           </div>
@@ -191,7 +191,7 @@ export default function LinkSaverPage() {
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-6 mt-4" />
             
             <form onSubmit={form.handleSubmit(onSubmitForm)} className="flex flex-col px-6 pb-8 overflow-y-auto">
-              <h3 className="font-extrabold text-2xl mb-6 text-foreground">Simpan Link Baru</h3>
+              <h3 className="text-modal-title mb-6">Simpan Link Baru</h3>
               
               <div className="space-y-6 mb-8">
                 <div>

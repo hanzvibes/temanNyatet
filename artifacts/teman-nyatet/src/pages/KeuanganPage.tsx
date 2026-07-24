@@ -169,8 +169,8 @@ export default function KeuanganPage() {
         <div className="px-6 py-6 pb-4 space-y-5 lg:px-10 max-w-screen-xl mx-auto">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 lg:hidden">TEMAN NYATET</div>
-              <h1 className="text-2xl font-extrabold text-foreground lg:text-3xl">Keuangan</h1>
+              <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
+              <h1 className="text-page-title">Keuangan</h1>
             </div>
             <SettingsSheet avatarBg="bg-[#FFF8D6]" avatarTextColor="text-[#F4C753]" />
           </div>
@@ -311,7 +311,7 @@ export default function KeuanganPage() {
 
               {/* Amount */}
               <div className="mb-6">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Nominal</label>
+                <label className="text-pill-label mb-2 block">Nominal</label>
                 <div className="relative">
                   <span className="absolute left-5 top-1/2 -translate-y-1/2 text-2xl font-extrabold text-muted-foreground/50">Rp</span>
                   <input
@@ -335,7 +335,7 @@ export default function KeuanganPage() {
               {/* Date & Source */}
               <div className="flex gap-4 mb-6">
                 <div className="flex-1">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Tanggal</label>
+                  <label className="text-pill-label mb-2 block">Tanggal</label>
                   <input
                     {...form.register('date')}
                     type="date"
@@ -343,7 +343,7 @@ export default function KeuanganPage() {
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Sumber</label>
+                  <label className="text-pill-label mb-2 block">Sumber</label>
                   <select
                     {...form.register('source')}
                     className="w-full bg-white border border-border rounded-xl py-3 px-4 outline-none focus:border-[#F4C753] focus:ring-2 focus:ring-[#F4C753]/20 text-sm font-bold text-foreground appearance-none"
@@ -355,7 +355,7 @@ export default function KeuanganPage() {
 
               {/* Category Grid */}
               <div className="mb-6">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 block">Kategori</label>
+                <label className="text-pill-label mb-3 block">Kategori</label>
                 <div className="grid grid-cols-4 gap-3">
                   {(txType === 'expense' ? DEFAULT_EXPENSE_CATEGORIES : DEFAULT_INCOME_CATEGORIES).map(cat => {
                     const isSelected = form.watch('category') === cat;
@@ -383,7 +383,7 @@ export default function KeuanganPage() {
 
               {/* Note */}
               <div className="mb-8">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">Catatan Tambahan</label>
+                <label className="text-pill-label mb-2 block">Catatan Tambahan</label>
                 <input
                   {...form.register('note')}
                   type="text"

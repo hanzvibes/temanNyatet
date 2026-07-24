@@ -60,7 +60,7 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
       <input
         {...form.register('title')}
         placeholder="Judul (opsional)"
-        className="w-full text-lg font-extrabold bg-transparent outline-none placeholder:text-muted-foreground/40 border-b border-border pb-2"
+        className="w-full text-lg font-extrabold bg-transparent outline-none placeholder:text-muted-foreground/50 border-b border-border pb-2"
       />
       <textarea
         {...form.register('content')}
@@ -200,7 +200,7 @@ function KeuanganSheetForm({ onSuccess }: { onSuccess: () => void }) {
 
       {/* Category chips (horizontal scroll) */}
       <div>
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">Kategori</p>
+        <p className="text-pill-tag mb-1.5">Kategori</p>
         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {cats.map(c => (
             <button key={c} type="button"
@@ -270,7 +270,7 @@ function TodoSheetForm({ onSuccess }: { onSuccess: () => void }) {
       <input
         {...form.register('title')}
         placeholder="Apa yang harus dikerjakan?"
-        className="w-full text-lg font-extrabold bg-transparent border-b-2 border-border pb-2.5 outline-none focus:border-[#9CB4D4] transition-colors placeholder:text-muted-foreground/40"
+        className="w-full text-lg font-extrabold bg-transparent border-b-2 border-border pb-2.5 outline-none focus:border-[#9CB4D4] transition-colors placeholder:text-muted-foreground/50"
       />
       {form.formState.errors.title && (
         <p className="text-destructive text-xs font-bold -mt-1">{form.formState.errors.title.message}</p>
@@ -282,12 +282,12 @@ function TodoSheetForm({ onSuccess }: { onSuccess: () => void }) {
       />
       <div className="flex gap-2">
         <div className="flex-1">
-          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1 block">Tanggal</label>
+          <label className="text-pill-tag mb-1 block">Tanggal</label>
           <input {...form.register('due_date')} type="date"
             className={inpFocus('#9CB4D4')} />
         </div>
         <div className="flex-1">
-          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1 block">Waktu</label>
+          <label className="text-pill-tag mb-1 block">Waktu</label>
           <input {...form.register('due_time')} type="time"
             className={inpFocus('#9CB4D4')} />
         </div>

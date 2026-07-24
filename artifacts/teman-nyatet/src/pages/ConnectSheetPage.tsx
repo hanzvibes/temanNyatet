@@ -236,7 +236,7 @@ export default function ConnectSheetPage() {
               <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg text-primary-foreground">
                 <ShieldCheck size={28} />
               </div>
-              <h1 className="text-2xl font-bold text-foreground leading-tight">
+              <h1 className="text-page-title">
                 {status?.connected ? 'Google Drive Terhubung' : 'Hubungkan Google Drive'}
               </h1>
               <p className="text-muted-foreground text-sm mt-2 max-w-xs leading-relaxed">

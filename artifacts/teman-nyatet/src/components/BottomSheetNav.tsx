@@ -42,6 +42,18 @@ export default function BottomSheetNav() {
 
   useEffect(() => { h.set(SNAP[snapState]); }, [screenH]);
 
+  // Broadcast open/closed state so peripheral fixed-position chrome (e.g.
+  // the PWA install prompt) can step out of the way while the sheet owns the
+  // bottom of the viewport. The event fires on mount with `open:false` and
+  // on every snap transition. Lightweight custom event — avoids a shared
+  // context for what is effectively a one-bit signal.
+  useEffect(() => {
+    const evt = new CustomEvent('teman-nyatet:bottom-sheet', {
+      detail: { open: snapState !== 'collapsed' },
+    });
+    window.dispatchEvent(evt);
+  }, [snapState]);
+
   // When navigating to a new tab, collapse the sheet so the page content is
   // visible. The user can tap/drag the handle to reopen it if they want to create.
   const prevLocation = useRef(location);

@@ -1,5 +1,14 @@
 // PWA install prompt — shows a bottom banner when the browser fires
 // `beforeinstallprompt`. Dismissed per-session via local state.
+//
+// Visibility rules:
+//   1. The browser fired `beforeinstallprompt` and we still have it
+//   2. The user hasn't dismissed in this session
+//   3. `BottomSheetNav` is not currently open. The sheet is bottom-anchored
+//      and grows upward to cover most of the screen; a fixed prompt above
+//      (or even below) the sheet covers form content. We listen for the
+//      `teman-nyatet:bottom-sheet` window event the sheet fires on each snap
+//      transition and step aside for the lifetime of the open snap.
 import { useEffect, useState } from 'react';
 import { Download, X } from 'lucide-react';
 
@@ -11,6 +20,7 @@ interface BeforeInstallPromptEvent extends Event {
 export default function PwaInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -21,7 +31,16 @@ export default function PwaInstallPrompt() {
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
-  if (!deferredPrompt || dismissed) return null;
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const open = (e as CustomEvent<{ open: boolean }>).detail?.open === true;
+      setSheetOpen(open);
+    };
+    window.addEventListener('teman-nyatet:bottom-sheet', handler);
+    return () => window.removeEventListener('teman-nyatet:bottom-sheet', handler);
+  }, []);
+
+  if (!deferredPrompt || dismissed || sheetOpen) return null;
 
   const handleInstall = async () => {
     await deferredPrompt.prompt();

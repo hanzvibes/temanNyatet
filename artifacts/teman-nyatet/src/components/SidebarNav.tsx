@@ -29,7 +29,7 @@ export default function SidebarNav() {
 
   const activeItem = NAV_ITEMS.find(n => location.startsWith(n.path));
   const settingsAvatarBg = activeItem
-    ? { '/catatan': 'bg-[#E8F2DF]', '/keuangan': 'bg-[#FFF8D6]', '/todo': 'bg-[#E1F0FF]', '/linksaver': 'bg-[#FFE4E1]' }[activeItem.path] ?? 'bg-primary/10'
+    ? { '/catatan': 'bg-[#E8F2DF] dark:bg-[#1F2D1A]', '/keuangan': 'bg-[#FFF8D6] dark:bg-[#3D3118]', '/todo': 'bg-[#E1F0FF] dark:bg-[#1A2638]', '/linksaver': 'bg-[#FFE4E1] dark:bg-[#38201E]' }[activeItem.path] ?? 'bg-primary/10'
     : 'bg-primary/10';
   const settingsAvatarColor = activeItem
     ? { '/catatan': 'text-primary', '/keuangan': 'text-[#F4C753]', '/todo': 'text-[#9CB4D4]', '/linksaver': 'text-[#E09898]' }[activeItem.path] ?? 'text-primary'

@@ -144,7 +144,7 @@ export default function CatatanPage() {
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">Catatan</h1>
             </div>
-            <SettingsSheet avatarBg="bg-[#E8F2DF]" avatarTextColor="text-primary" />
+            <SettingsSheet avatarBg="bg-[#E8F2DF] dark:bg-[#1F2D1A]" avatarTextColor="text-primary" />
           </div>
           <SearchBar value={search} onChange={setSearch} placeholder="Cari catatan..." />
         </div>

@@ -219,7 +219,7 @@ export default function TodoPage() {
               <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">To-Do List</h1>
             </div>
-            <SettingsSheet avatarBg="bg-[#E1F0FF]" avatarTextColor="text-[#9CB4D4]" />
+            <SettingsSheet avatarBg="bg-[#E1F0FF] dark:bg-[#1A2638]" avatarTextColor="text-[#9CB4D4]" />
           </div>
           <SearchBar value={search} onChange={setSearch} placeholder="Cari to-do..." />
         </div>
@@ -284,7 +284,7 @@ export default function TodoPage() {
                 transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
               >
                 {/* Card */}
-                <div className="bg-[#E1F0FF] rounded-[24px] overflow-hidden shadow-2xl">
+                <div className="bg-[#E1F0FF] dark:bg-[#1A2638] rounded-[24px] overflow-hidden shadow-2xl">
                   <form onSubmit={editForm.handleSubmit(onSubmitEdit)} className="flex flex-col">
                     {/* Header row */}
                     <div className="flex items-center justify-between px-6 pt-6 pb-3">

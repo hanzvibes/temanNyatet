@@ -110,7 +110,7 @@ export default function LinkSaverPage() {
               <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">Link Saver</h1>
             </div>
-            <SettingsSheet avatarBg="bg-[#FFE4E1]" avatarTextColor="text-linksaver" />
+            <SettingsSheet avatarBg="bg-[#FFE4E1] dark:bg-[#38201E]" avatarTextColor="text-linksaver" />
           </div>
           <SearchBar value={search} onChange={setSearch} placeholder="Cari link..." />
         </div>

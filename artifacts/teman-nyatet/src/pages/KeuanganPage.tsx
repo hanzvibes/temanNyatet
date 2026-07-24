@@ -174,7 +174,7 @@ export default function KeuanganPage() {
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">Keuangan</h1>
             </div>
-            <SettingsSheet avatarBg="bg-[#FFF8D6]" avatarTextColor="text-finance" />
+            <SettingsSheet avatarBg="bg-[#FFF8D6] dark:bg-[#3D3118]" avatarTextColor="text-finance" />
           </div>
         </div>
       </div>

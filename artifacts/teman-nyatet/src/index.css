@@ -95,6 +95,65 @@
   --radius: 1rem;
 }
 
+/* ── Dark mode ─────────────────────────────────────────────────────────
+   Same token names, different HSL values, so anything bound to theme
+   tokens (background / foreground / card / border / muted / primary /
+   secondary / input / ring) flips automatically.
+
+   What does NOT flip automatically:
+   - The five saturated mid-tone hex accents (`--finance #F4C753`,
+     `--todo #9CB4D4`, `--linksaver #E09898`, `--income #4ADE80`,
+     `--expense #F87171`). They read OK on the dark canvas because
+     they're already middling-bright; tinting them would lose the
+     identity of each section.
+   - The four per-section "soft tint" hexes used by the SidebarNav
+     palette and the SettingsSheet `<AvatarBg>`. These need explicit
+     `dark:bg-[…]` overrides at the call site because Tailwind's hex
+     arbitrary-value utility does not tokenize (and dark-shifting
+     `bg-[#FFF8D6]` to a literal dark hex per-section keeps the
+     "section identity" intact across themes).
+
+   Tone:
+   - Base canvas: deep slate (`hsl(222 25% 7%)`).
+   - Cards: slightly lighter slate so they read "lifted" off the
+     canvas without harsh edges.
+   - Borders: mid-slate so the chrome stays visible on dark cards
+     without looking heavy.
+   - Sage primary: 90→38% / 54→62% L — lifts the green so it remains
+     a brand signal at dark-mode contrast (WCAG AA on the dark fg).
+*/
+.dark {
+  --background: 222 25% 7%;
+  --foreground: 40 30% 95%;
+
+  --card: 222 22% 11%;
+  --card-foreground: 40 30% 95%;
+  --card-border: 222 15% 22%;
+
+  --popover: 222 22% 11%;
+  --popover-foreground: 40 30% 95%;
+  --popover-border: 222 15% 22%;
+
+  --primary: 90 38% 62%;
+  --primary-foreground: 222 25% 10%;
+
+  --secondary: 222 18% 16%;
+  --secondary-foreground: 40 25% 90%;
+
+  --muted: 222 18% 16%;
+  --muted-foreground: 220 12% 65%;
+
+  --accent: 43 90% 68%;
+  --accent-foreground: 222 25% 10%;
+
+  --destructive: 0 75% 60%;
+  --destructive-foreground: 40 30% 95%;
+
+  --input: 222 18% 22%;
+
+  --ring: 90 38% 62%;
+}
+
 @layer base {
   * {
     @apply border-border;

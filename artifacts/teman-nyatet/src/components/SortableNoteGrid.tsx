@@ -25,22 +25,19 @@ import type { Note } from '@/lib/database.types';
 
 const PALETTE = ['#FFF8D6', '#E8F2DF', '#FFE4E1', '#E1F0FF'];
 
-// Keep each card's colour fixed even when the user reorders the list.
-// New notes get the next available palette slot based on their first render position.
-function useStableNoteColors(notes: Note[]) {
-  const colorMap = React.useRef(new Map<string, number>());
-  React.useMemo(() => {
-    notes.forEach((note, index) => {
-      if (!colorMap.current.has(note.id)) {
-        colorMap.current.set(note.id, index % PALETTE.length);
-      }
-    });
-  }, [notes]);
-
-  return React.useCallback((noteId: string) => {
-    const index = colorMap.current.get(noteId) ?? 0;
-    return PALETTE[index % PALETTE.length];
-  }, []);
+// Derive a card's colour directly from the note's own ID. This makes the
+// colour bullet-proof across reorder, drag-drop, deletes, refetches, and
+// component remounts — the colour is a pure function of the data, not of
+// position or session state. (Earlier this used a ref-backed Map keyed by
+// position-based index, which could drift when notes were added/removed or
+// the grid remounted.)
+function colorForNoteId(noteId: string): string {
+  let hash = 0;
+  for (let i = 0; i < noteId.length; i++) {
+    // Standard 31-multiplier string hash; cast to int32 to keep it deterministic.
+    hash = (hash * 31 + noteId.charCodeAt(i)) | 0;
+  }
+  return PALETTE[Math.abs(hash) % PALETTE.length];
 }
 
 type SortableNoteGridProps = {
@@ -72,8 +69,10 @@ function SortableNoteCard({
 
   const dndStyle = {
     transform: CSS.Translate.toString(transform),
+    // Only transition `transform`, not opacity — otherwise the inline CSS
+    // transition fights framer-motion's own opacity tween and produces a
+    // visible flicker / stuck-opacity on drop.
     transition: transition ?? 'transform 220ms cubic-bezier(0.25, 0.1, 0.25, 1)',
-    opacity: isDragging ? 0.35 : undefined,
     zIndex: isDragging ? 50 : undefined,
   };
 
@@ -96,7 +95,7 @@ function SortableNoteCard({
       layout
       style={{ ...dndStyle, backgroundColor: color }}
       initial={{ opacity: 0, y: 16, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      animate={{ opacity: isDragging ? 0.35 : 1, y: 0, scale: 1 }}
       transition={{
         duration: 0.25,
         ease: [0.25, 0.1, 0.25, 1],
@@ -147,7 +146,6 @@ export function SortableNoteGrid({
   disabled,
 }: SortableNoteGridProps) {
   const [activeId, setActiveId] = React.useState<string | null>(null);
-  const getColor = useStableNoteColors(notes);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -189,8 +187,8 @@ export function SortableNoteGrid({
             <SortableNoteCard
               key={note.id}
               note={note}
-              color={getColor(note.id)}
-              onClick={() => onClickNote(note, getColor(note.id))}
+              color={colorForNoteId(note.id)}
+              onClick={() => onClickNote(note, colorForNoteId(note.id))}
               disabled={disabled}
             />
           ))}
@@ -202,7 +200,7 @@ export function SortableNoteGrid({
           <div className="rounded-[1.5rem] shadow-2xl scale-[1.03] rotate-1 opacity-95 cursor-grabbing">
             <div
               className="rounded-[1.5rem] p-5 shadow-sm h-full"
-              style={{ backgroundColor: getColor(activeNote.id) }}
+              style={{ backgroundColor: colorForNoteId(activeNote.id) }}
             >
               {activeNote.title && (
                 <h3 className="font-bold text-gray-900 mb-2 leading-tight text-lg">

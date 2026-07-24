@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { apiDelete, apiGet, apiPost } from '@/lib/apiClient';
+import { useLocation } from 'wouter';
+import { apiDelete, apiGet } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
 import {
   LogOut,
@@ -62,6 +63,7 @@ const ERROR_MESSAGES: Record<string, { title: string; body: string }> = {
 
 export default function ConnectSheetPage() {
   const { refreshProfile } = useAuthContext();
+  const [, setLocation] = useLocation();
   const [status, setStatus] = useState<GoogleStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [connecting, setConnecting] = useState(false);
@@ -77,12 +79,13 @@ export default function ConnectSheetPage() {
   const refreshProfileRef = useRef(refreshProfile);
   refreshProfileRef.current = refreshProfile;
 
-  const loadStatus = async () => {
+  const loadStatus = async (): Promise<GoogleStatus | null> => {
     try {
       const data = await apiGet<GoogleStatus>('/auth/google/status');
       setStatus(data);
+      return data;
     } catch {
-      // Silently ignore — show connect UI
+      return null;
     } finally {
       setLoadingStatus(false);
     }
@@ -93,21 +96,67 @@ export default function ConnectSheetPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // If redirected back from OAuth with ?connected=true, refresh profile and
-  // navigate into the app.
+  // If redirected back from OAuth with ?connected=true, poll the API server until
+  // it confirms the connection, then refresh the profile and navigate. We poll
+  // /auth/google/status (the source of truth) because the previous "fire once at
+  // 1.2s" approach could leave the user stuck on "Mengalihkan ke aplikasi..." if
+  // the Supabase profile fetch was delayed by a slow mobile network or
+  // backgrounded tab.
   useEffect(() => {
-    if (connectedParam === 'true') {
-      setIsNavigating(true);
-    }
-  }, [connectedParam]);
+    if (connectedParam !== 'true') return;
+    setIsNavigating(true);
 
-  useEffect(() => {
-    if (!isNavigating) return;
-    const timer = setTimeout(() => {
-      refreshProfileRef.current();
-    }, 1200);
-    return () => clearTimeout(timer);
-  }, [isNavigating]);
+    let cancelled = false;
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const refreshAndGo = async () => {
+      try {
+        await refreshProfileRef.current();
+      } catch {
+        // Swallow — AuthContext logs warnings; AuthGuard will skip the redirect
+        // if the profile fetch returns null.
+      }
+      if (cancelled) return;
+      // Force the navigation explicitly so we're not solely dependent on
+      // AuthGuard's effect — gives us a guaranteed escape hatch even if the
+      // profile state hasn't propagated yet.
+      setLocation('/catatan');
+    };
+
+    const checkAndProceed = async (attempt: number) => {
+      if (cancelled) return;
+      const result = await loadStatus();
+      if (result?.connected) {
+        refreshAndGo();
+        return;
+      }
+      // After ~10s of polling without success, give up the wait and force-fetch
+      // the profile anyway — the user already saw "Berhasil!" so they shouldn't
+      // be stranded.
+      if (attempt >= 10) {
+        refreshAndGo();
+        return;
+      }
+      pollTimer = setTimeout(() => checkAndProceed(attempt + 1), 1000);
+    };
+
+    checkAndProceed(0);
+
+    return () => {
+      cancelled = true;
+      if (pollTimer) clearTimeout(pollTimer);
+    };
+  }, [connectedParam, setLocation]);
+
+  const handleManualContinue = async () => {
+    setIsNavigating(true);
+    try {
+      await refreshProfileRef.current();
+    } catch {
+      // ignore — see effect above
+    }
+    setLocation('/catatan');
+  };
 
   const handleConnect = async () => {
     setConnecting(true);
@@ -359,6 +408,16 @@ export default function ConnectSheetPage() {
               <Loader2 size={16} className="animate-spin" />
               Mengalihkan ke aplikasi...
             </div>
+
+            {/* Fallback: if the auto-redirect stalls (slow network, backgrounded
+                tab), let the user tap "Lanjut ke Aplikasi" to force the move.
+                Without this, a user could be stranded on this screen forever. */}
+            <button
+              onClick={handleManualContinue}
+              className="mt-6 text-sm font-medium text-primary hover:underline"
+            >
+              Lanjut ke Aplikasi
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

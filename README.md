@@ -55,6 +55,8 @@ A note-taking SaaS web app + PWA for Indonesian users. Four core modules: Catata
 - **React+Vite instead of Next.js**: The Replit workspace scaffolds React+Vite. Server-side requirements (webhooks, cron, OAuth callback) are implemented as Express routes.
 - **Vaul for bottom sheets**: Feature input forms use the `vaul` library for mobile-feel drawer animations.
 - **PWA via VitePWA**: `vite-plugin-pwa` generates the service worker and precaches assets. `manifest.json` is maintained manually in `public/`.
+- **CachedSwitch for instant navigation** (`src/App.tsx`): every visited page stays mounted in the DOM, toggled via the `hidden` attribute, so React Query's hooks + cache survive back-tab visits. Combined with the `QueryClient` defaults (`staleTime: 30 s`, `gcTime: 30 min`, `refetchOnWindowFocus: 'always'`), returning to a previous page paints from cache instantly and silently revalidates in the background.
+- **Overlay bus via window event** (`BottomSheetNav`, `SettingsSheet`, `PwaInstallPrompt`): sheets dispatch `teman-nyatet:any-overlay` on open/closed transitions; the PWA prompt hides for the lifetime of any overlay. New modals can opt in with a single `useEffect`.
 
 ## Product
 

@@ -1,5 +1,35 @@
 # Changelog
 
+## UI Polish and Instant Navigation — 2026-07-24
+
+### Added
+- **CachedSwitch** in `artifacts/teman-nyatet/src/App.tsx` — every visited page stays mounted in the DOM, toggled via the `hidden` attribute, so React Query's hooks + cache survive navigation. Returning to a previous tab paints instantly from in-memory data; fresh data revalidates silently in the background.
+- **RouteSlot** wrapper (`src/App.tsx`) — one `<div hidden aria-hidden><Suspense fallback>` per route, preserving the lazy chunk's resolved promise state across visits.
+- **`ROUTE_ENTRIES`** table in `src/App.tsx` — declarative list of paths/components; add a new page in one line.
+- New CSS tokens in `artifacts/teman-nyatet/src/index.css`:
+  - `--note-card-1..4` — the four sticky-note tints with light pastels in `:root` and flat dark tints (e.g. `#1F2D1A`, `#38201E`) under `.dark`, so cards keep their hue identity without popping bright on the slate canvas.
+  - `--bottom-nav-collapsed-h: 96px` — documents `BottomSheetNav`'s `HANDLE_H(28) + NAV_H(68)` collapsed height so any other fixed chrome can clear it with a single `calc()`.
+- **Shared overlay-bus** — `window` event `teman-nyatet:any-overlay` dispatched by `BottomSheetNav` on snap changes and by `SettingsSheet` on `[open]` transitions (`vaul` drives `open` through `onOpenChange`, so every close path is captured). Any future Drawer/Dialog can opt in with one short effect.
+- Scroll-to-top on navigation (`src/App.tsx`) — every page shares one document scroll position; resetting on each `useLocation()` change keeps long Catatan listings from leaving Keuangan half-scrolled.
+
+### Updated
+- **TanStack Query defaults** in `src/App.tsx`: `staleTime: 30_000` (freshness window matches CachedSwitch's no-refetch contract), `gcTime: 30 min`, `refetchOnWindowFocus: 'always'`, `retry: 1`.
+- `SortableNoteGrid.PALETTE` (`src/components/SortableNoteGrid.tsx`) — references `var(--note-card-1..4)` instead of hardcoded hex pastels; the cascade flips light/dark without touching JS.
+- `NoteCardBody` (`src/components/SortableNoteGrid.tsx`) — title/content use `dark:text-foreground` (`/90` for body), tag pills `dark:bg-white/10 dark:text-foreground`, date `dark:text-muted-foreground`.
+- `SearchBar` and `PwaInstallPrompt` (`src/components/SearchBar.tsx`, `src/components/PwaInstallPrompt.tsx`) — `bg-white` → `dark:bg-card`; keyboard-only focus rings via `focus-visible:` instead of `focus:`.
+- `PwaInstallPrompt` position — `bottom-[calc(1.25rem+var(--bottom-nav-collapsed-h)+0.75rem)]` (128 px above the viewport bottom, 12 px clear of the nav top); `z-[60]` so it stays above `BottomSheetNav`'s `z-50` when the sheet expands.
+
+### Fixed
+- Sticky-note palette no longer renders as flashlight-bright pastels on the dark canvas — the `--note-card-1..4` dark variants sit one brightness step above the surrounding card, preserving hue without dominating the page.
+- PWA install banner no longer overlaps any drawer — `BottomSheetNav` snaps and the `SettingsSheet` Drawer (`vaul`) both dispatch `teman-nyatet:any-overlay`; the prompt hides for the lifetime of any open snapshot and reappears when every overlay closes.
+- `PwaInstallPrompt`'s Install/Tutup buttons now show a keyboard-visible focus ring on `Tab`/`Enter` navigation (was `focus:`, which painted on click only).
+
+### Removed
+- `AnimatePresence`, `motion`, `<Switch>`, `<Route>` from `src/App.tsx` — CachedSwitch delivers the instant tab swap the fade was masking; instant render is the goal.
+- `wouter`'s `Switch` / `Route` imports from `src/App.tsx` — unused after the CachedSwitch rewrite.
+
+---
+
 ## Documentation Update — 2026-07-23
 
 ### Added

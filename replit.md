@@ -62,6 +62,14 @@ OAuth and the data API will fail closed until the `google_refresh_token` column 
 - **Package manager:** pnpm 10.26.1 (monorepo)
 - **Node.js:** 22
 
+## Frontend patterns
+
+- **CachedSwitch** (`artifacts/teman-nyatet/src/App.tsx`) — every previously-visited page stays mounted in the DOM, toggled via `hidden`. Returning to a previous tab paints instantly from React Query's in-memory cache while the focus-event refetch keeps data fresh in the background. Combined with the `QueryClient` defaults tuned for `staleTime: 30 s` / `gcTime: 30 min`, navigation feels instant without blocking the active paint.
+- **Shared overlay bus** — `BottomSheetNav` (snap changes) and `SettingsSheet` (`[open]` changes) both dispatch `window` event `teman-nyatet:any-overlay` with `{ detail: { open: boolean } }`. `PwaInstallPrompt` listens on the same key and unmounts while any overlay is on screen. Any future Drawer/Dialog can opt in with one short `useEffect`.
+- **Theme tokens** in `artifacts/teman-nyatet/src/index.css`:
+  - `--note-card-1..4` — four sticky-note tints with light pastels in `:root` and flat dark tints under `.dark`. Adding a new tint means one CSS variable, no JS change.
+  - `--bottom-nav-collapsed-h: 96px` — `BottomSheetNav`'s `HANDLE_H(28) + NAV_H(68)` collapsed height. Any fixed chrome (e.g. the PWA install banner) that lives below the nav must clear this with a `calc()`, or it overlaps the pill.
+
 ## Project structure
 
 - `artifacts/teman-nyatet/` — React+Vite frontend SPA. `src/lib/apiClient.ts` calls the api-server (Bearer = Supabase access token) for notes/transactions/todos/links; `src/lib/supabase.ts` is used for auth and `profiles` updates. `src/pages/ConnectSheetPage.tsx` is the mandatory gate (`/connect-sheet`) for first-time Google OAuth.

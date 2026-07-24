@@ -78,6 +78,17 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSection]);
 
+  // Broadcast open/closed state on the shared overlay channel so the PWA
+  // install prompt (and any future peripheral chrome) can step aside while
+  // this drawer is on screen. `vaul` controls `open` via internal gestures
+  // and our `onOpenChange` handler — the effect fires on every transition,
+  // not just the explicit `handleOpen`/`handleLogout` paths.
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent('teman-nyatet:any-overlay', { detail: { open } }),
+    );
+  }, [open]);
+
   const handleOpen = () => {
     setActiveSection(null);
     setOpen(true);

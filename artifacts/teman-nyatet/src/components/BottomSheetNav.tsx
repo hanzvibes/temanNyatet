@@ -42,13 +42,13 @@ export default function BottomSheetNav() {
 
   useEffect(() => { h.set(SNAP[snapState]); }, [screenH]);
 
-  // Broadcast open/closed state so peripheral fixed-position chrome (e.g.
-  // the PWA install prompt) can step out of the way while the sheet owns the
-  // bottom of the viewport. The event fires on mount with `open:false` and
-  // on every snap transition. Lightweight custom event — avoids a shared
-  // context for what is effectively a one-bit signal.
+  // Broadcast open/closed state on the shared overlay channel so peripheral
+  // fixed-position chrome (e.g. the PWA install prompt) can step out of the
+  // way while any sheet — this BottomSheetNav, the SettingsSheet Drawer, or
+  // a future modal — owns the bottom of the viewport. Lightweight custom
+  // event; avoids a shared context for what is effectively a one-bit signal.
   useEffect(() => {
-    const evt = new CustomEvent('teman-nyatet:bottom-sheet', {
+    const evt = new CustomEvent('teman-nyatet:any-overlay', {
       detail: { open: snapState !== 'collapsed' },
     });
     window.dispatchEvent(evt);

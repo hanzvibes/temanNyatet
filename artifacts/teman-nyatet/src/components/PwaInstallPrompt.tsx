@@ -4,11 +4,10 @@
 // Visibility rules:
 //   1. The browser fired `beforeinstallprompt` and we still have it
 //   2. The user hasn't dismissed in this session
-//   3. `BottomSheetNav` is not currently open. The sheet is bottom-anchored
-//      and grows upward to cover most of the screen; a fixed prompt above
-//      (or even below) the sheet covers form content. We listen for the
-//      `teman-nyatet:bottom-sheet` window event the sheet fires on each snap
-//      transition and step aside for the lifetime of the open snap.
+//   3. No overlay (BottomSheetNav, SettingsSheet, future Drawers) is
+//      currently on screen. Both sheets dispatch the same
+//      `teman-nyatet:any-overlay` window event on their open/closed
+//      transitions; we react to a single shared channel.
 import { useEffect, useState } from 'react';
 import { Download, X } from 'lucide-react';
 
@@ -36,8 +35,8 @@ export default function PwaInstallPrompt() {
       const open = (e as CustomEvent<{ open: boolean }>).detail?.open === true;
       setSheetOpen(open);
     };
-    window.addEventListener('teman-nyatet:bottom-sheet', handler);
-    return () => window.removeEventListener('teman-nyatet:bottom-sheet', handler);
+    window.addEventListener('teman-nyatet:any-overlay', handler);
+    return () => window.removeEventListener('teman-nyatet:any-overlay', handler);
   }, []);
 
   if (!deferredPrompt || dismissed || sheetOpen) return null;

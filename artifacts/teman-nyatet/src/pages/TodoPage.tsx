@@ -6,6 +6,7 @@ import { useCreate } from '@/contexts/CreateContext';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Loader2, CheckCircle, Check, Clock, Calendar, Trash2, X } from 'lucide-react';
+import { PageEmpty, PageLoading } from '@/components/PageStates';
 import { toast } from 'sonner';
 import SearchBar from '@/components/SearchBar';
 import { Drawer } from 'vaul';
@@ -211,14 +212,14 @@ export default function TodoPage() {
       {/* List */}
       <div className="px-6 lg:px-10 flex-1 space-y-6 pt-2 max-w-screen-xl mx-auto w-full">
         {loading ? (
-          <div className="flex justify-center items-center h-40">
-            <Loader2 className="w-8 h-8 animate-spin text-[#9CB4D4]" />
-          </div>
+          <PageLoading accent="todo" label="Memuat to-do…" />
         ) : filteredTodos.length === 0 ? (
-          <div className="flex flex-col items-center justify-center text-center h-[50vh] text-muted-foreground">
-            <CheckCircle size={48} className="mb-4 text-muted-foreground/30" />
-            <p className="font-medium">{search ? 'Tidak ada hasil pencarian.' : 'Semua beres! Tambah to-do baru.'}</p>
-          </div>
+          <PageEmpty
+            accent="todo"
+            icon={CheckCircle}
+            title={search ? 'Tidak ada hasil pencarian' : 'Semua beres!'}
+            description={search ? 'Coba kata kunci lain atau hapus filter.' : 'Belum ada to-do. Tarik handle di bawah untuk menambah.'}
+          />
         ) : (
           <div className="pb-8 lg:grid lg:grid-cols-2 lg:gap-8 lg:items-start">
             {pendingTodos.length > 0 && (

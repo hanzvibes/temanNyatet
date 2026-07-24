@@ -20,11 +20,15 @@ export default function SearchBar({ value, onChange, placeholder = 'Cari...', cl
         className="w-full bg-white rounded-full pl-12 pr-12 py-3.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm border border-border focus:border-primary/30 transition-all placeholder:text-muted-foreground/50"
       />
       {value && (
-        <button 
+        <button
+          type="button"
+          aria-label="Hapus pencarian"
           onClick={() => onChange('')}
-          className="absolute right-3 p-1.5 rounded-full text-muted-foreground hover:bg-muted"
+          // min-h/min-w 40 → ~ min-h-44 with default browser touch hit-area,
+          // meets WCAG 2.5.5 / Apple HIG 44pt guidance on mobile.
+          className="absolute right-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:bg-muted/70 transition-colors"
         >
-          <X size={16} strokeWidth={3} />
+          <X size={16} strokeWidth={2.5} />
         </button>
       )}
     </div>

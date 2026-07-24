@@ -5,6 +5,7 @@ import { useCreate } from '@/contexts/CreateContext';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Loader2, BookOpen, Trash2, X } from 'lucide-react';
+import { PageEmpty, PageLoading } from '@/components/PageStates';
 import { NOTE_TAGS } from '@/lib/categoryIcons';
 import SearchBar from '@/components/SearchBar';
 import SettingsSheet from '@/components/SettingsSheet';
@@ -151,14 +152,14 @@ export default function CatatanPage() {
       {/* Content */}
       <div className="px-6 lg:px-10 flex-1 pt-2 max-w-screen-xl mx-auto w-full">
         {loading ? (
-          <div className="flex justify-center items-center h-40">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
+          <PageLoading accent="catatan" label="Memuat catatan…" />
         ) : filteredNotes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center text-center h-[50vh] text-muted-foreground">
-            <BookOpen size={48} className="mb-4 text-muted-foreground/30" />
-            <p className="font-medium">{search ? 'Tidak ada hasil pencarian.' : 'Belum ada catatan. Mulai catat sat-set!'}</p>
-          </div>
+          <PageEmpty
+            accent="catatan"
+            icon={BookOpen}
+            title={search ? 'Tidak ada hasil pencarian' : 'Belum ada catatan'}
+            description={search ? 'Coba kata kunci lain atau hapus filter.' : 'Tarik handle di bawah untuk menambah catatan pertama.'}
+          />
         ) : (
           <SortableNoteGrid
             notes={filteredNotes}

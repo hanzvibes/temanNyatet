@@ -8,6 +8,7 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { format, isToday, isYesterday } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Loader2, Wallet, ArrowDown, ArrowUp, Briefcase, Coffee, ShoppingBag, Car, HeartPulse, Laptop, Gamepad2, Gift, Receipt, Home, MoreHorizontal, BookOpen } from 'lucide-react';
+import { PageEmpty, PageLoading } from '@/components/PageStates';
 import { Drawer } from 'vaul';
 import { TransactionType, DEFAULT_INCOME_CATEGORIES, DEFAULT_EXPENSE_CATEGORIES, DEFAULT_PAYMENT_SOURCES } from '@/lib/database.types';
 import { useForm } from 'react-hook-form';
@@ -216,14 +217,14 @@ export default function KeuanganPage() {
           {/* List */}
           <div>
             {loading ? (
-              <div className="flex justify-center items-center h-40">
-                <Loader2 className="w-8 h-8 animate-spin text-[#F4C753]" />
-              </div>
+              <PageLoading accent="keuangan" label="Memuat transaksi…" />
             ) : sortedDates.length === 0 ? (
-              <div className="flex flex-col items-center justify-center text-center h-40 text-muted-foreground">
-                <Wallet size={48} className="mb-4 text-muted-foreground/30" />
-                <p className="font-medium">{search ? 'Tidak ada hasil pencarian.' : 'Belum ada transaksi bulan ini.'}</p>
-              </div>
+              <PageEmpty
+                accent="keuangan"
+                icon={Wallet}
+                title={search ? 'Tidak ada hasil pencarian' : 'Belum ada transaksi bulan ini'}
+                description={search ? 'Coba kata kunci lain atau hapus filter.' : 'Tarik handle di bawah untuk menambah transaksi pertama.'}
+              />
             ) : (
               <div className="space-y-6">
                 {sortedDates.map(dateStr => (

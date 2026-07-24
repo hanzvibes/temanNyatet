@@ -6,6 +6,7 @@ import SettingsSheet from '@/components/SettingsSheet';
 import { useLinks } from '@/hooks/useLinks';
 import { useCreate } from '@/contexts/CreateContext';
 import { Loader2, Link2, Copy, ExternalLink, Compass } from 'lucide-react';
+import { PageEmpty, PageLoading } from '@/components/PageStates';
 import SearchBar from '@/components/SearchBar';
 import { Drawer } from 'vaul';
 import { useForm } from 'react-hook-form';
@@ -117,14 +118,14 @@ export default function LinkSaverPage() {
       {/* Content */}
       <div className="px-6 lg:px-10 mt-2 flex-1 max-w-screen-xl mx-auto w-full">
         {loading ? (
-          <div className="flex justify-center items-center h-40">
-            <Loader2 className="w-8 h-8 animate-spin text-[#E09898]" />
-          </div>
+          <PageLoading accent="link" label="Memuat link…" />
         ) : filteredLinks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center text-center h-[50vh] text-muted-foreground">
-            <Link2 size={48} className="mb-4 text-muted-foreground/30" />
-            <p className="font-medium">{search ? 'Tidak ada hasil pencarian.' : 'Belum ada link tersimpan.'}</p>
-          </div>
+          <PageEmpty
+            accent="link"
+            icon={Link2}
+            title={search ? 'Tidak ada hasil pencarian' : 'Belum ada link tersimpan'}
+            description={search ? 'Coba kata kunci lain atau hapus filter.' : 'Tarik handle di bawah untuk menyimpan link pertama.'}
+          />
         ) : (
           <div className="grid gap-4 pb-8 md:grid-cols-2 xl:grid-cols-3">
             <AnimatePresence>

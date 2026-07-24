@@ -1,17 +1,24 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Drawer } from 'vaul';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'wouter';
 import { supabase } from '@/lib/supabase';
-import { apiUpload } from '@/lib/apiClient';
+import { apiGet, apiUpload } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet, MessageSquare } from 'lucide-react';
+import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet, MessageSquare, Crown, Calendar, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-type ActiveSection = null | 'name' | 'password' | 'phone' | 'feedback';
+type ActiveSection = null | 'name' | 'password' | 'phone' | 'feedback' | 'subscription';
+
+interface SubscriptionStatus {
+  subscription_status: 'pending' | 'active' | 'archived';
+  subscription_plan: 'monthly' | 'yearly' | null;
+  subscription_end: string | null;
+  days_remaining: number | null;
+}
 
 interface SettingsSheetProps {
   avatarBg: string;
@@ -25,6 +32,8 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
   const [activeSection, setActiveSection] = useState<ActiveSection>(null);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [subStatus, setSubStatus] = useState<SubscriptionStatus | null>(null);
+  const [subLoading, setSubLoading] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Form state
@@ -39,6 +48,34 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
     : user?.email?.substring(0, 2).toUpperCase() || 'TN';
 
   const isPro = profile?.subscription_status === 'active';
+
+  // Fetch the authoritative subscription status from the API when the user
+  // opens the subscription section. We don't rely solely on the cached profile
+  // because Mayar webhooks / admin actions can change server-side fields the
+  // profile may not yet have picked up.
+  const loadSubscription = async () => {
+    setSubLoading(true);
+    try {
+      const data = await apiGet<SubscriptionStatus>('/subscription/status');
+      setSubStatus(data);
+    } catch {
+      // Fall back to the locally-cached profile fields so the user still
+      // sees *something* even if the request fails.
+      setSubStatus({
+        subscription_status: (profile?.subscription_status as SubscriptionStatus['subscription_status']) ?? 'pending',
+        subscription_plan: (profile?.subscription_plan as SubscriptionStatus['subscription_plan']) ?? null,
+        subscription_end: (profile?.subscription_end as string | null) ?? null,
+        days_remaining: null,
+      });
+    } finally {
+      setSubLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSection === 'subscription') loadSubscription();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSection]);
 
   const handleOpen = () => {
     setActiveSection(null);
@@ -286,6 +323,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                           { key: 'name' as const,     icon: User,  label: 'Ganti Nama' },
                           { key: 'password' as const, icon: Lock,  label: 'Ganti Password' },
                           { key: 'phone' as const,    icon: Phone, label: 'Ganti Nomor HP' },
+                          { key: 'subscription' as const, icon: Crown, label: 'Informasi Langganan' },
                           { key: 'feedback' as const, icon: MessageSquare, label: 'Kirim Feedback' },
                         ].map(({ key, icon: Icon, label }) => (
                           <button
@@ -401,6 +439,114 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                       >
                         {saving ? 'Menyimpan...' : 'Simpan Nomor HP'}
                       </button>
+                    </div>
+                  ) : activeSection === 'subscription' ? (
+                    <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
+                      {subLoading ? (
+                        <div className="flex items-center justify-center py-[clamp(2rem,8vw,3rem)]">
+                          <Loader2 className="animate-spin text-primary" size={28} />
+                        </div>
+                      ) : (
+                        <>
+                          {/* Plan + status card */}
+                          <div className={`rounded-[clamp(1rem,3vw,1.5rem)] p-[clamp(1rem,4vw,1.5rem)] border ${
+                            subStatus?.subscription_status === 'active'
+                              ? 'bg-primary/10 border-primary/30'
+                              : subStatus?.subscription_status === 'archived'
+                                ? 'bg-destructive/10 border-destructive/30'
+                                : 'bg-secondary border-border'
+                          }`}>
+                            <div className="flex items-center gap-[clamp(0.75rem,3vw,1rem)]">
+                              <div className={`rounded-xl flex items-center justify-center flex-shrink-0 w-[clamp(2.75rem,10vw,3.5rem)] h-[clamp(2.75rem,10vw,3.5rem)] ${
+                                subStatus?.subscription_status === 'active' ? 'bg-primary/20' : 'bg-background'
+                              }`}>
+                                <Crown
+                                  size={20}
+                                  strokeWidth={2.2}
+                                  className={subStatus?.subscription_status === 'active' ? 'text-primary' : 'text-muted-foreground'}
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`font-extrabold uppercase tracking-widest text-[clamp(0.625rem,2vw,0.75rem)] ${
+                                  subStatus?.subscription_status === 'active' ? 'text-primary' : 'text-muted-foreground'
+                                }`}>
+                                  {subStatus?.subscription_status === 'active'
+                                    ? '⭐ AKTIF'
+                                    : subStatus?.subscription_status === 'archived'
+                                      ? 'DIARSIPKAN'
+                                      : 'GRATIS'}
+                                </p>
+                                <p className="text-[clamp(0.875rem,3vw,1.125rem)] font-extrabold text-foreground mt-[clamp(0.125rem,0.5vw,0.25rem)] leading-tight">
+                                  {subStatus?.subscription_status === 'active' && subStatus?.subscription_plan
+                                    ? (subStatus.subscription_plan === 'monthly' ? 'Paket Bulanan' : 'Paket Tahunan')
+                                    : 'TemanNyatet Free'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Detail rows — only meaningful for active subs */}
+                          {subStatus?.subscription_status === 'active' && (
+                            <div className="space-y-[clamp(0.5rem,2vw,0.75rem)]">
+                              {subStatus.days_remaining !== null && (
+                                <div className="flex items-center justify-between rounded-xl bg-secondary/60 border border-border px-[clamp(0.875rem,3vw,1.125rem)] py-[clamp(0.625rem,2vw,0.875rem)]">
+                                  <div className="flex items-center gap-[clamp(0.5rem,2vw,0.75rem)] text-muted-foreground">
+                                    <Sparkles size={16} strokeWidth={2.2} className="w-[clamp(0.875rem,3vw,1rem)] h-[clamp(0.875rem,3vw,1rem)]" />
+                                    <span className="text-[clamp(0.8125rem,2.5vw,0.9375rem)] font-bold">Sisa hari</span>
+                                  </div>
+                                  <span className="text-[clamp(0.9375rem,3vw,1.125rem)] font-extrabold text-foreground">
+                                    {subStatus.days_remaining} hari
+                                  </span>
+                                </div>
+                              )}
+                              {subStatus.subscription_end && (
+                                <div className="flex items-center justify-between rounded-xl bg-secondary/60 border border-border px-[clamp(0.875rem,3vw,1.125rem)] py-[clamp(0.625rem,2vw,0.875rem)]">
+                                  <div className="flex items-center gap-[clamp(0.5rem,2vw,0.75rem)] text-muted-foreground">
+                                    <Calendar size={16} strokeWidth={2.2} className="w-[clamp(0.875rem,3vw,1rem)] h-[clamp(0.875rem,3vw,1rem)]" />
+                                    <span className="text-[clamp(0.8125rem,2.5vw,0.9375rem)] font-bold">Berakhir pada</span>
+                                  </div>
+                                  <span className="text-[clamp(0.8125rem,2.5vw,0.9375rem)] font-extrabold text-foreground text-right">
+                                    {new Date(subStatus.subscription_end).toLocaleDateString('id-ID', {
+                                      day: 'numeric',
+                                      month: 'long',
+                                      year: 'numeric',
+                                    })}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Upgrade / manage CTA — context-sensitive */}
+                          {subStatus?.subscription_status === 'active' ? (
+                            <button
+                              onClick={() => { setOpen(false); setLocation('/payment'); }}
+                              className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
+                            >
+                              Kelola Langganan
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => { setOpen(false); setLocation('/payment'); }}
+                              className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)] flex items-center justify-center gap-2"
+                            >
+                              <Sparkles size={16} strokeWidth={2.5} />
+                              Upgrade ke PRO
+                            </button>
+                          )}
+
+                          {subStatus?.subscription_status === 'pending' && (
+                            <p className="text-[clamp(0.6875rem,2vw,0.8125rem)] text-muted-foreground text-center leading-relaxed">
+                              Akun kamu belum di-upgrade. Pilih paket di halaman pembayaran untuk membuka semua fitur.
+                            </p>
+                          )}
+                          {subStatus?.subscription_status === 'archived' && (
+                            <p className="text-[clamp(0.6875rem,2vw,0.8125rem)] text-muted-foreground text-center leading-relaxed">
+                              Langganan kamu sudah berakhir. Data kamu tetap tersimpan dengan aman — aktifkan kembali kapan saja.
+                            </p>
+                          )}
+                        </>
+                      )}
                     </div>
                   ) : (
                     <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">

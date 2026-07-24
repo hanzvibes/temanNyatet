@@ -8,7 +8,8 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { format, isToday, isYesterday } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Loader2, Wallet, ArrowDown, ArrowUp, Briefcase, Coffee, ShoppingBag, Car, HeartPulse, Laptop, Gamepad2, Gift, Receipt, Home, MoreHorizontal, BookOpen } from 'lucide-react';
-import { PageEmpty, PageLoading } from '@/components/PageStates';
+import { AlertCircle } from 'lucide-react';
+import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { Drawer } from 'vaul';
 import { TransactionType, DEFAULT_INCOME_CATEGORIES, DEFAULT_EXPENSE_CATEGORIES, DEFAULT_PAYMENT_SOURCES } from '@/lib/database.types';
 import { useForm } from 'react-hook-form';
@@ -173,7 +174,7 @@ export default function KeuanganPage() {
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">Keuangan</h1>
             </div>
-            <SettingsSheet avatarBg="bg-[#FFF8D6]" avatarTextColor="text-[#F4C753]" />
+            <SettingsSheet avatarBg="bg-[#FFF8D6]" avatarTextColor="text-finance" />
           </div>
         </div>
       </div>
@@ -237,7 +238,16 @@ export default function KeuanganPage() {
                         {groupedTx[dateStr].map(tx => (
                           <AnimatedListItem
                             key={tx.id}
-                            className="relative bg-white rounded-[1.25rem] p-4 flex items-center justify-between shadow-sm border border-border/50 hover:bg-secondary/50 transition-colors active:scale-[0.98] select-none overflow-hidden"
+                            // tabIndex={0} promotes the row into the tab order so keyboard
+                            // users can land on it; focus-visible ring confirms position.
+                            // No onKeyDown activation: long-press delete is mouse/touch only —
+                            // the row lacks an onClick handler, so there is no tap-to-edit
+                            // affordance to mirror with a keyboard shortcut (tracked separately).
+                            tabIndex={0}
+                            role="group"
+                            aria-label={`Transaksi ${tx.category} ${formatRupiah(tx.amount)}`}
+                            className="relative bg-white rounded-[1.25rem] p-4 flex items-center justify-between shadow-sm border border-border/50 hover:bg-secondary/50 transition-colors active:scale-[0.98] select-none overflow-hidden
+                                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-finance focus-visible:ring-offset-2"
                             onMouseDown={() => handlePressStart(tx.id)}
                             onMouseUp={handlePressEnd}
                             onMouseLeave={handlePressEnd}
@@ -320,7 +330,7 @@ export default function KeuanganPage() {
                     type="text"
                     inputMode="numeric"
                     placeholder="0"
-                    className="w-full text-4xl font-extrabold bg-white border border-border rounded-[1.5rem] py-5 pl-16 pr-5 outline-none focus:border-[#F4C753] focus:ring-2 focus:ring-[#F4C753]/20 transition-all text-foreground"
+                    className="w-full text-4xl font-extrabold bg-white border border-border rounded-[1.5rem] py-5 pl-16 pr-5 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 transition-all text-foreground"
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, '');
                       const formatted = val ? new Intl.NumberFormat('id-ID').format(Number(val)) : '';
@@ -329,7 +339,7 @@ export default function KeuanganPage() {
                   />
                 </div>
                 {form.formState.errors.amount && (
-                  <p className="text-destructive font-medium text-sm mt-2 ml-2">{form.formState.errors.amount.message as string}</p>
+                  <FormError className="mt-2 ml-2">{form.formState.errors.amount.message as string}</FormError>
                 )}
               </div>
 
@@ -340,14 +350,14 @@ export default function KeuanganPage() {
                   <input
                     {...form.register('date')}
                     type="date"
-                    className="w-full bg-white border border-border rounded-xl py-3 px-4 outline-none focus:border-[#F4C753] focus:ring-2 focus:ring-[#F4C753]/20 text-sm font-bold text-foreground"
+                    className="w-full bg-white border border-border rounded-xl py-3 px-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 text-sm font-bold text-foreground"
                   />
                 </div>
                 <div className="flex-1">
                   <label className="text-pill-label mb-2 block">Sumber</label>
                   <select
                     {...form.register('source')}
-                    className="w-full bg-white border border-border rounded-xl py-3 px-4 outline-none focus:border-[#F4C753] focus:ring-2 focus:ring-[#F4C753]/20 text-sm font-bold text-foreground appearance-none"
+                    className="w-full bg-white border border-border rounded-xl py-3 px-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 text-sm font-bold text-foreground appearance-none"
                   >
                     {DEFAULT_PAYMENT_SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
@@ -366,7 +376,7 @@ export default function KeuanganPage() {
                         type="button"
                         onClick={() => form.setValue('category', cat, { shouldValidate: true })}
                         className={`flex flex-col items-center gap-2 p-3 rounded-2xl transition-all border ${
-                          isSelected ? 'bg-[#F4C753]/10 border-[#F4C753] shadow-sm' : 'bg-white border-border hover:bg-secondary'
+                          isSelected ? 'bg-finance/10 border-finance shadow-sm' : 'bg-white border-border hover:bg-secondary'
                         }`}
                       >
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? getCategoryColor(cat, txType) : 'bg-secondary text-muted-foreground'}`}>
@@ -378,7 +388,7 @@ export default function KeuanganPage() {
                   })}
                 </div>
                 {form.formState.errors.category && (
-                  <p className="text-destructive font-medium text-sm mt-3 ml-2">{form.formState.errors.category.message as string}</p>
+                  <FormError className="mt-3 ml-2">{form.formState.errors.category.message as string}</FormError>
                 )}
               </div>
 
@@ -389,7 +399,7 @@ export default function KeuanganPage() {
                   {...form.register('note')}
                   type="text"
                   placeholder="Misal: Beli kopi susu..."
-                  className="w-full bg-white border border-border rounded-xl py-4 px-5 outline-none focus:border-[#F4C753] focus:ring-2 focus:ring-[#F4C753]/20 text-sm font-medium"
+                  className="w-full bg-white border border-border rounded-xl py-4 px-5 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 text-sm font-medium"
                 />
               </div>
 

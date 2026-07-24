@@ -5,7 +5,8 @@ import { useCreate } from '@/contexts/CreateContext';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Loader2, BookOpen, Trash2, X } from 'lucide-react';
-import { PageEmpty, PageLoading } from '@/components/PageStates';
+import { AlertCircle } from 'lucide-react';
+import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { NOTE_TAGS } from '@/lib/categoryIcons';
 import SearchBar from '@/components/SearchBar';
 import SettingsSheet from '@/components/SettingsSheet';
@@ -236,7 +237,7 @@ export default function CatatanPage() {
                           autoFocus
                         />
                         {form.formState.errors.content && (
-                          <p className="text-red-500 text-xs font-bold">{form.formState.errors.content.message}</p>
+                          <FormError size="xs" className="-mt-1"><AlertCircle className="hidden" aria-hidden />{form.formState.errors.content.message}</FormError>
                         )}
                         {/* Tags */}
                         <div>
@@ -360,7 +361,7 @@ export default function CatatanPage() {
                   autoFocus
                 />
                 {form.formState.errors.content && (
-                  <p className="text-destructive text-sm font-medium">{form.formState.errors.content.message}</p>
+                  <FormError className="">{form.formState.errors.content.message}</FormError>
                 )}
 
                 <div>

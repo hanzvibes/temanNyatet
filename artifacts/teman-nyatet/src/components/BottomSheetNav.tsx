@@ -182,7 +182,10 @@ export default function BottomSheetNav() {
                 <Link
                   key={item.path}
                   href={item.path}
-                  className="flex flex-col items-center justify-center flex-1 h-full gap-0.5"
+                  aria-label={item.name}
+                  className="flex flex-col items-center justify-center flex-1 h-full gap-0.5 rounded-xl
+                             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground
+                             focus-visible:ring-offset-0"
                 >
                   <div
                     className={`w-11 h-9 flex items-center justify-center rounded-xl transition-all duration-200 ${

@@ -173,9 +173,24 @@ function SortableNoteCard({
       ref={setNodeRef}
       style={style}
       onClick={onClick}
+      onKeyDown={(e) => {
+        // Keyboard parity with onClick — Enter and Space (the canonical
+        // button keys) open the same modal the click opens. Space is included
+        // because the WAI-ARIA button role treats Space as equivalent to
+        // Enter; without it, keyboard users would need a separate path.
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      // tabIndex={0} promotes the listitem into the tab order so keyboard
+      // users can reach it without having to hit every drag handle first.
+      tabIndex={0}
       role="listitem"
-      aria-label={note.title ? `Catatan: ${note.title}` : 'Catatan tanpa judul'}
-      className="rounded-[1.5rem] p-5 shadow-sm hover:shadow-md cursor-pointer relative select-none"
+      aria-label={note.title ? `Catatan: ${note.title}. Tekan Enter untuk membuka.` : 'Catatan tanpa judul. Tekan Enter untuk membuka.'}
+      className="rounded-[1.5rem] p-5 shadow-sm hover:shadow-md cursor-pointer relative select-none
+                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
+                 focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-shadow duration-200"
     >
       <NoteCardBody note={note} handle={handle} />
     </div>

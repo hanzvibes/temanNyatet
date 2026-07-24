@@ -6,7 +6,8 @@ import SettingsSheet from '@/components/SettingsSheet';
 import { useLinks } from '@/hooks/useLinks';
 import { useCreate } from '@/contexts/CreateContext';
 import { Loader2, Link2, Copy, ExternalLink, Compass } from 'lucide-react';
-import { PageEmpty, PageLoading } from '@/components/PageStates';
+import { AlertCircle } from 'lucide-react';
+import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import SearchBar from '@/components/SearchBar';
 import { Drawer } from 'vaul';
 import { useForm } from 'react-hook-form';
@@ -109,7 +110,7 @@ export default function LinkSaverPage() {
               <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">Link Saver</h1>
             </div>
-            <SettingsSheet avatarBg="bg-[#FFE4E1]" avatarTextColor="text-[#E09898]" />
+            <SettingsSheet avatarBg="bg-[#FFE4E1]" avatarTextColor="text-linksaver" />
           </div>
           <SearchBar value={search} onChange={setSearch} placeholder="Cari link..." />
         </div>
@@ -135,16 +136,26 @@ export default function LinkSaverPage() {
                 try { domain = new URL(link.url).hostname; } catch (e) {}
 
                 return (
-                  <AnimatedListItem 
+                  <AnimatedListItem
                     key={link.id}
                     onClick={() => openLink(link.url)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openLink(link.url);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Buka link: ${link.title}. Tahan 0,8 detik untuk hapus.`}
                     onMouseDown={() => handlePressStart(link.id)}
                     onMouseUp={handlePressEnd}
                     onMouseLeave={handlePressEnd}
                     onTouchStart={() => handlePressStart(link.id)}
                     onTouchEnd={handlePressEnd}
                     onTouchMove={handlePressEnd}
-                    className="relative bg-white rounded-[1.25rem] p-4 shadow-sm border border-border/50 flex items-center gap-4 cursor-pointer hover:border-[#E09898]/50 hover:bg-secondary/30 transition-all active:scale-[0.98] overflow-hidden"
+                    className="relative bg-white rounded-[1.25rem] p-4 shadow-sm border border-border/50 flex items-center gap-4 cursor-pointer hover:border-linksaver/50 hover:bg-secondary/30 transition-all active:scale-[0.98] overflow-hidden
+                               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2"
                   >
                     {deletingId === link.id && (
                       <div className="absolute inset-0 z-10 bg-white/90 backdrop-blur-[1px] flex items-center justify-center gap-2 text-red-500 font-bold text-sm">
@@ -165,13 +176,16 @@ export default function LinkSaverPage() {
                         <span className="truncate">{link.url.replace(/^https?:\/\//, '')}</span>
                       </div>
                       {link.note && (
-                        <p className="text-[11px] font-bold uppercase tracking-wider text-[#E09898] mt-2 line-clamp-1 bg-[#E09898]/10 px-2 py-1 rounded-md inline-block border border-[#E09898]/20">{link.note}</p>
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-linksaver mt-2 line-clamp-1 bg-linksaver/10 px-2 py-1 rounded-md inline-block border border-linksaver/20">{link.note}</p>
                       )}
                     </div>
 
-                    <button 
+                    <button
+                      type="button"
+                      aria-label={`Salin URL ${link.title}`}
                       onClick={(e) => copyToClipboard(e, link.url)}
-                      className="w-10 h-10 rounded-full bg-secondary border border-border text-muted-foreground flex items-center justify-center hover:bg-[#E09898]/10 hover:text-[#E09898] hover:border-[#E09898]/30 transition-colors"
+                      className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-secondary border border-border text-muted-foreground flex items-center justify-center hover:bg-[#E09898]/10 hover:text-linksaver hover:border-linksaver/30 transition-colors
+                                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2"
                     >
                       <Copy size={16} strokeWidth={2.5} />
                     </button>
@@ -200,11 +214,11 @@ export default function LinkSaverPage() {
                   <input
                     {...form.register('title')}
                     placeholder="Contoh: Artikel React"
-                    className="w-full bg-white border border-border rounded-xl py-3 px-4 outline-none focus:border-[#E09898] focus:ring-2 focus:ring-[#E09898]/20 text-base font-bold text-foreground transition-all"
+                    className="w-full bg-white border border-border rounded-xl py-3 px-4 outline-none focus:border-linksaver focus:ring-2 focus:ring-linksaver/20 text-base font-bold text-foreground transition-all"
                     autoFocus
                   />
                   {form.formState.errors.title && (
-                    <p className="text-destructive font-medium text-sm mt-2 ml-1">{form.formState.errors.title.message as string}</p>
+                    <FormError className="mt-2 ml-1">{form.formState.errors.title.message as string}</FormError>
                   )}
                 </div>
 
@@ -216,11 +230,11 @@ export default function LinkSaverPage() {
                       {...form.register('url')}
                       type="url"
                       placeholder="https://..."
-                      className="w-full bg-white border border-border rounded-xl py-3 pl-12 pr-4 outline-none focus:border-[#E09898] focus:ring-2 focus:ring-[#E09898]/20 text-base font-bold text-foreground transition-all"
+                      className="w-full bg-white border border-border rounded-xl py-3 pl-12 pr-4 outline-none focus:border-linksaver focus:ring-2 focus:ring-linksaver/20 text-base font-bold text-foreground transition-all"
                     />
                   </div>
                   {form.formState.errors.url && (
-                    <p className="text-destructive font-medium text-sm mt-2 ml-1">{form.formState.errors.url.message as string}</p>
+                    <FormError className="mt-2 ml-1">{form.formState.errors.url.message as string}</FormError>
                   )}
                 </div>
                 
@@ -229,14 +243,14 @@ export default function LinkSaverPage() {
                   <textarea
                     {...form.register('note')}
                     placeholder="Kenapa link ini disimpan?"
-                    className="w-full h-24 resize-none bg-white border border-border rounded-xl py-3 px-4 outline-none focus:border-[#E09898] focus:ring-2 focus:ring-[#E09898]/20 text-sm font-medium text-foreground transition-all"
+                    className="w-full h-24 resize-none bg-white border border-border rounded-xl py-3 px-4 outline-none focus:border-linksaver focus:ring-2 focus:ring-linksaver/20 text-sm font-medium text-foreground transition-all"
                   />
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-[#E09898] text-white font-bold text-lg py-4 rounded-[1.25rem] shadow-sm hover:bg-[#D48888] transition-colors mt-auto"
+                className="w-full bg-linksaver text-white font-bold text-lg py-4 rounded-[1.25rem] shadow-sm hover:bg-[#D48888] transition-colors mt-auto"
               >
                 Simpan Link
               </button>

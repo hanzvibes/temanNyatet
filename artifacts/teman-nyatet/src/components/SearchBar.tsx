@@ -26,7 +26,8 @@ export default function SearchBar({ value, onChange, placeholder = 'Cari...', cl
           onClick={() => onChange('')}
           // min-h/min-w 40 → ~ min-h-44 with default browser touch hit-area,
           // meets WCAG 2.5.5 / Apple HIG 44pt guidance on mobile.
-          className="absolute right-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:bg-muted/70 transition-colors"
+          className="absolute right-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted active:bg-muted/70 transition-colors
+                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:bg-muted"
         >
           <X size={16} strokeWidth={2.5} />
         </button>

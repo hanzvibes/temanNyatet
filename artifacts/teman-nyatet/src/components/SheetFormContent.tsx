@@ -19,6 +19,7 @@ import {
   CATEGORY_ICON,
   FALLBACK_CATEGORY_ICON,
 } from '@/lib/categoryIcons';
+import { FormError } from '@/components/PageStates';
 import {
   TransactionType,
   DEFAULT_INCOME_CATEGORIES,
@@ -73,7 +74,7 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
         className="flex-1 min-h-[80px] resize-none bg-white border border-border rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all leading-relaxed"
       />
       {form.formState.errors.content && (
-        <p className="text-destructive text-xs font-bold">{form.formState.errors.content.message}</p>
+        <FormError size="xs">{form.formState.errors.content.message}</FormError>
       )}
       {/* Tags */}
       <div className="flex flex-wrap gap-2">
@@ -182,14 +183,14 @@ function KeuanganSheetForm({ onSuccess }: { onSuccess: () => void }) {
           type="text"
           inputMode="numeric"
           placeholder="0"
-          className="w-full text-2xl font-extrabold bg-white border border-border rounded-xl py-3 pl-12 pr-4 outline-none focus:border-[#F4C753] focus:ring-2 focus:ring-[#F4C753]/20 transition-all"
+          className="w-full text-2xl font-extrabold bg-white border border-border rounded-xl py-3 pl-12 pr-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 transition-all"
           onChange={(e) => {
             const val = e.target.value.replace(/\D/g, '');
             form.setValue('amount', val ? new Intl.NumberFormat('id-ID').format(Number(val)) : '', { shouldValidate: true });
           }}
         />
         {form.formState.errors.amount && (
-          <p className="text-destructive text-xs font-bold mt-1">{form.formState.errors.amount.message}</p>
+          <FormError size="xs" className="mt-1">{form.formState.errors.amount.message}</FormError>
         )}
       </div>
 
@@ -214,7 +215,7 @@ function KeuanganSheetForm({ onSuccess }: { onSuccess: () => void }) {
                 onClick={() => form.setValue('category', c, { shouldValidate: true })}
                 className={`inline-flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
                   cat === c
-                    ? 'bg-[#F4C753]/20 border-[#F4C753] text-[#8B6914]'
+                    ? 'bg-finance/20 border-finance text-[#8B6914]'
                     : 'bg-white border-border text-muted-foreground'
                 }`}
               ><Icon size={14} strokeWidth={2.4} className="flex-shrink-0" />{c}</button>
@@ -222,7 +223,7 @@ function KeuanganSheetForm({ onSuccess }: { onSuccess: () => void }) {
           })}
         </div>
         {form.formState.errors.category && (
-          <p className="text-destructive text-xs font-bold mt-1">{form.formState.errors.category.message}</p>
+          <FormError size="xs" className="mt-1">{form.formState.errors.category.message}</FormError>
         )}
       </div>
 
@@ -278,15 +279,15 @@ function TodoSheetForm({ onSuccess }: { onSuccess: () => void }) {
       <input
         {...form.register('title')}
         placeholder="Apa yang harus dikerjakan?"
-        className="w-full text-lg font-extrabold bg-transparent border-b-2 border-border pb-2.5 outline-none focus:border-[#9CB4D4] transition-colors placeholder:text-muted-foreground/50"
+        className="w-full text-lg font-extrabold bg-transparent border-b-2 border-border pb-2.5 outline-none focus:border-todo transition-colors placeholder:text-muted-foreground/50"
       />
       {form.formState.errors.title && (
-        <p className="text-destructive text-xs font-bold -mt-1">{form.formState.errors.title.message}</p>
+        <FormError size="xs" className="-mt-1">{form.formState.errors.title.message}</FormError>
       )}
       <textarea
         {...form.register('description')}
         placeholder="Catatan tambahan (opsional)"
-        className="min-h-[60px] resize-none bg-white border border-border rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-[#9CB4D4] focus:ring-2 focus:ring-[#9CB4D4]/20 transition-all"
+        className="min-h-[60px] resize-none bg-white border border-border rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
       />
       <div className="flex gap-2">
         <div className="flex-1">
@@ -348,7 +349,7 @@ function LinkSheetForm({ onSuccess }: { onSuccess: () => void }) {
           className={`${inpFocus('#E09898')} pl-10`}
         />
         {form.formState.errors.url && (
-          <p className="text-destructive text-xs font-bold mt-1">{form.formState.errors.url.message}</p>
+          <FormError size="xs" className="mt-1">{form.formState.errors.url.message}</FormError>
         )}
       </div>
       <input
@@ -357,12 +358,12 @@ function LinkSheetForm({ onSuccess }: { onSuccess: () => void }) {
         className={inpFocus('#E09898')}
       />
       {form.formState.errors.title && (
-        <p className="text-destructive text-xs font-bold -mt-1">{form.formState.errors.title.message}</p>
+        <FormError size="xs" className="-mt-1">{form.formState.errors.title.message}</FormError>
       )}
       <textarea
         {...form.register('note')}
         placeholder="Catatan (opsional)"
-        className="min-h-[60px] resize-none bg-white border border-border rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-[#E09898] focus:ring-2 focus:ring-[#E09898]/20 transition-all"
+        className="min-h-[60px] resize-none bg-white border border-border rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-linksaver focus:ring-2 focus:ring-linksaver/20 transition-all"
       />
       <button type="submit"
         className="w-full bg-[#E09898] text-white font-bold py-3 rounded-[1rem] text-sm transition-colors hover:brightness-95 active:scale-[0.98] mt-auto"

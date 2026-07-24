@@ -18,7 +18,7 @@
 //   - Pages already import from lucide-react. Single dependency tree.
 
 import React from 'react';
-import { Loader2, type LucideIcon } from 'lucide-react';
+import { AlertCircle, Loader2, type LucideIcon } from 'lucide-react';
 
 export type SectionAccent = 'catatan' | 'keuangan' | 'todo' | 'link';
 
@@ -100,6 +100,47 @@ export function PageEmpty({ icon: Icon, title, description, accent = 'catatan', 
       </div>
       {cta}
     </div>
+  );
+}
+
+interface FormErrorProps {
+  /** The error message text. */
+  children: React.ReactNode;
+  /** Extra spacing / positioning. Ask before you change position-class expectations. */
+  className?: string;
+  /** Text size — `xs` for inline form errors, `sm` for general alert paragraphs. */
+  size?: 'sm' | 'xs';
+}
+
+/**
+ * Inline form-error message with built-in icon.
+ *
+ * Why an icon at all:
+ *   WCAG SC 1.4.1 (Use of Color) says color is not the only visual means of
+ *   conveying information. The original forms used plain `text-destructive`
+ *   red text alone; that hits ~4.6:1 contrast in light mode, fine for
+ *   readability, but unreadable as an "error" to a red-green colorblind
+ *   user if the message is short ("Required"). Adding the AlertCircle icon
+ *   pairs the red color with a redundant non-color cue.
+ *
+ * Visual anatomy:
+ *   - 12–14px AlertCircle icon (red) + message text in same red tone
+ *   - flex layout prevents the icon from being squished on narrow viewports
+ *   - role="alert" + aria-live="polite" so screen readers announce when
+ *     the error appears (after the user submits an invalid form)
+ */
+export function FormError({ children, className = '', size = 'sm' }: FormErrorProps) {
+  const sizeCls = size === 'xs' ? 'text-xs' : 'text-sm';
+  const iconSize = size === 'xs' ? 12 : 14;
+  return (
+    <p
+      role="alert"
+      aria-live="polite"
+      className={`flex items-center gap-1.5 ${sizeCls} font-medium text-destructive ${className}`}
+    >
+      <AlertCircle size={iconSize} strokeWidth={2.5} className="flex-shrink-0" aria-hidden="true" />
+      <span>{children}</span>
+    </p>
   );
 }
 

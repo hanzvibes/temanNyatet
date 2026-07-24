@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { getEmailRedirectUrl } from '@/lib/siteUrl';
 import { toast } from 'sonner';
 import { Loader2, Eye, EyeOff, BookOpen, Mail, ArrowLeft } from 'lucide-react';
+import { FormError } from '@/components/PageStates';
 
 const loginSchema = z.object({
   email: z.string().email('Email tidak valid'),
@@ -206,7 +207,7 @@ export default function AuthPage() {
                   className="w-full px-5 py-4 rounded-[1.25rem] bg-white border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base shadow-sm"
                 />
                 {form.formState.errors.email && (
-                  <p className="text-destructive text-sm mt-1 ml-2 font-medium">{form.formState.errors.email.message}</p>
+                  <FormError className="mt-1 ml-2">{form.formState.errors.email.message}</FormError>
                 )}
               </div>
 
@@ -226,7 +227,7 @@ export default function AuthPage() {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
                 {form.formState.errors.password && (
-                  <p className="text-destructive text-sm mt-1 ml-2 font-medium">{form.formState.errors.password.message}</p>
+                  <FormError className="mt-1 ml-2">{form.formState.errors.password.message}</FormError>
                 )}
               </div>
 
@@ -240,7 +241,7 @@ export default function AuthPage() {
                     className="w-full px-5 py-4 rounded-[1.25rem] bg-white border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base shadow-sm"
                   />
                   {form.formState.errors.confirmPassword && (
-                    <p className="text-destructive text-sm mt-1 ml-2 font-medium">{form.formState.errors.confirmPassword.message}</p>
+                    <FormError className="mt-1 ml-2">{form.formState.errors.confirmPassword.message}</FormError>
                   )}
                 </div>
               )}

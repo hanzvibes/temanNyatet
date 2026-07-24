@@ -56,7 +56,7 @@ export default function SidebarNav() {
             <Link
               key={item.path}
               href={item.path}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-sm font-bold select-none ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-sm font-bold select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
                 isActive
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -79,7 +79,9 @@ export default function SidebarNav() {
             onClick={() => triggerCreate(createSection)}
             className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground
                        rounded-xl py-2.5 font-bold text-sm hover:bg-primary/90 active:scale-[0.98]
-                       transition-all duration-150 shadow-sm"
+                       transition-all duration-150 shadow-sm
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground
+                       focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
           >
             <Plus size={16} strokeWidth={2.5} />
             Tambah Baru

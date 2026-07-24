@@ -104,10 +104,27 @@ function NoteCardBody({
 }
 
 // ── Sortable inline card ─────────────────────────────────────────────────────
-// Important: dnd-kit owns `transform` while dragging. Framer-motion therefore
-// MUST NOT animate scale/y here — that would conflict with the inline `style`
-// transform and cause visible jitter during drag. Framer-motion only animates
-// opacity (the dim) and runs the `layout` settle once the drag ends.
+// KEY DESIGN RULE: every visual property on this card is controlled by ONE
+// system, never two at once.
+//
+// Why it matters: an earlier version of this component animated opacity via
+// framer-motion (animate.opacity) while dnd-kit concurrently drove transform
+// via React state. On mobile Chrome those two animation systems could desync
+// during the brief render window between dnd-kit's `onDragEnd` clearing
+// `activeId` and the next React commit. The dropped card was left at its
+// mid-tween opacity (~0.35) until something else re-rendered it. The user saw
+// a washed-out card with light-gray text immediately after drop.
+//
+// Fix: opacity lives in plain CSS (inline `style.opacity + transition`).
+// CSS transitions are atomic — the property flips in one paint frame when
+// `isDragging` becomes false. There is no JS-driven MotionValue to lose its
+// target.
+//
+// dnd-kit owns `transform` and `transition` (its rectSortingStrategy already
+// gives cards a smooth cubic-bezier return-to-zero on drop, so no separate
+// layout-prop animation is needed — adding one just reintroduces the same
+// race we are avoiding). Framer-motion is retained ONLY for the one-shot
+// mount fade-in (`initial`); it never touches the live drag state.
 function SortableNoteCard({
   note,
   color,
@@ -123,13 +140,17 @@ function SortableNoteCard({
     useSortable({ id: note.id, disabled });
 
   const style: React.CSSProperties = {
-    // dnd-kit runs the transform during drag; framer-motion does not write
-    // transform here, so there is no fight.
+    // dnd-kit owns `transform` and `transition` outright. dnd-kit's
+    // rectSortingStrategy already applies a smooth cubic-bezier return-to-zero
+    // on drop, which is exactly what users expect for a "card settles into
+    // its slot" animation. No need for an additional framer-motion `layout`.
     transform: CSS.Translate.toString(transform),
     transition,
     backgroundColor: color,
-    // zIndex lift is the canonical pattern to keep the dragged card on top
-    // during grid re-flow.
+    // Pure CSS opacity. Flips atomically with isDragging — no JS animation
+    // to lose its target mid-tween.
+    opacity: isDragging ? 0.4 : 1,
+    // Lift on top during re-flow so the empty slot visibly opens beneath.
     zIndex: isDragging ? 50 : undefined,
   };
 
@@ -152,15 +173,12 @@ function SortableNoteCard({
     <motion.div
       ref={setNodeRef}
       style={style}
-      // Disable framer-motion's layout engine during active drag — otherwise it
-      // tries to drive transforms while dnd-kit does, producing jumps.
-      layout={!isDragging}
+      // Mount-only fade-in. `initial` runs once when the element mounts and
+      // naturally interpolates to the un-animated style (= what's in `style`).
+      // Crucially: we do NOT pass `animate`, so framer-motion never writes a
+      // MotionValue to opacity. After mount, opacity is 100% React/CSS-driven.
       initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: isDragging ? 0.35 : 1 }}
-      transition={{
-        opacity: { duration: 0.18, ease: [0.32, 0.72, 0, 1] },
-        layout: SORT_SPRING,
-      }}
+      transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
       onClick={onClick}
       role="listitem"
       aria-label={note.title ? `Catatan: ${note.title}` : 'Catatan tanpa judul'}

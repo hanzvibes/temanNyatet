@@ -2,15 +2,35 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiGet, apiPost, apiPut, apiDelete, SpreadsheetApiError } from '@/lib/apiClient';
 import type { Note, NoteInsert, NoteUpdate } from '@/lib/database.types';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 
 // Data now lives in a Google Sheet (via the api-server), which has no
-// realtime push. We poll instead so edits made directly in the sheet still
-// show up without a manual refresh.
+// realtime push. We poll so edits made directly in the sheet still show up
+// without a manual refresh.
 const POLL_INTERVAL_MS = 15000;
-
-// Custom event used to synchronise multiple hook instances (e.g. bottom-sheet
-// form vs. the page that displays the list) without a shared state layer.
 const REFETCH_EVENT = 'teman-nyatet:refetch:notes';
+
+// ── Module-level cache ────────────────────────────────────────────────────────
+// Why: wouter's `<Switch>` only renders the matched route. Navigating between
+// Catatan / Keuangan / Todo / Link Saver unmounts the previous page component
+// — and with it the local `useState` in this hook. On a remount the page would
+// show an empty grid until the next fetch round-trip finishes. Caching the
+// notes outside the component lifecycle (KeyedMap by userId) means re-entering
+// a tab populates the grid instantly with the last-known data, while polling
+// continues to keep it fresh in the background.
+const notesByUser = new Map<string, Note[]>();
+let cacheSubscriber: { unsubscribe: () => void } | null = null;
+
+// Drop cached data when the user signs out so the next sign-in (potentially
+// a different account on the same browser) cannot briefly read the previous
+// user's notes. Lazy-attached once on first useNotes call.
+function ensureCacheCleanupWired() {
+  if (cacheSubscriber) return;
+  const { data } = supabase.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_OUT') notesByUser.clear();
+  });
+  cacheSubscriber = data.subscription;
+}
 
 function dispatchSheetError(code: string): void {
   window.dispatchEvent(
@@ -19,17 +39,29 @@ function dispatchSheetError(code: string): void {
 }
 
 export function useNotes(userId?: string) {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
+  ensureCacheCleanupWired();
+
+  // Hydrate from cache so tab re-entry shows the existing grid immediately.
+  const [notes, setNotes] = useState<Note[]>(() =>
+    userId ? notesByUser.get(userId) ?? [] : [],
+  );
+  const [loading, setLoading] = useState(() => !(userId && notesByUser.has(userId)));
   const [error, setError] = useState<Error | null>(null);
   const firstLoad = useRef(true);
+
+  // Mirror React state into the module-level cache so subsequent mounts on
+  // the same tab (or any other consumer) can hydrate from it. Logout is
+  // already handled by the SIGNED_OUT listener wired in `ensureCache...`.
+  useEffect(() => {
+    if (userId) notesByUser.set(userId, notes);
+  }, [notes, userId]);
 
   const fetchNotes = useCallback(async () => {
     if (!userId) return;
     if (firstLoad.current) setLoading(true);
     try {
       const data = await apiGet<Note[]>('/notes');
-      // Notes are already sorted by the server (position desc, then created_at desc).
+      // Server already sorts by position desc, then created_at desc.
       setNotes((data || []).slice().sort((a, b) => {
         const posA = a.position ?? 0;
         const posB = b.position ?? 0;
@@ -104,7 +136,7 @@ export function useNotes(userId?: string) {
   };
 
   const reorderNotes = async (orderedIds: string[]) => {
-    // Optimistically reorder the local state so the UI feels instant.
+    // Optimistic reorder so the UI feels instant.
     const orderedSet = new Set(orderedIds);
     const prev = [...notes];
     const reordered = orderedIds
@@ -130,6 +162,6 @@ export function useNotes(userId?: string) {
     updateNote,
     deleteNote,
     reorderNotes,
-    refetch: fetchNotes
+    refetch: fetchNotes,
   };
 }

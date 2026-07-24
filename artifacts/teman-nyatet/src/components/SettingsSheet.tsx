@@ -5,8 +5,9 @@ import { useLocation } from 'wouter';
 import { supabase } from '@/lib/supabase';
 import { apiGet, apiUpload } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet, MessageSquare, Crown, Calendar, Sparkles } from 'lucide-react';
+import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet, MessageSquare, Crown, Calendar, Sparkles, Sun, Moon, Monitor } from 'lucide-react';
 import { toast } from 'sonner';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -205,14 +206,14 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
     }
   };
 
-  const INP = 'w-full bg-secondary border border-border rounded-xl outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 font-bold text-foreground transition-all py-[clamp(0.625rem,1.8vw,0.875rem)] px-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.75rem,2.5vw,1rem)]';
+  const INP = 'w-full bg-secondary border border-border rounded-xl outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 font-bold text-foreground transition-all py-[clamp(0.625rem,1.8vw,0.875rem)] px-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.75rem,2.5vw,1rem)]';
 
   return (
     <>
       {/* Avatar trigger */}
       <button
         onClick={handleOpen}
-        className={`rounded-full border-2 border-white flex items-center justify-center font-bold shadow-sm transition-transform active:scale-95 overflow-hidden w-[clamp(2.5rem,8vw,3.5rem)] h-[clamp(2.5rem,8vw,3.5rem)] text-[clamp(0.75rem,3vw,1rem)] ${avatarBg} ${avatarTextColor}`}
+        className={`rounded-full border-2 border-card flex items-center justify-center font-bold shadow-sm transition-transform active:scale-95 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card w-[clamp(2.5rem,8vw,3.5rem)] h-[clamp(2.5rem,8vw,3.5rem)] text-[clamp(0.75rem,3vw,1rem)] ${avatarBg} ${avatarTextColor}`}
       >
         {profile?.avatar_url ? (
           <img src={profile.avatar_url} alt="Foto profil" className="w-full h-full object-cover" />
@@ -240,7 +241,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
             {/* Header row */}
             <div className="flex items-center px-[clamp(1rem,4vw,1.75rem)] py-[clamp(0.5rem,2vw,0.75rem)] min-h-[clamp(2.75rem,8vw,3.5rem)]">
               {activeSection ? (
-                <button onClick={handleBack} className="flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] text-[clamp(0.8125rem,2.5vw,1rem)] font-bold text-muted-foreground hover:text-foreground transition-colors">
+                <button onClick={handleBack} className="flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] text-[clamp(0.8125rem,2.5vw,1rem)] font-bold text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card rounded-lg px-2 py-1">
                   <ArrowLeft size={16} strokeWidth={2.5} />
                   Kembali
                 </button>
@@ -281,7 +282,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                             onClick={handlePickAvatar}
                             disabled={uploadingAvatar}
                             aria-label="Ganti foto profil"
-                            className="absolute bottom-0 right-0 rounded-full bg-secondary border-2 border-card flex items-center justify-center shadow-sm transition-transform active:scale-95 disabled:opacity-50 w-[clamp(1.5rem,5vw,1.875rem)] h-[clamp(1.5rem,5vw,1.875rem)]"
+                            className="absolute bottom-0 right-0 rounded-full bg-secondary border-2 border-card flex items-center justify-center shadow-sm transition-transform active:scale-95 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card w-[clamp(1.5rem,5vw,1.875rem)] h-[clamp(1.5rem,5vw,1.875rem)]"
                           >
                             <Camera size={13} className="text-foreground w-[clamp(0.75rem,2.5vw,0.875rem)] h-[clamp(0.75rem,2.5vw,0.875rem)]" strokeWidth={2.5} />
                           </button>
@@ -329,7 +330,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                           <button
                             key={key}
                             onClick={() => handleOpenSection(key)}
-                            className="w-full flex items-center gap-[clamp(0.75rem,3vw,1rem)] px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] hover:bg-secondary active:bg-secondary/80 transition-colors text-left"
+                            className="w-full flex items-center gap-[clamp(0.75rem,3vw,1rem)] px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] hover:bg-secondary active:bg-secondary/80 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
                           >
                             <div className="rounded-xl bg-secondary border border-border flex items-center justify-center flex-shrink-0 w-[clamp(2rem,7vw,2.5rem)] h-[clamp(2rem,7vw,2.5rem)]">
                               <Icon size={18} className="text-muted-foreground w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
@@ -340,7 +341,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                         ))}
                         <button
                           onClick={() => { setOpen(false); setLocation('/connect-sheet'); }}
-                          className="w-full flex items-center gap-[clamp(0.75rem,3vw,1rem)] px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] hover:bg-secondary active:bg-secondary/80 transition-colors text-left"
+                          className="w-full flex items-center gap-[clamp(0.75rem,3vw,1rem)] px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] hover:bg-secondary active:bg-secondary/80 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
                         >
                           <div className="rounded-xl bg-secondary border border-border flex items-center justify-center flex-shrink-0 w-[clamp(2rem,7vw,2.5rem)] h-[clamp(2rem,7vw,2.5rem)]">
                             <Sheet size={18} className="text-muted-foreground w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
@@ -350,18 +351,31 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                         </button>
                       </div>
 
+                      {/* Tema — three-button segmented control reading/writing the
+                          theme preference saved by main.tsx boot. Lives below the
+                          menu and above the destructive divider so accidental
+                          taps force-clear plugins can't reach it. */}
+                      <div className="space-y-[clamp(0.5rem,2vw,0.75rem)] pt-[clamp(0.75rem,3vw,1rem)]">
+                        <h3 className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest px-[clamp(0.75rem,3vw,1.25rem)]">
+                          Tampilan
+                        </h3>
+                        <div className="px-[clamp(0.25rem,1vw,0.5rem)]">
+                          <ThemeToggle />
+                        </div>
+                      </div>
+
                       {/* Divider */}
                       <div className="h-px bg-border my-[clamp(0.5rem,2vw,1rem)]" />
 
                       {/* Logout */}
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-[clamp(0.75rem,3vw,1rem)] px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] hover:bg-red-50 active:bg-red-100/80 transition-colors text-left group"
+                        className="w-full flex items-center gap-[clamp(0.75rem,3vw,1rem)] px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] hover:bg-destructive/10 active:bg-destructive/15 transition-colors text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 focus-visible:ring-offset-card"
                       >
-                        <div className="rounded-xl bg-red-50 border border-red-100 flex items-center justify-center flex-shrink-0 w-[clamp(2rem,7vw,2.5rem)] h-[clamp(2rem,7vw,2.5rem)]">
-                          <LogOut size={18} className="text-red-500 w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
+                        <div className="rounded-xl bg-destructive/10 border border-destructive/20 flex items-center justify-center flex-shrink-0 w-[clamp(2rem,7vw,2.5rem)] h-[clamp(2rem,7vw,2.5rem)]">
+                          <LogOut size={18} className="text-destructive w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
                         </div>
-                        <span className="flex-1 font-bold text-red-500 text-[clamp(0.875rem,3vw,1.125rem)]">Keluar</span>
+                        <span className="flex-1 font-bold text-destructive text-[clamp(0.875rem,3vw,1.125rem)]">Keluar</span>
                       </button>
                     </>
                   ) : activeSection === 'name' ? (
@@ -381,7 +395,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                       <button
                         onClick={handleSaveName}
                         disabled={saving}
-                        className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
+                        className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
                       >
                         {saving ? 'Menyimpan...' : 'Simpan Nama'}
                       </button>
@@ -413,7 +427,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                       <button
                         onClick={handleSavePassword}
                         disabled={saving}
-                        className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
+                        className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
                       >
                         {saving ? 'Menyimpan...' : 'Simpan Password'}
                       </button>
@@ -435,7 +449,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                       <button
                         onClick={handleSavePhone}
                         disabled={saving}
-                        className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
+                        className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
                       >
                         {saving ? 'Menyimpan...' : 'Simpan Nomor HP'}
                       </button>
@@ -521,14 +535,14 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                           {subStatus?.subscription_status === 'active' ? (
                             <button
                               onClick={() => { setOpen(false); setLocation('/payment'); }}
-                              className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
+                              className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
                             >
                               Kelola Langganan
                             </button>
                           ) : (
                             <button
                               onClick={() => { setOpen(false); setLocation('/payment'); }}
-                              className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)] flex items-center justify-center gap-2"
+                              className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)] flex items-center justify-center gap-2"
                             >
                               <Sparkles size={16} strokeWidth={2.5} />
                               Upgrade ke PRO
@@ -562,7 +576,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                       </div>
                       <button
                         onClick={handleSendFeedback}
-                        className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
+                        className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
                       >
                         Kirim Feedback
                       </button>

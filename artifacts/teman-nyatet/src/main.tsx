@@ -3,7 +3,28 @@ import { registerSW } from 'virtual:pwa-register';
 import { setAuthTokenGetter } from '@workspace/api-client-react';
 import { supabase } from '@/lib/supabase';
 import App from './App';
+import type { ThemeMode } from '@/hooks/useTheme';
+import { resolveTheme } from '@/hooks/useTheme';
 import './index.css';
+
+// ── Theme bootstrap (runs synchronously before first paint) ─────────────────
+// Reads the stored theme preference and applies `.dark` to <html> so the
+// first paint matches the user's choice. Without this, light/dark mode flips
+// only after the SettingsSheet mounts — which produces a visible flash on
+// dark-mode users (cream canvas → slate canvas). Reading localStorage and
+// toggling a class is cheap, and the `.dark` CSS tokens are already loaded
+// by the time `index.css` finishes parsing.
+(function bootTheme() {
+  let mode: ThemeMode = 'system';
+  try {
+    const raw = window.localStorage.getItem('teman-nyatet:theme');
+    if (raw === 'light' || raw === 'dark' || raw === 'system') mode = raw;
+  } catch {
+    // Private-mode iframes throw on localStorage reads; ignore.
+  }
+  const effective = resolveTheme(mode);
+  document.documentElement.classList.toggle('dark', effective === 'dark');
+})();
 
 // Attach Supabase access token to all generated API hook requests.
 setAuthTokenGetter(async () => {

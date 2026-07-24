@@ -200,12 +200,12 @@ export default function KeuanganPage() {
                 </div>
                 <span className="font-extrabold text-[#4ADE80]">{formatRupiah(monthlySummary.income)}</span>
               </div>
-              <div className="flex-1 bg-[#F87171]/10 rounded-2xl p-4 flex flex-col items-center border border-[#F87171]/20">
-                <div className="flex items-center gap-1.5 text-[#F87171] mb-2">
+              <div className="flex-1 bg-[#F87171]/10 dark:bg-[#3F1F1F] rounded-2xl p-4 flex flex-col items-center border border-[#F87171]/20 dark:border-[#5A3030]">
+                <div className="flex items-center gap-1.5 text-[#F87171] dark:text-[#FCA5A5] mb-2">
                   <ArrowDown size={16} strokeWidth={3} />
                   <span className="text-xs font-bold uppercase tracking-wider">Pengeluaran</span>
                 </div>
-                <span className="font-extrabold text-[#F87171]">{formatRupiah(monthlySummary.expense)}</span>
+                <span className="font-extrabold text-[#F87171] dark:text-[#FCA5A5]">{formatRupiah(monthlySummary.expense)}</span>
               </div>
             </div>
           </div>

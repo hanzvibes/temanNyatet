@@ -26,33 +26,47 @@ export type SectionAccent = 'catatan' | 'keuangan' | 'todo' | 'link';
 // tinted background + a darker accent for the icon itself so it stays visible
 // against the cream app background without flashing bright color. Numbers
 // chosen for WCAG AA against white/cream (~5.5:1 minimum).
+// Per-section accent palettes. The empty-state icon container uses a soft
+// tinted background + a darker accent for the icon itself so it stays visible
+// against the cream app background without flashing bright color.
+//
+// `catatan` reads directly off the `--primary` theme token (it adapts to dark
+// mode automatically).
+//
+// `keuangan` / `todo` / `link` use inline hex because they predate the @theme
+// token migration. To make them theme-aware without dropping opacity
+// modifiers (Tailwind v4's hex arbitrary-value utility does not honor `/15`
+// reliably on a hex-valued CSS variable), each carries an explicit
+// `dark:bg-[…]` override. The dark hexes are flat, near-black tints of the
+// light tint — they keep section identity without producing bright blobs
+// on the dark canvas.
 const SECTION_THEME: Record<
   SectionAccent,
   { containerBg: string; containerBorder: string; iconText: string; spinnerText: string }
 > = {
   catatan: {
-    containerBg: 'bg-primary/10',
-    containerBorder: 'border-primary/20',
-    iconText: 'text-primary',
-    spinnerText: 'text-primary',
+    containerBg: 'bg-primary/10 dark:bg-primary/20',
+    containerBorder: 'border-primary/20 dark:border-primary/30',
+    iconText: 'text-primary dark:text-primary',
+    spinnerText: 'text-primary dark:text-primary',
   },
   keuangan: {
-    containerBg: 'bg-[#F4C753]/15',
-    containerBorder: 'border-[#F4C753]/35',
-    iconText: 'text-[#8B6914]',
-    spinnerText: 'text-[#8B6914]',
+    containerBg: 'bg-[#F4C753]/15 dark:bg-[#3D3118]',
+    containerBorder: 'border-[#F4C753]/35 dark:border-[#5F4D2A]',
+    iconText: 'text-[#8B6914] dark:text-[#F4C753]',
+    spinnerText: 'text-[#8B6914] dark:text-[#F4C753]',
   },
   todo: {
-    containerBg: 'bg-[#9CB4D4]/15',
-    containerBorder: 'border-[#9CB4D4]/35',
-    iconText: 'text-[#3D6B96]',
-    spinnerText: 'text-[#3D6B96]',
+    containerBg: 'bg-[#9CB4D4]/15 dark:bg-[#1A2638]',
+    containerBorder: 'border-[#9CB4D4]/35 dark:border-[#2A3F5A]',
+    iconText: 'text-[#3D6B96] dark:text-[#9CB4D4]',
+    spinnerText: 'text-[#3D6B96] dark:text-[#9CB4D4]',
   },
   link: {
-    containerBg: 'bg-[#E09898]/15',
-    containerBorder: 'border-[#E09898]/35',
-    iconText: 'text-[#963D3D]',
-    spinnerText: 'text-[#963D3D]',
+    containerBg: 'bg-[#E09898]/15 dark:bg-[#38201E]',
+    containerBorder: 'border-[#E09898]/35 dark:border-[#5A3030]',
+    iconText: 'text-[#963D3D] dark:text-[#E09898]',
+    spinnerText: 'text-[#963D3D] dark:text-[#E09898]',
   },
 };
 

@@ -15,6 +15,11 @@ import * as z              from 'zod';
 import { format }          from 'date-fns';
 import { ExternalLink }    from 'lucide-react';
 import {
+  NOTE_TAGS,
+  CATEGORY_ICON,
+  FALLBACK_CATEGORY_ICON,
+} from '@/lib/categoryIcons';
+import {
   TransactionType,
   DEFAULT_INCOME_CATEGORIES,
   DEFAULT_EXPENSE_CATEGORIES,
@@ -27,7 +32,7 @@ const inp  = 'w-full bg-white border border-border rounded-xl py-2.5 px-3.5 outl
 const inpFocus = (color: string) => `${inp} focus:border-[${color}] focus:ring-2 focus:ring-[${color}]/20`;
 
 // ─── Note Form ────────────────────────────────────────────────────────────────
-const TAGS = ['Kerja', 'Personal', 'Ide', 'Belajar', 'Lainnya'];
+const TAGS = NOTE_TAGS.map(({ name }) => name); // legacy order, dropdown-compatible
 const noteSchema = z.object({
   title:   z.string().optional(),
   content: z.string().min(1, 'Konten tidak boleh kosong'),
@@ -72,15 +77,15 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
       )}
       {/* Tags */}
       <div className="flex flex-wrap gap-2">
-        {TAGS.map(tag => {
+        {NOTE_TAGS.map(({ name: tag, icon: Icon }) => {
           const sel = tags.includes(tag);
           return (
             <button key={tag} type="button"
               onClick={() => form.setValue('tags', sel ? tags.filter(t => t !== tag) : [...tags, tag])}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
                 sel ? 'bg-primary text-primary-foreground border-primary' : 'bg-white text-muted-foreground border-border'
               }`}
-            >{tag}</button>
+            ><Icon size={14} strokeWidth={2.4} className="flex-shrink-0" />{tag}</button>
           );
         })}
       </div>
@@ -202,16 +207,19 @@ function KeuanganSheetForm({ onSuccess }: { onSuccess: () => void }) {
       <div>
         <p className="text-pill-tag mb-1.5">Kategori</p>
         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          {cats.map(c => (
-            <button key={c} type="button"
-              onClick={() => form.setValue('category', c, { shouldValidate: true })}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
-                cat === c
-                  ? 'bg-[#F4C753]/20 border-[#F4C753] text-[#8B6914]'
-                  : 'bg-white border-border text-muted-foreground'
-              }`}
-            >{c}</button>
-          ))}
+          {cats.map(c => {
+            const Icon = CATEGORY_ICON[c] ?? FALLBACK_CATEGORY_ICON;
+            return (
+              <button key={c} type="button"
+                onClick={() => form.setValue('category', c, { shouldValidate: true })}
+                className={`inline-flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                  cat === c
+                    ? 'bg-[#F4C753]/20 border-[#F4C753] text-[#8B6914]'
+                    : 'bg-white border-border text-muted-foreground'
+                }`}
+              ><Icon size={14} strokeWidth={2.4} className="flex-shrink-0" />{c}</button>
+            );
+          })}
         </div>
         {form.formState.errors.category && (
           <p className="text-destructive text-xs font-bold mt-1">{form.formState.errors.category.message}</p>

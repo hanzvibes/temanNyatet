@@ -5,6 +5,7 @@ import { useCreate } from '@/contexts/CreateContext';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Loader2, BookOpen, Trash2, X } from 'lucide-react';
+import { NOTE_TAGS } from '@/lib/categoryIcons';
 import SearchBar from '@/components/SearchBar';
 import SettingsSheet from '@/components/SettingsSheet';
 import { Drawer } from 'vaul';
@@ -16,7 +17,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { SortableNoteGrid } from '@/components/SortableNoteGrid';
 
 const PALETTE = ['#FFF8D6', '#E8F2DF', '#FFE4E1', '#E1F0FF'];
-const AVAILABLE_TAGS = ['Kerja', 'Personal', 'Ide', 'Belajar', 'Lainnya'];
+const AVAILABLE_TAGS = NOTE_TAGS;
 
 const noteSchema = z.object({
   title: z.string().optional(),
@@ -240,7 +241,7 @@ export default function CatatanPage() {
                         <div>
                           <label className="text-pill-tag !text-gray-500 mb-2 block">Tags</label>
                           <div className="flex flex-wrap gap-2">
-                            {AVAILABLE_TAGS.map(tag => {
+                            {AVAILABLE_TAGS.map(({ name: tag, icon: Icon }) => {
                               const currentTags = form.watch('tags');
                               const isSel = currentTags.includes(tag);
                               return (
@@ -248,12 +249,12 @@ export default function CatatanPage() {
                                   onClick={() => form.setValue('tags',
                                     isSel ? currentTags.filter(t => t !== tag) : [...currentTags, tag]
                                   )}
-                                  className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
                                     isSel
                                       ? 'bg-gray-800/80 text-white border-gray-800/80'
                                       : 'bg-white/60 text-gray-600 border-white/80 hover:bg-white/80'
                                   }`}
-                                >{tag}</button>
+                                ><Icon size={14} strokeWidth={2.4} className="flex-shrink-0" />{tag}</button>
                               );
                             })}
                           </div>
@@ -364,7 +365,7 @@ export default function CatatanPage() {
                 <div>
                   <label className="text-pill-label mb-3 block">Tags</label>
                   <div className="flex flex-wrap gap-2">
-                    {AVAILABLE_TAGS.map(tag => {
+                    {AVAILABLE_TAGS.map(({ name: tag, icon: Icon }) => {
                       const currentTags = form.watch('tags');
                       const isSelected = currentTags.includes(tag);
                       return (
@@ -378,12 +379,13 @@ export default function CatatanPage() {
                               form.setValue('tags', [...currentTags, tag]);
                             }
                           }}
-                          className={`px-5 py-2 rounded-full text-sm font-bold transition-all border ${
+                          className={`inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-bold transition-all border ${
                             isSelected
                               ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                               : 'bg-white text-muted-foreground border-border hover:border-primary/50'
                           }`}
                         >
+                          <Icon size={16} strokeWidth={2.4} className="flex-shrink-0" />
                           {tag}
                         </button>
                       );

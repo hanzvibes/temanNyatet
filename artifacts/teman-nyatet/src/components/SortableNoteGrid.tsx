@@ -27,7 +27,16 @@ import type { Note } from '@/lib/database.types';
 // Four soft sticky-note colours. Index-based mapping keeps the surface calm and
 // non-distracting; cards get their slot deterministically from their note id so
 // the colour is stable across reorder/remount/refetch.
-const PALETTE = ['#FFF8D6', '#E8F2DF', '#FFE4E1', '#E1F0FF'];
+// ─── Palette ──────────────────────────────────────────────────────────────────
+// Four soft sticky-note colours. Index-based mapping keeps the surface calm and
+// non-distracting; cards get their slot deterministically from their note id so
+// the colour is stable across reorder/remount/refetch.
+//
+// Entries reference CSS variables declared in `:root` / `.dark` so the palette
+// flips with the theme. Light values are pale pastels (paper-like against
+// cream); dark values are flat dark tints of the same hue (still legible as
+// "a card of section X" against the slate canvas, no longer flashlight-bright).
+const PALETTE = ['var(--note-card-1)', 'var(--note-card-2)', 'var(--note-card-3)', 'var(--note-card-4)'];
 
 function colorForNoteId(noteId: string): string {
   let hash = 0;
@@ -71,11 +80,11 @@ function NoteCardBody({
     <>
       <div className="flex justify-end mb-1 -mt-1 -mr-1">{handle}</div>
       {note.title && (
-        <h3 className="font-bold text-gray-900 mb-2 leading-tight text-lg">
+        <h3 className="font-bold text-gray-900 dark:text-foreground mb-2 leading-tight text-lg">
           {note.title}
         </h3>
       )}
-      <p className="text-sm text-gray-800 line-clamp-5 whitespace-pre-wrap leading-relaxed font-medium">
+      <p className="text-sm text-gray-800 dark:text-foreground/90 line-clamp-5 whitespace-pre-wrap leading-relaxed font-medium">
         {note.content}
       </p>
       {note.tags && note.tags.length > 0 && (
@@ -83,19 +92,19 @@ function NoteCardBody({
           {note.tags.slice(0, 2).map((tag) => (
             <span
               key={tag}
-              className="text-[10px] px-2.5 py-1 rounded-full bg-white/60 text-gray-800 font-bold uppercase tracking-wider"
+              className="text-[10px] px-2.5 py-1 rounded-full bg-white/60 dark:bg-white/10 text-gray-800 dark:text-foreground font-bold uppercase tracking-wider"
             >
               {tag}
             </span>
           ))}
           {note.tags.length > 2 && (
-            <span className="text-[10px] px-2 py-1 rounded-full bg-white/60 text-gray-800 font-bold">
+            <span className="text-[10px] px-2 py-1 rounded-full bg-white/60 dark:bg-white/10 text-gray-800 dark:text-foreground font-bold">
               +{note.tags.length - 2}
             </span>
           )}
         </div>
       )}
-      <div className="mt-4 text-xs text-gray-600/80 font-bold">
+      <div className="mt-4 text-xs text-gray-600/80 dark:text-muted-foreground font-bold">
         {format(new Date(note.created_at), 'd MMM yyyy', { locale: idLocale })}
       </div>
     </>

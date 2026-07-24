@@ -93,6 +93,18 @@
 
   --app-font-sans: 'Poppins', sans-serif;
   --radius: 1rem;
+
+  /* Sticky-note palette (Catatan grid).
+     Four soft tints picked deterministically by hashing the note id so each
+     card keeps its color across reorder/remount. Light values are pale pastels
+     that read as "paper"-ish on cream. Dark values are flat dark tints of
+     the same hue that keep section identity without producing bright blobs on
+     the slate canvas — they sit one step brighter than the surrounding card
+     so cards still pop, but no longer look like flashlights. */
+  --note-card-1: #FFF8D6;
+  --note-card-2: #E8F2DF;
+  --note-card-3: #FFE4E1;
+  --note-card-4: #E1F0FF;
 }
 
 /* ── Dark mode ─────────────────────────────────────────────────────────
@@ -152,6 +164,13 @@
   --input: 222 18% 22%;
 
   --ring: 90 38% 62%;
+
+  /* See :root — dark variants of the same palette so note cards keep their
+     hue identity but stop popping as bright blobs on the slate canvas. */
+  --note-card-1: #3D3118;
+  --note-card-2: #1F2D1A;
+  --note-card-3: #38201E;
+  --note-card-4: #1A2638;
 }
 
 @layer base {

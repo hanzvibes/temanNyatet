@@ -36,7 +36,7 @@ export default function PwaInstallPrompt() {
   return (
     <div
       className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm
-                 bg-white border border-border shadow-lg rounded-2xl px-4 py-3 flex items-center
+                 bg-white dark:bg-card border border-border shadow-lg rounded-2xl px-4 py-3 flex items-center
                  gap-3 z-50 animate-in slide-in-from-bottom-4"
     >
       <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -50,14 +50,18 @@ export default function PwaInstallPrompt() {
         <button
           onClick={handleInstall}
           className="text-xs font-semibold text-primary px-3 py-1.5 rounded-lg
-                     bg-primary/10 hover:bg-primary/20 transition-colors"
+                     bg-primary/10 hover:bg-primary/20 transition-colors
+                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
+                     focus-visible:ring-offset-2 focus-visible:ring-offset-card"
         >
           Install
         </button>
         <button
           onClick={() => setDismissed(true)}
           className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground
-                     hover:bg-muted transition-colors"
+                     hover:bg-muted transition-colors
+                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
+                     focus-visible:ring-offset-2 focus-visible:ring-offset-card"
           aria-label="Tutup"
         >
           <X className="w-4 h-4" />

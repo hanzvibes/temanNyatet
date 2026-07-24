@@ -17,7 +17,7 @@ export default function SearchBar({ value, onChange, placeholder = 'Cari...', cl
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-white rounded-full pl-12 pr-12 py-3.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm border border-border focus:border-primary/30 transition-all placeholder:text-muted-foreground/50"
+        className="w-full bg-white dark:bg-card rounded-full pl-12 pr-12 py-3.5 text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 shadow-sm border border-border focus:border-primary/30 transition-all placeholder:text-muted-foreground/50"
       />
       {value && (
         <button

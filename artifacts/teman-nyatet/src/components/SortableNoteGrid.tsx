@@ -19,7 +19,6 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import type { Note } from '@/lib/database.types';
@@ -170,22 +169,16 @@ function SortableNoteCard({
   );
 
   return (
-    <motion.div
+    <div
       ref={setNodeRef}
       style={style}
-      // Mount-only fade-in. `initial` runs once when the element mounts and
-      // naturally interpolates to the un-animated style (= what's in `style`).
-      // Crucially: we do NOT pass `animate`, so framer-motion never writes a
-      // MotionValue to opacity. After mount, opacity is 100% React/CSS-driven.
-      initial={{ opacity: 0, y: 12 }}
-      transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
       onClick={onClick}
       role="listitem"
       aria-label={note.title ? `Catatan: ${note.title}` : 'Catatan tanpa judul'}
       className="rounded-[1.5rem] p-5 shadow-sm hover:shadow-md cursor-pointer relative select-none"
     >
       <NoteCardBody note={note} handle={handle} />
-    </motion.div>
+    </div>
   );
 }
 

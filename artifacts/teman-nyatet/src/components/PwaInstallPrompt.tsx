@@ -35,9 +35,10 @@ export default function PwaInstallPrompt() {
 
   return (
     <div
-      className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm
+      className="fixed left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm
                  bg-white dark:bg-card border border-border shadow-lg rounded-2xl px-4 py-3 flex items-center
-                 gap-3 z-50 animate-in slide-in-from-bottom-4"
+                 gap-3 z-[60] animate-in slide-in-from-bottom-4
+                 bottom-[calc(1.25rem+var(--bottom-nav-collapsed-h)+0.75rem)]"
     >
       <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
         <Download className="w-5 h-5 text-primary" />

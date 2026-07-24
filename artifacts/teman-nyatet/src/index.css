@@ -94,6 +94,15 @@
   --app-font-sans: 'Poppins', sans-serif;
   --radius: 1rem;
 
+  /* Bottom-nav clearance.
+     BottomSheetNav is anchored `bottom: 20px` with
+       HANDLE_H(28) + NAV_H(68) = 96px
+     when collapsed, so its *top* is 116px above the viewport bottom. Any
+     fixed/anchored chrome (e.g. the PWA install prompt) that lives below the
+     nav must sit above this height plus a small gap or it gets visually
+     overrun by the pill. Same value used here and in PwaInstallPrompt. */
+  --bottom-nav-collapsed-h: 96px;
+
   /* Sticky-note palette (Catatan grid).
      Four soft tints picked deterministically by hashing the note id so each
      card keeps its color across reorder/remount. Light values are pale pastels

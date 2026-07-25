@@ -102,11 +102,15 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
         setLocation('/payment');
       } else if (profile.subscription_status === 'archived' && location !== '/archived') {
         setLocation('/archived');
-      } else if (
-        profile.subscription_status === 'active' &&
-        (location === '/' || location === '/login' || location === '/payment' || location === '/archived')
-      ) {
-        setLocation('/catatan');
+      } else if (profile.subscription_status === 'active') {
+        // Active users should never sit on the 404 page. Anything NOT in
+        // ROUTE_ENTRIES (root, typos, stale deep links) bounces to /catatan,
+        // including the previously-allowlisted '/' / '/login' / '/payment' /
+        // '/archived' (which the earlier branches already handle).
+        const matched = ROUTE_ENTRIES.find((e) => e.path === location);
+        if (!matched) {
+          setLocation('/catatan');
+        }
       }
     }
   }, [user, profile, loading, location, setLocation]);

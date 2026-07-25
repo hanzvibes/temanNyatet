@@ -24,10 +24,10 @@ Google → /api/auth/google/callback (server exchanges code)
 The canonical production callback URL is:
 
 ```
-https://<api-domain>.vercel.app/api/auth/google/callback
+https://teman-nyatet-api-server.vercel.app/api/auth/google/callback
 ```
 
-Replace `<api-domain>` with the actual Vercel production domain of the api-server project (e.g. `teman-nyatet-api.vercel.app`).
+Replace `teman-nyatet-api-server` with the actual Vercel production domain of the api-server project (e.g. `teman-nyatet-api.vercel.app`).
 
 This URL must be set with **byte-exact equality** in:
 
@@ -55,7 +55,7 @@ Add **one URI per environment** that needs to hit the callback:
 
 | Use case | URI |
 |---|---|
-| Production (Vercel) | `https://<api-domain>.vercel.app/api/auth/google/callback` |
+| Production (Vercel) | `https://teman-nyatet-api-server.vercel.app/api/auth/google/callback` |
 | Replit dev (if still developing) | `https://<repl-slug>.<user>.repl.co/api/auth/google/callback` |
 | Local laptop | `http://localhost:5000/api/auth/google/callback` |
 
@@ -71,8 +71,8 @@ Lower-priority for this codebase (frontend delegates OAuth through the API serve
 
 | Value |
 |---|
-| `https://<api-domain>.vercel.app` |
-| `https://<frontend-domain>.vercel.app` |
+| `https://teman-nyatet-api-server.vercel.app` |
+| `https://teman-nyatet.vercel.app` |
 
 Origin = scheme + host + port, no path. Don't include a trailing slash.
 
@@ -117,9 +117,9 @@ MAYAR_WEBHOOK_SECRET=<from-mayar-dashboard>
 CRON_SECRET=$(openssl rand -hex 32)
 
 # Production-specific
-GOOGLE_REDIRECT_URI=https://<api-domain>.vercel.app/api/auth/google/callback
-FRONTEND_URL=https://<frontend-domain>.vercel.app
-ALLOWED_ORIGINS=https://<frontend-domain>.vercel.app
+GOOGLE_REDIRECT_URI=https://teman-nyatet-api-server.vercel.app/api/auth/google/callback
+FRONTEND_URL=https://teman-nyatet.vercel.app
+ALLOWED_ORIGINS=https://teman-nyatet.vercel.app
 NODE_ENV=production
 ```
 
@@ -133,14 +133,14 @@ NODE_ENV=production
 
 End-to-end smoke test:
 
-1. `curl -i https://<api-domain>.vercel.app/healthz` → 200 OK with `{"status":"ok"}`
-2. Browser open `https://<frontend-domain>.vercel.app`
+1. `curl -i https://teman-nyatet-api-server.vercel.app/healthz` → 200 OK with `{"status":"ok"}`
+2. Browser open `https://teman-nyatet.vercel.app`
 3. Log in to Supabase (email/password)
 4. Navigate to `/connect-sheet`, click "Hubungkan Google Drive"
-5. Confirm the consent screen URL is `https://accounts.google.com/o/oauth2/v2/auth?…&redirect_uri=https%3A%2F%2F<api-domain>.vercel.app%2Fapi%2Fauth%2Fgoogle%2Fcallback…` — if `redirect_uri` matches what you registered, you're correctly configured
+5. Confirm the consent screen URL is `https://accounts.google.com/o/oauth2/v2/auth?…&redirect_uri=https%3A%2F%2Fteman-nyatet-api-server.vercel.app%2Fapi%2Fauth%2Fgoogle%2Fcallback…` — if `redirect_uri` matches what you registered, you're correctly configured
 6. Approve → browser lands back on `/connect-sheet` then redirects to `/dashboard` or similar
 7. Create a note → check that a row appears in the spreadsheet auto-created at the user's Google Drive (`/drive/search?q=owner:me type:spreadsheet type:teman-nyatet`)
-8. `curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://<api-domain>.vercel.app/api/cron/archive-expired` → 200 with `{"archived": N}` (fictional until expiry)
+8. `curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://teman-nyatet-api-server.vercel.app/api/cron/archive-expired` → 200 with `{"archived": N}` (fictional until expiry)
 
 If step 5 redirects to `redirect_uri_mismatch`:
 

@@ -6,7 +6,7 @@
 
 | Document | Path |
 |---|---|
-| README — project overview & docs map | [`README.md`](./README.md) |
+| README — project overview & docs map | [`README.md`](../README.md) |
 | ARCHITECTURE — system architecture & data flow | [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
 | API — complete route reference | [`API.md`](./API.md) |
 | AUTH — Supabase + Google OAuth flows | [`AUTH.md`](./AUTH.md) |

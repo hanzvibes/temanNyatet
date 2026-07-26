@@ -6,12 +6,12 @@ A note-taking SaaS PWA for Indonesian users. Four core modules: Catatan (Notes),
 
 | Document | Path |
 |---|---|
-| README — project overview & docs map | [`README.md`](./README.md) |
+| README — project overview & docs map | [`README.md`](../README.md) |
 | ENVIRONMENT — all env vars & secrets | [`ENVIRONMENT.md`](./ENVIRONMENT.md) |
 | DEPLOYMENT — Vercel deployment runbook | [`DEPLOYMENT.md`](./DEPLOYMENT.md) |
 | TROUBLESHOOTING — Replit-specific issues | [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) |
 | AUTH — Google OAuth setup for Replit | [`AUTH.md`](./AUTH.md) |
-| supabase/migrations — DB setup | [`supabase/migrations/README.md`](./supabase/migrations/README.md) |
+| docs/SUPABASE-SETUP.md — DB setup | [`docs/SUPABASE-SETUP.md`](./SUPABASE-SETUP.md) |
 
 ## How to run
 
@@ -107,7 +107,7 @@ OAuth and the data API will fail closed until the `google_refresh_token` column 
 - pnpm pinned to `10.26.1` (matching installed version) with `manage-package-manager-versions=false` in `.npmrc`
 - Node.js 22 required — Supabase's realtime client needs native WebSocket (Node 22+)
 - Vite config already has `host: 0.0.0.0` and `allowedHosts: true` for Replit proxy compatibility
-- **Production lives on Vercel**: dua project (`teman-nyatet` frontend + `teman-nyatet-api-server` API) dari satu repo ini, Root Directory berbeda. Replit env berfungsi sebagai development/staging. Lihat `artifacts/api-server/docs/DEPLOY.md` dan bagian "Deploy ke Vercel" di `README.md` untuk produksi
+- **Production lives on Vercel**: dua project (`teman-nyatet` frontend + `teman-nyatet-api-server` API) dari satu repo ini, Root Directory berbeda. Replit env berfungsi sebagai development/staging. Lihat [`docs/GOOGLE-CLOUD-OAUTH.md`](./GOOGLE-CLOUD-OAUTH.md) dan bagian "Deploy ke Vercel" di [`README.md`](../README.md) untuk produksi
 - `vercel.json` di tiap artifact hanya di-baca Vercel, tidak memengaruhi workflow Replit
 
 ## User preferences

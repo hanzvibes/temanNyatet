@@ -6,7 +6,7 @@
 
 | Document | Path |
 |---|---|
-| README — project overview & docs map | [`README.md`](./README.md) |
+| README — project overview & docs map | [`README.md`](../README.md) |
 | AI_CONTEXT — quick reference for AI agents | [`AI_CONTEXT.md`](./AI_CONTEXT.md) |
 | ARCHITECTURE — auth middleware & flow | [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
 | API — route auth requirements | [`API.md`](./API.md) |
@@ -221,4 +221,4 @@ If "Confirm email" is off, users can log in without verifying — the client-sid
 | Scopes | `drive.file`, `userinfo.email` |
 | Publishing status | Published (to remove 100-user test limit) |
 
-See `DEPLOYMENT.md` and `artifacts/api-server/docs/DEPLOY.md` for the full Google Cloud Console setup walkthrough.
+See [`docs/DEPLOYMENT.md`](./DEPLOYMENT.md) and [`docs/GOOGLE-CLOUD-OAUTH.md`](./GOOGLE-CLOUD-OAUTH.md) for the full Google Cloud Console setup walkthrough.

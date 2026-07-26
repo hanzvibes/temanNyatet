@@ -6,7 +6,7 @@
 
 | Document | Path |
 |---|---|
-| README — project overview & docs map | [`README.md`](./README.md) |
+| README — project overview & docs map | [`README.md`](../README.md) |
 | PRD — product requirements | [`PRD.md`](./PRD.md) |
 | TASKS — prioritized actionable tasks | [`TASKS.md`](./TASKS.md) |
 | DECISIONS — architecture decisions that shape the roadmap | [`DECISIONS.md`](./DECISIONS.md) |
@@ -55,7 +55,7 @@
 
 ### Deployment
 - [x] Production on Vercel (two-project setup)
-- [x] Vercel deployment documentation (`artifacts/api-server/docs/DEPLOY.md`)
+- [x] Vercel deployment documentation ([`docs/GOOGLE-CLOUD-OAUTH.md`](./GOOGLE-CLOUD-OAUTH.md))
 
 ---
 

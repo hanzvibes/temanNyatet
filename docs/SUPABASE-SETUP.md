@@ -1,6 +1,6 @@
 # Supabase Setup Instructions
 
-> For the full project overview, see [`README.md`](../../README.md). For the database schema, see [`DATABASE.md`](../../DATABASE.md). For environment variables, see [`ENVIRONMENT.md`](../../ENVIRONMENT.md). For OAuth setup, see [`AUTH.md`](../../AUTH.md).
+> For the full project overview, see [`README.md`](../README.md). For the database schema, see [`DATABASE.md`](./DATABASE.md). For environment variables, see [`ENVIRONMENT.md`](./ENVIRONMENT.md). For OAuth setup, see [`AUTH.md`](./AUTH.md).
 
 ## 1. Create Supabase Project
 1. Go to https://supabase.com
@@ -91,7 +91,7 @@ CRON_SECRET=your-random-cron-secret
    - **Local**: `http://localhost:5000/api/auth/google/callback`
    - **Vercel preview** (if you want OAuth on previews): `https://teman-nyatet-api-server-<branch>-<team>.vercel.app/api/auth/google/callback` — must be registered explicitly per branch, no wildcards
 
-   Lihat `artifacts/api-server/docs/DEPLOY.md` untuk checklist Google Console lengkap.
+   Lihat [`docs/GOOGLE-CLOUD-OAUTH.md`](./GOOGLE-CLOUD-OAUTH.md) untuk checklist Google Console lengkap.
 7. Copy the Client ID and Client Secret into the API server env vars (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
 8. Generate `GOOGLE_OAUTH_STATE_SECRET` with `openssl rand -hex 32`
 

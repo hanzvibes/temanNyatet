@@ -6,7 +6,7 @@
 
 | Document | Path |
 |---|---|
-| README — project overview & docs map | [`README.md`](./README.md) |
+| README — project overview & docs map | [`README.md`](../README.md) |
 | AI_CONTEXT — quick reference for AI agents | [`AI_CONTEXT.md`](./AI_CONTEXT.md) |
 | ROADMAP — completed / planned / future | [`ROADMAP.md`](./ROADMAP.md) |
 | UI_UX_GUIDELINES — frontend design system | [`UI_UX_GUIDELINES.md`](./UI_UX_GUIDELINES.md) |

@@ -43,9 +43,9 @@
 - `artifacts/teman-nyatet/vercel.json`
 
 **Existing docs:**
-- `README.md`, `CHANGELOG.md`, `DOC_AUDIT_REPORT.md`, `replit.md`
-- `artifacts/api-server/docs/DEPLOY.md`
-- `supabase/migrations/README.md`
+- `README.md` (root), `CHANGELOG.md`, `DOC_AUDIT_REPORT.md`, `replit.md` (now in `docs/`)
+- `docs/GOOGLE-CLOUD-OAUTH.md` (was `artifacts/api-server/docs/DEPLOY.md`)
+- `docs/SUPABASE-SETUP.md` (was `supabase/migrations/README.md`)
 
 ---
 
@@ -81,9 +81,9 @@
 
 | File | Reason |
 |---|---|
-| `replit.md` | Accurate from previous audit; no new inaccuracies found |
-| `supabase/migrations/README.md` | Accurate from previous audit |
-| `artifacts/api-server/docs/DEPLOY.md` | Still accurate; superseded by `DEPLOYMENT.md` for high-level use, but retained as the detailed Google Cloud Console walkthrough |
+| `docs/replit.md` | Accurate from previous audit; no new inaccuracies found |
+| `docs/SUPABASE-SETUP.md` | Accurate from previous audit (renamed from `supabase/migrations/README.md`) |
+| `docs/GOOGLE-CLOUD-OAUTH.md` | Still accurate; superseded by `docs/DEPLOYMENT.md` for high-level use, but retained as the detailed Google Cloud Console walkthrough (renamed from `artifacts/api-server/docs/DEPLOY.md`) |
 | `artifacts/api-server/.env.example` | Accurate from previous audit |
 | `artifacts/teman-nyatet/.env.example` | Accurate from previous audit |
 
@@ -139,7 +139,7 @@
 | Authentication | `AUTH.md` |
 | Database schema | `DATABASE.md` |
 | Environment variables | `ENVIRONMENT.md` |
-| Deployment | `DEPLOYMENT.md`, `artifacts/api-server/docs/DEPLOY.md` |
+| Deployment | `docs/DEPLOYMENT.md`, `docs/GOOGLE-CLOUD-OAUTH.md` |
 | Product features | `PRD.md` |
 | Architecture decisions | `DECISIONS.md` |
 | Security | `SECURITY.md` |
@@ -149,7 +149,7 @@
 | UI/UX conventions | `UI_UX_GUIDELINES.md` |
 | Testing | `TESTING.md` |
 | Run instructions | `replit.md`, `README.md` |
-| Supabase setup | `supabase/migrations/README.md` |
+| Supabase setup | `docs/SUPABASE-SETUP.md` |
 
 ---
 
@@ -169,9 +169,9 @@
 
 ## Remaining documentation debt (after this wave)
 
-1. **`artifacts/api-server/docs/DEPLOY.md`** and **`DEPLOYMENT.md`** now overlap. Consider whether to merge them or keep DEPLOY.md as the detailed Google Cloud Console walkthrough and DEPLOYMENT.md as the high-level runbook. Current state: both are accurate, no contradiction.
+1. **`docs/GOOGLE-CLOUD-OAUTH.md`** (was `artifacts/api-server/docs/DEPLOY.md`) and **`docs/DEPLOYMENT.md`** now overlap. Consider whether to merge them or keep `GOOGLE-CLOUD-OAUTH.md` as the detailed Google Cloud Console walkthrough and `DEPLOYMENT.md` as the high-level runbook. Current state: both are accurate, no contradiction.
 
-2. **`supabase/migrations/README.md`** and **`DATABASE.md`** overlap on migration order and environment variables. `DATABASE.md` is more complete; `supabase/migrations/README.md` is the setup guide for Supabase specifically. Both are accurate; duplication is acceptable given their different audiences.
+2. **`docs/SUPABASE-SETUP.md`** (was `supabase/migrations/README.md`) and **`docs/DATABASE.md`** overlap on migration order and environment variables. `DATABASE.md` is more complete; `SUPABASE-SETUP.md` is the setup guide for Supabase specifically. Both are accurate; duplication is acceptable given their different audiences.
 
 3. **No CONTRIBUTING.md**: The project doesn't have contributor guidelines. If external contributors are expected, add a `CONTRIBUTING.md` covering branching, pnpm setup, and the "no npm/yarn" constraint.
 

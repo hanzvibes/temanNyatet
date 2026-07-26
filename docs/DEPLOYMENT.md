@@ -1,17 +1,17 @@
 # DEPLOYMENT.md — TemanNyatet
 
-> Full deployment reference. For Google Cloud Console setup details, see [`artifacts/api-server/docs/DEPLOY.md`](./artifacts/api-server/docs/DEPLOY.md).  
-> For environment variables, see [`ENVIRONMENT.md`](./ENVIRONMENT.md).
+> Full deployment reference. For Google Cloud Console setup details, see [`docs/GOOGLE-CLOUD-OAUTH.md`](./GOOGLE-CLOUD-OAUTH.md).  
+> For environment variables, see [`docs/ENVIRONMENT.md`](./ENVIRONMENT.md).
 
 ## Related documentation
 
 | Document | Path |
 |---|---|
-| README — project overview & docs map | [`README.md`](./README.md) |
+| README — project overview & docs map | [`README.md`](../README.md) |
 | ENVIRONMENT — all env vars & secrets | [`ENVIRONMENT.md`](./ENVIRONMENT.md) |
 | AUTH — OAuth flows & redirect URIs | [`AUTH.md`](./AUTH.md) |
-| Google Cloud Console setup walkthrough | [`artifacts/api-server/docs/DEPLOY.md`](./artifacts/api-server/docs/DEPLOY.md) |
-| supabase/migrations — DB setup | [`supabase/migrations/README.md`](./supabase/migrations/README.md) |
+| Google Cloud Console setup walkthrough | [`docs/GOOGLE-CLOUD-OAUTH.md`](./GOOGLE-CLOUD-OAUTH.md) |
+| docs/SUPABASE-SETUP.md — DB setup | [`docs/SUPABASE-SETUP.md`](./SUPABASE-SETUP.md) |
 | TROUBLESHOOTING — deploy issues | [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) |
 
 ---
@@ -83,7 +83,7 @@ In your Supabase project → Authentication → Settings:
 
 ### 3. Configure Google Cloud Console
 
-See `artifacts/api-server/docs/DEPLOY.md` for the full checklist. Key requirement:
+See [`docs/GOOGLE-CLOUD-OAUTH.md`](./GOOGLE-CLOUD-OAUTH.md) for the full checklist. Key requirement:
 
 **Authorized redirect URI** must be registered exactly as:
 ```
@@ -101,7 +101,7 @@ https://teman-nyatet-api-server.vercel.app/api/mayar-webhook
 
 ### 5. Run Supabase migrations
 
-If this is a fresh Supabase project, run all migration files in order in the SQL Editor. See `supabase/migrations/README.md`.
+If this is a fresh Supabase project, run all migration files in order in the SQL Editor. See [`docs/SUPABASE-SETUP.md`](./SUPABASE-SETUP.md).
 
 ---
 

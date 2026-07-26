@@ -6,7 +6,7 @@
 
 | Document | Path |
 |---|---|
-| README — project overview & docs map | [`README.md`](./README.md) |
+| README — project overview & docs map | [`README.md`](../README.md) |
 | AI_CONTEXT — frontend conventions & stack | [`AI_CONTEXT.md`](./AI_CONTEXT.md) |
 | PRD — product requirements that drive UX | [`PRD.md`](./PRD.md) |
 | TESTING — manual UI checklist | [`TESTING.md`](./TESTING.md) |

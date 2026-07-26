@@ -6,7 +6,7 @@
 
 | Document | Path |
 |---|---|
-| README — project overview & docs map | [`README.md`](./README.md) |
+| README — project overview & docs map | [`README.md`](../README.md) |
 | AUTH — auth-specific security details | [`AUTH.md`](./AUTH.md) |
 | ENVIRONMENT — secret management & env vars | [`ENVIRONMENT.md`](./ENVIRONMENT.md) |
 | DECISIONS — security-related ADRs | [`DECISIONS.md`](./DECISIONS.md) |
@@ -82,7 +82,7 @@
 | In-process rate limit | Lost on serverless function cold starts (Vercel); no shared state across instances | Acceptable for current scale; DDoS mitigation at Vercel edge |
 | In-process sheet lock | Doesn't work with horizontal scaling | Vercel serverless is single-instance per invocation; acceptable risk |
 | No audit log | No record of which operations touched which spreadsheet row | Low priority for current scale |
-| `fix_profiles_rls_recursion.sql` is ad-hoc | Not in numbered migration sequence; could be missed on fresh deploy | Documented in `supabase/migrations/README.md`; should be promoted to numbered migration |
+| `fix_profiles_rls_recursion.sql` is ad-hoc | Not in numbered migration sequence; could be missed on fresh deploy | Documented in [`docs/SUPABASE-SETUP.md`](./SUPABASE-SETUP.md); should be promoted to numbered migration |
 | Mayar plan resolution uses heuristics | Incorrect plan assignment if Mayar changes payload structure | Low risk; plan assignment reviewed in webhook handler |
 
 ---

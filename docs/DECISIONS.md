@@ -6,7 +6,7 @@
 
 | Document | Path |
 |---|---|
-| README — project overview & docs map | [`README.md`](./README.md) |
+| README — project overview & docs map | [`README.md`](../README.md) |
 | ARCHITECTURE — system architecture that implements these decisions | [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
 | ROADMAP — completed / planned / future | [`ROADMAP.md`](./ROADMAP.md) |
 | SECURITY — security implications | [`SECURITY.md`](./SECURITY.md) |

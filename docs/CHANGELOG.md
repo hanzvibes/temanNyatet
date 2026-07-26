@@ -22,7 +22,7 @@
 ### Updated
 - **`DOC_AUDIT_REPORT.md`** — updated to reflect this audit wave: new files created, findings, remaining debt.
 - **`README.md`** — added "Documentation" section with links to all new docs.
-- **All documentation files** — added cross-linked "Related documentation" sections at the top of every project doc (root files + `artifacts/api-server/docs/DEPLOY.md` + `supabase/migrations/README.md`). All internal markdown links were validated to resolve to existing files.
+- **All documentation files** — moved to `docs/` and added cross-linked "Related documentation" sections at the top of every project doc. `artifacts/api-server/docs/DEPLOY.md` renamed to `docs/GOOGLE-CLOUD-OAUTH.md`; `supabase/migrations/README.md` renamed to `docs/SUPABASE-SETUP.md`. All internal markdown links were validated to resolve to existing files.
 
 ### Removed
 - None (no files removed; `DOC_AUDIT_REPORT.md` and `CHANGELOG.md` retained and updated).

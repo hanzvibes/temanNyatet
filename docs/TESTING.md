@@ -6,7 +6,7 @@
 
 | Document | Path |
 |---|---|
-| README — project overview & docs map | [`README.md`](./README.md) |
+| README — project overview & docs map | [`README.md`](../README.md) |
 | ROADMAP — planned testing improvements | [`ROADMAP.md`](./ROADMAP.md) |
 | TASKS — actionable testing tasks | [`TASKS.md`](./TASKS.md) |
 | UI_UX_GUIDELINES — UI patterns to test | [`UI_UX_GUIDELINES.md`](./UI_UX_GUIDELINES.md) |

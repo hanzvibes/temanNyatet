@@ -6,7 +6,7 @@
 
 | Document | Path |
 |---|---|
-| README — project overview & docs map | [`README.md`](./README.md) |
+| README — project overview & docs map | [`README.md`](../README.md) |
 | ROADMAP — feature direction & completed work | [`ROADMAP.md`](./ROADMAP.md) |
 | TESTING — what to test first | [`TESTING.md`](./TESTING.md) |
 | ARCHITECTURE — technical context for tasks | [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
@@ -39,7 +39,7 @@
 
 **Description**: Rename/integrate `fix_profiles_rls_recursion.sql` into the numbered migration sequence (e.g., `006_fix_profiles_rls.sql`). Remove the conflicting policy refresh from `005_phase1_schema.sql` if it causes the same recursion on fresh installs.  
 **Reason**: Ad-hoc scripts outside the numbered sequence are easily missed during fresh database setup. The recursion error is a hard blocker — profiles can't be read.  
-**Affected files**: `supabase/migrations/fix_profiles_rls_recursion.sql`, `supabase/migrations/005_phase1_schema.sql`, `supabase/migrations/README.md`  
+**Affected files**: `supabase/migrations/fix_profiles_rls_recursion.sql`, `supabase/migrations/005_phase1_schema.sql`, [`docs/SUPABASE-SETUP.md`](./SUPABASE-SETUP.md)  
 **Complexity**: Medium (SQL changes + testing on a fresh Supabase project)
 
 ---
@@ -48,7 +48,7 @@
 
 **Description**: Three files share the `002_` prefix: `002_add_avatar_url.sql`, `002_add_profile_fields.sql`, `002_add_spreadsheet_id.sql`. Rename them to sequential numbers (006, 007, 008 or similar) or consolidate into a single file.  
 **Reason**: File-system sort order is not guaranteed to match the intended run order. Automated migration tools would apply them in the wrong order.  
-**Affected files**: `supabase/migrations/002_add_avatar_url.sql`, `supabase/migrations/002_add_profile_fields.sql`, `supabase/migrations/002_add_spreadsheet_id.sql`, `supabase/migrations/README.md`  
+**Affected files**: `supabase/migrations/002_add_avatar_url.sql`, `supabase/migrations/002_add_profile_fields.sql`, `supabase/migrations/002_add_spreadsheet_id.sql`, [`docs/SUPABASE-SETUP.md`](./SUPABASE-SETUP.md)  
 **Complexity**: Low (rename files + update docs), but requires care not to break already-applied migrations
 
 ---

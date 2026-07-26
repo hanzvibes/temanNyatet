@@ -6,7 +6,7 @@
 
 | Document | Path |
 |---|---|
-| README — project overview & docs map | [`README.md`](./README.md) |
+| README — project overview & docs map | [`README.md`](../README.md) |
 | AUTH — OAuth-specific errors | [`AUTH.md`](./AUTH.md) |
 | DEPLOYMENT — deploy issues & verification | [`DEPLOYMENT.md`](./DEPLOYMENT.md) |
 | ENVIRONMENT — env vars & secrets | [`ENVIRONMENT.md`](./ENVIRONMENT.md) |
@@ -35,7 +35,7 @@
 
 **Symptom**: User signs in but app can't load profile, gets stuck loading.  
 **Cause**: The `on_auth_user_created` trigger may have failed (e.g., if `profiles` table didn't exist yet).  
-**Fix**: `AuthContext` has a client-side fallback upsert — it will create the profile row on first load. If it still fails, check that all migrations have been run in order (see `supabase/migrations/README.md`).
+**Fix**: `AuthContext` has a client-side fallback upsert — it will create the profile row on first load. If it still fails, check that all migrations have been run in order (see [`docs/SUPABASE-SETUP.md`](./SUPABASE-SETUP.md)).
 
 ---
 

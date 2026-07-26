@@ -6,12 +6,12 @@
 
 | Document | Path |
 |---|---|
-| README — project overview & docs map | [`README.md`](./README.md) |
+| README — project overview & docs map | [`README.md`](../README.md) |
 | AI_CONTEXT — quick reference for AI agents | [`AI_CONTEXT.md`](./AI_CONTEXT.md) |
 | ARCHITECTURE — system architecture & data flow | [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
 | AUTH — how profile columns are used in auth | [`AUTH.md`](./AUTH.md) |
 | ENVIRONMENT — Supabase + Google credentials | [`ENVIRONMENT.md`](./ENVIRONMENT.md) |
-| supabase/migrations — setup SQL files | [`supabase/migrations/README.md`](./supabase/migrations/README.md) |
+| docs/SUPABASE-SETUP.md — setup SQL files | [`docs/SUPABASE-SETUP.md`](./SUPABASE-SETUP.md) |
 
 ---
 
@@ -61,7 +61,7 @@ Auto-created for every new user by a trigger on `auth.users` INSERT.
 
 ### Migration history
 
-Run these in order in the Supabase SQL Editor. See `supabase/migrations/README.md` for full instructions.
+Run these in order in the Supabase SQL Editor. See [`docs/SUPABASE-SETUP.md`](./SUPABASE-SETUP.md) for full instructions.
 
 | File | What it does |
 |---|---|

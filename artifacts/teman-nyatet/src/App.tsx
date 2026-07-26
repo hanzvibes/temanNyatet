@@ -103,12 +103,12 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       } else if (profile.subscription_status === 'archived' && location !== '/archived') {
         setLocation('/archived');
       } else if (profile.subscription_status === 'active') {
-        // Active users should never sit on the 404 page. Anything NOT in
-        // ROUTE_ENTRIES (root, typos, stale deep links) bounces to /catatan,
-        // including the previously-allowlisted '/' / '/login' / '/payment' /
-        // '/archived' (which the earlier branches already handle).
+        // Auth-only pages that active users must be redirected away from.
+        // These exist in ROUTE_ENTRIES (so !matched alone won't catch them),
+        // but an active+connected user has no reason to be on them.
+        const AUTH_ONLY_ROUTES = new Set(['/login', '/payment', '/archived', '/connect-sheet']);
         const matched = ROUTE_ENTRIES.find((e) => e.path === location);
-        if (!matched) {
+        if (!matched || AUTH_ONLY_ROUTES.has(location)) {
           setLocation('/catatan');
         }
       }

@@ -1,5 +1,37 @@
 # Changelog
 
+## Production Deploy to Vercel + OAuth Wiring — 2026-07-26
+
+### Added
+- **`artifacts/api-server/docs/DEPLOY.md`** — fresh deploy doc khusus Vercel production. Mencakup:
+  - Canonical production OAuth callback URL: `https://teman-nyatet-api-server.vercel.app/api/auth/google/callback` (pinned, no longer placeholder)
+  - Google Cloud Console setup wizard (Authorized redirect URIs, JS origins, consent screen, scopes `drive.file` + `userinfo.email`)
+  - Vercel env-var contract (setiap key wajib + sources: Supabase, Mayar, Google, cron)
+  - End-to-end verification checklist (healthz, login, OAuth round-trip, Mayar webhook)
+  - Adding new environment (preview/staging) dengan wildcards caveat
+  - Rotating `GOOGLE_OAUTH_STATE_SECRET` / `GOOGLE_CLIENT_*` safely
+- **Production domains table** di `README.md` (section "Deploy ke Vercel") — frontend `teman-nyatet.vercel.app`, API `teman-nyatet-api-server.vercel.app`. Replaces placeholder domain `temannyatet.id` di onboarding instructions
+- Vercel-required env vars baru: `FRONTEND_URL`, `ALLOWED_ORIGINS`, `GOOGLE_REDIRECT_URI` untuk api-server project (ditambah ke `README.md` dan `artifacts/api-server/.env.example`)
+
+### Updated
+- **`README.md` "Deploy ke Vercel"** — melebar dari "two projects pattern" menjadi runbook penuh: Root Directory, framework auto-detect, env vars per project, Mayar webhook update, cron notes. Ditambah Vercel Production domains table
+- **`replit.md` "Replit setup notes"** — fix misleading line "Originally deployed to Vercel — `vercel.json` files remain but are ignored". Production IS Vercel now; Replit adalah dev/staging
+- **`artifacts/api-server/.env.example`** — annotated production override untuk `GOOGLE_REDIRECT_URI` (mencantumkan `https://teman-nyatet-api-server.vercel.app/api/auth/google/callback` di comment), dengan pointer ke `artifacts/api-server/docs/DEPLOY.md`
+
+### Fixed
+- **`AuthGuard` active-user 404 dead-end** di `artifacts/teman-nyatet/src/App.tsx`: jalur active hanya redirect kalau path masuk `hardcoded allowlist`. Setiap path tak-terdaftar mengirim user ke `NotFound` meskipun dia authenticated. Diperbaiki dengan route entries table; unmatched path di-redirect ke `/catatan` instead
+- **`src/pages/not-found.tsx`**: tambah "Kembali ke Catatan" button (calls `useLocation().setLocation('/catatan')`), replace hardcoded `bg-gray-50`/`text-gray-*` dengan tokens tema (`bg-background`/`text-foreground`/`text-muted-foreground`) supaya tetap kontras di dark mode
+- **`tsconfig.esModuleInterop`** di `artifacts/api-server/tsconfig.json` (commit `dda7a61`) — menambah flag `esModuleInterop: true` dan `allowSyntheticDefaultImports: true` agar Vercel post-build tsc test pass pada CJS packages (helmet, express-rate-limit, pino-http)
+
+### Deprecated
+- `Notes`, `transactions`, `todos`, `links` Supabase tables tetap di-dropsequence (pada 005 phase1) — app data lives di Google Sheets, dokumentasi ini tidak mengubah apa-apa tapi mencatat untuk konsistensi
+
+### Reference
+- See `artifacts/api-server/docs/DEPLOY.md` untuk full Vercel deployment + Google OAuth setup guide
+- See `DOC_AUDIT_REPORT.md` (updated) untuk audit trail dari perubahan dokumentasi ini
+
+---
+
 ## UI Polish and Instant Navigation — 2026-07-24
 
 ### Added

@@ -96,7 +96,8 @@ OAuth and the data API will fail closed until the `google_refresh_token` column 
 - pnpm pinned to `10.26.1` (matching installed version) with `manage-package-manager-versions=false` in `.npmrc`
 - Node.js 22 required — Supabase's realtime client needs native WebSocket (Node 22+)
 - Vite config already has `host: 0.0.0.0` and `allowedHosts: true` for Replit proxy compatibility
-- Originally deployed to Vercel — `vercel.json` files remain but are ignored on Replit
+- **Production lives on Vercel**: dua project (`teman-nyatet` frontend + `teman-nyatet-api-server` API) dari satu repo ini, Root Directory berbeda. Replit env berfungsi sebagai development/staging. Lihat `artifacts/api-server/docs/DEPLOY.md` dan bagian "Deploy ke Vercel" di `README.md` untuk produksi
+- `vercel.json` di tiap artifact hanya di-baca Vercel, tidak memengaruhi workflow Replit
 
 ## User preferences
 

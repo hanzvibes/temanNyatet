@@ -159,8 +159,24 @@ Repo ini punya dua deployable yang beda kebutuhan build-nya, jadi deploy sebagai
   - `GOOGLE_OAUTH_STATE_SECRET`
   - `MAYAR_WEBHOOK_SECRET`
   - `CRON_SECRET`
+  - `FRONTEND_URL` (production frontend URL — used for OAuth callback redirects)
+  - `ALLOWED_ORIGINS` (production frontend URL — gates CORS)
+  - `GOOGLE_REDIRECT_URI` (production callback URI — must match Google Cloud Console byte-for-byte)
 - Setelah live, update webhook URL di dashboard Mayar ke `https://<domain-api-server>/api/mayar-webhook`
 - Endpoint `/api/cron/archive-expired` masih pakai pola POST + Bearer token (`CRON_SECRET`), jadi tetap dipanggil dari scheduler eksternal (GitHub Actions cron, cron-job.org, dll) — bukan Vercel Cron Jobs bawaan (yang cuma bisa GET). Kalau mau pindah ke Vercel Cron, endpoint ini perlu ditambah handler GET.
+
+### Production domains (July 2026)
+
+Saat ini live di Vercel sebagai dua project dengan domain tetap (tidak berubah sampai deploy ulang):
+
+| Service | Domain | Catatan |
+|---|---|---|
+| Frontend | `https://teman-nyatet.vercel.app` | SPA dengan rewrite `(.*)→/index.html` |
+| API server | `https://teman-nyatet-api-server.vercel.app` | `@vercel/node` serverless function |
+
+Supabase Redirect URLs (Auth → Settings) harus menyertakan keduanya plus `https://*.vercel.app/login` dan `https://*.vercel.app/**` untuk preview branches.
+
+Google Cloud Console Authorized redirect URI untuk OAuth credential **wajib** persis byte-for-byte sama dengan `GOOGLE_REDIRECT_URI` di Vercel. Lihat `artifacts/api-server/docs/DEPLOY.md` untuk checklist lengkap (setup, verifikasi, rotasi secret).
 
 ### Catatan pnpm
 

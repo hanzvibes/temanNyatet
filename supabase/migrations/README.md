@@ -26,9 +26,11 @@ If you encounter `infinite recursion detected in policy for relation "profiles"`
 1. Go to **Authentication → Providers** and make sure **Email** is enabled.
 2. Go to **Authentication → Settings**.
 3. Enable **Confirm email**. This is required: new accounts cannot log in until they click the confirmation link.
-4. Set **Site URL** to your production domain, e.g. `https://temannyatet.id`.
+4. Set **Site URL** to your production domain.
+   - Current production (Vercel): `https://teman-nyatet.vercel.app`
+   - Custom domain (when configured): `https://temannyatet.id`
 5. Add **Redirect URLs** so Supabase accepts the URLs the app sends:
-   - Production: `https://temannyatet.id/login`
+   - Production: `https://teman-nyatet.vercel.app/login` (or your custom domain)
    - Vercel previews: `https://*.vercel.app/login`
    - Vercel wildcard (any path): `https://*.vercel.app/**`
    - Replit: `https://*.replit.dev/login` or `https://*.replit.dev/**`
@@ -80,10 +82,14 @@ CRON_SECRET=your-random-cron-secret
 3. Enable the **Google Sheets API** and **Google Drive API**
 4. Go to **APIs & Services → Credentials → Create Credentials → OAuth 2.0 Client ID**
 5. Application type: **Web application**
-6. Under **Authorized redirect URIs**, add the exact URL shown in `ConnectSheetPage` or the `GOOGLE_REDIRECT_URI` env var. For example:
-   - Replit: `https://<REPLIT_DEV_DOMAIN>/api/auth/google/callback`
-   - Local: `http://localhost:5000/api/auth/google/callback`
-   - Vercel: `https://<your-api-domain>/api/auth/google/callback`
+6. Under **Authorized redirect URIs**, add the exact URL shown in `ConnectSheetPage` or the `GOOGLE_REDIRECT_URI` env var.
+   For each environment you deploy to:
+   - **Production (Vercel)** — pinned: `https://teman-nyatet-api-server.vercel.app/api/auth/google/callback`
+   - **Replit dev**: `https://<REPLIT_DEV_DOMAIN>/api/auth/google/callback`
+   - **Local**: `http://localhost:5000/api/auth/google/callback`
+   - **Vercel preview** (if you want OAuth on previews): `https://teman-nyatet-api-server-<branch>-<team>.vercel.app/api/auth/google/callback` — must be registered explicitly per branch, no wildcards
+
+   Lihat `artifacts/api-server/docs/DEPLOY.md` untuk checklist Google Console lengkap.
 7. Copy the Client ID and Client Secret into the API server env vars (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
 8. Generate `GOOGLE_OAUTH_STATE_SECRET` with `openssl rand -hex 32`
 

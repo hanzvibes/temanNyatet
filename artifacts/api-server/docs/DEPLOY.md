@@ -21,17 +21,15 @@ Google consent screen
 Google → /api/auth/google/callback (server exchanges code)
 ```
 
-The canonical production callback URL is:
+The canonical production callback URL (pinned, not placeholder):
 
 ```
 https://teman-nyatet-api-server.vercel.app/api/auth/google/callback
 ```
 
-Replace `teman-nyatet-api-server` with the actual Vercel production domain of the api-server project (e.g. `teman-nyatet-api.vercel.app`).
-
 This URL must be set with **byte-exact equality** in:
 
-1. **Vercel** — Project `teman-nyatet-api` → Settings → Environment Variables → `GOOGLE_REDIRECT_URI` (Production + Preview if you want one for branches).
+1. **Vercel** — Project `teman-nyatet-api-server` → Settings → Environment Variables → `GOOGLE_REDIRECT_URI` (Production + Preview if you want one for branches).
 2. **Google Cloud Console** — OAuth 2.0 Client ID (Application type: **Web application**) → Authorized redirect URIs.
 
 If they disagree, the callback returns `redirect_uri_mismatch`. Server-side priority (`src/lib/google-oauth.ts`) is `env GOOGLE_REDIRECT_URI → REPLIT_DEV_DOMAIN → localhost:5000 fallback`, so without the env var Vercel will fail (no `REPLIT_DEV_DOMAIN` in Vercel runtime) — always set `GOOGLE_REDIRECT_URI` explicitly for production.

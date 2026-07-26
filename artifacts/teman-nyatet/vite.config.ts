@@ -98,14 +98,12 @@ export default defineConfig({
         //   2. Cache them independently — a UI update doesn't bust the charts chunk
         manualChunks(id) {
           if (!id.includes('node_modules')) return undefined;
-          // React core — tiny, separated so it's always cached alone
-          if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/scheduler/')) return 'react';
-          // Supabase SDK — large auth/realtime client
+          // Supabase SDK — large auth/realtime client, isolated for caching
           if (id.includes('@supabase/')) return 'supabase';
           // TanStack Query — data fetching layer
           if (id.includes('@tanstack/')) return 'query';
           // Recharts + its D3 dependencies — only loaded on Keuangan page
-          if (id.includes('recharts') || id.includes('d3-') || id.includes('d3@') || id.includes('victory-vendor')) return 'charts';
+          if (id.includes('recharts') || id.includes('d3-') || id.includes('victory-vendor')) return 'charts';
           // Drag-and-drop — only loaded on Catatan page
           if (id.includes('@dnd-kit/')) return 'dnd';
           // Animation / bottom-sheet libs
@@ -114,7 +112,9 @@ export default defineConfig({
           if (id.includes('@radix-ui/')) return 'radix';
           // date-fns — date formatting utilities
           if (id.includes('date-fns')) return 'datefns';
-          // Everything else (zod, wouter, lucide, clsx, etc.)
+          // Everything else (react, react-dom, zod, wouter, lucide, clsx, etc.)
+          // React intentionally NOT split — separating it causes circular chunk
+          // warnings because many vendor libs import React directly.
           return 'vendor';
         },
       },

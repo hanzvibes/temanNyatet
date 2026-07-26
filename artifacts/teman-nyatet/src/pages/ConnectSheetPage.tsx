@@ -162,10 +162,24 @@ export default function ConnectSheetPage() {
     setConnecting(true);
     try {
       // Get the OAuth URL from the backend, then redirect the browser there.
+      // Server-side response shape: { data: { url } }; apiClient auto-unwraps
+      // `data.data` so this returns { url: string }.
       const data = await apiGet<{ url: string }>('/auth/google/initiate');
+      if (!data?.url) {
+        const message = 'Server tidak mengembalikan tautan Google.';
+        console.error('[handleConnect] /auth/google/initiate returned no url', data);
+        toast.error(message);
+        setConnecting(false);
+        return;
+      }
       window.location.href = data.url;
-    } catch {
-      toast.error('Gagal memulai koneksi Google. Coba lagi.');
+    } catch (err) {
+      // Surface the actual cause instead of swallowing — common causes when
+      // this toast appears: Vercel DEPLOYMENT_NOT_FOUND (404 from api-server
+      // domain), CORS rejection, missing GOOGLE_CLIENT_ID on api-server, 401.
+      const detail = err instanceof Error ? err.message : String(err);
+      console.error('[handleConnect] /auth/google/initiate failed:', detail, err);
+      toast.error(`Gagal memulai koneksi Google: ${detail}`);
       setConnecting(false);
     }
   };

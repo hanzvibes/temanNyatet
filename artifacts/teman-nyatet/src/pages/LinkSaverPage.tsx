@@ -5,7 +5,7 @@ import { AnimatedListItem } from '@/components/AnimatedListItem';
 import SettingsSheet from '@/components/SettingsSheet';
 import { useLinks } from '@/hooks/useLinks';
 import { useCreate } from '@/contexts/CreateContext';
-import { Loader2, Link2, Copy, ExternalLink, Compass, Hand } from 'lucide-react';
+import { Loader2, Link2, Copy, ExternalLink, Compass, Hand, Plus } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import SearchBar from '@/components/SearchBar';
@@ -125,7 +125,16 @@ export default function LinkSaverPage() {
             accent="link"
             icon={Link2}
             title={search ? 'Tidak ada hasil pencarian' : 'Belum ada link tersimpan'}
-            description={search ? 'Coba kata kunci lain atau hapus filter.' : 'Tarik handle di bawah untuk menyimpan link pertama.'}
+            description={search ? 'Coba kata kunci lain atau hapus filter.' : 'Simpan link penting agar mudah ditemukan kapan saja.'}
+            cta={!search ? (
+              <button
+                onClick={() => { form.reset(); setIsFormOpen(true); }}
+                className="inline-flex items-center gap-2 bg-linksaver text-white font-bold px-6 py-3.5 rounded-full shadow-sm hover:bg-[#D48888] active:scale-95 transition-all text-sm"
+              >
+                <Plus size={18} strokeWidth={2.5} />
+                Simpan Link Pertama
+              </button>
+            ) : undefined}
           />
         ) : (
           <div className="grid gap-4 pb-8 md:grid-cols-2 xl:grid-cols-3">

@@ -5,7 +5,7 @@ import { useTodos } from '@/hooks/useTodos';
 import { useCreate } from '@/contexts/CreateContext';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Loader2, CheckCircle, Check, Clock, Calendar, Trash2, X } from 'lucide-react';
+import { Loader2, CheckCircle, Check, Clock, Calendar, Trash2, X, Plus } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { toast } from 'sonner';
@@ -233,8 +233,17 @@ export default function TodoPage() {
           <PageEmpty
             accent="todo"
             icon={CheckCircle}
-            title={search ? 'Tidak ada hasil pencarian' : 'Semua beres!'}
-            description={search ? 'Coba kata kunci lain atau hapus filter.' : 'Belum ada to-do. Tarik handle di bawah untuk menambah.'}
+            title={search ? 'Tidak ada hasil pencarian' : 'Belum ada to-do'}
+            description={search ? 'Coba kata kunci lain atau hapus filter.' : 'Atur hal yang perlu dikerjakan agar tidak ada yang terlewat.'}
+            cta={!search ? (
+              <button
+                onClick={() => { newForm.reset(); setIsFormOpen(true); }}
+                className="inline-flex items-center gap-2 bg-todo text-white font-bold px-6 py-3.5 rounded-full shadow-sm hover:bg-[#8AA8CF] active:scale-95 transition-all text-sm"
+              >
+                <Plus size={18} strokeWidth={2.5} />
+                Buat To-Do
+              </button>
+            ) : undefined}
           />
         ) : (
           <div className="pb-8 lg:grid lg:grid-cols-2 lg:gap-8 lg:items-start">

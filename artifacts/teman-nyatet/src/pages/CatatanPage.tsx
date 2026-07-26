@@ -4,7 +4,7 @@ import { useNotes } from '@/hooks/useNotes';
 import { useCreate } from '@/contexts/CreateContext';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Loader2, BookOpen, Trash2, X } from 'lucide-react';
+import { Loader2, BookOpen, Trash2, X, Plus } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { NOTE_TAGS } from '@/lib/categoryIcons';
@@ -159,7 +159,16 @@ export default function CatatanPage() {
             accent="catatan"
             icon={BookOpen}
             title={search ? 'Tidak ada hasil pencarian' : 'Belum ada catatan'}
-            description={search ? 'Coba kata kunci lain atau hapus filter.' : 'Tarik handle di bawah untuk menambah catatan pertama.'}
+            description={search ? 'Coba kata kunci lain atau hapus filter.' : 'Mulai catat hal penting. Tap tombol di bawah untuk memulai.'}
+            cta={!search ? (
+              <button
+                onClick={() => handleOpenForm()}
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-bold px-6 py-3.5 rounded-full shadow-sm hover:bg-primary/90 active:scale-95 transition-all text-sm"
+              >
+                <Plus size={18} strokeWidth={2.5} />
+                Tambah Catatan Pertama
+              </button>
+            ) : undefined}
           />
         ) : (
           <SortableNoteGrid

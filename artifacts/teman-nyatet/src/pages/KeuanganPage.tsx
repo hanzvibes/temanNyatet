@@ -7,7 +7,7 @@ import { useCreate } from '@/contexts/CreateContext';
 import { useTransactions } from '@/hooks/useTransactions';
 import { format, isToday, isYesterday } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Loader2, Wallet, ArrowDown, ArrowUp, Briefcase, Coffee, ShoppingBag, Car, HeartPulse, Laptop, Gamepad2, Gift, Receipt, Home, MoreHorizontal, BookOpen, Hand } from 'lucide-react';
+import { Loader2, Wallet, ArrowDown, ArrowUp, Briefcase, Coffee, ShoppingBag, Car, HeartPulse, Laptop, Gamepad2, Gift, Receipt, Home, MoreHorizontal, BookOpen, Hand, Plus } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { Drawer } from 'vaul';
@@ -224,7 +224,16 @@ export default function KeuanganPage() {
                 accent="keuangan"
                 icon={Wallet}
                 title={search ? 'Tidak ada hasil pencarian' : 'Belum ada transaksi bulan ini'}
-                description={search ? 'Coba kata kunci lain atau hapus filter.' : 'Tarik handle di bawah untuk menambah transaksi pertama.'}
+                description={search ? 'Coba kata kunci lain atau hapus filter.' : 'Catat pemasukan dan pengeluaran kamu agar keuangan tetap terpantau.'}
+                cta={!search ? (
+                  <button
+                    onClick={() => handleOpenForm('expense')}
+                    className="inline-flex items-center gap-2 bg-[#F4C753] text-[#4A3D18] font-bold px-6 py-3.5 rounded-full shadow-sm hover:bg-[#E0B442] active:scale-95 transition-all text-sm"
+                  >
+                    <Plus size={18} strokeWidth={2.5} />
+                    Catat Transaksi
+                  </button>
+                ) : undefined}
               />
             ) : (
               <div className="space-y-6">

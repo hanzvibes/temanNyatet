@@ -105,8 +105,14 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       } else if (profile.subscription_status === 'active') {
         // Auth-only pages that active users must be redirected away from.
         // These exist in ROUTE_ENTRIES (so !matched alone won't catch them),
-        // but an active+connected user has no reason to be on them.
-        const AUTH_ONLY_ROUTES = new Set(['/login', '/payment', '/archived', '/connect-sheet']);
+        // but an active user has no reason to be on them.
+        //
+        // /connect-sheet is intentionally NOT in this set: an active user
+        // navigates there voluntarily from Settings → "Spreadsheet Saya" to
+        // reconnect, disconnect, or check their spreadsheet. The
+        // `if (!profile.spreadsheet_id)` branch above already handles the
+        // involuntary case (first-time connect after login).
+        const AUTH_ONLY_ROUTES = new Set(['/login', '/payment', '/archived']);
         const matched = ROUTE_ENTRIES.find((e) => e.path === location);
         if (!matched || AUTH_ONLY_ROUTES.has(location)) {
           setLocation('/catatan');

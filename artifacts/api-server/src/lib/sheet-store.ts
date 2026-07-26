@@ -6,8 +6,8 @@
 // All public functions receive a `sheets` client (per-user OAuth) rather than
 // calling a global service-account client.
 import type { sheets_v4 } from 'googleapis';
-import { newId, withGoogleRetry } from './google-sheets';
-import { logger } from './logger';
+import { newId, withGoogleRetry } from './google-sheets.js';
+import { logger } from './logger.js';
 
 // ─── Sheet schemas ──────────────────────────────────────────────────────────
 

@@ -1,9 +1,9 @@
 // Resolves the per-user Google Sheets connection (spreadsheet ID + OAuth client).
 // Results are cached in memory with a short TTL to avoid a Supabase round-trip
 // on every data request while still picking up reconnects quickly.
-import { supabaseAdmin } from './supabase-admin';
-import { createSheetsClient } from './google-oauth';
-import { logger } from './logger';
+import { supabaseAdmin } from './supabase-admin.js';
+import { createSheetsClient } from './google-oauth.js';
+import { logger } from './logger.js';
 import type { sheets_v4 } from 'googleapis';
 
 const CACHE_TTL_MS = 60 * 1000; // 1 minute

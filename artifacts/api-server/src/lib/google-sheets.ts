@@ -2,7 +2,7 @@
 // The actual Sheets client is now per-user (see google-oauth.ts + user-sheet.ts).
 // This file no longer holds a global service-account client.
 import crypto from 'crypto';
-import { logger } from './logger';
+import { logger } from './logger.js';
 
 export function newId(): string {
   return crypto.randomUUID();

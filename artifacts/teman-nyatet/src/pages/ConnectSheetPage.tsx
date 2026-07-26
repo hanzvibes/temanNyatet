@@ -14,8 +14,31 @@ import {
   AlertTriangle,
   RefreshCw,
   Unlink,
+  WifiOff,
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+// Translate raw API error codes / fetch error strings into user-friendly
+// Indonesian messages shown in the connect-button toast.
+function translateConnectError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (msg === 'SERVER_NOT_DEPLOYED') {
+    return 'Server API belum aktif di Vercel. Lakukan deploy ulang project api-server di dashboard Vercel.';
+  }
+  if (msg === 'NETWORK_ERROR') {
+    return 'Tidak dapat menghubungi server API. Periksa koneksi internet atau pastikan server sudah aktif.';
+  }
+  if (msg === 'CORS_BLOCKED') {
+    return 'Permintaan diblokir CORS. Pastikan ALLOWED_ORIGINS di api-server sudah mencantumkan domain frontend.';
+  }
+  if (msg.includes('status 404')) {
+    return 'Server API tidak ditemukan (404). Pastikan VITE_API_SERVER_URL sudah di-set di Vercel frontend, atau api-server sudah ter-deploy.';
+  }
+  if (msg.includes('status 5')) {
+    return `Server API error (${msg}). Periksa log Vercel api-server untuk detail.`;
+  }
+  return msg;
+}
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface GoogleStatus {
@@ -70,6 +93,9 @@ export default function ConnectSheetPage() {
   const [disconnecting, setDisconnecting] = useState(false);
   const [showDisconnect, setShowDisconnect] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  // Set when the API server itself is unreachable — shown as a persistent banner
+  // so the user (or developer) knows the root cause before clicking anything.
+  const [apiServerError, setApiServerError] = useState<string | null>(null);
 
   const params = new URLSearchParams(window.location.search);
   const connectedParam = params.get('connected');
@@ -82,9 +108,22 @@ export default function ConnectSheetPage() {
   const loadStatus = async (): Promise<GoogleStatus | null> => {
     try {
       const data = await apiGet<GoogleStatus>('/auth/google/status');
+      setApiServerError(null); // clear any previous server-unreachable banner
       setStatus(data);
       return data;
-    } catch {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      // Surface infra-level errors (server not deployed, network, CORS) as a
+      // persistent banner so the user knows the root cause immediately.
+      if (
+        msg === 'SERVER_NOT_DEPLOYED' ||
+        msg === 'NETWORK_ERROR' ||
+        msg === 'CORS_BLOCKED' ||
+        msg.includes('status 404') ||
+        msg.includes('status 5')
+      ) {
+        setApiServerError(translateConnectError(err));
+      }
       return null;
     } finally {
       setLoadingStatus(false);
@@ -166,7 +205,7 @@ export default function ConnectSheetPage() {
       // `data.data` so this returns { url: string }.
       const data = await apiGet<{ url: string }>('/auth/google/initiate');
       if (!data?.url) {
-        const message = 'Server tidak mengembalikan tautan Google.';
+        const message = 'Server tidak mengembalikan tautan Google. Periksa konfigurasi GOOGLE_CLIENT_ID di api-server.';
         console.error('[handleConnect] /auth/google/initiate returned no url', data);
         toast.error(message);
         setConnecting(false);
@@ -174,12 +213,11 @@ export default function ConnectSheetPage() {
       }
       window.location.href = data.url;
     } catch (err) {
-      // Surface the actual cause instead of swallowing — common causes when
-      // this toast appears: Vercel DEPLOYMENT_NOT_FOUND (404 from api-server
-      // domain), CORS rejection, missing GOOGLE_CLIENT_ID on api-server, 401.
-      const detail = err instanceof Error ? err.message : String(err);
-      console.error('[handleConnect] /auth/google/initiate failed:', detail, err);
-      toast.error(`Gagal memulai koneksi Google: ${detail}`);
+      const detail = translateConnectError(err);
+      console.error('[handleConnect] /auth/google/initiate failed:', err);
+      // Also update the banner so the persistent state reflects the failure.
+      setApiServerError(detail);
+      toast.error(detail);
       setConnecting(false);
     }
   };
@@ -227,6 +265,29 @@ export default function ConnectSheetPage() {
             transition={{ duration: 0.35, ease: 'easeOut' }}
             className="relative w-full max-w-md bg-card/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-border p-6 sm:p-8"
           >
+            {/* API server unreachable banner — shown when the health/status check
+                fails at the infra level (server not deployed, CORS, network). */}
+            <AnimatePresence>
+              {apiServerError && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-5 flex gap-3 bg-orange-500/10 border border-orange-500/25 rounded-2xl p-4"
+                >
+                  <WifiOff size={18} className="flex-shrink-0 text-orange-600 dark:text-orange-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-orange-700 dark:text-orange-300">
+                      Server API tidak dapat diakses
+                    </p>
+                    <p className="text-xs text-orange-700/80 dark:text-orange-300/80 mt-0.5 leading-relaxed">
+                      {apiServerError}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Error / recovery alert */}
             <AnimatePresence>
               {recoveryInfo && (

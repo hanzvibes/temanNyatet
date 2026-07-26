@@ -13,6 +13,12 @@ import { supabase } from './supabase';
 
 const API_BASE = (import.meta.env.VITE_API_SERVER_URL as string | undefined)?.replace(/\/$/, '') ?? '';
 
+// Warn once in non-production if the API base isn't configured, so developers
+// know why all API calls are going to relative /api/… paths.
+if (import.meta.env.DEV && !API_BASE) {
+  console.info('[apiClient] VITE_API_SERVER_URL not set — using relative /api/* (Vite proxy must be running)');
+}
+
 let refreshPromise: Promise<string | null> | null = null;
 
 // ─── Typed error for spreadsheet access failures ────────────────────────────
@@ -66,6 +72,18 @@ async function refreshToken(): Promise<string | null> {
 
 async function handle<T>(res: Response): Promise<T> {
   if (res.status === 204) return undefined as T;
+
+  // Vercel returns plain-text "DEPLOYMENT_NOT_FOUND" with a 404 when the
+  // api-server project has no live deployment. Detect this early so we can
+  // surface a clear, actionable message instead of "Request failed with status 404".
+  if (res.status === 404) {
+    const vercelError = res.headers.get('x-vercel-error');
+    if (vercelError === 'DEPLOYMENT_NOT_FOUND') {
+      throw new Error('SERVER_NOT_DEPLOYED');
+    }
+    // Generic 404 from a deployed server (route not found) — fall through.
+  }
+
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const code = body?.error as string | undefined;
@@ -93,24 +111,40 @@ async function fetchWithAuth<T>(path: string, init: RequestInit): Promise<T> {
   const token = await getToken();
   const url = `${API_BASE}/api${path}`;
 
-  const res = await fetch(url, {
-    ...init,
-    headers: {
-      ...init.headers,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...init,
+      headers: {
+        ...init.headers,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+  } catch (networkErr) {
+    // fetch() itself threw — either a CORS preflight rejection or the host is
+    // unreachable. Surface a descriptive error instead of an untyped TypeError.
+    const isCors = networkErr instanceof TypeError && networkErr.message.toLowerCase().includes('cors');
+    if (isCors) {
+      throw new Error('CORS_BLOCKED');
+    }
+    throw new Error('NETWORK_ERROR');
+  }
 
   if (res.status === 401) {
     const newToken = await refreshToken();
     if (newToken) {
-      const retryRes = await fetch(url, {
-        ...init,
-        headers: {
-          ...init.headers,
-          Authorization: `Bearer ${newToken}`,
-        },
-      });
+      let retryRes: Response;
+      try {
+        retryRes = await fetch(url, {
+          ...init,
+          headers: {
+            ...init.headers,
+            Authorization: `Bearer ${newToken}`,
+          },
+        });
+      } catch {
+        throw new Error('NETWORK_ERROR');
+      }
       return handle<T>(retryRes);
     }
 

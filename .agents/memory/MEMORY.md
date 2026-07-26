@@ -3,3 +3,4 @@
 - [Google Sheets as app-data backend](google-sheets-as-db.md) — TemanNyatet: users connect their own private spreadsheet (not auto-created — service accounts have 0 Drive quota). NOTE: now superseded by OAuth arch above.
 - [Supabase profiles missing columns](supabase-profiles-missing-columns.md) — TemanNyatet migration omitted `name`, `phone`, `avatar_url`; add them via `002_add_profile_fields.sql` when name/avatar updates fail.
 - [google-auth-library version conflict](gauth-version-conflict.md) — two versions (10.5.0 + 10.9.0) cause TS type errors; fixed with pnpm-workspace override + `as any` cast in google-oauth.ts.
+- [Vercel Express entry point pattern](vercel-express-entry-point.md) — api-server src/index.ts must `export default app` and gate `app.listen()` on `VERCEL !== "1"` so @vercel/node can wrap it serverlessly.

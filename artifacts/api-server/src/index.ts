@@ -47,11 +47,22 @@ if (missingVars.length > 0) {
 // to 8080 (matches the port documented in replit.md for local dev).
 const port = Number(process.env["PORT"]) || 8080;
 
-app.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
-    process.exit(1);
-  }
+// On Vercel, @vercel/node wraps the default-exported Express app as a
+// serverless function handler — calling app.listen() there would block
+// forever trying to bind a port that doesn't exist in PaaS runtime.
+// On Replit / local dev / a self-hosted Node process, start the HTTP
+// server normally.
+const isVercel = process.env["VERCEL"] === "1";
 
-  logger.info({ port }, "Server listening");
-});
+if (!isVercel) {
+  app.listen(port, (err) => {
+    if (err) {
+      logger.error({ err }, "Error listening on port");
+      process.exit(1);
+    }
+
+    logger.info({ port }, "Server listening");
+  });
+}
+
+export default app;

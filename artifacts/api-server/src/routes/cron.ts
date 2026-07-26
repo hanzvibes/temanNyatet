@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import crypto from 'crypto';
-import { archiveExpiredAccounts } from '../lib/supabase-admin';
+import { archiveExpiredAccounts } from '../lib/supabase-admin.js';
 
 const router = Router();
 

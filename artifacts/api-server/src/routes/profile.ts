@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as multerMod from 'multer';
-import { requireUser } from '../middleware/requireAuth';
-import { supabaseAdmin } from '../lib/supabase-admin';
+import { requireUser } from '../middleware/requireAuth.js';
+import { supabaseAdmin } from '../lib/supabase-admin.js';
 
 // multer ships CJS UMD types (`export = multer`) alongside an ESM default
 // shim. Vercel's tsc post-build type-check pins the default-import to the

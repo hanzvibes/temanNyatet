@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { requireAuth, userRateLimit } from '../middleware/requireAuth';
-import { createRow, deleteRow, listByUser, updateRow } from '../lib/sheet-store';
-import { SheetsAccessError } from '../lib/google-sheets';
-import { optionalString, requireEnum, requireString, ValidationError } from '../lib/validate';
+import { requireAuth, userRateLimit } from '../middleware/requireAuth.js';
+import { createRow, deleteRow, listByUser, updateRow } from '../lib/sheet-store.js';
+import { SheetsAccessError } from '../lib/google-sheets.js';
+import { optionalString, requireEnum, requireString, ValidationError } from '../lib/validate.js';
 
 const router = Router();
 const SHEET = '💰 Transactions';

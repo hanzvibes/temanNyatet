@@ -8,8 +8,8 @@
 //   4. Callback: verify state, exchange code for tokens, auto-create spreadsheet
 //   5. Redirect browser to frontend success/error page
 import { Router } from 'express';
-import { requireUser } from '../middleware/requireAuth';
-import { supabaseAdmin } from '../lib/supabase-admin';
+import { requireUser } from '../middleware/requireAuth.js';
+import { supabaseAdmin } from '../lib/supabase-admin.js';
 import {
   createDriveClient,
   createOAuth2Client,
@@ -18,9 +18,9 @@ import {
   getAuthorizationUrl,
   getRedirectUri,
   verifyState,
-} from '../lib/google-oauth';
-import { ensureSheetsInitialized } from '../lib/sheet-store';
-import { invalidateUserSheetCache } from '../lib/user-sheet';
+} from '../lib/google-oauth.js';
+import { ensureSheetsInitialized } from '../lib/sheet-store.js';
+import { invalidateUserSheetCache } from '../lib/user-sheet.js';
 
 const router = Router();
 

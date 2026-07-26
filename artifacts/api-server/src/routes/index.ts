@@ -1,15 +1,15 @@
 import { Router, type IRouter } from 'express';
-import healthRouter from './health';
-import webhookRouter from './webhook';
-import subscriptionRouter from './subscription';
-import cronRouter from './cron';
-import authGoogleRouter from './auth-google';
-import notesRouter from './notes';
-import transactionsRouter from './transactions';
-import todosRouter from './todos';
-import linksRouter from './links';
-import profileRouter from './profile';
-import spreadsheetRouter from './spreadsheet';
+import healthRouter from './health.js';
+import webhookRouter from './webhook.js';
+import subscriptionRouter from './subscription.js';
+import cronRouter from './cron.js';
+import authGoogleRouter from './auth-google.js';
+import notesRouter from './notes.js';
+import transactionsRouter from './transactions.js';
+import todosRouter from './todos.js';
+import linksRouter from './links.js';
+import profileRouter from './profile.js';
+import spreadsheetRouter from './spreadsheet.js';
 
 const router: IRouter = Router();
 

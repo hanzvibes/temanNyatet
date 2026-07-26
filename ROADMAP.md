@@ -2,6 +2,15 @@
 
 > Built from the current implementation. Only confirmed features are listed as Completed. Planned items reflect known intent, not invented features.
 
+## Related documentation
+
+| Document | Path |
+|---|---|
+| README — project overview & docs map | [`README.md`](./README.md) |
+| PRD — product requirements | [`PRD.md`](./PRD.md) |
+| TASKS — prioritized actionable tasks | [`TASKS.md`](./TASKS.md) |
+| DECISIONS — architecture decisions that shape the roadmap | [`DECISIONS.md`](./DECISIONS.md) |
+
 ---
 
 ## Completed

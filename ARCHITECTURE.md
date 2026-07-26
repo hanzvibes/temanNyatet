@@ -1,6 +1,18 @@
 # ARCHITECTURE.md — TemanNyatet
 
-> See also: `AI_CONTEXT.md` (quick reference), `DATABASE.md` (schema), `API.md` (routes), `AUTH.md` (auth flow).
+> See also: [`AI_CONTEXT.md`](./AI_CONTEXT.md) (quick reference), [`DATABASE.md`](./DATABASE.md) (schema), [`API.md`](./API.md) (routes), [`AUTH.md`](./AUTH.md) (auth flow).
+
+## Related documentation
+
+| Document | Path |
+|---|---|
+| README — project overview & docs map | [`README.md`](./README.md) |
+| AI_CONTEXT — quick reference for AI agents | [`AI_CONTEXT.md`](./AI_CONTEXT.md) |
+| API — complete route reference | [`API.md`](./API.md) |
+| DATABASE — Supabase schema + Google Sheets schemas | [`DATABASE.md`](./DATABASE.md) |
+| AUTH — Supabase + Google OAuth flows | [`AUTH.md`](./AUTH.md) |
+| DEPLOYMENT — Vercel deployment runbook | [`DEPLOYMENT.md`](./DEPLOYMENT.md) |
+| DECISIONS — architecture decision records | [`DECISIONS.md`](./DECISIONS.md) |
 
 ---
 

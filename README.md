@@ -127,28 +127,39 @@ PORT=8080
 LOG_LEVEL=info
 ```
 
-## Documentation
+## Documentation map
+
+For AI agents and new contributors, read in this order:
+
+1. [`AI_CONTEXT.md`](./AI_CONTEXT.md) — quick project overview and conventions.
+2. [`ARCHITECTURE.md`](./ARCHITECTURE.md) — system architecture and data flow.
+3. [`AUTH.md`](./AUTH.md) — authentication flows and required configs.
+4. [`DATABASE.md`](./DATABASE.md) — Supabase schema and Google Sheets tab schemas.
+5. [`API.md`](./API.md) — complete API route reference.
+6. [`ENVIRONMENT.md`](./ENVIRONMENT.md) — all environment variables.
+7. [`DEPLOYMENT.md`](./DEPLOYMENT.md) — Vercel deployment runbook.
+8. [`replit.md`](./replit.md) — Replit-specific run instructions and secrets.
 
 | File | What's in it |
 |---|---|
-| `AI_CONTEXT.md` | AI-agent quick reference — read this first |
-| `ARCHITECTURE.md` | Full system architecture, routing, data layer |
-| `API.md` | Complete API route reference |
-| `AUTH.md` | Authentication + Google OAuth flows |
-| `DATABASE.md` | Supabase schema + Google Sheets tab schemas |
-| `ENVIRONMENT.md` | All environment variables (required + optional) |
-| `DEPLOYMENT.md` | Vercel deployment runbook |
-| `PRD.md` | Product requirements (confirmed features only) |
-| `DECISIONS.md` | Architecture Decision Records (why things are the way they are) |
-| `SECURITY.md` | Security controls and known limitations |
-| `TROUBLESHOOTING.md` | Common problems and solutions |
-| `ROADMAP.md` | Completed / planned / future |
-| `TASKS.md` | Prioritized actionable tasks |
-| `UI_UX_GUIDELINES.md` | Frontend design system and conventions |
-| `TESTING.md` | Manual checklist + automation roadmap |
-| `supabase/migrations/README.md` | Supabase setup instructions |
-| `artifacts/api-server/docs/DEPLOY.md` | Google Cloud Console OAuth setup walkthrough |
-| `replit.md` | Replit-specific run instructions and secrets |
+| [`AI_CONTEXT.md`](./AI_CONTEXT.md) | AI-agent quick reference — read this first |
+| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Full system architecture, routing, data layer |
+| [`API.md`](./API.md) | Complete API route reference |
+| [`AUTH.md`](./AUTH.md) | Authentication + Google OAuth flows |
+| [`DATABASE.md`](./DATABASE.md) | Supabase schema + Google Sheets tab schemas |
+| [`ENVIRONMENT.md`](./ENVIRONMENT.md) | All environment variables (required + optional) |
+| [`DEPLOYMENT.md`](./DEPLOYMENT.md) | Vercel deployment runbook |
+| [`PRD.md`](./PRD.md) | Product requirements (confirmed features only) |
+| [`DECISIONS.md`](./DECISIONS.md) | Architecture Decision Records (why things are the way they are) |
+| [`SECURITY.md`](./SECURITY.md) | Security controls and known limitations |
+| [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) | Common problems and solutions |
+| [`ROADMAP.md`](./ROADMAP.md) | Completed / planned / future |
+| [`TASKS.md`](./TASKS.md) | Prioritized actionable tasks |
+| [`UI_UX_GUIDELINES.md`](./UI_UX_GUIDELINES.md) | Frontend design system and conventions |
+| [`TESTING.md`](./TESTING.md) | Manual checklist + automation roadmap |
+| [`supabase/migrations/README.md`](./supabase/migrations/README.md) | Supabase setup instructions |
+| [`artifacts/api-server/docs/DEPLOY.md`](./artifacts/api-server/docs/DEPLOY.md) | Google Cloud Console OAuth setup walkthrough |
+| [`replit.md`](./replit.md) | Replit-specific run instructions and secrets |
 
 ## Deploy ke Vercel
 

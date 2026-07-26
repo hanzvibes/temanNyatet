@@ -2,6 +2,17 @@
 
 A note-taking SaaS PWA for Indonesian users. Four core modules: Catatan (Notes), Keuangan (Finance), To Do List, and Link Saver. Mobile-first with bottom sheet patterns ("sat-set" UX). Each user stores their own data in a private Google Spreadsheet created automatically by the app in their own Google Drive via OAuth2.
 
+## Related documentation
+
+| Document | Path |
+|---|---|
+| README — project overview & docs map | [`README.md`](./README.md) |
+| ENVIRONMENT — all env vars & secrets | [`ENVIRONMENT.md`](./ENVIRONMENT.md) |
+| DEPLOYMENT — Vercel deployment runbook | [`DEPLOYMENT.md`](./DEPLOYMENT.md) |
+| TROUBLESHOOTING — Replit-specific issues | [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) |
+| AUTH — Google OAuth setup for Replit | [`AUTH.md`](./AUTH.md) |
+| supabase/migrations — DB setup | [`supabase/migrations/README.md`](./supabase/migrations/README.md) |
+
 ## How to run
 
 Two services run in parallel — both are already configured as workflows:

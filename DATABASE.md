@@ -1,6 +1,17 @@
 # DATABASE.md — TemanNyatet
 
-> See also: `ARCHITECTURE.md` (system overview), `AUTH.md` (profile columns used in auth).
+> See also: [`ARCHITECTURE.md`](./ARCHITECTURE.md) (system overview), [`AUTH.md`](./AUTH.md) (profile columns used in auth).
+
+## Related documentation
+
+| Document | Path |
+|---|---|
+| README — project overview & docs map | [`README.md`](./README.md) |
+| AI_CONTEXT — quick reference for AI agents | [`AI_CONTEXT.md`](./AI_CONTEXT.md) |
+| ARCHITECTURE — system architecture & data flow | [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
+| AUTH — how profile columns are used in auth | [`AUTH.md`](./AUTH.md) |
+| ENVIRONMENT — Supabase + Google credentials | [`ENVIRONMENT.md`](./ENVIRONMENT.md) |
+| supabase/migrations — setup SQL files | [`supabase/migrations/README.md`](./supabase/migrations/README.md) |
 
 ---
 

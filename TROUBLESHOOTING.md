@@ -1,6 +1,16 @@
 # TROUBLESHOOTING.md — TemanNyatet
 
-> Common problems and their solutions. See `AUTH.md` for OAuth-specific errors, `DEPLOYMENT.md` for deploy issues.
+> Common problems and their solutions. See [`AUTH.md`](./AUTH.md) for OAuth-specific errors, [`DEPLOYMENT.md`](./DEPLOYMENT.md) for deploy issues.
+
+## Related documentation
+
+| Document | Path |
+|---|---|
+| README — project overview & docs map | [`README.md`](./README.md) |
+| AUTH — OAuth-specific errors | [`AUTH.md`](./AUTH.md) |
+| DEPLOYMENT — deploy issues & verification | [`DEPLOYMENT.md`](./DEPLOYMENT.md) |
+| ENVIRONMENT — env vars & secrets | [`ENVIRONMENT.md`](./ENVIRONMENT.md) |
+| replit.md — Replit-specific issues | [`replit.md`](./replit.md) |
 
 ---
 

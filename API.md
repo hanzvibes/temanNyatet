@@ -1,8 +1,20 @@
 # API.md — TemanNyatet API Reference
 
 > Base URL (production): `https://teman-nyatet-api-server.vercel.app`  
-> Base URL (Replit dev): proxied via Vite at `/api/*` → `http://localhost:8080`  
-> See also: `AUTH.md` (token format), `ARCHITECTURE.md` (middleware stack).
+> Base URL (Replit dev): proxied via Vite at `/api/*` → `http://localhost:8080`
+
+## Related documentation
+
+| Document | Path |
+|---|---|
+| README — project overview & docs map | [`README.md`](./README.md) |
+| AI_CONTEXT — quick reference for AI agents | [`AI_CONTEXT.md`](./AI_CONTEXT.md) |
+| ARCHITECTURE — system architecture & middleware stack | [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
+| AUTH — token format & auth flows | [`AUTH.md`](./AUTH.md) |
+| DATABASE — request/response schemas | [`DATABASE.md`](./DATABASE.md) |
+| ENVIRONMENT — env vars for the API server | [`ENVIRONMENT.md`](./ENVIRONMENT.md) |
+
+---
 
 ---
 

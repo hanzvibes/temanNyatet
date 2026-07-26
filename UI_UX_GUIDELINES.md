@@ -1,6 +1,15 @@
 # UI_UX_GUIDELINES.md — TemanNyatet
 
-> Coding conventions and design decisions for the frontend. Read alongside `AI_CONTEXT.md`.
+> Coding conventions and design decisions for the frontend. Read alongside [`AI_CONTEXT.md`](./AI_CONTEXT.md).
+
+## Related documentation
+
+| Document | Path |
+|---|---|
+| README — project overview & docs map | [`README.md`](./README.md) |
+| AI_CONTEXT — frontend conventions & stack | [`AI_CONTEXT.md`](./AI_CONTEXT.md) |
+| PRD — product requirements that drive UX | [`PRD.md`](./PRD.md) |
+| TESTING — manual UI checklist | [`TESTING.md`](./TESTING.md) |
 
 ---
 

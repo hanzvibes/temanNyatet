@@ -1,7 +1,18 @@
 # DEPLOYMENT.md — TemanNyatet
 
-> Full deployment reference. For Google Cloud Console setup details, see `artifacts/api-server/docs/DEPLOY.md`.  
-> For environment variables, see `ENVIRONMENT.md`.
+> Full deployment reference. For Google Cloud Console setup details, see [`artifacts/api-server/docs/DEPLOY.md`](./artifacts/api-server/docs/DEPLOY.md).  
+> For environment variables, see [`ENVIRONMENT.md`](./ENVIRONMENT.md).
+
+## Related documentation
+
+| Document | Path |
+|---|---|
+| README — project overview & docs map | [`README.md`](./README.md) |
+| ENVIRONMENT — all env vars & secrets | [`ENVIRONMENT.md`](./ENVIRONMENT.md) |
+| AUTH — OAuth flows & redirect URIs | [`AUTH.md`](./AUTH.md) |
+| Google Cloud Console setup walkthrough | [`artifacts/api-server/docs/DEPLOY.md`](./artifacts/api-server/docs/DEPLOY.md) |
+| supabase/migrations — DB setup | [`supabase/migrations/README.md`](./supabase/migrations/README.md) |
+| TROUBLESHOOTING — deploy issues | [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) |
 
 ---
 

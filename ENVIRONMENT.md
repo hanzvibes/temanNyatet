@@ -1,6 +1,16 @@
 # ENVIRONMENT.md — TemanNyatet Environment Variables
 
-> Complete reference for all environment variables. See `AUTH.md` for what each secret is used for. See `DEPLOYMENT.md` for Vercel-specific configuration.
+> Complete reference for all environment variables. See [`AUTH.md`](./AUTH.md) for what each secret is used for. See [`DEPLOYMENT.md`](./DEPLOYMENT.md) for Vercel-specific configuration.
+
+## Related documentation
+
+| Document | Path |
+|---|---|
+| README — project overview & docs map | [`README.md`](./README.md) |
+| AUTH — what each secret is used for | [`AUTH.md`](./AUTH.md) |
+| DEPLOYMENT — Vercel-specific configuration | [`DEPLOYMENT.md`](./DEPLOYMENT.md) |
+| replit.md — Replit secrets & setup | [`replit.md`](./replit.md) |
+| Google OAuth setup walkthrough | [`artifacts/api-server/docs/DEPLOY.md`](./artifacts/api-server/docs/DEPLOY.md) |
 
 ---
 

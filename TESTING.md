@@ -2,6 +2,16 @@
 
 > Documents the current testing state and what should be tested. No automated test suite exists yet.
 
+## Related documentation
+
+| Document | Path |
+|---|---|
+| README — project overview & docs map | [`README.md`](./README.md) |
+| ROADMAP — planned testing improvements | [`ROADMAP.md`](./ROADMAP.md) |
+| TASKS — actionable testing tasks | [`TASKS.md`](./TASKS.md) |
+| UI_UX_GUIDELINES — UI patterns to test | [`UI_UX_GUIDELINES.md`](./UI_UX_GUIDELINES.md) |
+| API.md — API behavior to test | [`API.md`](./API.md) |
+
 ---
 
 ## Current state

@@ -1,6 +1,15 @@
 # TASKS.md — TemanNyatet
 
-> Actionable tasks derived from repository analysis. Categorized by impact. See `ROADMAP.md` for feature direction.
+> Actionable tasks derived from repository analysis. Categorized by impact. See [`ROADMAP.md`](./ROADMAP.md) for feature direction.
+
+## Related documentation
+
+| Document | Path |
+|---|---|
+| README — project overview & docs map | [`README.md`](./README.md) |
+| ROADMAP — feature direction & completed work | [`ROADMAP.md`](./ROADMAP.md) |
+| TESTING — what to test first | [`TESTING.md`](./TESTING.md) |
+| ARCHITECTURE — technical context for tasks | [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
 
 ---
 

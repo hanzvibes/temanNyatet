@@ -1,5 +1,7 @@
 # Supabase Setup Instructions
 
+> For the full project overview, see [`README.md`](../../README.md). For the database schema, see [`DATABASE.md`](../../DATABASE.md). For environment variables, see [`ENVIRONMENT.md`](../../ENVIRONMENT.md). For OAuth setup, see [`AUTH.md`](../../AUTH.md).
+
 ## 1. Create Supabase Project
 1. Go to https://supabase.com
 2. Create a new project

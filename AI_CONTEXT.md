@@ -2,6 +2,18 @@
 
 > Optimized for AI coding agents. Read this file first, then follow the "Read next" pointers.
 
+## Related documentation
+
+| Document | Path |
+|---|---|
+| README — project overview & docs map | [`README.md`](./README.md) |
+| ARCHITECTURE — system architecture & data flow | [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
+| API — complete route reference | [`API.md`](./API.md) |
+| AUTH — Supabase + Google OAuth flows | [`AUTH.md`](./AUTH.md) |
+| DATABASE — Supabase schema + Google Sheets schemas | [`DATABASE.md`](./DATABASE.md) |
+| ENVIRONMENT — env vars & secrets | [`ENVIRONMENT.md`](./ENVIRONMENT.md) |
+| replit.md — Replit-specific instructions | [`replit.md`](./replit.md) |
+
 ---
 
 ## Project summary

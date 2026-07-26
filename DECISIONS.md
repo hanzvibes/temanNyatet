@@ -2,6 +2,15 @@
 
 > Documents the *why* behind major technical choices. Helps future maintainers understand tradeoffs before changing direction.
 
+## Related documentation
+
+| Document | Path |
+|---|---|
+| README — project overview & docs map | [`README.md`](./README.md) |
+| ARCHITECTURE — system architecture that implements these decisions | [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
+| ROADMAP — completed / planned / future | [`ROADMAP.md`](./ROADMAP.md) |
+| SECURITY — security implications | [`SECURITY.md`](./SECURITY.md) |
+
 ---
 
 ## ADR-001: Google Sheets as the app data backend

@@ -1,6 +1,16 @@
 # SECURITY.md — TemanNyatet
 
-> Documents the security controls currently implemented. See `AUTH.md` for auth-specific security details.
+> Documents the security controls currently implemented. See [`AUTH.md`](./AUTH.md) for auth-specific security details.
+
+## Related documentation
+
+| Document | Path |
+|---|---|
+| README — project overview & docs map | [`README.md`](./README.md) |
+| AUTH — auth-specific security details | [`AUTH.md`](./AUTH.md) |
+| ENVIRONMENT — secret management & env vars | [`ENVIRONMENT.md`](./ENVIRONMENT.md) |
+| DECISIONS — security-related ADRs | [`DECISIONS.md`](./DECISIONS.md) |
+| DEPLOYMENT — secret rotation procedures | [`DEPLOYMENT.md`](./DEPLOYMENT.md) |
 
 ---
 

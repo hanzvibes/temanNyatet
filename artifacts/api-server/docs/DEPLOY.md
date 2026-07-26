@@ -1,5 +1,7 @@
 # Deploy — Production
 
+> This is the detailed Google Cloud Console / OAuth setup walkthrough. For the high-level Vercel deployment runbook, see [`DEPLOYMENT.md`](../../../DEPLOYMENT.md). For all env vars, see [`ENVIRONMENT.md`](../../../ENVIRONMENT.md).
+
 This project ships as **two Vercel projects** from a single GitHub repo, each with its own `Root Directory`:
 
 | Project | Root Directory | Output |

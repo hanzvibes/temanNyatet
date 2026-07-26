@@ -1,6 +1,18 @@
 # AUTH.md — TemanNyatet Authentication & Authorization
 
-> See also: `API.md` (route auth requirements), `DATABASE.md` (profiles table), `ENVIRONMENT.md` (required secrets).
+> See also: [`API.md`](./API.md) (route auth requirements), [`DATABASE.md`](./DATABASE.md) (profiles table), [`ENVIRONMENT.md`](./ENVIRONMENT.md) (required secrets).
+
+## Related documentation
+
+| Document | Path |
+|---|---|
+| README — project overview & docs map | [`README.md`](./README.md) |
+| AI_CONTEXT — quick reference for AI agents | [`AI_CONTEXT.md`](./AI_CONTEXT.md) |
+| ARCHITECTURE — auth middleware & flow | [`ARCHITECTURE.md`](./ARCHITECTURE.md) |
+| API — route auth requirements | [`API.md`](./API.md) |
+| DATABASE — profiles table schema | [`DATABASE.md`](./DATABASE.md) |
+| ENVIRONMENT — OAuth secrets & redirect URIs | [`ENVIRONMENT.md`](./ENVIRONMENT.md) |
+| SECURITY — security controls | [`SECURITY.md`](./SECURITY.md) |
 
 ---
 

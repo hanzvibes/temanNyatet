@@ -80,7 +80,7 @@ export async function getUserSheetConnection(userId: string): Promise<UserSheetC
 
   let connection: UserSheetConnection | null = null;
   if (spreadsheetId && refreshToken) {
-    const sheets = createSheetsClient(refreshToken);
+    const sheets = await createSheetsClient(refreshToken);
     connection = { spreadsheetId, sheets };
   }
 

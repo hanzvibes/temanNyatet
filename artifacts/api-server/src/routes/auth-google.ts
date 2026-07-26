@@ -33,10 +33,10 @@ function getFrontendUrl(): string {
 // ─── GET /api/auth/google/initiate ──────────────────────────────────────────
 // Returns the Google consent URL. The frontend redirects the user there.
 
-router.get('/auth/google/initiate', requireUser, (req, res) => {
+router.get('/auth/google/initiate', requireUser, async (req, res) => {
   try {
     const state = createState(req.userId!);
-    const url = getAuthorizationUrl(state);
+    const url = await getAuthorizationUrl(state);
     req.log.info({ userId: req.userId, redirectUri: getRedirectUri() }, '[auth-google] Generated authorization URL');
     res.json({ data: { url } });
   } catch (err) {
@@ -68,7 +68,7 @@ router.get('/auth/google/callback', async (req, res) => {
 
   try {
     // Exchange the authorization code for tokens.
-    const client = createOAuth2Client();
+    const client = await createOAuth2Client();
     const { tokens } = await client.getToken(code);
 
     if (!tokens.refresh_token) {
@@ -100,7 +100,7 @@ router.get('/auth/google/callback', async (req, res) => {
       .eq('id', userId);
 
     // Auto-create a new Google Spreadsheet in the user's own Drive.
-    const drive = createDriveClient(refreshToken);
+    const drive = await createDriveClient(refreshToken);
     const driveRes = await drive.files.create({
       requestBody: {
         name: 'TemanNyatet — Data Pribadi',
@@ -113,7 +113,7 @@ router.get('/auth/google/callback', async (req, res) => {
     if (!spreadsheetId) throw new Error('Drive API returned no spreadsheet ID');
 
     // Initialize all tabs and header rows.
-    const sheets = createSheetsClient(refreshToken);
+    const sheets = await createSheetsClient(refreshToken);
     await ensureSheetsInitialized(spreadsheetId, sheets);
 
     // Persist the spreadsheet ID.
@@ -178,7 +178,7 @@ router.delete('/auth/google/disconnect', requireUser, async (req, res) => {
     if (refreshToken) {
       // Best-effort revocation — don't let revoke failure block disconnect.
       try {
-        const client = createOAuth2Client();
+        const client = await createOAuth2Client();
         await client.revokeToken(refreshToken);
       } catch {
         req.log.warn({ userId: req.userId }, '[auth-google] Token revocation failed (ignored)');

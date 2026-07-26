@@ -1,8 +1,21 @@
 // Per-user Google OAuth2 client for Sheets + Drive access.
 // Each user authenticates once; we store their refresh_token in Supabase
 // and derive a per-request Sheets client from it. No service account needed.
-import { google, type drive_v3, type sheets_v4 } from 'googleapis';
+//
+// `googleapis` is large (~100 MB parsed) and only needed at runtime when a
+// user actually hits a Google OAuth / Sheets route. We lazy-import it so the
+// Vercel Function cold-start doesn't have to parse it on every wake-up.
+import type { drive_v3, sheets_v4 } from 'googleapis';
 import crypto from 'crypto';
+
+// Cached lazy import — resolves on first use, reused on subsequent calls.
+let _googleLib: typeof import('googleapis') | null = null;
+async function getGoogle(): Promise<typeof import('googleapis').google> {
+  if (!_googleLib) {
+    _googleLib = await import('googleapis');
+  }
+  return _googleLib.google;
+}
 
 const CLIENT_ID = process.env['GOOGLE_CLIENT_ID'] ?? '';
 const CLIENT_SECRET = process.env['GOOGLE_CLIENT_SECRET'] ?? '';
@@ -25,7 +38,8 @@ export function getRedirectUri(): string {
   return 'http://localhost:5000/api/auth/google/callback';
 }
 
-export function createOAuth2Client() {
+export async function createOAuth2Client() {
+  const google = await getGoogle();
   return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, getRedirectUri());
 }
 
@@ -35,8 +49,8 @@ const SCOPES = [
   'https://www.googleapis.com/auth/drive.file',
 ];
 
-export function getAuthorizationUrl(state: string): string {
-  const client = createOAuth2Client();
+export async function getAuthorizationUrl(state: string): Promise<string> {
+  const client = await createOAuth2Client();
   return client.generateAuthUrl({
     access_type: 'offline',
     prompt: 'consent', // always request refresh_token, even if previously granted
@@ -47,16 +61,18 @@ export function getAuthorizationUrl(state: string): string {
 
 // Create a Sheets client using this user's refresh_token.
 // The googleapis library handles access-token refresh automatically.
-export function createSheetsClient(refreshToken: string): sheets_v4.Sheets {
-  const client = createOAuth2Client();
+export async function createSheetsClient(refreshToken: string): Promise<sheets_v4.Sheets> {
+  const google = await getGoogle();
+  const client = await createOAuth2Client();
   client.setCredentials({ refresh_token: refreshToken });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return google.sheets({ version: 'v4', auth: client as any });
 }
 
 // Create a Drive client using this user's refresh_token.
-export function createDriveClient(refreshToken: string): drive_v3.Drive {
-  const client = createOAuth2Client();
+export async function createDriveClient(refreshToken: string): Promise<drive_v3.Drive> {
+  const google = await getGoogle();
+  const client = await createOAuth2Client();
   client.setCredentials({ refresh_token: refreshToken });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return google.drive({ version: 'v3', auth: client as any });

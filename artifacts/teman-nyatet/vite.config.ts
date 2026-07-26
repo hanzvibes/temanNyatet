@@ -91,6 +91,34 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, 'dist/public'),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        // Split vendor libs into separate chunks so the browser can:
+        //   1. Download them in parallel on first visit
+        //   2. Cache them independently — a UI update doesn't bust the charts chunk
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          // React core — tiny, separated so it's always cached alone
+          if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/scheduler/')) return 'react';
+          // Supabase SDK — large auth/realtime client
+          if (id.includes('@supabase/')) return 'supabase';
+          // TanStack Query — data fetching layer
+          if (id.includes('@tanstack/')) return 'query';
+          // Recharts + its D3 dependencies — only loaded on Keuangan page
+          if (id.includes('recharts') || id.includes('d3-') || id.includes('d3@') || id.includes('victory-vendor')) return 'charts';
+          // Drag-and-drop — only loaded on Catatan page
+          if (id.includes('@dnd-kit/')) return 'dnd';
+          // Animation / bottom-sheet libs
+          if (id.includes('framer-motion') || id.includes('vaul')) return 'motion';
+          // Radix UI primitives — many small packages, group together
+          if (id.includes('@radix-ui/')) return 'radix';
+          // date-fns — date formatting utilities
+          if (id.includes('date-fns')) return 'datefns';
+          // Everything else (zod, wouter, lucide, clsx, etc.)
+          return 'vendor';
+        },
+      },
+    },
   },
   server: {
     port,

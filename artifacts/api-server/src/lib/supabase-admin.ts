@@ -1,3 +1,7 @@
+// MUST be the first import — see env-compat.ts for why. ESM evaluates imports
+// left-to-right, so this polyfill runs before @supabase/supabase-js (which
+// would otherwise crash on Node 18/20 at module load).
+import './env-compat.js';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env['SUPABASE_URL'] ?? '';

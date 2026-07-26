@@ -73,6 +73,16 @@ async function refreshToken(): Promise<string | null> {
 async function handle<T>(res: Response): Promise<T> {
   if (res.status === 204) return undefined as T;
 
+  // Surface HTML responses as a typed error BEFORE attempting JSON parsing.
+  // This happens when Vercel's SPA rewrites catch `/api/*` and serve
+  // index.html from the frontend (because VITE_API_SERVER_URL wasn't set
+  // or points to the wrong host) — silently returning 200 + HTML would
+  // otherwise look like a successful empty result.
+  const contentType = res.headers.get('content-type') ?? '';
+  if (contentType.includes('text/html')) {
+    throw new Error('WRONG_RESPONSE_HTML');
+  }
+
   // Vercel returns plain-text "DEPLOYMENT_NOT_FOUND" with a 404 when the
   // api-server project has no live deployment. Detect this early so we can
   // surface a clear, actionable message instead of "Request failed with status 404".

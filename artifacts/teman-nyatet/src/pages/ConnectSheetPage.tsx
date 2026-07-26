@@ -31,6 +31,9 @@ function translateConnectError(err: unknown): string {
   if (msg === 'CORS_BLOCKED') {
     return 'Permintaan diblokir CORS. Pastikan ALLOWED_ORIGINS di api-server sudah mencantumkan domain frontend.';
   }
+  if (msg === 'WRONG_RESPONSE_HTML') {
+    return 'Frontend menerima HTML, bukan JSON. Biasanya ini karena VITE_API_SERVER_URL di Vercel belum di-set atau salah — pastikan mengarah ke URL api-server (https://teman-nyatet-api-server.vercel.app), BUKAN ke domain frontend.';
+  }
   if (msg.includes('status 404')) {
     return 'Server API tidak ditemukan (404). Pastikan VITE_API_SERVER_URL sudah di-set di Vercel frontend, atau api-server sudah ter-deploy.';
   }
@@ -119,6 +122,7 @@ export default function ConnectSheetPage() {
         msg === 'SERVER_NOT_DEPLOYED' ||
         msg === 'NETWORK_ERROR' ||
         msg === 'CORS_BLOCKED' ||
+        msg === 'WRONG_RESPONSE_HTML' ||
         msg.includes('status 404') ||
         msg.includes('status 5')
       ) {

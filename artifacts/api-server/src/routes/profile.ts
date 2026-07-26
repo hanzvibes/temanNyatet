@@ -1,7 +1,15 @@
 import { Router } from 'express';
-import multer from 'multer';
+import * as multerMod from 'multer';
 import { requireUser } from '../middleware/requireAuth';
 import { supabaseAdmin } from '../lib/supabase-admin';
+
+// multer ships CJS UMD types (`export = multer`) alongside an ESM default
+// shim. Vercel's tsc post-build type-check pins the default-import to the
+// namespace, which downstream `multer.MulterError` and `multer.memoryStorage`
+// accesses then surface as not-callable. The namespace + `.default ?? mod`
+// pattern is robust under both module flavors and preserves the function's
+// attached properties (`MulterError`, `memoryStorage`) at runtime.
+const multer = ((multerMod as any).default ?? multerMod) as any;
 
 const router = Router();
 
@@ -89,7 +97,7 @@ router.post('/profile/avatar', requireUser, upload.single('avatar'), async (req,
     }
 
     res.status(200).json({ data: { avatar_url: avatarUrl } });
-  } catch (err) {
+  } catch (err: any) {
     if (err instanceof multer.MulterError) {
       const message = err.code === 'LIMIT_FILE_SIZE' ? 'Photo must be 5MB or smaller' : err.message;
       res.status(400).json({ error: message });

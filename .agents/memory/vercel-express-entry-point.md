@@ -63,3 +63,27 @@ const pinoHttp = ((pinoHttpMod as any).default ?? pinoHttpMod) as any;
 **Why:** The current offenders are `helmet@8.3.0`, `express-rate-limit@8.5.2`, `pino-http@10.5.0`. Any future CJS-UMD dep should follow the same pattern unless Vercel relaxes the module-shape check. `@vercel/node` builder does not surface this; it is the **standalone tsc check** Vercel runs after install.
 
 **How to apply:** When importing a third-party CJS-UMD hybrid into `artifacts/api-server/src/**`, do not use `import X from "X"` — use the namespace + `.default ?? mod` + `as any` triple. Treat local tsc green as necessary-but-not-sufficient; always reason about whether Vercel's stricter resolver could see it differently.
+
+---
+
+## Cascading `noImplicitAny` on `as any` middleware callbacks
+
+When the namespace-import + `as any` pattern is applied to a middleware factory like `rateLimit`, `multer`, or `pinoHttp`, downstream options-callbacks lose their parameter types:
+
+```ts
+const rateLimit = ((rateLimitMod as any).default ?? rateLimitMod) as any;
+const limiter = rateLimit({
+  keyGenerator(req) { … },   // ← req: any (implicit) — TS7006
+  skip(req) { … },
+  handler(_req, res) { … },
+});
+```
+
+`noImplicitAny: true` (set in `tsconfig.base.json`) then rejects each callback parameter. And `try { … } catch (err)` chains fall under `useUnknownInCatchVariables: true` — even inside `if (err instanceof X.MulterError)`, the narrowing fails when `X` is `any`.
+
+**How to apply:**
+
+- For `keyGenerator(req)`, `skip(req)`, `handler(_req, res)` callbacks on `as any` middleware configs: add an explicit `: any` annotation to every parameter.
+- For `catch (err)` blocks that touch `instanceof` against an `as any` module's class: type the binding explicitly as `catch (err: any)` rather than relying on narrowing. Keep this scoped to error-handling sites — don't widen other catches.
+
+The pattern in `artifacts/api-server/src/middleware/requireAuth.ts` (line 47 onward) and `artifacts/api-server/src/routes/profile.ts` (line 99 onward) is the reference shape.

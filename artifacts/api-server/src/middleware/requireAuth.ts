@@ -1,8 +1,15 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { sheets_v4 } from 'googleapis';
-import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
+import * as rateLimitMod from 'express-rate-limit';
+import { ipKeyGenerator } from 'express-rate-limit';
 import { supabaseAdmin } from '../lib/supabase-admin';
 import { getUserSheetConnection } from '../lib/user-sheet';
+
+// express-rate-limit ships CJS UMD types (`export = X` in `dist/index.d.ts`)
+// alongside an ESM default-export shim. Vercel's tsc post-build type-check
+// resolves it more strictly than local tsc and breaks the default-import.
+// The namespace + `.default ?? mod` pattern is robust under both shapes.
+const rateLimit = ((rateLimitMod as any).default ?? rateLimitMod) as any;
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -49,15 +56,18 @@ export const userRateLimit = rateLimit({
   limit: 120, // generous for polling + normal CRUD; protect against abuse
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator(req) {
+  // Cast rateLimit to `any` upstream (see top of file) so its option
+  // callbacks aren't typed — give the params an explicit `any` here so
+  // `noImplicitAny: true` doesn't reject them.
+  keyGenerator(req: any) {
     return req.userId ?? ipKeyGenerator(req.ip ?? 'unknown');
   },
-  skip(req) {
+  skip(req: any) {
     // Only apply to authenticated requests; unauthenticated requests are handled
     // by the global rate limiter in app.ts.
     return !req.userId;
   },
-  handler(_req, res) {
+  handler(_req: any, res: any) {
     res.status(429).json({ error: 'Too many requests. Slow down.' });
   },
 });

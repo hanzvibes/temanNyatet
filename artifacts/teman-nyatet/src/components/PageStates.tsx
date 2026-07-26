@@ -1,72 +1,44 @@
 // Shared empty + loading state components for the four feature pages.
 // Single source of truth so the visual treatment (icon, copy, accent color,
 // height, padding) is identical across Catatan, Keuangan, Todo, Link Saver.
-//
-// Why this file exists:
-//   - Each page used to roll its own `<Loader2 className=".. text-[#XXX]" />`
-//     and its own ad-hoc empty div with a 48px lucide icon and a one-line
-//     copy. Inconsistencies: Catatan used `h-[50vh]`, Keuangan used `h-40`,
-//     plus three of the four pages used inline hex colors that already exist
-//     as `--color-finance` / `--color-todo` / `--color-linksaver` in @theme.
-//   - The empty-state copy also drifted: Keuangan said "Belum ada transaksi
-//     bulan ini"; Catatan said "Belum ada catatan. Mulai catat sat-set!";
-//     To-do said "Semua beres! Tambah to-do baru." Different vibes. Here we
-//     standardize on title + hint, where the hint explains how to add the
-//     first item (drawer pull or + button).
-//
-// Why `lucide-react` icon prop:
-//   - Pages already import from lucide-react. Single dependency tree.
 
 import React from 'react';
 import { AlertCircle, Loader2, type LucideIcon } from 'lucide-react';
 
 export type SectionAccent = 'catatan' | 'keuangan' | 'todo' | 'link';
 
-// Per-section accent palettes. The empty-state icon container uses a soft
-// tinted background + a darker accent for the icon itself so it stays visible
-// against the cream app background without flashing bright color. Numbers
-// chosen for WCAG AA against white/cream (~5.5:1 minimum).
-// Per-section accent palettes. The empty-state icon container uses a soft
-// tinted background + a darker accent for the icon itself so it stays visible
-// against the cream app background without flashing bright color.
-//
-// `catatan` reads directly off the `--primary` theme token (it adapts to dark
-// mode automatically).
-//
-// `keuangan` / `todo` / `link` use inline hex because they predate the @theme
-// token migration. To make them theme-aware without dropping opacity
-// modifiers (Tailwind v4's hex arbitrary-value utility does not honor `/15`
-// reliably on a hex-valued CSS variable), each carries an explicit
-// `dark:bg-[…]` override. The dark hexes are flat, near-black tints of the
-// light tint — they keep section identity without producing bright blobs
-// on the dark canvas.
+// Per-section accent palettes using theme tokens. In light mode the icon
+// container uses a soft tint of the section color; in dark mode it uses the
+// same section color at a low opacity so it stays muted against the slate
+// canvas. Text colors are drawn from the dedicated `*-text` tokens which are
+// dark in light mode and light in dark mode, ensuring WCAG contrast.
 const SECTION_THEME: Record<
   SectionAccent,
   { containerBg: string; containerBorder: string; iconText: string; spinnerText: string }
 > = {
   catatan: {
-    containerBg: 'bg-primary/10 dark:bg-primary/20',
-    containerBorder: 'border-primary/20 dark:border-primary/30',
+    containerBg: 'bg-primary/10 dark:bg-primary/15',
+    containerBorder: 'border-primary/20 dark:border-primary/25',
     iconText: 'text-primary dark:text-primary',
     spinnerText: 'text-primary dark:text-primary',
   },
   keuangan: {
-    containerBg: 'bg-[#F4C753]/15 dark:bg-[#3D3118]',
-    containerBorder: 'border-[#F4C753]/35 dark:border-[#5F4D2A]',
-    iconText: 'text-[#8B6914] dark:text-[#F4C753]',
-    spinnerText: 'text-[#8B6914] dark:text-[#F4C753]',
+    containerBg: 'bg-finance/15 dark:bg-finance/15',
+    containerBorder: 'border-finance/30 dark:border-finance/25',
+    iconText: 'text-finance-text',
+    spinnerText: 'text-finance-text',
   },
   todo: {
-    containerBg: 'bg-[#9CB4D4]/15 dark:bg-[#1A2638]',
-    containerBorder: 'border-[#9CB4D4]/35 dark:border-[#2A3F5A]',
-    iconText: 'text-[#3D6B96] dark:text-[#9CB4D4]',
-    spinnerText: 'text-[#3D6B96] dark:text-[#9CB4D4]',
+    containerBg: 'bg-todo/15 dark:bg-todo/15',
+    containerBorder: 'border-todo/30 dark:border-todo/25',
+    iconText: 'text-todo-text',
+    spinnerText: 'text-todo-text',
   },
   link: {
-    containerBg: 'bg-[#E09898]/15 dark:bg-[#38201E]',
-    containerBorder: 'border-[#E09898]/35 dark:border-[#5A3030]',
-    iconText: 'text-[#963D3D] dark:text-[#E09898]',
-    spinnerText: 'text-[#963D3D] dark:text-[#E09898]',
+    containerBg: 'bg-linksaver/15 dark:bg-linksaver/15',
+    containerBorder: 'border-linksaver/30 dark:border-linksaver/25',
+    iconText: 'text-linksaver-text',
+    spinnerText: 'text-linksaver-text',
   },
 };
 
@@ -83,13 +55,11 @@ interface PageEmptyProps {
  * Page-level empty state.
  *
  * Visual anatomy:
- *   - 80×80 rounded container at the section accent tint
- *   - 32×32 lucide icon, darker accent color
- *   - Two-line text block: bold title + quiet description hint explaining how to add content
- *   - Optional CTA below
- *
- * Height: at least `min-h-[40vh]` so it visually anchors the page even on
- * short viewports (e.g. iPhone SE portrait, ~44vh usable area minus sheet nav).
+ *   - 64×64 rounded container at the section accent tint (smaller than the
+ *     previous 80×80 so it doesn't dominate the page on small phones).
+ *   - 28×28 lucide icon in the section text color.
+ *   - Two-line text block: semibold title + quiet description hint.
+ *   - Optional CTA below.
  */
 export function PageEmpty({ icon: Icon, title, description, accent = 'catatan', cta }: PageEmptyProps) {
   const t = SECTION_THEME[accent];
@@ -97,15 +67,15 @@ export function PageEmpty({ icon: Icon, title, description, accent = 'catatan', 
     <div
       role="status"
       aria-live="polite"
-      className="flex flex-col items-center justify-center text-center min-h-[42vh] px-6 py-6 gap-4"
+      className="flex flex-col items-center justify-center text-center min-h-[42vh] px-6 py-6 gap-3"
     >
       <div
-        className={`w-20 h-20 rounded-3xl ${t.containerBg} border ${t.containerBorder} flex items-center justify-center flex-shrink-0`}
+        className={`w-16 h-16 rounded-2xl ${t.containerBg} border ${t.containerBorder} flex items-center justify-center flex-shrink-0 animate-in fade-in zoom-in-95 duration-300`}
       >
-        <Icon size={34} strokeWidth={2} className={t.iconText} />
+        <Icon size={28} strokeWidth={2} className={t.iconText} />
       </div>
-      <div className="space-y-1.5 max-w-xs">
-        <p className={`font-extrabold text-base ${t.iconText}`}>{title}</p>
+      <div className="space-y-1 max-w-xs">
+        <p className={`font-semibold text-base ${t.iconText}`}>{title}</p>
         {description && (
           <p className="text-sm text-muted-foreground leading-relaxed font-medium">
             {description}
@@ -120,7 +90,7 @@ export function PageEmpty({ icon: Icon, title, description, accent = 'catatan', 
 interface FormErrorProps {
   /** The error message text. */
   children: React.ReactNode;
-  /** Extra spacing / positioning. Ask before you change position-class expectations. */
+  /** Extra spacing / positioning. */
   className?: string;
   /** Text size — `xs` for inline form errors, `sm` for general alert paragraphs. */
   size?: 'sm' | 'xs';
@@ -128,20 +98,6 @@ interface FormErrorProps {
 
 /**
  * Inline form-error message with built-in icon.
- *
- * Why an icon at all:
- *   WCAG SC 1.4.1 (Use of Color) says color is not the only visual means of
- *   conveying information. The original forms used plain `text-destructive`
- *   red text alone; that hits ~4.6:1 contrast in light mode, fine for
- *   readability, but unreadable as an "error" to a red-green colorblind
- *   user if the message is short ("Required"). Adding the AlertCircle icon
- *   pairs the red color with a redundant non-color cue.
- *
- * Visual anatomy:
- *   - 12–14px AlertCircle icon (red) + message text in same red tone
- *   - flex layout prevents the icon from being squished on narrow viewports
- *   - role="alert" + aria-live="polite" so screen readers announce when
- *     the error appears (after the user submits an invalid form)
  */
 export function FormError({ children, className = '', size = 'sm' }: FormErrorProps) {
   const sizeCls = size === 'xs' ? 'text-xs' : 'text-sm';
@@ -167,12 +123,8 @@ interface PageLoadingProps {
  * Page-level loading state.
  *
  * Visual anatomy:
- *   - 28×28 spinner in the section accent color (darker variant for visibility)
- *   - Small uppercase label underneath so screen readers + sighted users
- *     both know data is being fetched
- *
- * Height: `min-h-[40vh]` to prevent layout shift when the data resolves and
- * the empty/grid state replaces it.
+ *   - 28×28 spinner in the section accent color.
+ *   - Small label underneath using normal letter spacing so it remains readable.
  */
 export function PageLoading({ accent = 'catatan', label = 'Memuat…' }: PageLoadingProps) {
   const t = SECTION_THEME[accent];
@@ -180,10 +132,10 @@ export function PageLoading({ accent = 'catatan', label = 'Memuat…' }: PageLoa
     <div
       role="status"
       aria-live="polite"
-      className="flex flex-col items-center justify-center min-h-[40vh] gap-3"
+      className="flex flex-col items-center justify-center min-h-[40vh] gap-2"
     >
       <Loader2 className={`w-7 h-7 animate-spin ${t.spinnerText}`} aria-hidden="true" />
-      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+      <p className="text-xs font-semibold text-muted-foreground tracking-wide">
         {label}
       </p>
     </div>

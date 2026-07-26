@@ -11,6 +11,9 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
+  --color-surface: hsl(var(--surface));
+  --color-surface-foreground: hsl(var(--surface-foreground));
+
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
   --color-card-border: hsl(var(--card-border));
@@ -39,11 +42,14 @@
   --color-destructive-foreground: hsl(var(--destructive-foreground));
   --color-destructive-border: var(--destructive-border);
 
-  --color-finance: var(--finance);
-  --color-todo: var(--todo);
-  --color-linksaver: var(--linksaver);
-  --color-income: var(--income);
-  --color-expense: var(--expense);
+  --color-finance: hsl(var(--finance));
+  --color-finance-text: hsl(var(--finance-text));
+  --color-todo: hsl(var(--todo));
+  --color-todo-text: hsl(var(--todo-text));
+  --color-linksaver: hsl(var(--linksaver));
+  --color-linksaver-text: hsl(var(--linksaver-text));
+  --color-income: hsl(var(--income));
+  --color-expense: hsl(var(--expense));
 
   --font-sans: var(--app-font-sans);
 
@@ -51,13 +57,20 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  --shadow-elevation-1: var(--shadow-1);
+  --shadow-elevation-2: var(--shadow-2);
+  --shadow-elevation-3: var(--shadow-3);
 }
 
 :root {
   --background: 83 50% 95%; /* #F5FAEB */
   --foreground: 0 0% 15%; /* #262626 */
-  
-  --border: 0 0% 90%; /* #E5E5E5 */
+
+  --surface: 80 30% 92%; /* slightly deeper cream for grouped sections */
+  --surface-foreground: 0 0% 18%;
+
+  --border: 0 0% 88%; /* #E0E0E0 — slightly darker for better hierarchy */
 
   --card: 0 0% 100%; /* #FFFFFF */
   --card-foreground: 0 0% 15%;
@@ -85,14 +98,21 @@
   --input: 0 0% 88%;
   --ring: 90 32% 54%;
 
-  --finance: #F4C753;
-  --todo: #9CB4D4;
-  --linksaver: #E09898;
-  --income: #4ADE80;
-  --expense: #F87171;
+  --finance: 43 89% 64%;
+  --finance-text: 43 75% 32%;
+  --todo: 213 35% 71%;
+  --todo-text: 213 45% 35%;
+  --linksaver: 0 48% 74%;
+  --linksaver-text: 0 50% 35%;
+  --income: 142 69% 58%;
+  --expense: 0 91% 71%;
 
   --app-font-sans: 'Poppins', sans-serif;
   --radius: 1rem;
+
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.02);
+  --shadow-3: 0 8px 28px rgba(0, 0, 0, 0.10), 0 4px 8px rgba(0, 0, 0, 0.04);
 
   /* Bottom-nav clearance.
      BottomSheetNav is anchored `bottom: 20px` with
@@ -121,19 +141,6 @@
    tokens (background / foreground / card / border / muted / primary /
    secondary / input / ring) flips automatically.
 
-   What does NOT flip automatically:
-   - The five saturated mid-tone hex accents (`--finance #F4C753`,
-     `--todo #9CB4D4`, `--linksaver #E09898`, `--income #4ADE80`,
-     `--expense #F87171`). They read OK on the dark canvas because
-     they're already middling-bright; tinting them would lose the
-     identity of each section.
-   - The four per-section "soft tint" hexes used by the SidebarNav
-     palette and the SettingsSheet `<AvatarBg>`. These need explicit
-     `dark:bg-[…]` overrides at the call site because Tailwind's hex
-     arbitrary-value utility does not tokenize (and dark-shifting
-     `bg-[#FFF8D6]` to a literal dark hex per-section keeps the
-     "section identity" intact across themes).
-
    Tone:
    - Base canvas: deep slate (`hsl(222 25% 7%)`).
    - Cards: slightly lighter slate so they read "lifted" off the
@@ -146,6 +153,11 @@
 .dark {
   --background: 222 25% 7%;
   --foreground: 40 30% 95%;
+
+  --surface: 222 22% 10%;
+  --surface-foreground: 40 25% 90%;
+
+  --border: 222 15% 22%;
 
   --card: 222 22% 11%;
   --card-foreground: 40 30% 95%;
@@ -171,8 +183,15 @@
   --destructive-foreground: 40 30% 95%;
 
   --input: 222 18% 22%;
-
   --ring: 90 38% 62%;
+
+  --finance-text: 43 90% 68%;
+  --todo-text: 213 45% 75%;
+  --linksaver-text: 0 55% 75%;
+
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.20);
+  --shadow-3: 0 8px 28px rgba(0, 0, 0, 0.45), 0 4px 8px rgba(0, 0, 0, 0.25);
 
   /* See :root — dark variants of the same palette so note cards keep their
      hue identity but stop popping as bright blobs on the slate canvas. */
@@ -194,60 +213,55 @@
 /* ── Typography roles (single source of truth) ────────────────────────
    Each role bundles font-size, weight, leading, and tracking so the
    rest of the codebase just picks one role by name. Change here and
-   all pages update. Tracking-widest (0.1em) at 10–12px text breaks
-   legibility — `text-pill-label` uses `tracking-wider` (0.05em) which
-   keeps the small-caps look without snapping letters too far apart. */
+   all pages update.
+
+   Hierarchy:
+   - display: brand wordmark, only on unauthenticated entry points.
+   - page-title: top-level H1 of every page.
+   - modal-title: sheet/drawer H1s.
+   - section-title: H2 inside read-mode modals.
+   - input-title: large editable inputs (note title).
+   - input-content: multi-line editable inputs.
+   - body: default readable body text.
+   - label: small uppercase tags/labels.
+   - tag: tiny in-card chips.
+
+   We intentionally mix weights (bold/semibold/medium) so the hierarchy
+   reads from weight AND size, not just size. */
 @layer components {
   .text-display {
-    /* Brand wordmark on the unauthenticated entry points
-       (login, payment), where it's the primary signal of the product. */
     @apply text-3xl font-extrabold leading-[1.1] tracking-tight text-foreground;
   }
 
   .text-page-title {
-    /* Main H1 of every authenticated page — Catatan, Keuangan, To-do,
-       Link Saver, Pengaturan, Diarsipkan, Connect-Sheet, Bayar.
-       Step up to 30px on lg+ so the same role reads correctly on
-       tablets and desktops. */
-    @apply text-2xl lg:text-3xl font-extrabold leading-[1.15] tracking-tight text-foreground;
+    @apply text-2xl lg:text-3xl font-bold leading-[1.15] tracking-tight text-foreground;
   }
 
   .text-modal-title {
-    /* Bottom-sheet / drawer H1s ("Catatan Baru", "Simpan Link Baru",
-       "To-Do Baru", "Bayar"). Stay at 2xl across breakpoints so the
-       sheet chrome reads at mobile scale. */
-    @apply text-2xl font-extrabold leading-tight text-foreground;
+    @apply text-2xl font-bold leading-tight text-foreground;
   }
 
   .text-section-title {
-    /* H2 inside read-mode modals — note detail, archived view, etc. */
-    @apply text-xl font-bold leading-snug text-foreground;
+    @apply text-xl font-semibold leading-snug text-foreground;
   }
 
   .text-input-title {
-    /* Larger editable inputs — note title only. No tracking tweak
-       because mobile OS autocorrect/spell-check occasionally stutters
-       on heavily-tracked spans; keeping it crisp. */
-    @apply text-2xl font-bold leading-[1.2] text-foreground;
+    @apply text-2xl font-semibold leading-[1.2] text-foreground;
   }
 
   .text-input-content {
-    /* Wide multi-line editable inputs — note content textarea, link
-       notes, transaction details. */
     @apply text-base font-medium leading-relaxed text-foreground;
   }
 
+  .text-body {
+    @apply text-sm font-medium leading-relaxed text-foreground;
+  }
+
   .text-pill-label {
-    /* "Tags"/"Nominal"/"DATE" small-caps labels. Was 0.1em
-       tracking-widest at 12px — letters broke apart. 0.05em
-       tracking-wider keeps an obvious small-caps tag without hurting
-       legibility. */
     @apply text-xs font-bold uppercase tracking-wider text-muted-foreground;
   }
 
   .text-pill-tag {
-    /* Tiny in-card chips (tags inside note cards). Same rule as label
-       but at 10px with a hint less tracking. */
     @apply text-[10px] font-bold uppercase tracking-wide text-muted-foreground;
   }
 }
@@ -255,10 +269,7 @@
 @layer base {
   /* ── Placeholder contrast ─────────────────────────────────────────────
      Default placeholder color at /50 (~5.2:1 on cream background, 7:1
-     on white cards) keeps WCAG AA. Previously /40 used in 5 spots failed
-     AA on the cream `--background`. Components can still override with
-     `placeholder:text-X` when they need a custom color (e.g. on the
-     yellow note background). */
+     on white cards) keeps WCAG AA. */
   input::placeholder,
   textarea::placeholder {
     @apply text-muted-foreground/50;
@@ -270,14 +281,23 @@
   .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
 
   .shadow-soft {
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-2);
   }
 
-  /* Smooth press feedback on every interactive element */
+  .shadow-elevated {
+    box-shadow: var(--shadow-3);
+  }
+
+  .transition-press {
+    transition: transform 0.12s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  }
+
+  /* Smooth press feedback on every interactive element — more subtle and
+     consistent than the previous 0.96 scale. */
   button:active,
   a:active,
   [role='button']:active {
-    transform: scale(0.96);
+    transform: scale(0.98);
     transition: transform 0.1s ease;
   }
 }

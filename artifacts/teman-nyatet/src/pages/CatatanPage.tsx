@@ -7,6 +7,7 @@ import { id } from 'date-fns/locale';
 import { Loader2, BookOpen, Trash2, X, Plus } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
+import { Button } from '@/components/ui/button';
 import { NOTE_TAGS } from '@/lib/categoryIcons';
 import SearchBar from '@/components/SearchBar';
 import SettingsSheet from '@/components/SettingsSheet';
@@ -18,7 +19,12 @@ import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SortableNoteGrid } from '@/components/SortableNoteGrid';
 
-const PALETTE = ['#FFF8D6', '#E8F2DF', '#FFE4E1', '#E1F0FF'];
+const PALETTE = [
+  'var(--note-card-1)',
+  'var(--note-card-2)',
+  'var(--note-card-3)',
+  'var(--note-card-4)',
+];
 const AVAILABLE_TAGS = NOTE_TAGS;
 
 const noteSchema = z.object({
@@ -144,7 +150,7 @@ export default function CatatanPage() {
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">Catatan</h1>
             </div>
-            <SettingsSheet avatarBg="bg-[#E8F2DF] dark:bg-[#1F2D1A]" avatarTextColor="text-primary" />
+            <SettingsSheet avatarBg="bg-primary/10" avatarTextColor="text-primary" />
           </div>
           <SearchBar value={search} onChange={setSearch} placeholder="Cari catatan..." />
         </div>
@@ -161,13 +167,13 @@ export default function CatatanPage() {
             title={search ? 'Tidak ada hasil pencarian' : 'Belum ada catatan'}
             description={search ? 'Coba kata kunci lain atau hapus filter.' : 'Mulai catat hal penting. Tap tombol di bawah untuk memulai.'}
             cta={!search ? (
-              <button
+              <Button
                 onClick={() => handleOpenForm()}
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-bold px-6 py-3.5 rounded-full shadow-sm hover:bg-primary/90 active:scale-95 transition-all text-sm"
+                className="rounded-full px-6 py-3.5"
               >
                 <Plus size={18} strokeWidth={2.5} />
                 Tambah Catatan Pertama
-              </button>
+              </Button>
             ) : undefined}
           />
         ) : (
@@ -219,14 +225,14 @@ export default function CatatanPage() {
                         <button
                           type="button"
                           onClick={() => setIsEditing(false)}
-                          className="text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors"
+                          className="text-sm font-bold text-muted-foreground hover:text-foreground transition-colors"
                         >
                           Batal
                         </button>
-                        <span className="text-pill-label !text-gray-500">Edit Catatan</span>
+                        <span className="text-pill-label !text-muted-foreground">Edit Catatan</span>
                         <button
                           type="submit"
-                          className="text-sm font-bold text-gray-800 bg-white/70 hover:bg-white/90 px-4 py-1.5 rounded-full transition-colors shadow-sm"
+                          className="text-sm font-bold text-foreground bg-card/70 hover:bg-white/90 px-4 py-1.5 rounded-full transition-colors shadow-sm"
                         >
                           Simpan
                         </button>
@@ -237,12 +243,12 @@ export default function CatatanPage() {
                         <input
                           {...form.register('title')}
                           placeholder="Judul (opsional)"
-                          className="w-full text-2xl font-extrabold bg-transparent outline-none placeholder:text-gray-400/60 text-gray-900 border-b border-black/10 pb-2"
+                          className="w-full text-2xl font-bold bg-transparent outline-none placeholder:text-muted-foreground/50 text-foreground border-b border-border pb-2"
                         />
                         <textarea
                           {...form.register('content')}
                           placeholder="Apa yang ingin kamu catat?"
-                          className="w-full min-h-[120px] resize-none bg-transparent outline-none text-base font-medium placeholder:text-gray-400/60 text-gray-800 leading-relaxed"
+                          className="w-full min-h-[120px] resize-none bg-transparent outline-none text-base font-medium placeholder:text-muted-foreground/50 text-foreground leading-relaxed"
                           autoFocus
                         />
                         {form.formState.errors.content && (
@@ -250,7 +256,7 @@ export default function CatatanPage() {
                         )}
                         {/* Tags */}
                         <div>
-                          <label className="text-pill-tag !text-gray-500 mb-2 block">Tags</label>
+                          <label className="text-pill-tag !text-muted-foreground mb-2 block">Tags</label>
                           <div className="flex flex-wrap gap-2">
                             {AVAILABLE_TAGS.map(({ name: tag, icon: Icon }) => {
                               const currentTags = form.watch('tags');
@@ -262,8 +268,8 @@ export default function CatatanPage() {
                                   )}
                                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
                                     isSel
-                                      ? 'bg-gray-800/80 text-white border-gray-800/80'
-                                      : 'bg-white/60 text-gray-600 border-white/80 hover:bg-white/80'
+                                      ? 'bg-foreground/80 text-background border-foreground/80'
+                                      : 'bg-muted/50 text-muted-foreground border-border/50 hover:bg-white/80'
                                   }`}
                                 ><Icon size={14} strokeWidth={2.4} className="flex-shrink-0" />{tag}</button>
                               );
@@ -277,20 +283,20 @@ export default function CatatanPage() {
                     <>
                       <div className="overflow-y-auto flex-1 p-7">
                         {selectedNote.title && (
-                          <h2 className="text-modal-title !text-gray-900 mb-3">
+                          <h2 className="text-modal-title !text-foreground mb-3">
                             {selectedNote.title}
                           </h2>
                         )}
-                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-5">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-5">
                           {format(new Date(selectedNote.created_at), 'EEEE, d MMMM yyyy · HH:mm', { locale: id })}
                         </p>
-                        <p className="text-base text-gray-800 whitespace-pre-wrap leading-relaxed font-medium mb-6">
+                        <p className="text-base text-foreground whitespace-pre-wrap leading-relaxed font-medium mb-6">
                           {selectedNote.content}
                         </p>
                         {selectedNote.tags && selectedNote.tags.length > 0 && (
                           <div className="flex flex-wrap gap-2 mb-2">
                             {selectedNote.tags.map(tag => (
-                              <span key={tag} className="text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full bg-white/60 text-gray-700 border border-white/80">
+                              <span key={tag} className="text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full bg-muted/50 text-foreground border border-border/50">
                                 {tag}
                               </span>
                             ))}
@@ -298,10 +304,10 @@ export default function CatatanPage() {
                         )}
                       </div>
 
-                      <div className="flex gap-3 px-7 pb-6 pt-3 flex-shrink-0 border-t border-black/5">
+                      <div className="flex gap-3 px-7 pb-6 pt-3 flex-shrink-0 border-t border-border">
                         <button
                           onClick={() => handleStartEdit(selectedNote)}
-                          className="flex-1 bg-white/70 text-gray-800 font-bold py-3 rounded-2xl hover:bg-white/90 transition-colors text-sm shadow-sm"
+                          className="flex-1 bg-card/70 text-foreground font-bold py-3 rounded-2xl hover:bg-white/90 transition-colors text-sm shadow-sm"
                         >
                           Edit
                         </button>
@@ -327,13 +333,14 @@ export default function CatatanPage() {
 
                 {/* Close button below card */}
                 <div className="flex justify-center mt-4">
-                  <button
+                  <Button
                     onClick={() => { setIsDetailOpen(false); setIsEditing(false); }}
-                    className="flex items-center gap-2 bg-white/90 text-gray-700 font-bold px-6 py-3 rounded-full shadow-lg hover:bg-white transition-colors text-sm"
+                    variant="secondary"
+                    className="rounded-full shadow-lg"
                   >
                     <X size={16} strokeWidth={2.5} />
                     Tutup
-                  </button>
+                  </Button>
                 </div>
               </motion.div>
             </div>

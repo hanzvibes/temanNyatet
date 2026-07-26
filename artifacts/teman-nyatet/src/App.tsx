@@ -123,8 +123,9 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-dvh w-full flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-dvh w-full flex flex-col items-center justify-center gap-3 bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+        <p className="text-xs font-semibold text-muted-foreground tracking-wide">Memuat…</p>
       </div>
     );
   }
@@ -164,8 +165,9 @@ function MainLayout({ children }: { children: React.ReactNode }) {
 
 function PageLoading() {
   return (
-    <div className="min-h-dvh w-full flex items-center justify-center bg-background">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    <div className="min-h-dvh w-full flex flex-col items-center justify-center gap-3 bg-background">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+      <p className="text-xs font-semibold text-muted-foreground tracking-wide">Memuat…</p>
     </div>
   );
 }

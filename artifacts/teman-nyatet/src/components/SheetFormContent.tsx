@@ -20,6 +20,7 @@ import {
   FALLBACK_CATEGORY_ICON,
 } from '@/lib/categoryIcons';
 import { FormError } from '@/components/PageStates';
+import { Button } from '@/components/ui/button';
 import {
   TransactionType,
   DEFAULT_INCOME_CATEGORIES,
@@ -30,7 +31,7 @@ import { toast } from 'sonner';
 
 // ─── Shared input style helpers ───────────────────────────────────────────────
 const inp  = 'w-full bg-white border border-border rounded-xl py-2.5 px-3.5 outline-none text-sm font-bold text-foreground transition-all';
-const inpFocus = (color: string) => `${inp} focus:border-[${color}] focus:ring-2 focus:ring-[${color}]/20`;
+const inpFocus = (color: string) => `${inp} focus:border-${color} focus:ring-2 focus:ring-${color}/20`;
 
 // ─── Note Form ────────────────────────────────────────────────────────────────
 const TAGS = NOTE_TAGS.map(({ name }) => name); // legacy order, dropdown-compatible
@@ -66,7 +67,7 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
       <input
         {...form.register('title')}
         placeholder="Judul (opsional)"
-        className="w-full text-lg font-extrabold bg-transparent outline-none placeholder:text-muted-foreground/50 border-b border-border pb-2"
+        className="w-full text-lg font-bold bg-transparent outline-none placeholder:text-muted-foreground/50 border-b border-border pb-2"
       />
       <textarea
         {...form.register('content')}
@@ -90,11 +91,9 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
           );
         })}
       </div>
-      <button type="submit"
-        className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-[1rem] text-sm transition-colors hover:brightness-95 active:scale-[0.98]"
-      >
+      <Button type="submit" className="w-full mt-auto">
         Simpan Catatan
-      </button>
+      </Button>
     </form>
   );
 }
@@ -177,13 +176,13 @@ function KeuanganSheetForm({ onSuccess }: { onSuccess: () => void }) {
 
       {/* Amount */}
       <div className="relative">
-        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-lg font-extrabold text-muted-foreground/50">Rp</span>
+        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-lg font-bold text-muted-foreground/50">Rp</span>
         <input
           {...form.register('amount')}
           type="text"
           inputMode="numeric"
           placeholder="0"
-          className="w-full text-2xl font-extrabold bg-white border border-border rounded-xl py-3 pl-12 pr-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 transition-all"
+          className="w-full text-2xl font-bold bg-white border border-border rounded-xl py-3 pl-12 pr-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 transition-all"
           onChange={(e) => {
             const val = e.target.value.replace(/\D/g, '');
             form.setValue('amount', val ? new Intl.NumberFormat('id-ID').format(Number(val)) : '', { shouldValidate: true });
@@ -197,9 +196,9 @@ function KeuanganSheetForm({ onSuccess }: { onSuccess: () => void }) {
       {/* Date + Source */}
       <div className="flex gap-2">
         <input {...form.register('date')} type="date"
-          className={`flex-1 ${inpFocus('#F4C753')}`} />
+          className={`flex-1 ${inpFocus('finance')}`} />
         <select {...form.register('source')}
-          className={`flex-1 ${inpFocus('#F4C753')} appearance-none`}>
+          className={`flex-1 ${inpFocus('finance')} appearance-none`}>
           {DEFAULT_PAYMENT_SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
@@ -215,7 +214,7 @@ function KeuanganSheetForm({ onSuccess }: { onSuccess: () => void }) {
                 onClick={() => form.setValue('category', c, { shouldValidate: true })}
                 className={`inline-flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
                   cat === c
-                    ? 'bg-finance/20 border-finance text-[#8B6914]'
+                    ? 'bg-finance/20 border-finance text-finance-text'
                     : 'bg-white border-border text-muted-foreground'
                 }`}
               ><Icon size={14} strokeWidth={2.4} className="flex-shrink-0" />{c}</button>
@@ -230,13 +229,11 @@ function KeuanganSheetForm({ onSuccess }: { onSuccess: () => void }) {
       {/* Note */}
       <input {...form.register('note')} type="text"
         placeholder="Catatan tambahan (opsional)"
-        className={inpFocus('#F4C753')} />
+        className={inpFocus('finance')} />
 
-      <button type="submit"
-        className="w-full bg-[#F4C753] text-[#4A3D18] font-bold py-3 rounded-[1rem] text-sm transition-colors hover:brightness-95 active:scale-[0.98] mt-auto"
-      >
+      <Button type="submit" className="w-full bg-finance text-finance-text hover:bg-finance/90 mt-auto">
         Simpan Transaksi 💾
-      </button>
+      </Button>
     </form>
   );
 }
@@ -279,7 +276,7 @@ function TodoSheetForm({ onSuccess }: { onSuccess: () => void }) {
       <input
         {...form.register('title')}
         placeholder="Apa yang harus dikerjakan?"
-        className="w-full text-lg font-extrabold bg-transparent border-b-2 border-border pb-2.5 outline-none focus:border-todo transition-colors placeholder:text-muted-foreground/50"
+        className="w-full text-lg font-bold bg-transparent border-b-2 border-border pb-2.5 outline-none focus:border-todo transition-colors placeholder:text-muted-foreground/50"
       />
       {form.formState.errors.title && (
         <FormError size="xs" className="-mt-1">{form.formState.errors.title.message}</FormError>
@@ -293,19 +290,17 @@ function TodoSheetForm({ onSuccess }: { onSuccess: () => void }) {
         <div className="flex-1">
           <label className="text-pill-tag mb-1 block">Tanggal</label>
           <input {...form.register('due_date')} type="date"
-            className={inpFocus('#9CB4D4')} />
+            className={inpFocus('todo')} />
         </div>
         <div className="flex-1">
           <label className="text-pill-tag mb-1 block">Waktu</label>
           <input {...form.register('due_time')} type="time"
-            className={inpFocus('#9CB4D4')} />
+            className={inpFocus('todo')} />
         </div>
       </div>
-      <button type="submit"
-        className="w-full bg-[#9CB4D4] text-white font-bold py-3 rounded-[1rem] text-sm transition-colors hover:brightness-95 active:scale-[0.98] mt-auto"
-      >
+      <Button type="submit" className="w-full bg-todo text-white hover:bg-todo/90 mt-auto">
         Simpan To-Do ✓
-      </button>
+      </Button>
     </form>
   );
 }
@@ -346,7 +341,7 @@ function LinkSheetForm({ onSuccess }: { onSuccess: () => void }) {
           {...form.register('url')}
           type="url"
           placeholder="https://..."
-          className={`${inpFocus('#E09898')} pl-10`}
+          className={`${inpFocus('linksaver')} pl-10`}
         />
         {form.formState.errors.url && (
           <FormError size="xs" className="mt-1">{form.formState.errors.url.message}</FormError>
@@ -355,7 +350,7 @@ function LinkSheetForm({ onSuccess }: { onSuccess: () => void }) {
       <input
         {...form.register('title')}
         placeholder="Judul link"
-        className={inpFocus('#E09898')}
+        className={inpFocus('linksaver')}
       />
       {form.formState.errors.title && (
         <FormError size="xs" className="-mt-1">{form.formState.errors.title.message}</FormError>
@@ -365,21 +360,19 @@ function LinkSheetForm({ onSuccess }: { onSuccess: () => void }) {
         placeholder="Catatan (opsional)"
         className="min-h-[60px] resize-none bg-white border border-border rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-linksaver focus:ring-2 focus:ring-linksaver/20 transition-all"
       />
-      <button type="submit"
-        className="w-full bg-[#E09898] text-white font-bold py-3 rounded-[1rem] text-sm transition-colors hover:brightness-95 active:scale-[0.98] mt-auto"
-      >
+      <Button type="submit" className="w-full bg-linksaver text-white hover:bg-linksaver/90 mt-auto">
         Simpan Link 🔗
-      </button>
+      </Button>
     </form>
   );
 }
 
 // ─── Router ───────────────────────────────────────────────────────────────────
 const SECTION_META: Record<string, { label: string; color: string }> = {
-  '/catatan':   { label: 'Catatan Baru',      color: '#3D6B4F' },
-  '/keuangan':  { label: 'Tambah Transaksi',  color: '#8B6914' },
-  '/todo':      { label: 'To-Do Baru',        color: '#3D6B96' },
-  '/linksaver': { label: 'Simpan Link',        color: '#963D3D' },
+  '/catatan':   { label: 'Catatan Baru',      color: 'var(--color-primary)' },
+  '/keuangan':  { label: 'Tambah Transaksi',  color: 'var(--color-finance-text)' },
+  '/todo':      { label: 'To-Do Baru',        color: 'var(--color-todo-text)' },
+  '/linksaver': { label: 'Simpan Link',        color: 'var(--color-linksaver-text)' },
 };
 
 interface Props {

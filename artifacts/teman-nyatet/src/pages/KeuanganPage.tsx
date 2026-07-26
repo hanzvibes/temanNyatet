@@ -10,6 +10,7 @@ import { id } from 'date-fns/locale';
 import { Loader2, Wallet, ArrowDown, ArrowUp, Briefcase, Coffee, ShoppingBag, Car, HeartPulse, Laptop, Gamepad2, Gift, Receipt, Home, MoreHorizontal, BookOpen, Hand, Plus } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
+import { Button } from '@/components/ui/button';
 import { Drawer } from 'vaul';
 import { TransactionType, DEFAULT_INCOME_CATEGORIES, DEFAULT_EXPENSE_CATEGORIES, DEFAULT_PAYMENT_SOURCES } from '@/lib/database.types';
 import { useForm } from 'react-hook-form';
@@ -36,13 +37,8 @@ const getCategoryIcon = (category: string) => {
   }
 };
 
-const getCategoryColor = (category: string, type: TransactionType) => {
-  if (type === 'income') return 'bg-[#4ADE80]'; // Green
-  // Mix of pinks, yellows, blues for expenses to make it playful
-  const colors = ['bg-[#F87171]', 'bg-[#FBBF24]', 'bg-[#60A5FA]', 'bg-[#A78BFA]', 'bg-[#F472B6]', 'bg-[#34D399]'];
-  let hash = 0;
-  for (let i = 0; i < category.length; i++) hash = category.charCodeAt(i) + ((hash << 5) - hash);
-  return colors[Math.abs(hash) % colors.length];
+const getCategoryColor = (type: TransactionType) => {
+  return type === 'income' ? 'bg-income' : 'bg-expense';
 };
 
 const formatRupiah = (amount: number) => {
@@ -174,7 +170,7 @@ export default function KeuanganPage() {
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">Keuangan</h1>
             </div>
-            <SettingsSheet avatarBg="bg-[#FFF8D6] dark:bg-[#3D3118]" avatarTextColor="text-finance" />
+            <SettingsSheet avatarBg="bg-finance/15" avatarTextColor="text-finance-text" />
           </div>
         </div>
       </div>
@@ -193,19 +189,19 @@ export default function KeuanganPage() {
                <h2 className="text-4xl font-extrabold text-foreground tracking-tight">{formatRupiah(monthlySummary.balance)}</h2>
             </div>
             <div className="flex gap-4">
-              <div className="flex-1 bg-[#4ADE80]/10 rounded-2xl p-4 flex flex-col items-center border border-[#4ADE80]/20">
-                <div className="flex items-center gap-1.5 text-[#4ADE80] mb-2">
+              <div className="flex-1 bg-income/10 rounded-2xl p-4 flex flex-col items-center border border-income/20">
+                <div className="flex items-center gap-1.5 text-income mb-2">
                   <ArrowUp size={16} strokeWidth={3} />
                   <span className="text-xs font-bold uppercase tracking-wider">Pemasukan</span>
                 </div>
-                <span className="font-extrabold text-[#4ADE80]">{formatRupiah(monthlySummary.income)}</span>
+                <span className="font-bold text-income">{formatRupiah(monthlySummary.income)}</span>
               </div>
-              <div className="flex-1 bg-[#F87171]/10 dark:bg-[#3F1F1F] rounded-2xl p-4 flex flex-col items-center border border-[#F87171]/20 dark:border-[#5A3030]">
-                <div className="flex items-center gap-1.5 text-[#F87171] dark:text-[#FCA5A5] mb-2">
+              <div className="flex-1 bg-expense/10 rounded-2xl p-4 flex flex-col items-center border border-expense/20">
+                <div className="flex items-center gap-1.5 text-expense mb-2">
                   <ArrowDown size={16} strokeWidth={3} />
                   <span className="text-xs font-bold uppercase tracking-wider">Pengeluaran</span>
                 </div>
-                <span className="font-extrabold text-[#F87171] dark:text-[#FCA5A5]">{formatRupiah(monthlySummary.expense)}</span>
+                <span className="font-bold text-expense">{formatRupiah(monthlySummary.expense)}</span>
               </div>
             </div>
           </div>
@@ -226,13 +222,13 @@ export default function KeuanganPage() {
                 title={search ? 'Tidak ada hasil pencarian' : 'Belum ada transaksi bulan ini'}
                 description={search ? 'Coba kata kunci lain atau hapus filter.' : 'Catat pemasukan dan pengeluaran kamu agar keuangan tetap terpantau.'}
                 cta={!search ? (
-                  <button
+                  <Button
                     onClick={() => handleOpenForm('expense')}
-                    className="inline-flex items-center gap-2 bg-[#F4C753] text-[#4A3D18] font-bold px-6 py-3.5 rounded-full shadow-sm hover:bg-[#E0B442] active:scale-95 transition-all text-sm"
+                    className="bg-finance text-finance-text hover:bg-finance/90 rounded-full px-6 py-3.5"
                   >
                     <Plus size={18} strokeWidth={2.5} />
                     Catat Transaksi
-                  </button>
+                  </Button>
                 ) : undefined}
               />
             ) : (
@@ -270,11 +266,11 @@ export default function KeuanganPage() {
                               </div>
                             )}
                             <div className="flex items-center gap-4">
-                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${getCategoryColor(tx.category, tx.type)}`}>
+                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${getCategoryColor(tx.type)}`}>
                                 {getCategoryIcon(tx.category)}
                               </div>
                               <div>
-                                <p className="font-extrabold text-foreground text-base mb-0.5">{tx.category}</p>
+                                <p className="font-bold text-foreground text-base mb-0.5">{tx.category}</p>
                                 <div className="flex items-center gap-2">
                                   <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-secondary text-muted-foreground rounded-md border border-border">
                                     {tx.source}
@@ -287,7 +283,7 @@ export default function KeuanganPage() {
                                 </p>
                               </div>
                             </div>
-                            <div className={`font-extrabold text-lg ${tx.type === 'income' ? 'text-[#4ADE80]' : 'text-foreground'}`}>
+                            <div className={`font-bold text-lg ${tx.type === 'income' ? 'text-income' : 'text-foreground'}`}>
                               {tx.type === 'income' ? '+' : '-'}{formatRupiah(tx.amount)}
                             </div>
                           </AnimatedListItem>
@@ -337,13 +333,13 @@ export default function KeuanganPage() {
               <div className="mb-6">
                 <label className="text-pill-label mb-2 block">Nominal</label>
                 <div className="relative">
-                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-2xl font-extrabold text-muted-foreground/50">Rp</span>
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground/50">Rp</span>
                   <input
                     {...form.register('amount')}
                     type="text"
                     inputMode="numeric"
                     placeholder="0"
-                    className="w-full text-4xl font-extrabold bg-white border border-border rounded-[1.5rem] py-5 pl-16 pr-5 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 transition-all text-foreground"
+                    className="w-full text-4xl font-bold bg-white border border-border rounded-[1.5rem] py-5 pl-16 pr-5 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 transition-all text-foreground"
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, '');
                       const formatted = val ? new Intl.NumberFormat('id-ID').format(Number(val)) : '';
@@ -392,7 +388,7 @@ export default function KeuanganPage() {
                           isSelected ? 'bg-finance/10 border-finance shadow-sm' : 'bg-white border-border hover:bg-secondary'
                         }`}
                       >
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? getCategoryColor(cat, txType) : 'bg-secondary text-muted-foreground'}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? getCategoryColor(txType) : 'bg-secondary text-muted-foreground'}`}>
                            {isSelected ? getCategoryIcon(cat) : <div className="text-muted-foreground opacity-50">{getCategoryIcon(cat)}</div>}
                         </div>
                         <span className={`text-[10px] font-bold text-center uppercase tracking-wider ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>{cat}</span>
@@ -416,12 +412,12 @@ export default function KeuanganPage() {
                 />
               </div>
 
-              <button
+              <Button
                 type="submit"
-                className="w-full bg-[#F4C753] text-[#4A3D18] font-bold text-lg py-4 rounded-[1.25rem] shadow-sm hover:bg-[#E0B442] transition-colors"
+                className="w-full bg-finance text-finance-text hover:bg-finance/90 text-lg py-4 rounded-[1.25rem]"
               >
                 Simpan Transaksi
-              </button>
+              </Button>
             </form>
           </Drawer.Content>
         </Drawer.Portal>

@@ -8,6 +8,7 @@ import { id } from 'date-fns/locale';
 import { Loader2, CheckCircle, Check, Clock, Calendar, Trash2, X, Plus } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import SearchBar from '@/components/SearchBar';
 import { Drawer } from 'vaul';
@@ -177,7 +178,7 @@ export default function TodoPage() {
       </button>
 
       <div className="flex-1 min-w-0">
-        <h3 className={`font-extrabold text-base leading-tight transition-all ${
+        <h3 className={`font-bold text-base leading-tight transition-all ${
           todo.is_done ? 'line-through text-muted-foreground' : 'text-foreground'
         }`}>
           {todo.title}
@@ -192,13 +193,13 @@ export default function TodoPage() {
         {(todo.due_date || todo.due_time) && !todo.is_done && (
           <div className="flex items-center gap-2 mt-3 flex-wrap">
             {todo.due_date && (
-              <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-md bg-[#9CB4D4]/10 text-[#7A9CC6] border border-todo/20">
+              <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-md bg-todo/10 text-todo-text border border-todo/20">
                 <Calendar size={12} strokeWidth={2.5} />
                 {format(new Date(todo.due_date.length === 10 ? todo.due_date + 'T12:00:00' : todo.due_date), 'd MMM', { locale: id })}
               </span>
             )}
             {todo.due_time && (
-              <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-md bg-[#9CB4D4]/10 text-[#7A9CC6] border border-todo/20">
+              <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-md bg-todo/10 text-todo-text border border-todo/20">
                 <Clock size={12} strokeWidth={2.5} />
                 {todo.due_time}
               </span>
@@ -219,7 +220,7 @@ export default function TodoPage() {
               <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">To-Do List</h1>
             </div>
-            <SettingsSheet avatarBg="bg-[#E1F0FF] dark:bg-[#1A2638]" avatarTextColor="text-[#9CB4D4]" />
+            <SettingsSheet avatarBg="bg-todo/15" avatarTextColor="text-todo-text" />
           </div>
           <SearchBar value={search} onChange={setSearch} placeholder="Cari to-do..." />
         </div>
@@ -236,13 +237,13 @@ export default function TodoPage() {
             title={search ? 'Tidak ada hasil pencarian' : 'Belum ada to-do'}
             description={search ? 'Coba kata kunci lain atau hapus filter.' : 'Atur hal yang perlu dikerjakan agar tidak ada yang terlewat.'}
             cta={!search ? (
-              <button
+              <Button
                 onClick={() => { newForm.reset(); setIsFormOpen(true); }}
-                className="inline-flex items-center gap-2 bg-todo text-white font-bold px-6 py-3.5 rounded-full shadow-sm hover:bg-[#8AA8CF] active:scale-95 transition-all text-sm"
+                className="bg-todo text-white hover:bg-todo/90 rounded-full px-6 py-3.5"
               >
                 <Plus size={18} strokeWidth={2.5} />
                 Buat To-Do
-              </button>
+              </Button>
             ) : undefined}
           />
         ) : (
@@ -293,24 +294,25 @@ export default function TodoPage() {
                 transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
               >
                 {/* Card */}
-                <div className="bg-[#E1F0FF] dark:bg-[#1A2638] rounded-[24px] overflow-hidden shadow-2xl">
+                <div className="bg-todo/15 rounded-[24px] overflow-hidden shadow-2xl">
                   <form onSubmit={editForm.handleSubmit(onSubmitEdit)} className="flex flex-col">
                     {/* Header row */}
                     <div className="flex items-center justify-between px-6 pt-6 pb-3">
                       <button
                         type="button"
                         onClick={() => setIsEditOpen(false)}
-                        className="text-sm font-bold text-[#7A9CC6] hover:text-[#5A7CA6] transition-colors"
+                        className="text-sm font-bold text-todo-text hover:text-todo-text/80 transition-colors"
                       >
                         Batal
                       </button>
-                      <span className="text-[10px] font-bold text-[#7A9CC6] uppercase tracking-widest">Edit To-Do</span>
-                      <button
+                      <span className="text-[10px] font-bold text-todo-text uppercase tracking-widest">Edit To-Do</span>
+                      <Button
                         type="submit"
-                        className="text-sm font-bold text-[#3D6B96] bg-white/70 hover:bg-white/90 px-4 py-1.5 rounded-full transition-colors shadow-sm"
+                        size="sm"
+                        className="rounded-full bg-white/80 text-todo-text hover:bg-white shadow-sm"
                       >
                         Simpan
-                      </button>
+                      </Button>
                     </div>
 
                     {/* Fields */}
@@ -319,7 +321,7 @@ export default function TodoPage() {
                       <input
                         {...editForm.register('title')}
                         placeholder="Apa yang harus dikerjakan?"
-                        className="w-full text-xl font-extrabold bg-transparent border-b-2 border-todo/40 pb-2.5 outline-none focus:border-todo transition-colors placeholder:text-[#9CB4D4]/50 text-[#2A4A6A]"
+                        className="w-full text-input-title bg-transparent border-b-2 border-todo/40 pb-2.5 outline-none focus:border-todo transition-colors placeholder:text-muted-foreground/50 text-foreground"
                       />
                       {editForm.formState.errors.title && (
                         <FormError size="xs" className="-mt-1">{editForm.formState.errors.title.message}</FormError>
@@ -329,25 +331,25 @@ export default function TodoPage() {
                       <textarea
                         {...editForm.register('description')}
                         placeholder="Catatan tambahan (opsional)"
-                        className="w-full h-20 resize-none bg-white/60 border border-todo/30 rounded-xl p-3 outline-none text-sm font-medium placeholder:text-[#9CB4D4]/60 text-[#2A4A6A] focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
+                        className="w-full h-20 resize-none bg-muted/50 border border-todo/30 rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 text-foreground focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
                       />
 
                       {/* Date + Time */}
                       <div className="flex gap-3">
                         <div className="flex-1">
-                          <label className="text-[10px] font-bold text-[#7A9CC6] uppercase tracking-widest mb-1.5 block">Tanggal</label>
+                          <label className="text-[10px] font-bold text-todo-text uppercase tracking-widest mb-1.5 block">Tanggal</label>
                           <input
                             {...editForm.register('due_date')}
                             type="date"
-                            className="w-full bg-white/60 border border-todo/30 rounded-xl py-2.5 px-3 outline-none focus:border-todo text-sm font-bold text-[#2A4A6A] transition-all"
+                            className="w-full bg-muted/50 border border-todo/30 rounded-xl py-2.5 px-3 outline-none focus:border-todo text-sm font-bold text-foreground transition-all"
                           />
                         </div>
                         <div className="flex-1">
-                          <label className="text-[10px] font-bold text-[#7A9CC6] uppercase tracking-widest mb-1.5 block">Waktu</label>
+                          <label className="text-[10px] font-bold text-todo-text uppercase tracking-widest mb-1.5 block">Waktu</label>
                           <input
                             {...editForm.register('due_time')}
                             type="time"
-                            className="w-full bg-white/60 border border-todo/30 rounded-xl py-2.5 px-3 outline-none focus:border-todo text-sm font-bold text-[#2A4A6A] transition-all"
+                            className="w-full bg-muted/50 border border-todo/30 rounded-xl py-2.5 px-3 outline-none focus:border-todo text-sm font-bold text-foreground transition-all"
                           />
                         </div>
                       </div>
@@ -377,13 +379,14 @@ export default function TodoPage() {
 
                 {/* Close pill */}
                 <div className="flex justify-center mt-4">
-                  <button
+                  <Button
                     onClick={() => setIsEditOpen(false)}
-                    className="flex items-center gap-2 bg-white/90 text-gray-700 font-bold px-6 py-3 rounded-full shadow-lg hover:bg-white transition-colors text-sm"
+                    variant="secondary"
+                    className="rounded-full shadow-lg"
                   >
                     <X size={16} strokeWidth={2.5} />
                     Tutup
-                  </button>
+                  </Button>
                 </div>
               </motion.div>
             </div>
@@ -404,7 +407,7 @@ export default function TodoPage() {
                   <input
                     {...newForm.register('title')}
                     placeholder="Apa yang harus dikerjakan?"
-                    className="w-full text-xl font-extrabold bg-transparent border-b-2 border-border py-3 outline-none focus:border-todo transition-colors placeholder:text-muted-foreground/50 text-foreground"
+                    className="w-full text-xl font-bold bg-transparent border-b-2 border-border py-3 outline-none focus:border-todo transition-colors placeholder:text-muted-foreground/50 text-foreground"
                   />
                   {newForm.formState.errors.title && (
                     <FormError className="mt-2">{newForm.formState.errors.title.message}</FormError>
@@ -413,7 +416,7 @@ export default function TodoPage() {
                 <textarea
                   {...newForm.register('description')}
                   placeholder="Catatan tambahan (opsional)"
-                  className="w-full h-24 resize-none bg-white border border-border rounded-xl p-4 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
+                  className="w-full h-24 resize-none bg-muted/50 border border-border rounded-xl p-4 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
                 />
                 <div className="flex gap-4">
                   <div className="flex-1">
@@ -426,11 +429,11 @@ export default function TodoPage() {
                   </div>
                 </div>
               </div>
-              <button type="submit"
-                className="w-full bg-todo text-white font-bold text-lg py-4 rounded-[1.25rem] shadow-sm hover:bg-[#8AA8CF] transition-colors mt-auto"
+              <Button type="submit"
+                className="w-full bg-todo text-white hover:bg-todo/90 text-lg py-4 rounded-[1.25rem] mt-auto"
               >
                 Simpan To-Do
-              </button>
+              </Button>
             </form>
           </Drawer.Content>
         </Drawer.Portal>

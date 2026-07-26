@@ -35,18 +35,12 @@ export default function BottomSheetNav() {
   };
 
   // Animate HEIGHT — pill grows upward since it's bottom-anchored.
-  // Start collapsed so the page content is visible. User can tap the handle
-  // or drag it up to open the sheet.
   const h = useMotionValue(SNAP.collapsed);
   const [snapState, setSnapState] = useState<SnapState>('collapsed');
 
   useEffect(() => { h.set(SNAP[snapState]); }, [screenH]);
 
-  // Broadcast open/closed state on the shared overlay channel so peripheral
-  // fixed-position chrome (e.g. the PWA install prompt) can step out of the
-  // way while any sheet — this BottomSheetNav, the SettingsSheet Drawer, or
-  // a future modal — owns the bottom of the viewport. Lightweight custom
-  // event; avoids a shared context for what is effectively a one-bit signal.
+  // Broadcast open/closed state on the shared overlay channel.
   useEffect(() => {
     const evt = new CustomEvent('teman-nyatet:any-overlay', {
       detail: { open: snapState !== 'collapsed' },
@@ -54,8 +48,7 @@ export default function BottomSheetNav() {
     window.dispatchEvent(evt);
   }, [snapState]);
 
-  // When navigating to a new tab, collapse the sheet so the page content is
-  // visible. The user can tap/drag the handle to reopen it if they want to create.
+  // When navigating to a new tab, collapse the sheet so the page content is visible.
   const prevLocation = useRef(location);
   useEffect(() => {
     if (location !== prevLocation.current) {
@@ -69,8 +62,7 @@ export default function BottomSheetNav() {
     setSnapState(state);
   };
 
-  // Drag — pointer capture on the handle bar only. Also supports a tap on the
-  // handle to toggle between collapsed and half-open.
+  // Drag — pointer capture on the handle bar only.
   const dragStartClientY = useRef(0);
   const dragStartH       = useRef(0);
   const samples          = useRef<{ t: number; y: number }[]>([]);
@@ -88,8 +80,6 @@ export default function BottomSheetNav() {
     if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
     const delta = dragStartClientY.current - e.clientY;
     if (Math.abs(delta) > 4) isDragging.current = true;
-
-    // Upward finger movement (negative delta) → pill grows taller
     const next  = Math.max(SNAP.collapsed, Math.min(SNAP.expanded, dragStartH.current + delta));
     h.set(next);
     samples.current.push({ t: Date.now(), y: e.clientY });
@@ -97,18 +87,16 @@ export default function BottomSheetNav() {
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
-    // Treat a tap on the handle as a click: toggle between collapsed and half-open.
     if (!isDragging.current && Math.abs(dragStartClientY.current - e.clientY) < 4) {
       snapTo(snapState === 'collapsed' ? 'half' : 'collapsed');
       return;
     }
-
     const cur = h.get();
     let vel = 0;
     if (samples.current.length >= 2) {
       const a = samples.current[0], b = samples.current[samples.current.length - 1];
       const dt = (b.t - a.t) / 1000;
-      if (dt > 0) vel = (b.y - a.y) / dt; // positive = moving DOWN = shrink
+      if (dt > 0) vel = (b.y - a.y) / dt;
     }
     if (vel > 500) {
       snapTo('collapsed');
@@ -123,7 +111,6 @@ export default function BottomSheetNav() {
 
   const isOpen = snapState !== 'collapsed';
 
-  // Hidden on desktop (lg+) — SidebarNav handles navigation there.
   return (
     <div className="lg:hidden">
       {/* Dim backdrop */}
@@ -141,10 +128,7 @@ export default function BottomSheetNav() {
         )}
       </AnimatePresence>
 
-      {/*
-        Floating pill — same position as original BottomNav.
-        Bottom-anchored so height growth goes UPWARD.
-      */}
+      {/* Floating pill */}
       <motion.div
         className="fixed left-1/2 z-50 -translate-x-1/2 w-[calc(100%-2.5rem)] max-w-sm md:max-w-md"
         style={{
@@ -155,10 +139,10 @@ export default function BottomSheetNav() {
         }}
       >
         <div
-          className="bg-card border border-border/30 shadow-[0_4px_32px_rgba(0,0,0,0.14)] h-full flex flex-col"
+          className="bg-card border border-border/30 shadow-elevated h-full flex flex-col"
           style={{ borderRadius: 24 }}
         >
-          {/* ── Drag Handle ── */}
+          {/* Drag Handle */}
           <div
             className="flex-shrink-0 flex justify-center items-center cursor-grab active:cursor-grabbing touch-none select-none"
             style={{ height: HANDLE_H }}
@@ -167,10 +151,10 @@ export default function BottomSheetNav() {
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
           >
-            <div className="w-9 h-[5px] rounded-full bg-muted-foreground/25" />
+            <div className="w-9 h-[5px] rounded-full bg-muted-foreground/30" />
           </div>
 
-          {/* ── Inline form — only rendered when sheet is open ── */}
+          {/* Inline form — only rendered when sheet is open */}
           <div className="flex-1 min-h-0 overflow-hidden">
             {isOpen && (
               <div className="h-full overflow-y-auto overflow-x-hidden px-4 pb-3 pt-1">
@@ -182,7 +166,7 @@ export default function BottomSheetNav() {
             )}
           </div>
 
-          {/* ── Nav Tabs — always pinned at the bottom of the pill ── */}
+          {/* Nav Tabs — always pinned at the bottom of the pill */}
           <div
             className="flex-shrink-0 border-t border-border/20 flex justify-around items-center px-1 bg-card"
             style={{ height: NAV_H, borderRadius: '0 0 24px 24px' }}
@@ -195,18 +179,12 @@ export default function BottomSheetNav() {
                   key={item.path}
                   href={item.path}
                   aria-label={item.name}
-                  className="flex flex-col items-center justify-center flex-1 h-full gap-0.5 rounded-xl
-                             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground
-                             focus-visible:ring-offset-0"
+                  className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 rounded-xl transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${isActive ? 'bg-primary/15' : 'hover:bg-muted'}`}
                 >
-                  <div
-                    className={`w-11 h-9 flex items-center justify-center rounded-xl transition-all duration-200 ${
-                      isActive ? 'bg-primary scale-105' : ''
-                    }`}
-                  >
+                  <div className="w-11 h-9 flex items-center justify-center rounded-xl transition-colors">
                     <Icon
                       size={22}
-                      className={isActive ? 'text-primary-foreground' : 'text-muted-foreground'}
+                      className={isActive ? 'text-primary' : 'text-muted-foreground'}
                       strokeWidth={isActive ? 2.5 : 2}
                     />
                   </div>

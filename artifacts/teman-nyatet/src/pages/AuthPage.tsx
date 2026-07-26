@@ -7,6 +7,7 @@ import { getEmailRedirectUrl } from '@/lib/siteUrl';
 import { toast } from 'sonner';
 import { Loader2, Eye, EyeOff, BookOpen, Mail, ArrowLeft } from 'lucide-react';
 import { FormError } from '@/components/PageStates';
+import { Button } from '@/components/ui/button';
 
 const loginSchema = z.object({
   email: z.string().email('Email tidak valid'),
@@ -152,9 +153,9 @@ export default function AuthPage() {
 
         {/* Logo Section */}
         <div className="flex flex-col items-center mb-10">
-          <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center mb-6 shadow-soft relative">
+          <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center mb-6 shadow-elevated relative">
              {/* Yellow Notebook Icon Placeholder */}
-             <div className="absolute w-12 h-14 bg-[#F4C753] rounded-md shadow-sm border border-[#E0B442] flex items-center justify-center transform -rotate-6">
+             <div className="absolute w-12 h-14 bg-finance rounded-md shadow-sm border border-finance-text/50 flex items-center justify-center transform -rotate-6">
                 <BookOpen size={24} className="text-white" />
              </div>
           </div>
@@ -177,19 +178,20 @@ export default function AuthPage() {
               </p>
             </div>
 
-            <button
+            <Button
               type="button"
               onClick={handleResendVerification}
               disabled={isLoading}
-              className="w-full bg-[#F4C753] text-[#4A3D18] font-bold text-lg py-4 rounded-full shadow-soft hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+              size="lg"
+              className="w-full text-lg py-5 rounded-full gap-2"
             >
               {isLoading ? <Loader2 className="animate-spin w-6 h-6" /> : <><Mail size={20} /> Kirim Ulang Email Verifikasi</>}
-            </button>
+            </Button>
 
             <button
               type="button"
               onClick={handleBackToLogin}
-              className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline transition-colors"
             >
               <ArrowLeft size={16} /> Sudah verifikasi? Kembali ke login
             </button>
@@ -251,20 +253,21 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={handleResetPassword}
-                    className="text-sm font-bold text-primary hover:underline"
+                    className="text-sm font-semibold text-primary hover:underline transition-colors"
                   >
                     Lupa password?
                   </button>
                 </div>
               )}
 
-              <button
+              <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-[#F4C753] text-[#4A3D18] font-bold text-lg py-4 rounded-full shadow-soft hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center mt-4"
+                size="lg"
+                className="w-full text-lg py-5 rounded-full mt-4"
               >
                 {isLoading ? <Loader2 className="animate-spin w-6 h-6" /> : (isLogin ? 'Masuk' : 'Daftar')}
-              </button>
+              </Button>
             </form>
 
             <div className="mt-8 text-center">
@@ -275,7 +278,7 @@ export default function AuthPage() {
                     setIsLogin(!isLogin);
                     form.reset();
                   }}
-                  className="text-primary font-bold hover:underline"
+                  className="text-primary font-semibold hover:underline transition-colors"
                 >
                   {isLogin ? 'Daftar' : 'Masuk'}
                 </button>

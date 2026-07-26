@@ -8,6 +8,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet, MessageSquare, Crown, Calendar, Sparkles, Sun, Moon, Monitor } from 'lucide-react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Button } from '@/components/ui/button';
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -230,7 +231,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
     }
   };
 
-  const INP = 'w-full bg-secondary border border-border rounded-xl outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 font-bold text-foreground transition-all py-[clamp(0.625rem,1.8vw,0.875rem)] px-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.75rem,2.5vw,1rem)]';
+  const INP = 'w-full bg-secondary border border-border rounded-xl outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 font-bold text-foreground transition-all py-3 px-4 text-sm';
 
   return (
     <>
@@ -318,7 +319,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                             ? 'bg-primary/15 text-primary border border-primary/30'
                             : 'bg-muted text-muted-foreground border border-border'
                         }`}>
-                          {isPro ? '⭐ PRO' : 'FREE'}
+                          {isPro ? 'PRO' : 'FREE'}
                         </span>
 
                         {/* Name */}
@@ -416,13 +417,14 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                           onKeyDown={e => e.key === 'Enter' && handleSaveName()}
                         />
                       </div>
-                      <button
+                      <Button
                         onClick={handleSaveName}
                         disabled={saving}
-                        className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
+                        className="w-full"
+                        size="lg"
                       >
                         {saving ? 'Menyimpan...' : 'Simpan Nama'}
-                      </button>
+                      </Button>
                     </div>
                   ) : activeSection === 'password' ? (
                     <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
@@ -448,13 +450,14 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                           onKeyDown={e => e.key === 'Enter' && handleSavePassword()}
                         />
                       </div>
-                      <button
+                      <Button
                         onClick={handleSavePassword}
                         disabled={saving}
-                        className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
+                        className="w-full"
+                        size="lg"
                       >
                         {saving ? 'Menyimpan...' : 'Simpan Password'}
-                      </button>
+                      </Button>
                     </div>
                   ) : activeSection === 'phone' ? (
                     <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
@@ -470,13 +473,14 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                           onKeyDown={e => e.key === 'Enter' && handleSavePhone()}
                         />
                       </div>
-                      <button
+                      <Button
                         onClick={handleSavePhone}
                         disabled={saving}
-                        className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
+                        className="w-full"
+                        size="lg"
                       >
                         {saving ? 'Menyimpan...' : 'Simpan Nomor HP'}
-                      </button>
+                      </Button>
                     </div>
                   ) : activeSection === 'subscription' ? (
                     <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
@@ -627,22 +631,25 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                               // because AuthGuard blocks active users from reaching /payment and
                               // immediately redirects them to /catatan.
                               return (
-                                <a
-                                  href={mayarUrl === '#' ? undefined : mayarUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={() => {
-                                    if (mayarUrl === '#') {
-                                      toast.error('Tautan langganan belum dikonfigurasi. Hubungi support.');
-                                      return;
-                                    }
-                                    // Keep drawer open so user can come back to it
-                                  }}
-                                  className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)] flex items-center justify-center gap-2"
+                                <Button
+                                  asChild
+                                  className="w-full gap-2"
+                                  size="lg"
                                 >
-                                  <Crown size={16} strokeWidth={2.5} />
-                                  Kelola Langganan
-                                </a>
+                                  <a
+                                    href={mayarUrl === '#' ? undefined : mayarUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={() => {
+                                      if (mayarUrl === '#') {
+                                        toast.error('Tautan langganan belum dikonfigurasi. Hubungi support.');
+                                      }
+                                    }}
+                                  >
+                                    <Crown size={16} strokeWidth={2.5} />
+                                    Kelola Langganan
+                                  </a>
+                                </Button>
                               );
                             }
 
@@ -650,32 +657,38 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                               // Archived: same — open Mayar URL in new tab to re-subscribe.
                               // AuthGuard blocks archived users from /payment too (→ /archived).
                               return (
-                                <a
-                                  href={mayarUrl === '#' ? undefined : mayarUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={() => {
-                                    if (mayarUrl === '#') {
-                                      toast.error('Tautan langganan belum dikonfigurasi. Hubungi support.');
-                                    }
-                                  }}
-                                  className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)] flex items-center justify-center gap-2"
+                                <Button
+                                  asChild
+                                  className="w-full gap-2"
+                                  size="lg"
                                 >
-                                  <Sparkles size={16} strokeWidth={2.5} />
-                                  Perpanjang Langganan
-                                </a>
+                                  <a
+                                    href={mayarUrl === '#' ? undefined : mayarUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={() => {
+                                      if (mayarUrl === '#') {
+                                        toast.error('Tautan langganan belum dikonfigurasi. Hubungi support.');
+                                      }
+                                    }}
+                                  >
+                                    <Sparkles size={16} strokeWidth={2.5} />
+                                    Perpanjang Langganan
+                                  </a>
+                                </Button>
                               );
                             }
 
                             // Pending / free: navigate to payment onboarding page (correct for pending)
                             return (
-                              <button
+                              <Button
                                 onClick={() => { setOpen(false); setLocation('/payment'); }}
-                                className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)] flex items-center justify-center gap-2"
+                                className="w-full gap-2"
+                                size="lg"
                               >
                                 <Sparkles size={16} strokeWidth={2.5} />
                                 Upgrade ke PRO
-                              </button>
+                              </Button>
                             );
                           })()}
 
@@ -705,12 +718,13 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                           autoFocus
                         />
                       </div>
-                      <button
+                      <Button
                         onClick={handleSendFeedback}
-                        className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
+                        className="w-full"
+                        size="lg"
                       >
                         Kirim Feedback
-                      </button>
+                      </Button>
                       <p className="text-[clamp(0.75rem,2.5vw,1rem)] text-muted-foreground text-center">
                         Akan membuka aplikasi email dengan alamat tujuan <strong className="text-foreground">rhn.rmdhniii@gmail.com</strong>.
                       </p>

@@ -80,11 +80,11 @@ function NoteCardBody({
     <>
       <div className="flex justify-end mb-1 -mt-1 -mr-1">{handle}</div>
       {note.title && (
-        <h3 className="font-bold text-gray-900 dark:text-foreground mb-2 leading-tight text-lg">
+        <h3 className="font-bold text-foreground mb-2 leading-tight text-lg">
           {note.title}
         </h3>
       )}
-      <p className="text-sm text-gray-800 dark:text-foreground/90 line-clamp-5 whitespace-pre-wrap leading-relaxed font-medium">
+      <p className="text-sm text-foreground/90 line-clamp-5 whitespace-pre-wrap leading-relaxed font-medium">
         {note.content}
       </p>
       {note.tags && note.tags.length > 0 && (
@@ -92,19 +92,19 @@ function NoteCardBody({
           {note.tags.slice(0, 2).map((tag) => (
             <span
               key={tag}
-              className="text-[10px] px-2.5 py-1 rounded-full bg-white/60 dark:bg-white/10 text-gray-800 dark:text-foreground font-bold uppercase tracking-wider"
+              className="text-[10px] px-2.5 py-1 rounded-full bg-white/60 dark:bg-white/10 text-foreground font-bold uppercase tracking-wider"
             >
               {tag}
             </span>
           ))}
           {note.tags.length > 2 && (
-            <span className="text-[10px] px-2 py-1 rounded-full bg-white/60 dark:bg-white/10 text-gray-800 dark:text-foreground font-bold">
+            <span className="text-[10px] px-2 py-1 rounded-full bg-white/60 dark:bg-white/10 text-foreground font-bold">
               +{note.tags.length - 2}
             </span>
           )}
         </div>
       )}
-      <div className="mt-4 text-xs text-gray-600/80 dark:text-muted-foreground font-bold">
+      <div className="mt-4 text-xs text-muted-foreground font-bold">
         {format(new Date(note.created_at), 'd MMM yyyy', { locale: idLocale })}
       </div>
     </>
@@ -171,7 +171,7 @@ function SortableNoteCard({
       aria-label={`Ubah urutan catatan: ${note.title || 'tanpa judul'}`}
       // 44×44 minimum tap target on the grip — Apple HIG / WCAG 2.5.5.
       // `touch-none` lets dnd-kit fully claim the gesture (no scroll steal).
-      className="min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500/60 hover:text-gray-800 rounded-full hover:bg-black/5 touch-none cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-colors"
+      className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground rounded-full hover:bg-muted touch-none cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-colors"
     >
       <GripVertical size={20} strokeWidth={2.2} />
     </button>

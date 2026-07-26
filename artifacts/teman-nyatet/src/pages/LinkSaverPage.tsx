@@ -8,6 +8,7 @@ import { useCreate } from '@/contexts/CreateContext';
 import { Loader2, Link2, Copy, ExternalLink, Compass, Hand, Plus } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
+import { Button } from '@/components/ui/button';
 import SearchBar from '@/components/SearchBar';
 import { Drawer } from 'vaul';
 import { useForm } from 'react-hook-form';
@@ -110,7 +111,7 @@ export default function LinkSaverPage() {
               <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">Link Saver</h1>
             </div>
-            <SettingsSheet avatarBg="bg-[#FFE4E1] dark:bg-[#38201E]" avatarTextColor="text-linksaver" />
+            <SettingsSheet avatarBg="bg-linksaver/15" avatarTextColor="text-linksaver-text" />
           </div>
           <SearchBar value={search} onChange={setSearch} placeholder="Cari link..." />
         </div>
@@ -127,13 +128,13 @@ export default function LinkSaverPage() {
             title={search ? 'Tidak ada hasil pencarian' : 'Belum ada link tersimpan'}
             description={search ? 'Coba kata kunci lain atau hapus filter.' : 'Simpan link penting agar mudah ditemukan kapan saja.'}
             cta={!search ? (
-              <button
+              <Button
                 onClick={() => { form.reset(); setIsFormOpen(true); }}
-                className="inline-flex items-center gap-2 bg-linksaver text-white font-bold px-6 py-3.5 rounded-full shadow-sm hover:bg-[#D48888] active:scale-95 transition-all text-sm"
+                className="bg-linksaver text-white hover:bg-linksaver/90 rounded-full px-6 py-3.5"
               >
                 <Plus size={18} strokeWidth={2.5} />
                 Simpan Link Pertama
-              </button>
+              </Button>
             ) : undefined}
           />
         ) : (
@@ -180,7 +181,7 @@ export default function LinkSaverPage() {
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-extrabold text-base text-foreground line-clamp-1 mb-1">{link.title}</h3>
+                      <h3 className="font-bold text-base text-foreground line-clamp-1 mb-1">{link.title}</h3>
                       <div className="flex items-center text-xs font-bold text-muted-foreground gap-1">
                         <span className="truncate">{link.url.replace(/^https?:\/\//, '')}</span>
                       </div>
@@ -197,7 +198,7 @@ export default function LinkSaverPage() {
                       type="button"
                       aria-label={`Salin URL ${link.title}`}
                       onClick={(e) => copyToClipboard(e, link.url)}
-                      className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-secondary border border-border text-muted-foreground flex items-center justify-center hover:bg-[#E09898]/10 hover:text-linksaver hover:border-linksaver/30 transition-colors
+                      className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-secondary border border-border text-muted-foreground flex items-center justify-center hover:bg-linksaver/10 hover:text-linksaver hover:border-linksaver/30 transition-colors
                                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2"
                     >
                       <Copy size={16} strokeWidth={2.5} />
@@ -261,12 +262,12 @@ export default function LinkSaverPage() {
                 </div>
               </div>
 
-              <button
+              <Button
                 type="submit"
-                className="w-full bg-linksaver text-white font-bold text-lg py-4 rounded-[1.25rem] shadow-sm hover:bg-[#D48888] transition-colors mt-auto"
+                className="w-full bg-linksaver text-white hover:bg-linksaver/90 text-lg py-4 rounded-[1.25rem] mt-auto"
               >
                 Simpan Link
-              </button>
+              </Button>
             </form>
           </Drawer.Content>
         </Drawer.Portal>

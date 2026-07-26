@@ -152,8 +152,8 @@ export default function DraggableSheet() {
             onPointerUp={onHandlePointerUp}
             onPointerCancel={onHandlePointerUp}
           >
-            <div className="w-10 h-1.5 rounded-full bg-gray-200 mb-3" />
-            <div className="flex items-center gap-1 text-gray-400">
+            <div className="w-10 h-1.5 rounded-full bg-muted mb-3" />
+            <div className="flex items-center gap-1 text-muted-foreground">
               <ChevronUp size={13} strokeWidth={2.5} />
               <span className="text-[11px] font-bold uppercase tracking-widest">Tambah Baru</span>
             </div>

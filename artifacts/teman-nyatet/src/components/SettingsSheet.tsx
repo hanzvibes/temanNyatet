@@ -35,6 +35,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [subStatus, setSubStatus] = useState<SubscriptionStatus | null>(null);
   const [subLoading, setSubLoading] = useState(false);
+  const [subError, setSubError] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Form state
@@ -56,18 +57,30 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
   // profile may not yet have picked up.
   const loadSubscription = async () => {
     setSubLoading(true);
+    setSubError(null);
     try {
       const data = await apiGet<SubscriptionStatus>('/subscription/status');
       setSubStatus(data);
-    } catch {
-      // Fall back to the locally-cached profile fields so the user still
-      // sees *something* even if the request fails.
-      setSubStatus({
-        subscription_status: (profile?.subscription_status as SubscriptionStatus['subscription_status']) ?? 'pending',
-        subscription_plan: (profile?.subscription_plan as SubscriptionStatus['subscription_plan']) ?? null,
-        subscription_end: (profile?.subscription_end as string | null) ?? null,
-        days_remaining: null,
-      });
+    } catch (err) {
+      // Check for offline / network failure first
+      if (!navigator.onLine || (err instanceof TypeError && String(err).includes('fetch'))) {
+        setSubError('offline');
+      } else {
+        // Fall back to the locally-cached profile fields so the user still
+        // sees *something* even if the request fails (e.g. api-server cold start).
+        if (profile?.subscription_status) {
+          setSubStatus({
+            subscription_status: profile.subscription_status as SubscriptionStatus['subscription_status'],
+            subscription_plan: (profile?.subscription_plan as SubscriptionStatus['subscription_plan']) ?? null,
+            subscription_end: (profile?.subscription_end as string | null) ?? null,
+            days_remaining: null,
+          });
+          // Show a soft warning — data may be stale
+          setSubError('stale');
+        } else {
+          setSubError('unavailable');
+        }
+      }
     } finally {
       setSubLoading(false);
     }
@@ -468,47 +481,107 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                   ) : activeSection === 'subscription' ? (
                     <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
                       {subLoading ? (
-                        <div className="flex items-center justify-center py-[clamp(2rem,8vw,3rem)]">
-                          <Loader2 className="animate-spin text-primary" size={28} />
-                        </div>
-                      ) : (
-                        <>
-                          {/* Plan + status card */}
-                          <div className={`rounded-[clamp(1rem,3vw,1.5rem)] p-[clamp(1rem,4vw,1.5rem)] border ${
-                            subStatus?.subscription_status === 'active'
-                              ? 'bg-primary/10 border-primary/30'
-                              : subStatus?.subscription_status === 'archived'
-                                ? 'bg-destructive/10 border-destructive/30'
-                                : 'bg-secondary border-border'
-                          }`}>
+                        /* ── Loading skeleton ── */
+                        <div className="space-y-[clamp(0.75rem,3vw,1rem)]">
+                          <div className="rounded-[clamp(1rem,3vw,1.5rem)] p-[clamp(1rem,4vw,1.5rem)] border border-border bg-secondary animate-pulse">
                             <div className="flex items-center gap-[clamp(0.75rem,3vw,1rem)]">
-                              <div className={`rounded-xl flex items-center justify-center flex-shrink-0 w-[clamp(2.75rem,10vw,3.5rem)] h-[clamp(2.75rem,10vw,3.5rem)] ${
-                                subStatus?.subscription_status === 'active' ? 'bg-primary/20' : 'bg-background'
-                              }`}>
-                                <Crown
-                                  size={20}
-                                  strokeWidth={2.2}
-                                  className={subStatus?.subscription_status === 'active' ? 'text-primary' : 'text-muted-foreground'}
-                                />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className={`font-extrabold uppercase tracking-widest text-[clamp(0.625rem,2vw,0.75rem)] ${
-                                  subStatus?.subscription_status === 'active' ? 'text-primary' : 'text-muted-foreground'
-                                }`}>
-                                  {subStatus?.subscription_status === 'active'
-                                    ? '⭐ AKTIF'
-                                    : subStatus?.subscription_status === 'archived'
-                                      ? 'DIARSIPKAN'
-                                      : 'GRATIS'}
-                                </p>
-                                <p className="text-[clamp(0.875rem,3vw,1.125rem)] font-extrabold text-foreground mt-[clamp(0.125rem,0.5vw,0.25rem)] leading-tight">
-                                  {subStatus?.subscription_status === 'active' && subStatus?.subscription_plan
-                                    ? (subStatus.subscription_plan === 'monthly' ? 'Paket Bulanan' : 'Paket Tahunan')
-                                    : 'TemanNyatet Free'}
-                                </p>
+                              <div className="rounded-xl bg-muted flex-shrink-0 w-[clamp(2.75rem,10vw,3.5rem)] h-[clamp(2.75rem,10vw,3.5rem)]" />
+                              <div className="flex-1 space-y-2">
+                                <div className="h-3 bg-muted rounded-full w-1/3" />
+                                <div className="h-5 bg-muted rounded-full w-2/3" />
                               </div>
                             </div>
                           </div>
+                          <div className="h-[clamp(3rem,10vw,3.75rem)] bg-muted rounded-[clamp(0.75rem,3vw,1.25rem)] animate-pulse" />
+                        </div>
+                      ) : subError === 'unavailable' ? (
+                        /* ── Hard error: no data at all ── */
+                        <div className="rounded-[clamp(1rem,3vw,1.5rem)] p-[clamp(1rem,4vw,1.5rem)] border border-destructive/30 bg-destructive/10 text-center space-y-[clamp(0.75rem,3vw,1rem)]">
+                          <p className="text-[clamp(0.875rem,3vw,1.125rem)] font-bold text-foreground">Status Langganan Tidak Tersedia</p>
+                          <p className="text-[clamp(0.75rem,2.5vw,0.9375rem)] text-muted-foreground leading-relaxed">
+                            Tidak dapat memuat informasi langganan. Periksa koneksimu dan coba lagi.
+                          </p>
+                          <button
+                            onClick={loadSubscription}
+                            className="inline-flex items-center gap-2 font-bold text-primary text-[clamp(0.8125rem,2.5vw,0.9375rem)] hover:underline focus-visible:outline-none"
+                          >
+                            <Loader2 size={14} strokeWidth={2.5} /> Coba Lagi
+                          </button>
+                        </div>
+                      ) : subError === 'offline' ? (
+                        /* ── Offline error ── */
+                        <div className="rounded-[clamp(1rem,3vw,1.5rem)] p-[clamp(1rem,4vw,1.5rem)] border border-orange-300/40 bg-orange-50/60 dark:bg-orange-900/20 dark:border-orange-500/30 text-center space-y-[clamp(0.75rem,3vw,1rem)]">
+                          <p className="text-[clamp(0.875rem,3vw,1.125rem)] font-bold text-foreground">Kamu Sedang Offline</p>
+                          <p className="text-[clamp(0.75rem,2.5vw,0.9375rem)] text-muted-foreground leading-relaxed">
+                            Periksa koneksi internetmu, lalu coba lagi.
+                          </p>
+                          <button
+                            onClick={loadSubscription}
+                            className="inline-flex items-center gap-2 font-bold text-primary text-[clamp(0.8125rem,2.5vw,0.9375rem)] hover:underline focus-visible:outline-none"
+                          >
+                            <Loader2 size={14} strokeWidth={2.5} /> Coba Lagi
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Stale-data soft warning */}
+                          {subError === 'stale' && (
+                            <div className="rounded-xl px-[clamp(0.875rem,3vw,1.125rem)] py-[clamp(0.5rem,2vw,0.75rem)] border border-orange-300/40 bg-orange-50/60 dark:bg-orange-900/20 dark:border-orange-500/30 flex items-center justify-between gap-3">
+                              <p className="text-[clamp(0.75rem,2.5vw,0.875rem)] text-muted-foreground leading-snug">
+                                Data mungkin belum terkini. Ketuk untuk muat ulang.
+                              </p>
+                              <button
+                                onClick={loadSubscription}
+                                className="text-primary font-bold text-[clamp(0.75rem,2.5vw,0.875rem)] whitespace-nowrap hover:underline focus-visible:outline-none flex-shrink-0"
+                              >
+                                Muat Ulang
+                              </button>
+                            </div>
+                          )}
+
+                          {/* ── Plan + status card ── */}
+                          {(() => {
+                            const st = subStatus?.subscription_status;
+                            const isActive   = st === 'active';
+                            const isArchived = st === 'archived';
+                            // dot colour + label
+                            const dot   = isActive ? '🟢' : isArchived ? '🔴' : '🟡';
+                            const label = isActive
+                              ? 'Aktif'
+                              : isArchived
+                                ? 'Berakhir'
+                                : 'Belum Berlangganan';
+                            const planName = isActive && subStatus?.subscription_plan
+                              ? (subStatus.subscription_plan === 'monthly' ? 'Paket Bulanan' : 'Paket Tahunan')
+                              : isArchived
+                                ? 'Langganan Berakhir'
+                                : 'TemanNyatet Free';
+                            return (
+                              <div className={`rounded-[clamp(1rem,3vw,1.5rem)] p-[clamp(1rem,4vw,1.5rem)] border ${
+                                isActive   ? 'bg-primary/10 border-primary/30'
+                                : isArchived ? 'bg-destructive/10 border-destructive/30'
+                                : 'bg-secondary border-border'
+                              }`}>
+                                <div className="flex items-center gap-[clamp(0.75rem,3vw,1rem)]">
+                                  <div className={`rounded-xl flex items-center justify-center flex-shrink-0 w-[clamp(2.75rem,10vw,3.5rem)] h-[clamp(2.75rem,10vw,3.5rem)] text-[clamp(1.25rem,4vw,1.75rem)] ${
+                                    isActive ? 'bg-primary/20' : 'bg-background'
+                                  }`}>
+                                    {isActive ? <Crown size={22} className="text-primary" strokeWidth={2.2} /> : dot}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className={`font-extrabold uppercase tracking-widest text-[clamp(0.625rem,2vw,0.75rem)] ${
+                                      isActive ? 'text-primary' : isArchived ? 'text-destructive' : 'text-muted-foreground'
+                                    }`}>
+                                      {dot} {label}
+                                    </p>
+                                    <p className="text-[clamp(0.875rem,3vw,1.125rem)] font-extrabold text-foreground mt-[clamp(0.125rem,0.5vw,0.25rem)] leading-tight">
+                                      {planName}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
 
                           {/* Detail rows — only meaningful for active subs */}
                           {subStatus?.subscription_status === 'active' && (
@@ -528,13 +601,15 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                                 <div className="flex items-center justify-between rounded-xl bg-secondary/60 border border-border px-[clamp(0.875rem,3vw,1.125rem)] py-[clamp(0.625rem,2vw,0.875rem)]">
                                   <div className="flex items-center gap-[clamp(0.5rem,2vw,0.75rem)] text-muted-foreground">
                                     <Calendar size={16} strokeWidth={2.2} className="w-[clamp(0.875rem,3vw,1rem)] h-[clamp(0.875rem,3vw,1rem)]" />
-                                    <span className="text-[clamp(0.8125rem,2.5vw,0.9375rem)] font-bold">Berakhir pada</span>
+                                    <span className="text-[clamp(0.8125rem,2.5vw,0.9375rem)] font-bold">
+                                      {subStatus.days_remaining !== null && subStatus.days_remaining > 0
+                                        ? 'Perpanjang otomatis'
+                                        : 'Berakhir pada'}
+                                    </span>
                                   </div>
                                   <span className="text-[clamp(0.8125rem,2.5vw,0.9375rem)] font-extrabold text-foreground text-right">
                                     {new Date(subStatus.subscription_end).toLocaleDateString('id-ID', {
-                                      day: 'numeric',
-                                      month: 'long',
-                                      year: 'numeric',
+                                      day: 'numeric', month: 'long', year: 'numeric',
                                     })}
                                   </span>
                                 </div>
@@ -542,32 +617,77 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                             </div>
                           )}
 
-                          {/* Upgrade / manage CTA — context-sensitive */}
-                          {subStatus?.subscription_status === 'active' ? (
-                            <button
-                              onClick={() => { setOpen(false); setLocation('/payment'); }}
-                              className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)]"
-                            >
-                              Kelola Langganan
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => { setOpen(false); setLocation('/payment'); }}
-                              className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)] flex items-center justify-center gap-2"
-                            >
-                              <Sparkles size={16} strokeWidth={2.5} />
-                              Upgrade ke PRO
-                            </button>
-                          )}
+                          {/* ── CTA button — context-sensitive ── */}
+                          {(() => {
+                            const st = subStatus?.subscription_status;
+                            const mayarUrl = import.meta.env.VITE_MAYAR_PAYMENT_URL || '#';
 
+                            if (st === 'active') {
+                              // Active: open Mayar portal in new tab — do NOT navigate to /payment
+                              // because AuthGuard blocks active users from reaching /payment and
+                              // immediately redirects them to /catatan.
+                              return (
+                                <a
+                                  href={mayarUrl === '#' ? undefined : mayarUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={() => {
+                                    if (mayarUrl === '#') {
+                                      toast.error('Tautan langganan belum dikonfigurasi. Hubungi support.');
+                                      return;
+                                    }
+                                    // Keep drawer open so user can come back to it
+                                  }}
+                                  className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)] flex items-center justify-center gap-2"
+                                >
+                                  <Crown size={16} strokeWidth={2.5} />
+                                  Kelola Langganan
+                                </a>
+                              );
+                            }
+
+                            if (st === 'archived') {
+                              // Archived: same — open Mayar URL in new tab to re-subscribe.
+                              // AuthGuard blocks archived users from /payment too (→ /archived).
+                              return (
+                                <a
+                                  href={mayarUrl === '#' ? undefined : mayarUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={() => {
+                                    if (mayarUrl === '#') {
+                                      toast.error('Tautan langganan belum dikonfigurasi. Hubungi support.');
+                                    }
+                                  }}
+                                  className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)] flex items-center justify-center gap-2"
+                                >
+                                  <Sparkles size={16} strokeWidth={2.5} />
+                                  Perpanjang Langganan
+                                </a>
+                              );
+                            }
+
+                            // Pending / free: navigate to payment onboarding page (correct for pending)
+                            return (
+                              <button
+                                onClick={() => { setOpen(false); setLocation('/payment'); }}
+                                className="w-full bg-primary text-primary-foreground font-bold shadow-sm hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] text-[clamp(0.875rem,3vw,1.125rem)] flex items-center justify-center gap-2"
+                              >
+                                <Sparkles size={16} strokeWidth={2.5} />
+                                Upgrade ke PRO
+                              </button>
+                            );
+                          })()}
+
+                          {/* Contextual helper text */}
                           {subStatus?.subscription_status === 'pending' && (
                             <p className="text-[clamp(0.6875rem,2vw,0.8125rem)] text-muted-foreground text-center leading-relaxed">
-                              Akun kamu belum di-upgrade. Pilih paket di halaman pembayaran untuk membuka semua fitur.
+                              Akun kamu belum di-upgrade. Pilih paket untuk membuka semua fitur.
                             </p>
                           )}
                           {subStatus?.subscription_status === 'archived' && (
                             <p className="text-[clamp(0.6875rem,2vw,0.8125rem)] text-muted-foreground text-center leading-relaxed">
-                              Langganan kamu sudah berakhir. Data kamu tetap tersimpan dengan aman — aktifkan kembali kapan saja.
+                              Langganan kamu sudah berakhir. Data kamu tetap tersimpan — aktifkan kembali kapan saja.
                             </p>
                           )}
                         </>

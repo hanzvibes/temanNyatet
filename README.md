@@ -127,11 +127,28 @@ PORT=8080
 LOG_LEVEL=info
 ```
 
-## Pointers
+## Documentation
 
-- See `supabase/migrations/README.md` for Supabase setup instructions
-- See `replit.md` for Replit-specific run instructions and secrets
-- See `TEMAN_NYATET_AUDIT_ROADMAP.md` for the current backlog and prioritized improvements
+| File | What's in it |
+|---|---|
+| `AI_CONTEXT.md` | AI-agent quick reference — read this first |
+| `ARCHITECTURE.md` | Full system architecture, routing, data layer |
+| `API.md` | Complete API route reference |
+| `AUTH.md` | Authentication + Google OAuth flows |
+| `DATABASE.md` | Supabase schema + Google Sheets tab schemas |
+| `ENVIRONMENT.md` | All environment variables (required + optional) |
+| `DEPLOYMENT.md` | Vercel deployment runbook |
+| `PRD.md` | Product requirements (confirmed features only) |
+| `DECISIONS.md` | Architecture Decision Records (why things are the way they are) |
+| `SECURITY.md` | Security controls and known limitations |
+| `TROUBLESHOOTING.md` | Common problems and solutions |
+| `ROADMAP.md` | Completed / planned / future |
+| `TASKS.md` | Prioritized actionable tasks |
+| `UI_UX_GUIDELINES.md` | Frontend design system and conventions |
+| `TESTING.md` | Manual checklist + automation roadmap |
+| `supabase/migrations/README.md` | Supabase setup instructions |
+| `artifacts/api-server/docs/DEPLOY.md` | Google Cloud Console OAuth setup walkthrough |
+| `replit.md` | Replit-specific run instructions and secrets |
 
 ## Deploy ke Vercel
 

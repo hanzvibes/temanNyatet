@@ -1,176 +1,178 @@
 # Documentation Audit Report
 
-**Last updated:** 2026-07-26 (Vercel production deploy wave)
-**Original audit:** 2026-07-23
-**Auditor:** Replit Agent (Senior Software Architect, Technical Writer, Documentation Auditor)
-**Mode:** Strict — source code is the only source of truth.
-**Scope:** All project Markdown files plus environment example files and key configuration.  
+**Last updated:** 2026-07-26 (full documentation synchronization wave)  
+**Previous audit:** 2026-07-26 (Vercel production deploy wave)  
+**Original audit:** 2026-07-23  
+**Auditor:** Replit Agent  
+**Mode:** Strict — source code is the only source of truth.  
+**Scope:** All project Markdown files, environment example files, key configuration, and source code.
 
 ---
 
-## Files audited
+## Audit scope — this wave (July 2026 documentation sync)
 
-- `README.md`
-- `replit.md`
-- `supabase/migrations/README.md`
-- `.agents/memory/MEMORY.md`
-- `.agents/memory/google-sheets-oauth-arch.md`
-- `.agents/memory/supabase-profiles-missing-columns.md`
-- `.agents/memory/gauth-version-conflict.md`
-- `.agents/memory/google-sheets-as-db.md` (superseded but retained)
-- `.agents/memory/google-sheets-template-architecture.md`
-- `.agents/memory/secrets-pasted-in-chat.md`
-- `TEMAN_NYATET_AUDIT_ROADMAP.md`
-- `artifacts/api-server/.env.example`
-- `artifacts/teman-nyatet/.env.example`
-- `package.json`
-- `pnpm-workspace.yaml`
-- `artifacts/teman-nyatet/package.json`
-- `artifacts/api-server/package.json`
-- `artifacts/teman-nyatet/vercel.json`
-- `artifacts/api-server/vercel.json`
+### Files read (source of truth)
+
+**API server:**
+- `artifacts/api-server/src/index.ts` + `src/app.ts`
+- `artifacts/api-server/src/routes/index.ts` (all routes)
+- `artifacts/api-server/src/routes/{auth-google,notes,transactions,todos,links,spreadsheet,profile,subscription,webhook,cron,health}.ts`
+- `artifacts/api-server/src/middleware/requireAuth.ts`
+- `artifacts/api-server/src/lib/{google-oauth,user-sheet,sheet-store,supabase-admin}.ts`
+
+**Frontend:**
+- `artifacts/teman-nyatet/src/App.tsx`
 - `artifacts/teman-nyatet/src/main.tsx`
-- `artifacts/teman-nyatet/src/lib/database.types.ts`
-- `artifacts/teman-nyatet/src/lib/apiClient.ts`
-- `artifacts/teman-nyatet/src/lib/supabase.ts`
-- `artifacts/teman-nyatet/src/hooks/useNotes.ts`
-- `artifacts/teman-nyatet/src/hooks/useTransactions.ts`
-- `artifacts/teman-nyatet/src/hooks/useTodos.ts`
-- `artifacts/teman-nyatet/src/hooks/useLinks.ts`
-- `artifacts/api-server/src/index.ts`
-- `artifacts/api-server/src/app.ts`
-- `artifacts/api-server/src/routes/index.ts`
-- `artifacts/api-server/src/routes/auth-google.ts`
-- `artifacts/api-server/src/routes/notes.ts`
-- `artifacts/api-server/src/routes/transactions.ts`
-- `artifacts/api-server/src/routes/todos.ts`
-- `artifacts/api-server/src/routes/links.ts`
-- `artifacts/api-server/src/routes/spreadsheet.ts`
-- `artifacts/api-server/src/routes/profile.ts`
-- `artifacts/api-server/src/routes/subscription.ts`
-- `artifacts/api-server/src/routes/webhook.ts`
-- `artifacts/api-server/src/routes/cron.ts`
-- `artifacts/api-server/src/routes/health.ts`
-- `supabase/migrations/001_initial_schema.sql`
-- `supabase/migrations/002_add_profile_fields.sql`
-- `supabase/migrations/002_add_avatar_url.sql`
-- `supabase/migrations/002_add_spreadsheet_id.sql`
-- `supabase/migrations/003_template_tracking.sql`
-- `supabase/migrations/004_add_google_oauth.sql`
-- `supabase/migrations/005_phase1_schema.sql`
+- `artifacts/teman-nyatet/src/contexts/{AuthContext,CreateContext}.tsx`
+- `artifacts/teman-nyatet/src/hooks/{useNotes,useTransactions,useTodos,useLinks}.ts`
+- `artifacts/teman-nyatet/src/lib/{apiClient,database.types,supabase}.ts`
+- `artifacts/teman-nyatet/src/components/PageStates.tsx`
+- `artifacts/teman-nyatet/src/pages/{CatatanPage,KeuanganPage,TodoPage,LinkSaverPage,AuthPage,ConnectSheetPage,PaymentPage,ArchivedPage,not-found}.tsx`
+- `artifacts/teman-nyatet/vite.config.ts`
+
+**Database:**
+- `supabase/migrations/001_initial_schema.sql` through `005_phase1_schema.sql`
 - `supabase/migrations/fix_profiles_rls_recursion.sql`
-- `lib/db/src/index.ts`
 - `lib/db/src/schema/index.ts`
-- `lib/db/drizzle.config.ts`
-- `lib/db/package.json`
-- `lib/api-spec/openapi.yaml` (partial review of structure)
 
-Skill files under `.local/skills/` and `.agents/skills/` were not audited because they are platform/agent capabilities, not project documentation.
+**Config:**
+- `package.json` (root + per-package)
+- `pnpm-workspace.yaml`
+- `tsconfig.base.json`
+- `artifacts/api-server/vercel.json`
+- `artifacts/teman-nyatet/vercel.json`
 
----
-
-## Files modified
-
-- `README.md` — major rewrite to match current architecture
-- `replit.md` — corrected migration order, env var status, and stale domain references
-- `supabase/migrations/README.md` — added all migrations, OAuth setup, legacy table notice, and RLS fix reference
-- `artifacts/api-server/.env.example` — replaced service-account vars with Google OAuth vars; added optional overrides
-- `artifacts/teman-nyatet/.env.example` — added `VITE_MAYAR_PAYMENT_URL` and `VITE_API_SERVER_URL`
-
-## Files created
-
-- `CHANGELOG.md` — initial documentation update entry
-- `DOC_AUDIT_REPORT.md` — this report
-
-## Files skipped
-
-- `.local/skills/**` — Replit platform skill docs, not project documentation
-- `.agents/skills/**` — agent capability docs, not project documentation
-- `TEMAN_NYATET_AUDIT_ROADMAP.md` — left in place; it is a forward-looking backlog and its factual claims were not contradicted by the audit. A few roadmap items (e.g., migration consolidation) may overlap with this audit but are code changes, not documentation changes.
+**Existing docs:**
+- `README.md`, `CHANGELOG.md`, `DOC_AUDIT_REPORT.md`, `replit.md`
+- `artifacts/api-server/docs/DEPLOY.md`
+- `supabase/migrations/README.md`
 
 ---
 
-## Outdated sections removed
+## Files created this wave
 
-### README.md
-- Removed: "Direct Supabase from frontend" architecture claim. The data hooks call the API server (`src/lib/apiClient.ts`), not Supabase directly.
-- Removed: "State: React Context (auth) + useState/useEffect (feature data via Supabase directly)" stack line. Data is fetched via custom polling hooks from the API server.
-- Removed: `GOOGLE_SERVICE_ACCOUNT_KEY` and `GOOGLE_SHEETS_SPREADSHEET_ID` from env vars; the code uses `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_OAUTH_STATE_SECRET` (verified in `src/index.ts` and `src/lib/google-oauth.ts`).
-- Removed: pnpm `10.34.3` reference; `package.json` pins `10.26.1`.
-- Removed: claim that `notes`, `transactions`, `todos`, `links` are live Supabase tables.
+| File | Purpose |
+|---|---|
+| `AI_CONTEXT.md` | AI-agent-optimized quick reference |
+| `ARCHITECTURE.md` | Full system architecture |
+| `DATABASE.md` | Schema reference (Supabase + Google Sheets) |
+| `API.md` | Complete API route reference |
+| `AUTH.md` | Authentication and authorization flows |
+| `ENVIRONMENT.md` | All environment variables |
+| `DEPLOYMENT.md` | Deployment runbook (Vercel + Replit) |
+| `PRD.md` | Product requirements (confirmed features only) |
+| `DECISIONS.md` | 10 Architecture Decision Records (ADRs) |
+| `SECURITY.md` | Security controls and known limitations |
+| `TROUBLESHOOTING.md` | Common problems and solutions |
+| `ROADMAP.md` | Completed / in-progress / planned / future |
+| `TASKS.md` | 12 prioritized actionable tasks |
+| `UI_UX_GUIDELINES.md` | Frontend design system and conventions |
+| `TESTING.md` | Current test state + manual checklist + automation roadmap |
 
-### replit.md
-- Removed: stale Replit domain in the `GOOGLE_REDIRECT_URI` example (domains are dynamic; documentation now describes the derivation from `REPLIT_DEV_DOMAIN`).
-- Removed: claim that `MAYAR_WEBHOOK_SECRET` and `VITE_MAYAR_PAYMENT_URL` are "configured" as required secrets. They are optional; the app or route fails closed if unset.
+## Files updated this wave
 
-### supabase/migrations/README.md
-- Removed: instruction to run only `001_initial_schema.sql` and `002_add_profile_fields.sql`. All migrations are required.
-- Removed: table summary that treated `notes`, `transactions`, `todos`, `links` as live tables. Added legacy table notice.
+| File | Change |
+|---|---|
+| `CHANGELOG.md` | Added this audit wave as a new entry |
+| `DOC_AUDIT_REPORT.md` | This file — updated to reflect current audit |
+| `README.md` | Added "Documentation" section with links to all new docs |
 
-### artifacts/api-server/.env.example
-- Removed: `GOOGLE_SERVICE_ACCOUNT_KEY` and `GOOGLE_SHEETS_SPREADSHEET_ID` (no code references found; grep returned no output).
+## Files not changed
 
----
-
-## Broken links / invalid references fixed
-
-- `README.md` now references `replit.md` and `TEMAN_NYATET_AUDIT_ROADMAP.md` under Pointers.
-- `supabase/migrations/README.md` now references `fix_profiles_rls_recursion.sql` for the RLS recursion error.
-- All file paths in updated docs were verified to exist at the time of the audit.
-
----
-
-## Missing documentation added
-
-- `CHANGELOG.md` created with a documentation-update entry.
-- Google OAuth setup steps added to `supabase/migrations/README.md`.
-- `VITE_API_SERVER_URL` documented in `artifacts/teman-nyatet/.env.example` and `README.md`.
-- `GOOGLE_REDIRECT_URI`, `FRONTEND_URL`, `ALLOWED_ORIGINS`, `SITE_URL`, and `LOG_LEVEL` documented in `artifacts/api-server/.env.example` and `README.md`.
-- All current API routes documented in `README.md` (previously only webhook and cron were mentioned).
-- Legacy table notice and per-user Google Sheets data backend documented in `supabase/migrations/README.md`.
-- Migration order now includes all `002_*` files, `003`, `004`, `005`, and the ad-hoc RLS fix.
+| File | Reason |
+|---|---|
+| `replit.md` | Accurate from previous audit; no new inaccuracies found |
+| `supabase/migrations/README.md` | Accurate from previous audit |
+| `artifacts/api-server/docs/DEPLOY.md` | Still accurate; superseded by `DEPLOYMENT.md` for high-level use, but retained as the detailed Google Cloud Console walkthrough |
+| `artifacts/api-server/.env.example` | Accurate from previous audit |
+| `artifacts/teman-nyatet/.env.example` | Accurate from previous audit |
 
 ---
 
-## Unverifiable items (explicitly marked)
+## Findings
 
-- The exact current production domain(s) for TemanNyatet. `README.md` and `supabase/migrations/README.md` use `https://temannyatet.id` as a placeholder example because no production domain is present in the codebase.
-- The exact Mayar payment page URL. `README.md` and `.env.example` use `https://mayar.id/your-payment-page` as a placeholder.
-- Whether the `avatars` Supabase Storage bucket is created before the first upload. The code (`profile.ts`) attempts to create it on first upload; documentation reflects this behavior.
-- Whether `lib/db/` will be used in the future. It is currently unused; documentation marks it as deprecated/unused.
+### Architecture observations
+
+1. **Dual caching systems**: Data hooks use module-level `Map` cache + 15 s polling. TanStack Query `QueryClient` is present but not used for data fetching in the four main modules — only for `staleTime`/`gcTime` defaults and `invalidateQueries`. These are parallel, not unified.
+
+2. **Orval pipeline partially used**: `lib/api-client-react` (Orval-generated TanStack Query hooks) is only used in `main.tsx` for token wiring (`setTokenGetter`). Data fetching in the four modules uses the custom `apiClient.ts` directly. The Orval pipeline is maintained but underutilized.
+
+3. **CachedSwitch is the routing backbone**: Custom DOM `hidden`-toggle router in `App.tsx` replaces wouter's `Switch`. This keeps all visited pages mounted, preserving React Query cache and preventing refetch thrash. Any future page or route change must update `ROUTE_ENTRIES` in `App.tsx`.
+
+4. **Google Sheets as a database has real constraints**: The in-process `Map` lock in `sheet-store.ts` prevents concurrent writes within a single process. On Vercel serverless (single-instance per invocation) this works. Horizontal scaling would require a distributed lock.
+
+5. **Five migrations share `002_*` prefix**: Three files use `002_` prefix. The documented order is the authoritative run order — alphabetical sort would apply them incorrectly. This is a risk on automated migration tools.
+
+### Technical debt
+
+| Item | Risk level | Task |
+|---|---|---|
+| `lib/db/` unused | Low | TASK-006 |
+| `lib/api-client-react` barely used | Low | TASK-007 |
+| `002_*` migration collision | Medium | TASK-004 |
+| `fix_profiles_rls_recursion.sql` ad-hoc | High | TASK-003 |
+| No automated tests | High | TESTING.md |
+| Long-press delete has no keyboard alternative | Medium | TASK-008 |
+| No cron scheduler configured | Critical | TASK-001 |
+| Data hooks use module-level Map (not useQuery) | Medium | TASK-005 |
+| In-process sheet lock (no horizontal scale) | Low (Vercel serverless mitigates) | TASK-011 |
+
+### Outdated documentation found and addressed
+
+- **None found** in this wave — previous audits (July 23 + July 26 Vercel wave) had already corrected the major inaccuracies (service account → per-user OAuth, Supabase tables → Google Sheets, env var names).
+
+### Unverifiable items (explicitly marked in generated docs)
+
+- Exact Mayar dashboard URLs and webhook payload format (Mayar is external)
+- Google Cloud Console publishing status (external)
+- Whether a cron scheduler has been configured externally (not in repo)
+- Custom domain `temannyatet.id` status (not configured in repo)
 
 ---
 
-## Remaining documentation debt
+## Documentation coverage
 
-1. **Migration numbering**: Three files share the `002_*` prefix. This is a code-level issue, not strictly documentation, but it makes the documented order fragile. A future task should rename or consolidate these migrations.
-2. **`fix_profiles_rls_recursion.sql` is ad-hoc**: It is not part of the numbered sequence. The documentation notes this, but ideally it should be promoted to a numbered migration.
-3. **OpenAPI spec accuracy**: `lib/api-spec/openapi.yaml` was only partially reviewed. A full audit of the spec against the actual route implementations is still needed to ensure the generated client stays accurate.
-4. **Generated client usage**: The Orval-generated client is only used for token wiring (`main.tsx`). The data hooks use a custom client. This duality is documented but could be simplified in the future.
-5. **Drizzle scaffolding**: `lib/db/` is unused. A future task should either remove it or adopt it fully; the documentation currently marks it as unused.
-6. **No `CONTRIBUTING.md`, `ARCHITECTURE.md`, `SECURITY.md`, or `DEPLOYMENT.md`**: These docs do not exist. This audit did not create them except where they overlapped with `README.md` updates, because the prompt asked to preserve style and only document what exists. A future task could create `DEPLOYMENT.md` from the Vercel section of `README.md`.
-7. **TEMAN_NYATET_AUDIT_ROADMAP.md**: Contains forward-looking recommendations. Some items (e.g., migration consolidation, payment bypass fix) are code changes that should be tracked as tasks, not docs.
+| Area | Covered by |
+|---|---|
+| Architecture overview | `ARCHITECTURE.md`, `AI_CONTEXT.md` |
+| API routes | `API.md` |
+| Authentication | `AUTH.md` |
+| Database schema | `DATABASE.md` |
+| Environment variables | `ENVIRONMENT.md` |
+| Deployment | `DEPLOYMENT.md`, `artifacts/api-server/docs/DEPLOY.md` |
+| Product features | `PRD.md` |
+| Architecture decisions | `DECISIONS.md` |
+| Security | `SECURITY.md` |
+| Troubleshooting | `TROUBLESHOOTING.md` |
+| Roadmap | `ROADMAP.md` |
+| Tasks / backlog | `TASKS.md` |
+| UI/UX conventions | `UI_UX_GUIDELINES.md` |
+| Testing | `TESTING.md` |
+| Run instructions | `replit.md`, `README.md` |
+| Supabase setup | `supabase/migrations/README.md` |
 
 ---
 
-## Recommendations
+## Validation checklist (this wave)
 
-1. **Promote `fix_profiles_rls_recursion.sql` to a numbered migration** and remove the conflicting policy refresh from `005_phase1_schema.sql` so new projects don't hit the recursion bug.
-2. **Consolidate the three `002_*` migrations** into one file to remove filename-order ambiguity.
-3. **Remove or adopt `lib/db/`** so the documentation doesn't need to describe unused scaffolding.
-4. **Audit `lib/api-spec/openapi.yaml`** against the current route implementations and either regenerate the client or remove the Orval pipeline if it isn't being used.
-5. **Extract the Vercel deployment section** into a dedicated `DEPLOYMENT.md` once the architecture stabilizes.
-6. **Keep `README.md` and `replit.md` in sync** after any future code changes to routes, env vars, or migrations.
+- Every file path referenced in generated docs was verified to exist in the repository
+- Every API route in `API.md` was verified against `artifacts/api-server/src/routes/index.ts` and the individual route files
+- Every environment variable in `ENVIRONMENT.md` was verified against `src/index.ts` (required check) and usage in source files
+- Every migration file in `DATABASE.md` was verified to exist in `supabase/migrations/`
+- Every Google Sheets tab schema was verified against `SHEET_SCHEMAS` in `sheet-store.ts`
+- Every `profiles` column was verified against `database.types.ts` and the migration files
+- Route paths in `ARCHITECTURE.md` were verified against `ROUTE_ENTRIES` in `App.tsx`
+- No speculative features were documented
+- No fictional architecture was invented
 
 ---
 
-## Validation checklist
+## Remaining documentation debt (after this wave)
 
-- Every command referenced in updated docs exists in `package.json` scripts.
-- Every file path referenced in updated docs exists in the repository.
-- Every environment variable documented in updated docs is read by the code (`grep` verified).
-- Every API route documented in updated docs is registered in `artifacts/api-server/src/routes/index.ts`.
-- Every migration referenced in `supabase/migrations/README.md` exists in `supabase/migrations/`.
-- Removed documentation only described features/vars that no longer exist in the codebase.
-- No speculative features were added.
-- `CHANGELOG.md` contains only the documentation changes actually made.
+1. **`artifacts/api-server/docs/DEPLOY.md`** and **`DEPLOYMENT.md`** now overlap. Consider whether to merge them or keep DEPLOY.md as the detailed Google Cloud Console walkthrough and DEPLOYMENT.md as the high-level runbook. Current state: both are accurate, no contradiction.
+
+2. **`supabase/migrations/README.md`** and **`DATABASE.md`** overlap on migration order and environment variables. `DATABASE.md` is more complete; `supabase/migrations/README.md` is the setup guide for Supabase specifically. Both are accurate; duplication is acceptable given their different audiences.
+
+3. **No CONTRIBUTING.md**: The project doesn't have contributor guidelines. If external contributors are expected, add a `CONTRIBUTING.md` covering branching, pnpm setup, and the "no npm/yarn" constraint.
+
+4. **OpenAPI spec accuracy**: `lib/api-spec/openapi.yaml` was not verified against current route implementations in this audit. See TASK-007.

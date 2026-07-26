@@ -1,5 +1,42 @@
 # Changelog
 
+## Documentation Audit & Synchronization — 2026-07-26
+
+### Added
+- **`AI_CONTEXT.md`** — AI-agent-optimized project summary: stack, folder overview, entry points, coding conventions, constraints, known debt, common mistakes. First file an AI should read.
+- **`ARCHITECTURE.md`** — full system architecture: monorepo structure, frontend routing (CachedSwitch), data hooks pattern, API server middleware stack, Google OAuth flow, deployment topology, dependency relationships.
+- **`DATABASE.md`** — complete schema reference: `profiles` table columns, migration history (with ordering notes for the three `002_*` files), Google Sheets tab schemas (Notes, Transactions, Todos, Links, \_Archive), type coercion rules, Supabase Storage.
+- **`API.md`** — full API route reference: every endpoint with auth requirements, request/response shapes, error codes.
+- **`AUTH.md`** — authentication and authorization reference: Supabase auth flow, Google OAuth 2.0 flow, subscription authorization, cron auth, Supabase configuration checklist, Google Cloud Console checklist.
+- **`ENVIRONMENT.md`** — complete environment variable reference: frontend + API server, required vs optional, Replit secrets, Vercel quick reference, derivation logic for `GOOGLE_REDIRECT_URI` and `FRONTEND_URL`.
+- **`DEPLOYMENT.md`** — deployment runbook: two-project Vercel setup, post-deploy steps, Supabase + Google Console + Mayar configuration, cron scheduler setup, secret rotation, end-to-end verification checklist.
+- **`PRD.md`** — product requirements document: target user, business model, core module specs (Catatan, Keuangan, Todo, Link Saver), user flows, non-functional requirements, out-of-scope items.
+- **`DECISIONS.md`** — 10 architecture decision records (ADRs) with why, tradeoffs, and future direction. Covers Google Sheets as data backend, Supabase for auth, CachedSwitch, custom data hooks, React+Vite over Next.js, Mayar payments, two Vercel projects, email confirmation, per-user OAuth, and in-process sheet lock.
+- **`SECURITY.md`** — security controls: auth, OAuth, API server (Helmet, CORS, rate limiting, HMAC webhook, formula injection guard), data isolation, transport, known limitations, incident response.
+- **`TROUBLESHOOTING.md`** — common problems and solutions: auth loops, RLS recursion, OAuth errors (`redirect_uri_mismatch`, `GOOGLE_TOKEN_INVALID`, `SPREADSHEET_NOT_FOUND`), subscription/payment issues, data not loading, PWA issues, development environment issues.
+- **`ROADMAP.md`** — completed, in-progress, planned, and future ideas sections built from actual implementation.
+- **`TASKS.md`** — 12 actionable tasks categorized by priority (Critical → Low): cron scheduler, OAuth publish, RLS migration, `002_*` collision, data hook migration, `lib/db/` resolution, OpenAPI audit, keyboard accessibility, delete confirmation.
+- **`UI_UX_GUIDELINES.md`** — design system reference: color tokens, typography classes, component conventions (`PageEmpty`, drawers, modals, buttons), accessibility requirements, layout patterns, animation guidelines, dark mode, Indonesian copy guidelines.
+- **`TESTING.md`** — current test state (none), manual testing checklist for all flows, prioritized automation roadmap (API unit tests first), recommended test stack.
+
+### Updated
+- **`DOC_AUDIT_REPORT.md`** — updated to reflect this audit wave: new files created, findings, remaining debt.
+- **`README.md`** — added "Documentation" section with links to all new docs.
+
+### Removed
+- None (no files removed; `DOC_AUDIT_REPORT.md` and `CHANGELOG.md` retained and updated).
+
+### Findings
+- `lib/db/` is unused dead code (Drizzle scaffold, empty schema)
+- Three migration files share `002_*` prefix (ordering ambiguity)
+- `fix_profiles_rls_recursion.sql` is ad-hoc and not in the numbered sequence
+- `lib/api-client-react` Orval-generated client only used for token wiring in `main.tsx`
+- No automated tests exist
+- Long-press delete (Keuangan, LinkSaver) has no keyboard alternative (WCAG gap)
+- No external cron scheduler configured for `/api/cron/archive-expired`
+
+---
+
 ## Production Deploy to Vercel + OAuth Wiring — 2026-07-26
 
 ### Added

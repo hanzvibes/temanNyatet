@@ -2,8 +2,8 @@ import type { NextFunction, Request, Response } from 'express';
 import type { sheets_v4 } from 'googleapis';
 import * as rateLimitMod from 'express-rate-limit';
 import { ipKeyGenerator } from 'express-rate-limit';
-import { supabaseAdmin } from '../lib/supabase-admin';
-import { getUserSheetConnection } from '../lib/user-sheet';
+import { supabaseAdmin } from '../lib/supabase-admin.js';
+import { getUserSheetConnection } from '../lib/user-sheet.js';
 
 // express-rate-limit ships CJS UMD types (`export = X` in `dist/index.d.ts`)
 // alongside an ESM default-export shim. Vercel's tsc post-build type-check

@@ -1,12 +1,29 @@
 import express, { type Express } from "express";
 import cors from "cors";
-import helmet from "helmet";
-import rateLimit from "express-rate-limit";
-import pinoHttp from "pino-http";
+import * as helmetMod from "helmet";
+import * as rateLimitMod from "express-rate-limit";
+import * as pinoHttpMod from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
+
+// helmet, express-rate-limit, and pino-http all ship CJS UMD types
+// (`export = X`) alongside an ESM `export { X as default }` shim, and their
+// package.json points at the CJS-shaped `.d.cts` for the Node runtime.
+// Under some tsc invocations Vercel runs on the build (likely the post-build
+// type-check pass for the @vercel/node builder), the default-import form
+// `import helmet from "helmet"` resolves to the namespace object instead of
+// the callable — TS2349 "This expression is not callable". The namespace +
+// `.default ?? mod` pattern works regardless of which module flavor tsc
+// resolves, so we use it for the three affected packages and let the
+// well-typed ESM-only `cors` / `express` keep their default-import shape.
+// `as any` (not `Parameters<typeof X.default>[0] => unknown`) so the
+// `pinoHttp` overload-resolution chain doesn't pin us to `DestinationStream`
+// and reject the `{ logger, serializers }` options object literal.
+const helmet = ((helmetMod as any).default ?? helmetMod) as any;
+const rateLimit = ((rateLimitMod as any).default ?? rateLimitMod) as any;
+const pinoHttp = ((pinoHttpMod as any).default ?? pinoHttpMod) as any;
 
 // Sets standard security headers (HSTS, no-sniff, frameguard, etc). CSP is
 // left to the frontend's own hosting since this is a JSON API, not an HTML
@@ -51,14 +68,14 @@ app.use(
   pinoHttp({
     logger,
     serializers: {
-      req(req) {
+      req(req: any) {
         return {
           id: req.id,
           method: req.method,
           url: req.url?.split("?")[0],
         };
       },
-      res(res) {
+      res(res: any) {
         return {
           statusCode: res.statusCode,
         };

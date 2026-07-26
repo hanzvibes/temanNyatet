@@ -3,8 +3,8 @@ import cors from "cors";
 import * as helmetMod from "helmet";
 import * as rateLimitMod from "express-rate-limit";
 import * as pinoHttpMod from "pino-http";
-import router from "./routes";
-import { logger } from "./lib/logger";
+import router from "./routes/index.js";
+import { logger } from "./lib/logger.js";
 
 const app: Express = express();
 

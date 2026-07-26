@@ -67,17 +67,17 @@ export function PageEmpty({ icon: Icon, title, description, accent = 'catatan', 
     <div
       role="status"
       aria-live="polite"
-      className="flex flex-col items-center justify-center text-center min-h-[42vh] px-6 py-6 gap-3"
+      className="flex flex-col items-center justify-center text-center min-h-[42vh] px-6 py-10 gap-4"
     >
       <div
-        className={`w-16 h-16 rounded-2xl ${t.containerBg} border ${t.containerBorder} flex items-center justify-center flex-shrink-0 animate-in fade-in zoom-in-95 duration-300`}
+        className={`w-[4.5rem] h-[4.5rem] rounded-[1.35rem] ${t.containerBg} border ${t.containerBorder} flex items-center justify-center flex-shrink-0 shadow-elevation-1 animate-in fade-in zoom-in-95 duration-300`}
       >
         <Icon size={28} strokeWidth={2} className={t.iconText} />
       </div>
       <div className="space-y-1 max-w-xs">
-        <p className={`font-semibold text-base ${t.iconText}`}>{title}</p>
+        <p className={`font-semibold text-base leading-snug ${t.iconText}`}>{title}</p>
         {description && (
-          <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+          <p className="text-sm text-muted-foreground leading-[1.65] font-medium">
             {description}
           </p>
         )}
@@ -132,7 +132,7 @@ export function PageLoading({ accent = 'catatan', label = 'Memuat…' }: PageLoa
     <div
       role="status"
       aria-live="polite"
-      className="flex flex-col items-center justify-center min-h-[40vh] gap-2"
+      className="flex flex-col items-center justify-center min-h-[40vh] gap-3"
     >
       <Loader2 className={`w-7 h-7 animate-spin ${t.spinnerText}`} aria-hidden="true" />
       <p className="text-xs font-semibold text-muted-foreground tracking-wide">

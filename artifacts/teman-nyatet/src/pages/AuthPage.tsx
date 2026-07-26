@@ -148,18 +148,18 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center p-6 bg-background">
+    <div className="min-h-dvh flex flex-col items-center justify-center p-5 sm:p-6 bg-background">
       <div className="w-full max-w-sm flex flex-col items-center">
 
         {/* Logo Section */}
-        <div className="flex flex-col items-center mb-10">
-          <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center mb-6 shadow-elevated relative">
+        <div className="flex flex-col items-center mb-9">
+          <div className="w-20 h-20 bg-primary rounded-[1.5rem] flex items-center justify-center mb-5 shadow-elevated relative rotate-[-3deg]">
              {/* Yellow Notebook Icon Placeholder */}
              <div className="absolute w-12 h-14 bg-finance rounded-md shadow-sm border border-finance-text/50 flex items-center justify-center transform -rotate-6">
                 <BookOpen size={24} className="text-white" />
              </div>
           </div>
-          <h1 className="text-display">TemanNyatet</h1>
+           <h1 className="text-display">TemanNyatet</h1>
           <p className="text-muted-foreground text-base mt-2 font-medium">Catat sat-set, urusan beres.</p>
         </div>
 
@@ -201,12 +201,14 @@ export default function AuthPage() {
             {/* Form Section */}
             <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-4">
               <div>
+                <label htmlFor="auth-email" className="text-pill-label mb-2 block ml-1">Email</label>
                 <input
+                  id="auth-email"
                   {...form.register('email')}
                   type="email"
                   autoComplete="email"
-                  placeholder="Email"
-                  className="w-full px-5 py-4 rounded-[1.25rem] bg-white border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base shadow-sm"
+                  placeholder="nama@email.com"
+                  className="w-full min-h-12 px-5 py-3.5 rounded-xl bg-card border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base shadow-elevation-1"
                 />
                 {form.formState.errors.email && (
                   <FormError className="mt-1 ml-2">{form.formState.errors.email.message}</FormError>
@@ -214,17 +216,20 @@ export default function AuthPage() {
               </div>
 
               <div className="relative">
+                <label htmlFor="auth-password" className="text-pill-label mb-2 block ml-1">Password</label>
                 <input
+                  id="auth-password"
                   {...form.register('password')}
                   type={showPassword ? "text" : "password"}
                   autoComplete={isLogin ? 'current-password' : 'new-password'}
-                  placeholder="Password"
-                  className="w-full px-5 py-4 rounded-[1.25rem] bg-white border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all pr-12 text-base shadow-sm"
+                  placeholder="Masukkan password"
+                  className="w-full min-h-12 px-5 py-3.5 rounded-xl bg-card border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all pr-12 text-base shadow-elevation-1"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-5 top-4 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                  className="absolute right-2 top-8 min-h-11 min-w-11 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -235,12 +240,14 @@ export default function AuthPage() {
 
               {!isLogin && (
                 <div>
+                  <label htmlFor="auth-confirm-password" className="text-pill-label mb-2 block ml-1">Konfirmasi password</label>
                   <input
+                    id="auth-confirm-password"
                     {...form.register('confirmPassword')}
                     type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
-                    placeholder="Konfirmasi Password"
-                    className="w-full px-5 py-4 rounded-[1.25rem] bg-white border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base shadow-sm"
+                    placeholder="Ulangi password"
+                    className="w-full min-h-12 px-5 py-3.5 rounded-xl bg-card border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base shadow-elevation-1"
                   />
                   {form.formState.errors.confirmPassword && (
                     <FormError className="mt-1 ml-2">{form.formState.errors.confirmPassword.message}</FormError>
@@ -264,7 +271,7 @@ export default function AuthPage() {
                 type="submit"
                 disabled={isLoading}
                 size="lg"
-                className="w-full text-lg py-5 rounded-full mt-4"
+                className="w-full text-base py-5 rounded-xl mt-4"
               >
                 {isLoading ? <Loader2 className="animate-spin w-6 h-6" /> : (isLogin ? 'Masuk' : 'Daftar')}
               </Button>

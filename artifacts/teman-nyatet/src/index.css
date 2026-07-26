@@ -64,55 +64,55 @@
 }
 
 :root {
-  --background: 83 50% 95%; /* #F5FAEB */
-  --foreground: 0 0% 15%; /* #262626 */
+  --background: 72 33% 97%; /* warm sage-tinted canvas */
+  --foreground: 150 16% 17%; /* deep green ink */
 
-  --surface: 80 30% 92%; /* slightly deeper cream for grouped sections */
-  --surface-foreground: 0 0% 18%;
+  --surface: 76 25% 93%; /* grouped section surface */
+  --surface-foreground: 150 14% 20%;
 
-  --border: 0 0% 88%; /* #E0E0E0 — slightly darker for better hierarchy */
+  --border: 82 17% 85%;
 
-  --card: 0 0% 100%; /* #FFFFFF */
-  --card-foreground: 0 0% 15%;
-  --card-border: 0 0% 90%;
+  --card: 0 0% 100%;
+  --card-foreground: 150 16% 17%;
+  --card-border: 82 18% 88%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 15%;
-  --popover-border: 0 0% 90%;
+  --popover-foreground: 150 16% 17%;
+  --popover-border: 82 18% 88%;
 
-  --primary: 90 32% 54%; /* #8FB465 */
+  --primary: 93 28% 38%; /* deep sage brand signal */
   --primary-foreground: 0 0% 100%; /* #FFFFFF */
 
-  --secondary: 0 0% 96%; /* #F5F5F5 */
-  --secondary-foreground: 0 0% 15%;
+  --secondary: 76 23% 93%;
+  --secondary-foreground: 150 16% 20%;
 
-  --muted: 0 0% 96%;
-  --muted-foreground: 0 0% 45%; /* #737373 */
+  --muted: 76 20% 91%;
+  --muted-foreground: 150 8% 43%;
 
-  --accent: 43 89% 64%; /* #F4C753 */
-  --accent-foreground: 0 0% 10%;
+  --accent: 78 34% 88%;
+  --accent-foreground: 150 16% 17%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 0 0% 88%;
-  --ring: 90 32% 54%;
+  --input: 82 17% 83%;
+  --ring: 93 28% 38%;
 
-  --finance: 43 89% 64%;
-  --finance-text: 43 75% 32%;
-  --todo: 213 35% 71%;
-  --todo-text: 213 45% 35%;
-  --linksaver: 0 48% 74%;
-  --linksaver-text: 0 50% 35%;
-  --income: 142 69% 58%;
-  --expense: 0 91% 71%;
+  --finance: 43 83% 58%;
+  --finance-text: 38 76% 29%;
+  --todo: 211 42% 67%;
+  --todo-text: 211 47% 30%;
+  --linksaver: 0 53% 69%;
+  --linksaver-text: 0 54% 32%;
+  --income: 146 54% 42%;
+  --expense: 0 72% 59%;
 
   --app-font-sans: 'Poppins', sans-serif;
-  --radius: 1rem;
+  --radius: 0.875rem;
 
-  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
-  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.02);
-  --shadow-3: 0 8px 28px rgba(0, 0, 0, 0.10), 0 4px 8px rgba(0, 0, 0, 0.04);
+  --shadow-1: 0 1px 2px rgba(37, 50, 44, 0.04), 0 2px 8px rgba(37, 50, 44, 0.03);
+  --shadow-2: 0 4px 14px rgba(37, 50, 44, 0.07), 0 1px 3px rgba(37, 50, 44, 0.04);
+  --shadow-3: 0 14px 34px rgba(37, 50, 44, 0.13), 0 4px 10px rgba(37, 50, 44, 0.06);
 
   /* Bottom-nav clearance.
      BottomSheetNav is anchored `bottom: 20px` with
@@ -151,43 +151,43 @@
      a brand signal at dark-mode contrast (WCAG AA on the dark fg).
 */
 .dark {
-  --background: 222 25% 7%;
-  --foreground: 40 30% 95%;
+  --background: 150 13% 8%;
+  --foreground: 70 22% 94%;
 
-  --surface: 222 22% 10%;
-  --surface-foreground: 40 25% 90%;
+  --surface: 150 12% 11%;
+  --surface-foreground: 70 18% 90%;
 
-  --border: 222 15% 22%;
+  --border: 145 12% 23%;
 
-  --card: 222 22% 11%;
-  --card-foreground: 40 30% 95%;
-  --card-border: 222 15% 22%;
+  --card: 150 12% 12%;
+  --card-foreground: 70 22% 94%;
+  --card-border: 145 12% 23%;
 
-  --popover: 222 22% 11%;
-  --popover-foreground: 40 30% 95%;
-  --popover-border: 222 15% 22%;
+  --popover: 150 12% 12%;
+  --popover-foreground: 70 22% 94%;
+  --popover-border: 145 12% 23%;
 
-  --primary: 90 38% 62%;
-  --primary-foreground: 222 25% 10%;
+  --primary: 93 38% 61%;
+  --primary-foreground: 150 13% 10%;
 
-  --secondary: 222 18% 16%;
-  --secondary-foreground: 40 25% 90%;
+  --secondary: 150 12% 17%;
+  --secondary-foreground: 70 18% 90%;
 
-  --muted: 222 18% 16%;
-  --muted-foreground: 220 12% 65%;
+  --muted: 150 12% 17%;
+  --muted-foreground: 78 10% 67%;
 
-  --accent: 43 90% 68%;
-  --accent-foreground: 222 25% 10%;
+  --accent: 78 24% 23%;
+  --accent-foreground: 70 22% 94%;
 
   --destructive: 0 75% 60%;
   --destructive-foreground: 40 30% 95%;
 
-  --input: 222 18% 22%;
-  --ring: 90 38% 62%;
+  --input: 145 12% 24%;
+  --ring: 93 38% 61%;
 
-  --finance-text: 43 90% 68%;
-  --todo-text: 213 45% 75%;
-  --linksaver-text: 0 55% 75%;
+  --finance-text: 43 90% 72%;
+  --todo-text: 211 55% 78%;
+  --linksaver-text: 0 62% 79%;
 
   --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
   --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.20);
@@ -207,6 +207,12 @@
   }
   body {
     @apply font-sans antialiased bg-background text-foreground selection:bg-primary/20;
+    min-width: 320px;
+  }
+
+  :where(button, a, input, textarea, select, [role='button']):focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 3px;
   }
 }
 
@@ -230,11 +236,11 @@
    reads from weight AND size, not just size. */
 @layer components {
   .text-display {
-    @apply text-3xl font-extrabold leading-[1.1] tracking-tight text-foreground;
+    @apply text-3xl font-extrabold leading-[1.08] tracking-[-0.03em] text-foreground;
   }
 
   .text-page-title {
-    @apply text-2xl lg:text-3xl font-bold leading-[1.15] tracking-tight text-foreground;
+    @apply text-[1.75rem] lg:text-3xl font-bold leading-[1.12] tracking-[-0.025em] text-foreground;
   }
 
   .text-modal-title {
@@ -254,7 +260,7 @@
   }
 
   .text-body {
-    @apply text-sm font-medium leading-relaxed text-foreground;
+    @apply text-sm font-medium leading-[1.65] text-foreground;
   }
 
   .text-pill-label {
@@ -289,7 +295,7 @@
   }
 
   .transition-press {
-    transition: transform 0.12s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    transition: transform 0.12s ease, box-shadow 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
   }
 
   /* Smooth press feedback on every interactive element — more subtle and
@@ -299,5 +305,16 @@
   [role='button']:active {
     transform: scale(0.98);
     transition: transform 0.1s ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

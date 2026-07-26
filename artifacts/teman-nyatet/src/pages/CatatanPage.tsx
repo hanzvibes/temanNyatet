@@ -143,11 +143,11 @@ export default function CatatanPage() {
   return (
     <div className="flex flex-col h-full bg-background min-h-dvh pb-32 lg:pb-16">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b-0">
-        <div className="px-6 py-6 pb-4 space-y-5 lg:px-10 max-w-screen-xl mx-auto">
+      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-border/50">
+        <div className="px-5 py-5 pb-4 space-y-4 sm:px-6 lg:px-10 lg:py-7 lg:pb-5 max-w-screen-xl mx-auto">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
+              <div className="text-pill-label mb-1.5 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">Catatan</h1>
             </div>
             <SettingsSheet avatarBg="bg-primary/10" avatarTextColor="text-primary" />
@@ -157,7 +157,7 @@ export default function CatatanPage() {
       </div>
 
       {/* Content */}
-      <div className="px-6 lg:px-10 flex-1 pt-2 max-w-screen-xl mx-auto w-full">
+      <div className="px-5 sm:px-6 lg:px-10 flex-1 pt-5 lg:pt-7 max-w-screen-xl mx-auto w-full">
         {loading ? (
           <PageLoading accent="catatan" label="Memuat catatan…" />
         ) : filteredNotes.length === 0 ? (
@@ -169,7 +169,7 @@ export default function CatatanPage() {
             cta={!search ? (
               <Button
                 onClick={() => handleOpenForm()}
-                className="rounded-full px-6 py-3.5"
+                className="rounded-xl px-6 py-3.5"
               >
                 <Plus size={18} strokeWidth={2.5} />
                 Tambah Catatan Pertama
@@ -214,7 +214,7 @@ export default function CatatanPage() {
               >
                 {/* Card */}
                 <div
-                  className="rounded-[24px] overflow-hidden shadow-2xl flex flex-col"
+                  className="rounded-[1.5rem] overflow-hidden shadow-elevated flex flex-col border border-black/5"
                   style={{ backgroundColor: selectedNoteColor, maxHeight: '72vh' }}
                 >
                   {isEditing ? (
@@ -225,14 +225,14 @@ export default function CatatanPage() {
                         <button
                           type="button"
                           onClick={() => setIsEditing(false)}
-                          className="text-sm font-bold text-muted-foreground hover:text-foreground transition-colors"
+                          className="min-h-11 px-2 -ml-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors rounded-lg"
                         >
                           Batal
                         </button>
                         <span className="text-pill-label !text-muted-foreground">Edit Catatan</span>
                         <button
                           type="submit"
-                          className="text-sm font-bold text-foreground bg-card/70 hover:bg-white/90 px-4 py-1.5 rounded-full transition-colors shadow-sm"
+                          className="min-h-11 text-sm font-bold text-foreground bg-card/70 hover:bg-white/90 px-4 rounded-xl transition-colors shadow-elevation-1"
                         >
                           Simpan
                         </button>
@@ -243,12 +243,14 @@ export default function CatatanPage() {
                         <input
                           {...form.register('title')}
                           placeholder="Judul (opsional)"
-                          className="w-full text-2xl font-bold bg-transparent outline-none placeholder:text-muted-foreground/50 text-foreground border-b border-border pb-2"
+                          aria-label="Judul catatan"
+                          className="w-full text-2xl font-bold bg-transparent outline-none placeholder:text-muted-foreground/60 text-foreground border-b border-foreground/15 focus:border-foreground/40 pb-2 transition-colors"
                         />
                         <textarea
                           {...form.register('content')}
                           placeholder="Apa yang ingin kamu catat?"
-                          className="w-full min-h-[120px] resize-none bg-transparent outline-none text-base font-medium placeholder:text-muted-foreground/50 text-foreground leading-relaxed"
+                          aria-label="Isi catatan"
+                          className="w-full min-h-[120px] resize-none bg-transparent outline-none text-base font-medium placeholder:text-muted-foreground/60 text-foreground leading-relaxed"
                           autoFocus
                         />
                         {form.formState.errors.content && (
@@ -304,17 +306,17 @@ export default function CatatanPage() {
                         )}
                       </div>
 
-                      <div className="flex gap-3 px-7 pb-6 pt-3 flex-shrink-0 border-t border-border">
+                      <div className="flex gap-3 px-7 pb-6 pt-4 flex-shrink-0 border-t border-black/10">
                         <button
                           onClick={() => handleStartEdit(selectedNote)}
-                          className="flex-1 bg-card/70 text-foreground font-bold py-3 rounded-2xl hover:bg-white/90 transition-colors text-sm shadow-sm"
+                          className="flex-1 bg-card/70 text-foreground font-bold min-h-11 rounded-xl hover:bg-white/90 transition-colors text-sm shadow-elevation-1"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(selectedNote.id)}
                           disabled={deletingId === selectedNote.id}
-                          className="flex-1 bg-red-100/70 text-red-600 font-bold py-3 rounded-2xl hover:bg-red-100 transition-colors flex items-center justify-center gap-1.5 text-sm shadow-sm disabled:opacity-70"
+                          className="flex-1 bg-red-100/70 text-red-600 font-bold min-h-11 rounded-xl hover:bg-red-100 transition-colors flex items-center justify-center gap-1.5 text-sm shadow-elevation-1 disabled:opacity-70"
                         >
                           {deletingId === selectedNote.id ? (
                             <>
@@ -352,7 +354,7 @@ export default function CatatanPage() {
       <Drawer.Root open={isFormOpen} onOpenChange={setIsFormOpen}>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" />
-          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] h-[90vh] z-50 outline-none">
+          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] h-[90vh] z-50 outline-none border-t border-border/70 shadow-elevated">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-4 mt-4" />
 
             <form onSubmit={form.handleSubmit(onSubmitForm)} className="flex flex-col flex-1 px-6 pb-6 overflow-hidden">
@@ -366,14 +368,16 @@ export default function CatatanPage() {
               <div className="flex-1 overflow-y-auto space-y-5 pb-4">
                 <input
                   {...form.register('title')}
-                  placeholder="Judul (opsional)"
-                  className="w-full text-2xl font-bold bg-transparent outline-none placeholder:text-muted-foreground/50"
+                   placeholder="Judul (opsional)"
+                   aria-label="Judul catatan"
+                   className="w-full text-2xl font-bold bg-transparent outline-none placeholder:text-muted-foreground/60 border-b border-border/70 focus:border-primary pb-2 transition-colors"
                 />
 
                 <textarea
                   {...form.register('content')}
-                  placeholder="Apa yang ingin kamu catat?"
-                  className="w-full h-48 resize-none bg-transparent outline-none text-lg font-medium placeholder:text-muted-foreground/50 leading-relaxed"
+                   placeholder="Apa yang ingin kamu catat?"
+                   aria-label="Isi catatan"
+                   className="w-full h-48 resize-none bg-transparent outline-none text-lg font-medium placeholder:text-muted-foreground/60 leading-relaxed"
                   autoFocus
                 />
                 {form.formState.errors.content && (

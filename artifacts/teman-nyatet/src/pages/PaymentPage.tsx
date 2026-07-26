@@ -33,33 +33,33 @@ export default function PaymentPage() {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center p-6 bg-background">
+    <div className="min-h-dvh flex flex-col items-center justify-center p-5 sm:p-6 bg-background">
       <div className="w-full max-w-sm flex flex-col items-center text-center mb-8">
-        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mb-3 shadow-sm text-primary-foreground">
+        <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center mb-3 shadow-elevation-1 text-primary-foreground">
           <NotebookPen size={24} />
         </div>
         <h1 className="text-display">TemanNyatet</h1>
       </div>
 
-      <div className="w-full max-w-sm bg-card rounded-2xl shadow-md p-6 border border-border">
+      <div className="w-full max-w-sm bg-card rounded-[1.5rem] shadow-elevation-2 p-6 border border-card-border">
         <h2 className="text-2xl font-bold text-foreground mb-2">Satu langkah lagi!</h2>
         <p className="text-muted-foreground text-sm mb-6">
           Aktivasi akun kamu untuk mulai mencatat sat-set tanpa batas.
         </p>
 
         <div className="flex flex-col gap-4">
-          <div className="border border-border rounded-xl p-4 flex flex-col">
+          <div className="border border-border rounded-2xl p-4 flex flex-col bg-surface/40">
             <h3 className="font-semibold text-lg">Bulanan</h3>
             <p className="text-2xl font-bold mt-1 mb-4">Rp 100.000<span className="text-sm font-normal text-muted-foreground"> / bulan</span></p>
             <a 
               href={paymentUrl} 
-              className="w-full py-2.5 rounded-full border-2 border-primary text-primary font-semibold text-center hover:bg-primary/5 transition-colors"
+               className="w-full min-h-11 py-2.5 rounded-xl border-2 border-primary text-primary font-semibold text-center hover:bg-primary/5 transition-colors"
             >
               Pilih Bulanan
             </a>
           </div>
 
-          <div className="border-2 border-primary rounded-xl p-4 flex flex-col relative overflow-hidden">
+          <div className="border-2 border-primary rounded-2xl p-4 flex flex-col relative overflow-hidden shadow-elevation-1">
             <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-bl-lg">
               REKOMENDASI
             </div>
@@ -67,7 +67,7 @@ export default function PaymentPage() {
             <p className="text-2xl font-bold mt-1 mb-4">Rp 249.000<span className="text-sm font-normal text-muted-foreground"> / tahun</span></p>
             <a 
               href={paymentUrl} 
-              className="w-full py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-center hover:opacity-90 shadow-sm transition-opacity"
+               className="w-full min-h-11 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-center hover:opacity-90 shadow-elevation-1 transition-opacity"
             >
               Pilih Tahunan
             </a>

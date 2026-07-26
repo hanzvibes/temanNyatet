@@ -277,7 +277,7 @@ export default function ConnectSheetPage() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mb-5 flex gap-3 bg-orange-500/10 border border-orange-500/25 rounded-2xl p-4"
+                  className="mb-5 flex gap-3 bg-orange-500/10 border border-orange-500/25 rounded-2xl p-4 shadow-elevation-1"
                 >
                   <WifiOff size={18} className="flex-shrink-0 text-orange-600 dark:text-orange-400 mt-0.5" />
                   <div>
@@ -299,7 +299,7 @@ export default function ConnectSheetPage() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mb-5 flex gap-3 bg-destructive/10 border border-destructive/20 rounded-2xl p-4"
+                  className="mb-5 flex gap-3 bg-destructive/10 border border-destructive/20 rounded-2xl p-4 shadow-elevation-1"
                 >
                   <AlertTriangle size={18} className="flex-shrink-0 text-destructive mt-0.5" />
                   <div>
@@ -312,7 +312,7 @@ export default function ConnectSheetPage() {
 
             {/* Header */}
             <div className="flex flex-col items-center text-center mb-7">
-              <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg text-primary-foreground">
+              <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-elevation-2 text-primary-foreground">
                 <ShieldCheck size={28} />
               </div>
               <h1 className="text-page-title">
@@ -332,7 +332,7 @@ export default function ConnectSheetPage() {
                   href={status.spreadsheetUrl ?? '#'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold py-3 px-4 rounded-2xl shadow-sm hover:opacity-90 transition-opacity"
+                  className="w-full min-h-12 flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold py-3 px-4 rounded-xl shadow-elevation-1 hover:opacity-90 transition-opacity"
                 >
                   Buka Spreadsheet <ExternalLink size={16} />
                 </a>
@@ -341,14 +341,14 @@ export default function ConnectSheetPage() {
                   <button
                     onClick={handleConnect}
                     disabled={connecting}
-                    className="flex-1 flex items-center justify-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-xl py-2.5 transition-colors hover:bg-secondary/50 disabled:opacity-50"
+                    className="flex-1 min-h-11 flex items-center justify-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-xl py-2.5 transition-colors hover:bg-secondary/50 disabled:opacity-50"
                   >
                     {connecting ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
                     Hubungkan Ulang
                   </button>
                   <button
                     onClick={() => setShowDisconnect(true)}
-                    className="flex-1 flex items-center justify-center gap-1.5 text-sm font-medium text-destructive/70 hover:text-destructive border border-border rounded-xl py-2.5 transition-colors hover:bg-destructive/5"
+                    className="flex-1 min-h-11 flex items-center justify-center gap-1.5 text-sm font-medium text-destructive/70 hover:text-destructive border border-border rounded-xl py-2.5 transition-colors hover:bg-destructive/5"
                   >
                     <Unlink size={14} /> Putuskan
                   </button>
@@ -367,7 +367,7 @@ export default function ConnectSheetPage() {
                 <button
                   onClick={handleDisconnect}
                   disabled={disconnecting}
-                  className="w-full bg-destructive text-destructive-foreground font-semibold py-3 px-4 rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full min-h-12 bg-destructive text-destructive-foreground font-semibold py-3 px-4 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {disconnecting ? <Loader2 size={16} className="animate-spin" /> : <Unlink size={16} />}
                   {disconnecting ? 'Memutus...' : 'Ya, Putuskan'}
@@ -383,7 +383,7 @@ export default function ConnectSheetPage() {
               // ── Not connected — main connect CTA ────────────────────────────
               <div className="space-y-4">
                 {/* Privacy callout */}
-                <div className="bg-secondary/50 border border-border rounded-2xl p-4 space-y-2">
+                 <div className="bg-secondary/50 border border-border rounded-2xl p-4 space-y-2 shadow-elevation-1">
                   <div className="flex items-start gap-2.5">
                     <Check size={15} className="flex-shrink-0 text-primary mt-0.5" />
                     <p className="text-xs text-muted-foreground leading-relaxed">
@@ -407,7 +407,7 @@ export default function ConnectSheetPage() {
                 <button
                   onClick={handleConnect}
                   disabled={connecting}
-                  className="w-full bg-primary text-primary-foreground font-semibold py-3.5 px-4 rounded-2xl shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2.5"
+                   className="w-full min-h-12 bg-primary text-primary-foreground font-semibold py-3.5 px-4 rounded-xl shadow-elevation-1 hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2.5"
                 >
                   {connecting ? (
                     <>

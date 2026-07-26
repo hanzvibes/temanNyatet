@@ -36,19 +36,19 @@ export default function SidebarNav() {
     : 'text-primary';
 
   return (
-    <aside className="hidden lg:flex flex-col w-60 min-h-dvh bg-card border-r border-border/40 sticky top-0 h-dvh shrink-0">
+    <aside className="hidden lg:flex flex-col w-64 min-h-dvh bg-card/80 border-r border-border/70 sticky top-0 h-dvh shrink-0">
       {/* Brand */}
-      <div className="px-5 pt-7 pb-6">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-1">
+      <div className="px-6 pt-8 pb-7">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/70 mb-2">
           TemanNyatet
         </p>
-        <h1 className="text-xl font-bold text-foreground leading-tight">
+        <h1 className="text-xl font-bold text-foreground leading-tight tracking-[-0.02em]">
           Sat-set, beres! ✓
         </h1>
       </div>
 
       {/* Nav links */}
-      <nav className="flex flex-col gap-1 px-3">
+      <nav className="flex flex-col gap-1.5 px-3">
         {NAV_ITEMS.map((item) => {
           const isActive = location.startsWith(item.path);
           const Icon = item.icon;
@@ -56,10 +56,10 @@ export default function SidebarNav() {
             <Link
               key={item.path}
               href={item.path}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 text-sm font-semibold select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
+              className={`flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-150 text-sm font-semibold select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
                 isActive
                   ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                   : 'text-muted-foreground hover:bg-muted hover:text-foreground hover:translate-x-0.5'
               }`}
             >
               <Icon size={17} strokeWidth={isActive ? 2.5 : 2} className={isActive ? '' : item.color} />
@@ -73,12 +73,12 @@ export default function SidebarNav() {
       <div className="flex-1" />
 
       {/* Create button — only shown when on a data page */}
-      <div className="px-3 mb-3">
+      <div className="px-3 mb-4">
         {createSection && (
           <button
             onClick={() => triggerCreate(createSection)}
             className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground
-                       rounded-xl py-2.5 font-semibold text-sm hover:bg-primary/90 active:scale-[0.98]
+                       rounded-xl py-3 font-semibold text-sm hover:bg-primary/90 active:scale-[0.98]
                        transition-all duration-150 shadow-sm
                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
                        focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
@@ -90,7 +90,7 @@ export default function SidebarNav() {
       </div>
 
       {/* Settings — avatar at the bottom */}
-      <div className="px-3 pb-5 border-t border-border/30 pt-4">
+      <div className="px-3 pb-6 border-t border-border/60 pt-5">
         <div className="flex items-center gap-3">
           <SettingsSheet avatarBg={settingsAvatarBg} avatarTextColor={settingsAvatarColor} />
           <div className="flex-1 min-w-0">

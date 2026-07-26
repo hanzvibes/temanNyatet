@@ -163,8 +163,8 @@ export default function KeuanganPage() {
   return (
     <div className="flex flex-col h-full bg-background min-h-dvh pb-32 lg:pb-16">
       {/* Header Area */}
-      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b-0">
-        <div className="px-6 py-6 pb-4 space-y-5 lg:px-10 max-w-screen-xl mx-auto">
+      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-border/50">
+        <div className="px-5 py-5 pb-4 space-y-4 sm:px-6 lg:px-10 lg:py-7 lg:pb-5 max-w-screen-xl mx-auto">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
@@ -176,27 +176,27 @@ export default function KeuanganPage() {
       </div>
 
       {/* Desktop: two-column (balance card left, list right). Mobile: stacked. */}
-      <div className="px-6 lg:px-10 max-w-screen-xl mx-auto w-full
+      <div className="px-5 sm:px-6 lg:px-10 max-w-screen-xl mx-auto w-full
                       space-y-6 lg:space-y-0
-                      lg:grid lg:grid-cols-[360px_1fr] lg:gap-10 lg:items-start lg:pt-6 lg:pb-8">
+                      lg:grid lg:grid-cols-[360px_1fr] lg:gap-10 lg:items-start lg:pt-7 lg:pb-8">
 
         {/* ── Left column: balance card (sticky on desktop) ── */}
         <div className="space-y-6 lg:sticky lg:top-6 pt-4 lg:pt-0">
           {/* Balance Card */}
-          <div className="bg-card rounded-[1.5rem] p-6 shadow-sm border border-border">
+          <div className="bg-card rounded-[1.5rem] p-6 shadow-elevation-2 border border-card-border">
             <div className="flex flex-col items-center mb-6">
-               <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Total Saldo</p>
-               <h2 className="text-4xl font-extrabold text-foreground tracking-tight">{formatRupiah(monthlySummary.balance)}</h2>
+               <p className="text-pill-label mb-2">Total saldo</p>
+               <h2 className="text-4xl font-extrabold text-foreground tracking-[-0.04em] tabular-nums">{formatRupiah(monthlySummary.balance)}</h2>
             </div>
             <div className="flex gap-4">
-              <div className="flex-1 bg-income/10 rounded-2xl p-4 flex flex-col items-center border border-income/20">
+               <div className="flex-1 bg-income/10 rounded-xl p-4 flex flex-col items-center border border-income/20">
                 <div className="flex items-center gap-1.5 text-income mb-2">
                   <ArrowUp size={16} strokeWidth={3} />
                   <span className="text-xs font-bold uppercase tracking-wider">Pemasukan</span>
                 </div>
                 <span className="font-bold text-income">{formatRupiah(monthlySummary.income)}</span>
               </div>
-              <div className="flex-1 bg-expense/10 rounded-2xl p-4 flex flex-col items-center border border-expense/20">
+               <div className="flex-1 bg-expense/10 rounded-xl p-4 flex flex-col items-center border border-expense/20">
                 <div className="flex items-center gap-1.5 text-expense mb-2">
                   <ArrowDown size={16} strokeWidth={3} />
                   <span className="text-xs font-bold uppercase tracking-wider">Pengeluaran</span>
@@ -251,7 +251,7 @@ export default function KeuanganPage() {
                             tabIndex={0}
                             role="group"
                             aria-label={`Transaksi ${tx.category} ${formatRupiah(tx.amount)}`}
-                            className="relative bg-white rounded-[1.25rem] p-4 flex items-center justify-between shadow-sm border border-border/50 hover:bg-secondary/50 transition-colors active:scale-[0.98] select-none overflow-hidden
+                             className="relative bg-card rounded-[1.25rem] p-4 flex items-center justify-between shadow-elevation-1 border border-card-border hover:bg-secondary/50 hover:shadow-elevation-2 transition-all active:scale-[0.98] select-none overflow-hidden
                                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-finance focus-visible:ring-offset-2"
                             onMouseDown={() => handlePressStart(tx.id)}
                             onMouseUp={handlePressEnd}
@@ -266,7 +266,7 @@ export default function KeuanganPage() {
                               </div>
                             )}
                             <div className="flex items-center gap-4">
-                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${getCategoryColor(tx.type)}`}>
+                               <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-elevation-1 ${getCategoryColor(tx.type)}`}>
                                 {getCategoryIcon(tx.category)}
                               </div>
                               <div>
@@ -283,7 +283,7 @@ export default function KeuanganPage() {
                                 </p>
                               </div>
                             </div>
-                            <div className={`font-bold text-lg ${tx.type === 'income' ? 'text-income' : 'text-foreground'}`}>
+                             <div className={`font-bold text-lg tabular-nums ${tx.type === 'income' ? 'text-income' : 'text-foreground'}`}>
                               {tx.type === 'income' ? '+' : '-'}{formatRupiah(tx.amount)}
                             </div>
                           </AnimatedListItem>
@@ -303,7 +303,7 @@ export default function KeuanganPage() {
       <Drawer.Root open={isFormOpen} onOpenChange={setIsFormOpen}>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" />
-          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] z-50 outline-none">
+             <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] z-50 outline-none border-t border-border/70 shadow-elevated">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-6 mt-4" />
             
             <form onSubmit={form.handleSubmit(onSubmitForm)} className="flex flex-col px-6 pb-8 overflow-y-auto">

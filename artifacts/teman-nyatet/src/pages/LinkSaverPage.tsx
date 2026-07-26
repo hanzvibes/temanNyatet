@@ -104,8 +104,8 @@ export default function LinkSaverPage() {
   return (
     <div className="flex flex-col h-full bg-background min-h-dvh pb-32 lg:pb-16">
       {/* Header Area */}
-      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b-0">
-        <div className="px-6 py-6 pb-4 space-y-5 lg:px-10 max-w-screen-xl mx-auto">
+      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-border/50">
+        <div className="px-5 py-5 pb-4 space-y-4 sm:px-6 lg:px-10 lg:py-7 lg:pb-5 max-w-screen-xl mx-auto">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 lg:hidden">TEMAN NYATET</div>
@@ -118,7 +118,7 @@ export default function LinkSaverPage() {
       </div>
 
       {/* Content */}
-      <div className="px-6 lg:px-10 mt-2 flex-1 max-w-screen-xl mx-auto w-full">
+      <div className="px-5 sm:px-6 lg:px-10 mt-5 lg:mt-7 flex-1 max-w-screen-xl mx-auto w-full">
         {loading ? (
           <PageLoading accent="link" label="Memuat link…" />
         ) : filteredLinks.length === 0 ? (
@@ -164,7 +164,7 @@ export default function LinkSaverPage() {
                     onTouchStart={() => handlePressStart(link.id)}
                     onTouchEnd={handlePressEnd}
                     onTouchMove={handlePressEnd}
-                    className="relative bg-white rounded-[1.25rem] p-4 shadow-sm border border-border/50 flex items-center gap-4 cursor-pointer hover:border-linksaver/50 hover:bg-secondary/30 transition-all active:scale-[0.98] overflow-hidden
+                     className="relative bg-card rounded-[1.25rem] p-4 shadow-elevation-1 border border-card-border flex items-center gap-4 cursor-pointer hover:border-linksaver/50 hover:bg-secondary/30 hover:shadow-elevation-2 transition-all active:scale-[0.98] overflow-hidden
                                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2"
                   >
                     {deletingId === link.id && (
@@ -172,7 +172,7 @@ export default function LinkSaverPage() {
                         <Loader2 size={16} className="animate-spin" /> Menghapus...
                       </div>
                     )}
-                    <div className="w-14 h-14 bg-secondary rounded-[1rem] flex items-center justify-center flex-shrink-0 overflow-hidden border border-border">
+                     <div className="w-14 h-14 bg-secondary rounded-[1rem] flex items-center justify-center flex-shrink-0 overflow-hidden border border-border shadow-elevation-1">
                       {domain ? (
                         <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`} alt="" className="w-7 h-7 object-contain" onError={(e) => { e.currentTarget.style.display='none'; }} />
                       ) : (
@@ -198,7 +198,7 @@ export default function LinkSaverPage() {
                       type="button"
                       aria-label={`Salin URL ${link.title}`}
                       onClick={(e) => copyToClipboard(e, link.url)}
-                      className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-secondary border border-border text-muted-foreground flex items-center justify-center hover:bg-linksaver/10 hover:text-linksaver hover:border-linksaver/30 transition-colors
+                       className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-xl bg-secondary border border-border text-muted-foreground flex items-center justify-center hover:bg-linksaver/10 hover:text-linksaver hover:border-linksaver/30 transition-colors
                                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2"
                     >
                       <Copy size={16} strokeWidth={2.5} />
@@ -216,7 +216,7 @@ export default function LinkSaverPage() {
       <Drawer.Root open={isFormOpen} onOpenChange={setIsFormOpen}>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" />
-          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] z-50 outline-none">
+          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] z-50 outline-none border-t border-border/70 shadow-elevated">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-6 mt-4" />
             
             <form onSubmit={form.handleSubmit(onSubmitForm)} className="flex flex-col px-6 pb-8 overflow-y-auto">
@@ -228,7 +228,7 @@ export default function LinkSaverPage() {
                   <input
                     {...form.register('title')}
                     placeholder="Contoh: Artikel React"
-                    className="w-full bg-white border border-border rounded-xl py-3 px-4 outline-none focus:border-linksaver focus:ring-2 focus:ring-linksaver/20 text-base font-bold text-foreground transition-all"
+                     className="w-full bg-card border border-border rounded-xl py-3 px-4 outline-none focus:border-linksaver focus:ring-2 focus:ring-linksaver/20 text-base font-bold text-foreground transition-all shadow-elevation-1"
                     autoFocus
                   />
                   {form.formState.errors.title && (
@@ -244,7 +244,7 @@ export default function LinkSaverPage() {
                       {...form.register('url')}
                       type="url"
                       placeholder="https://..."
-                      className="w-full bg-white border border-border rounded-xl py-3 pl-12 pr-4 outline-none focus:border-linksaver focus:ring-2 focus:ring-linksaver/20 text-base font-bold text-foreground transition-all"
+                       className="w-full bg-card border border-border rounded-xl py-3 pl-12 pr-4 outline-none focus:border-linksaver focus:ring-2 focus:ring-linksaver/20 text-base font-bold text-foreground transition-all shadow-elevation-1"
                     />
                   </div>
                   {form.formState.errors.url && (
@@ -257,7 +257,8 @@ export default function LinkSaverPage() {
                   <textarea
                     {...form.register('note')}
                     placeholder="Kenapa link ini disimpan?"
-                    className="w-full h-24 resize-none bg-white border border-border rounded-xl py-3 px-4 outline-none focus:border-linksaver focus:ring-2 focus:ring-linksaver/20 text-sm font-medium text-foreground transition-all"
+                     aria-label="Catatan tambahan"
+                     className="w-full h-24 resize-none bg-card border border-border rounded-xl py-3 px-4 outline-none focus:border-linksaver focus:ring-2 focus:ring-linksaver/20 text-sm font-medium text-foreground transition-all shadow-elevation-1"
                   />
                 </div>
               </div>

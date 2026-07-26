@@ -155,7 +155,7 @@ export default function TodoPage() {
       tabIndex={0}
       role="button"
       aria-label={`Buka to-do: ${todo.title}`}
-      className={`bg-white rounded-[1.25rem] p-5 shadow-sm border border-border/50 flex items-start gap-4 transition-all cursor-pointer active:scale-[0.98]
+      className={`bg-card rounded-[1.25rem] p-5 shadow-elevation-1 border border-card-border flex items-start gap-4 transition-all cursor-pointer active:scale-[0.98]
                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-todo focus-visible:ring-offset-2 ${
         todo.is_done ? 'opacity-60 bg-secondary/30' : 'hover:border-todo/50 hover:shadow-md'
       }`}
@@ -213,8 +213,8 @@ export default function TodoPage() {
   return (
     <div className="flex flex-col h-full bg-background min-h-dvh pb-32 lg:pb-16">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b-0">
-        <div className="px-6 py-6 pb-4 space-y-5 lg:px-10 max-w-screen-xl mx-auto">
+      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-border/50">
+        <div className="px-5 py-5 pb-4 space-y-4 sm:px-6 lg:px-10 lg:py-7 lg:pb-5 max-w-screen-xl mx-auto">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 lg:hidden">TEMAN NYATET</div>
@@ -227,7 +227,7 @@ export default function TodoPage() {
       </div>
 
       {/* List */}
-      <div className="px-6 lg:px-10 flex-1 space-y-6 pt-2 max-w-screen-xl mx-auto w-full">
+      <div className="px-5 sm:px-6 lg:px-10 flex-1 space-y-6 pt-5 lg:pt-7 max-w-screen-xl mx-auto w-full">
         {loading ? (
           <PageLoading accent="todo" label="Memuat to-do…" />
         ) : filteredTodos.length === 0 ? (
@@ -250,7 +250,7 @@ export default function TodoPage() {
           <div className="pb-8 lg:grid lg:grid-cols-2 lg:gap-8 lg:items-start">
             {pendingTodos.length > 0 && (
               <div className="space-y-3">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1 mb-4">Belum Selesai</h3>
+                 <h3 className="text-pill-label px-1 mb-4">Belum selesai</h3>
                 <AnimatePresence>
                   {pendingTodos.map(renderTodoItem)}
                 </AnimatePresence>
@@ -258,7 +258,7 @@ export default function TodoPage() {
             )}
             {completedTodos.length > 0 && (
               <div className="space-y-3 mt-8 lg:mt-0">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-1 mb-4">Selesai</h3>
+                 <h3 className="text-pill-label px-1 mb-4">Selesai</h3>
                 <AnimatePresence>
                   {completedTodos.map(renderTodoItem)}
                 </AnimatePresence>
@@ -318,20 +318,22 @@ export default function TodoPage() {
                     {/* Fields */}
                     <div className="px-6 pb-5 space-y-4 max-h-[60vh] overflow-y-auto">
                       {/* Title */}
-                      <input
+                   <input
                         {...editForm.register('title')}
                         placeholder="Apa yang harus dikerjakan?"
-                        className="w-full text-input-title bg-transparent border-b-2 border-todo/40 pb-2.5 outline-none focus:border-todo transition-colors placeholder:text-muted-foreground/50 text-foreground"
+                     aria-label="Judul to-do"
+                     className="w-full text-input-title bg-transparent border-b-2 border-todo/40 pb-2.5 outline-none focus:border-todo transition-colors placeholder:text-muted-foreground/60 text-foreground"
                       />
                       {editForm.formState.errors.title && (
                         <FormError size="xs" className="-mt-1">{editForm.formState.errors.title.message}</FormError>
                       )}
 
                       {/* Description */}
-                      <textarea
+                       <textarea
                         {...editForm.register('description')}
                         placeholder="Catatan tambahan (opsional)"
-                        className="w-full h-20 resize-none bg-muted/50 border border-todo/30 rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 text-foreground focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
+                         aria-label="Deskripsi to-do"
+                         className="w-full h-20 resize-none bg-muted/50 border border-todo/30 rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/60 text-foreground focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
                       />
 
                       {/* Date + Time */}

@@ -139,7 +139,7 @@ export default function BottomSheetNav() {
         }}
       >
         <div
-          className="bg-card border border-border/30 shadow-elevated h-full flex flex-col"
+            className="bg-card/95 border border-border/70 shadow-elevated h-full flex flex-col backdrop-blur-xl"
           style={{ borderRadius: 24 }}
         >
           {/* Drag Handle */}
@@ -151,7 +151,7 @@ export default function BottomSheetNav() {
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
           >
-            <div className="w-9 h-[5px] rounded-full bg-muted-foreground/30" />
+            <div className="w-10 h-1.5 rounded-full bg-muted-foreground/35" />
           </div>
 
           {/* Inline form — only rendered when sheet is open */}
@@ -168,7 +168,7 @@ export default function BottomSheetNav() {
 
           {/* Nav Tabs — always pinned at the bottom of the pill */}
           <div
-            className="flex-shrink-0 border-t border-border/20 flex justify-around items-center px-1 bg-card"
+            className="flex-shrink-0 border-t border-border/60 flex justify-around items-center px-1 bg-card/95"
             style={{ height: NAV_H, borderRadius: '0 0 24px 24px' }}
           >
             {NAV_ITEMS.map((item) => {
@@ -179,7 +179,7 @@ export default function BottomSheetNav() {
                   key={item.path}
                   href={item.path}
                   aria-label={item.name}
-                  className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 rounded-xl transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${isActive ? 'bg-primary/15' : 'hover:bg-muted'}`}
+                  className={`flex flex-col items-center justify-center flex-1 h-full gap-1 rounded-xl transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${isActive ? 'bg-primary/12' : 'hover:bg-muted'}`}
                 >
                   <div className="w-11 h-9 flex items-center justify-center rounded-xl transition-colors">
                     <Icon

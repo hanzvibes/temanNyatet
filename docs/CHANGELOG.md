@@ -1,5 +1,19 @@
 # Changelog
 
+## Tooling Setup — 2026-07-27
+
+### Added
+- **Graphify knowledge graph** for the TemanNyatet codebase:
+  - Generated graph in `graphify-out/` (3359 nodes, 4331 edges, 328 communities)
+  - `AGENTS.md` in project root with graph rules and key community summary
+  - Replit skill file at `.agents/skills/graphify/SKILL.md` so AI agents can use the graph
+  - Replit workflow `graphify: MCP server` on port `8099` serving the graph over HTTP MCP transport
+  - Port `8099` added to `.replit` so the MCP server can be proxied by Replit
+- `graphifyy` (Python package) installed via pip for graph extraction and MCP serving.
+
+### Updated
+- `docs/replit.md` — added the Graphify MCP server workflow to the run instructions.
+
 ## Documentation Update — 2026-07-27
 
 ### Fixed

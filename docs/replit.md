@@ -15,10 +15,11 @@ A note-taking SaaS PWA for Indonesian users. Four core modules: Catatan (Notes),
 
 ## How to run
 
-Two services run in parallel — both are already configured as workflows:
+Three services are available as workflows. Start the ones you need:
 
 - **Frontend** (`artifacts/teman-nyatet: web`): `pnpm --filter @workspace/teman-nyatet run dev` — Vite dev server (defaults to `5173`; on Replit it runs on the port configured by the `PORT` env var, typically `5000`)
 - **API Server** (`artifacts/api-server: API Server`): `pnpm --filter @workspace/api-server run dev` — Express on port `8080` (builds first with `build.mjs`, then starts)
+- **Graphify MCP server** (`graphify: MCP server`): `graphify serve graphify-out/graph.json --transport http --host 0.0.0.0 --port 8099 --stateless` — serves the knowledge graph over HTTP for AI agents to query (port `8099`)
 
 Replit normally remembers the last workflow state, so if the workflows were running when you left the project they should auto-start when you reopen it. If they ever appear stopped, restart them from the Workflows panel (or ask the agent to restart them).
 

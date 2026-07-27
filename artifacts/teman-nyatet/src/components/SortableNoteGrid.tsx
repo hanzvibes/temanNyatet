@@ -1,15 +1,17 @@
-import React, { memo, useCallback, useMemo, useState, useRef } from 'react';
+import React, { memo, useCallback, useMemo, useState, useRef, useEffect } from 'react';
 import {
   DndContext,
   closestCenter,
+  pointerWithin,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
   type DragEndEvent,
   type DragStartEvent,
-  type DragMoveEvent,
   DragOverlay,
+  type CollisionDetection,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -27,51 +29,80 @@ import type { Note } from '@/lib/database.types';
 import { DeleteTarget } from './DeleteTarget';
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
-// Four soft sticky-note colours. Index-based mapping keeps the surface calm and
-// non-distracting; cards get their slot deterministically from their note id so
-// the colour is stable across reorder/remount/refetch.
-// ─── Palette ──────────────────────────────────────────────────────────────────
-// Four soft sticky-note colours. Index-based mapping keeps the surface calm and
-// non-distracting; cards get their slot deterministically from their note id so
-// the colour is stable across reorder/remount/refetch.
-//
-// Entries reference CSS variables declared in `:root` / `.dark` so the palette
-// flips with the theme. Light values are pale pastels (paper-like against
-// cream); dark values are flat dark tints of the same hue (still legible as
-// "a card of section X" against the slate canvas, no longer flashlight-bright).
 const PALETTE = ['var(--note-card-1)', 'var(--note-card-2)', 'var(--note-card-3)', 'var(--note-card-4)'];
 
 function colorForNoteId(noteId: string): string {
   let hash = 0;
   for (let i = 0; i < noteId.length; i++) {
-    // Standard 31-multiplier string hash; cast to int32 keeps it deterministic.
     hash = (hash * 31 + noteId.charCodeAt(i)) | 0;
   }
   return PALETTE[Math.abs(hash) % PALETTE.length];
 }
 
 // ─── Animation tuning ─────────────────────────────────────────────────────────
-// A single spring config drives both layout-settle (after drop) and the
-// overlay's drop animation. Tuned to:
-// - React with no perceptible lag on mid-range mobile devices
-// - Settle with a hint of bounce (not overshoot) — feels "physical" like the
-//   reference apps (Notion / Linear / Trello)
-// - Stay sub-300ms so reordering feels instant
 const SORT_SPRING = { type: 'spring', stiffness: 380, damping: 32, mass: 0.8 } as const;
-
-// Visual lift applied to the dragged overlay clone. Subtle (1.04× / -1.5°) on
-// purpose — large values look theatrical; small values read as weight.
 const OVERLAY_SCALE = 1.04;
 const OVERLAY_ROTATE_DEG = -1.5;
-
-// Pointer activation distance. ≥4px prevents a drag-vs-scroll conflict on
-// touch devices while still feeling snappy on desktop pointers.
 const POINTER_ACTIVATION_DISTANCE = 5;
 
+// ── Collision detection ────────────────────────────────────────────────────────
+// When the pointer is inside the delete‑zone droppable, return only that
+// collision so the drop registers as a delete gesture. Otherwise fall back
+// to closestCenter for normal sortable re‑ordering.
+const customCollisionDetection: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+  const deleteZoneCollision = pointerCollisions.find(
+    (c) => c.id === 'delete-zone',
+  );
+  if (deleteZoneCollision) return [deleteZoneCollision];
+  return closestCenter(args);
+};
+
+// ── Invisible droppable that makes the bottom area a delete target ─────────────
+// Rendered as a sibling of SortableContext so dnd-kit detects it during drag.
+// The `isOver` state is synced to the parent via onIsOverChange for visual
+// feedback in the DeleteTarget component.
+const DELETE_ZONE_W = 500;
+const DELETE_ZONE_H = 170;
+
+function DeleteDroppable({
+  activeId,
+  onIsOverChange,
+}: {
+  activeId: string | null;
+  onIsOverChange: (over: boolean) => void;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: 'delete-zone' });
+
+  // Stable callback ref so the useEffect doesn't re‑run on every render.
+  const onIsOverChangeRef = useRef(onIsOverChange);
+  onIsOverChangeRef.current = onIsOverChange;
+
+  useEffect(() => {
+    // Only report isOver while a drag is active — we never want stale
+    // hover state when the user isn't dragging anything.
+    if (activeId) {
+      onIsOverChangeRef.current(isOver);
+    }
+  }, [isOver, activeId]);
+
+  return (
+    <div
+      ref={setNodeRef}
+      className="fixed left-1/2 z-[199]"
+      style={{
+        bottom: '9rem',
+        width: DELETE_ZONE_W,
+        height: DELETE_ZONE_H,
+        transform: 'translateX(-50%)',
+        // Invisible — never block the visual delete pill or any other UI.
+        pointerEvents: 'none',
+      }}
+    />
+  );
+}
+
 // ── Shared card body ─────────────────────────────────────────────────────────
-// One render path for "inline" and "in overlay". Eliminates the small visual
-// jump that happens when the active card flips between the two at pickup/drop,
-// and reduces the markup duplication that previously lived in two places.
 function NoteCardBody({
   note,
   handle,
@@ -115,27 +146,6 @@ function NoteCardBody({
 }
 
 // ── Sortable inline card ─────────────────────────────────────────────────────
-// KEY DESIGN RULE: every visual property on this card is controlled by ONE
-// system, never two at once.
-//
-// Why it matters: an earlier version of this component animated opacity via
-// framer-motion (animate.opacity) while dnd-kit concurrently drove transform
-// via React state. On mobile Chrome those two animation systems could desync
-// during the brief render window between dnd-kit's `onDragEnd` clearing
-// `activeId` and the next React commit. The dropped card was left at its
-// mid-tween opacity (~0.35) until something else re-rendered it. The user saw
-// a washed-out card with light-gray text immediately after drop.
-//
-// Fix: opacity lives in plain CSS (inline `style.opacity + transition`).
-// CSS transitions are atomic — the property flips in one paint frame when
-// `isDragging` becomes false. There is no JS-driven MotionValue to lose its
-// target.
-//
-// dnd-kit owns `transform` and `transition` (its rectSortingStrategy already
-// gives cards a smooth cubic-bezier return-to-zero on drop, so no separate
-// layout-prop animation is needed — adding one just reintroduces the same
-// race we are avoiding). Framer-motion is retained ONLY for the one-shot
-// mount fade-in (`initial`); it never touches the live drag state.
 function SortableNoteCard({
   note,
   color,
@@ -151,17 +161,10 @@ function SortableNoteCard({
     useSortable({ id: note.id, disabled });
 
   const style: React.CSSProperties = {
-    // dnd-kit owns `transform` and `transition` outright. dnd-kit's
-    // rectSortingStrategy already applies a smooth cubic-bezier return-to-zero
-    // on drop, which is exactly what users expect for a "card settles into
-    // its slot" animation. No need for an additional framer-motion `layout`.
     transform: CSS.Translate.toString(transform),
     transition,
     backgroundColor: color,
-    // Pure CSS opacity. Flips atomically with isDragging — no JS animation
-    // to lose its target mid-tween.
     opacity: isDragging ? 0.4 : 1,
-    // Lift on top during re-flow so the empty slot visibly opens beneath.
     zIndex: isDragging ? 50 : undefined,
   };
 
@@ -172,8 +175,6 @@ function SortableNoteCard({
       {...listeners}
       onClick={(e) => e.stopPropagation()}
       aria-label={`Ubah urutan catatan: ${note.title || 'tanpa judul'}`}
-      // 44×44 minimum tap target on the grip — Apple HIG / WCAG 2.5.5.
-      // `touch-none` lets dnd-kit fully claim the gesture (no scroll steal).
       className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground/60 hover:text-foreground rounded-full hover:bg-muted touch-none cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-colors"
     >
       <GripVertical size={20} strokeWidth={2.2} />
@@ -186,17 +187,11 @@ function SortableNoteCard({
       style={style}
       onClick={onClick}
       onKeyDown={(e) => {
-        // Keyboard parity with onClick — Enter and Space (the canonical
-        // button keys) open the same modal the click opens. Space is included
-        // because the WAI-ARIA button role treats Space as equivalent to
-        // Enter; without it, keyboard users would need a separate path.
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           onClick();
         }
       }}
-      // tabIndex={0} promotes the listitem into the tab order so keyboard
-      // users can reach it without having to hit every drag handle first.
       tabIndex={0}
       role="listitem"
       aria-label={note.title ? `Catatan: ${note.title}. Tekan Enter untuk membuka.` : 'Catatan tanpa judul. Tekan Enter untuk membuka.'}
@@ -207,14 +202,9 @@ function SortableNoteCard({
   );
 }
 
-// React.memo: re-renders of the grid parent's drag state shouldn't redraw
-// every card — only the active and the new-order neighbours actually need to.
 const MemoSortableNoteCard = memo(SortableNoteCard);
 
 // ── Drag overlay clone ───────────────────────────────────────────────────────
-// This is the cursor-following preview. We give it the same chrome as an
-// inline card plus the lift treatment (scale + tilt) so users feel they're
-// holding something heavy.
 function DragOverlayCard({ note, color }: { note: Note; color: string }) {
   return (
     <div
@@ -222,46 +212,12 @@ function DragOverlayCard({ note, color }: { note: Note; color: string }) {
       style={{
         backgroundColor: color,
         transform: `rotate(${OVERLAY_ROTATE_DEG}deg) scale(${OVERLAY_SCALE})`,
-        // Big, soft shadow so the overlay reads "lifted off the surface"
-        // without looking like a different component.
         boxShadow:
           '0 24px 48px -12px rgba(0,0,0,0.25), 0 8px 16px -6px rgba(0,0,0,0.12)',
       }}
     >
       <NoteCardBody note={note} handle={null} />
     </div>
-  );
-}
-
-// ── Delete zone parameters ─────────────────────────────────────────────────────
-// The delete target activates when the pointer enters the bottom 160 px of the
-// viewport, centred horizontally in a 500 px-wide band — very forgiving so it
-// works reliably across mouse, touch, and fast gestures.
-const DELETE_ZONE_BOTTOM = 160;
-const DELETE_ZONE_HALF_WIDTH = 250; // half of the 500 px band
-
-// ── Coordinate helpers ─────────────────────────────────────────────────────────
-// dnd-kit's activatorEvent can be a PointerEvent, MouseEvent, or TouchEvent
-// depending on the sensor and device. These helpers normalize them.
-function getPointerPosition(
-  ev: Event | PointerEvent | MouseEvent | TouchEvent | KeyboardEvent,
-): { x: number; y: number } | null {
-  if ('changedTouches' in ev && (ev as TouchEvent).changedTouches.length > 0) {
-    return {
-      x: (ev as TouchEvent).changedTouches[0].clientX,
-      y: (ev as TouchEvent).changedTouches[0].clientY,
-    };
-  }
-  if ('clientX' in ev && typeof (ev as MouseEvent).clientX === 'number') {
-    return { x: (ev as MouseEvent).clientX, y: (ev as MouseEvent).clientY };
-  }
-  return null;
-}
-
-function isOverDeleteZone(x: number, y: number): boolean {
-  return (
-    window.innerHeight - y < DELETE_ZONE_BOTTOM &&
-    Math.abs(x - window.innerWidth / 2) < DELETE_ZONE_HALF_WIDTH
   );
 }
 
@@ -294,8 +250,6 @@ export function SortableNoteGrid({
   onDeleteNoteRef.current = onDeleteNote;
   const onClickNoteRef = useRef(onClickNote);
   onClickNoteRef.current = onClickNote;
-  const isOverDeleteRef = useRef(false);
-  const activeIdRef = useRef<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -304,9 +258,6 @@ export function SortableNoteGrid({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  // Stable callbacks so MemoSortableNoteCard's memoization actually skips
-  // re-renders. Without these, every keystroke / state update in a parent
-  // would re-render every card.
   const itemsKey = useMemo(() => notes.map((n) => n.id).join('|'), [notes]);
 
   const handleCardClick = useCallback(
@@ -321,52 +272,32 @@ export function SortableNoteGrid({
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const id = String(event.active.id);
     setActiveId(id);
-    activeIdRef.current = id;
     setIsOverDelete(false);
-    isOverDeleteRef.current = false;
     setDeleteConfirmed(false);
-  }, []);
-
-  const handleDragMove = useCallback((event: DragMoveEvent) => {
-    const pos = getPointerPosition(event.activatorEvent);
-    if (pos) {
-      const near = isOverDeleteZone(pos.x, pos.y);
-      setIsOverDelete(near);
-      isOverDeleteRef.current = near;
-    }
   }, []);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const draggedId = String(event.active.id);
 
-      // Check the REF (set during onDragMove) and also the FINAL coordinates
-      // from the release event itself. This catches fast drags where the
-      // last onDragMove didn't enter the zone but the drop position is
-      // inside it.
-      const finalPos = getPointerPosition(event.activatorEvent);
-      const wasOverDelete =
-        isOverDeleteRef.current ||
-        (finalPos !== null && isOverDeleteZone(finalPos.x, finalPos.y));
-
-      if (wasOverDelete && onDeleteNoteRef.current) {
-        // Brief confirmation flash before resetting
+      // ── Delete-on-drop via useDroppable ────────────────────────────────
+      // dnd-kit's built‑in collision detection (customCollisionDetection)
+      // returns the delete‑zone droppable when the pointer is inside it.
+      // Checking event.over?.id is the canonical, reliable way to detect
+      // drops — no manual coordinate extraction needed.
+      if (event.over?.id === 'delete-zone' && onDeleteNoteRef.current) {
         setDeleteConfirmed(true);
         setTimeout(() => {
           setActiveId(null);
           setIsOverDelete(false);
-          isOverDeleteRef.current = false;
-          activeIdRef.current = null;
         }, 280);
-        // Fire the delete callback so the exit animation can play
-        // while the API call is in-flight.
         setTimeout(() => onDeleteNoteRef.current!(draggedId), 20);
         return;
       }
 
+      // ── Normal reorder ─────────────────────────────────────────────────
       setActiveId(null);
       setIsOverDelete(false);
-      isOverDeleteRef.current = false;
 
       const { active, over } = event;
       if (!over || active.id === over.id) return;
@@ -383,8 +314,6 @@ export function SortableNoteGrid({
   const handleDragCancel = useCallback(() => {
     setActiveId(null);
     setIsOverDelete(false);
-    isOverDeleteRef.current = false;
-    activeIdRef.current = null;
     setDeleteConfirmed(false);
   }, []);
 
@@ -393,24 +322,22 @@ export function SortableNoteGrid({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={customCollisionDetection}
       onDragStart={handleDragStart}
-      onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
-      // Localised screen-reader announcements. dnd-kit wires these into a
-      // hidden live region automatically; no extra markup needed.
       accessibility={{
         announcements: {
           onDragStart: ({ active }) =>
             `Mengambil catatan. Gunakan tombol panah untuk memindahkan, Tekan Enter untuk meletakkan, Escape untuk membatalkan.`,
           onDragOver: ({ active, over }) =>
-            over && active.id !== over.id
-              ? `Berpindah ke posisi baru.`
-              : ``,
+            over && active.id !== over.id ? `Berpindah ke posisi baru.` : ``,
           onDragEnd: ({ over }) =>
-            over ? `Catatan diletakkan di posisi baru.` : `Pengurutan dibatalkan.`,
-          onDragCancel: () => `Pengurutan dibatalkan. Catatan dikembalikan ke posisi semula.`,
+            over
+              ? `Catatan diletakkan di posisi baru.`
+              : `Pengurutan dibatalkan.`,
+          onDragCancel: () =>
+            `Pengurutan dibatalkan. Catatan dikembalikan ke posisi semula.`,
         },
         screenReaderInstructions: {
           draggable:
@@ -455,6 +382,13 @@ export function SortableNoteGrid({
         ) : null}
       </DragOverlay>
 
+      {/* Invisible droppable that makes the bottom area a delete target */}
+      <DeleteDroppable
+        activeId={activeId}
+        onIsOverChange={setIsOverDelete}
+      />
+
+      {/* Visual delete pill */}
       <DeleteTarget
         isDragging={activeId !== null || deleteConfirmed}
         isOverDelete={isOverDelete}

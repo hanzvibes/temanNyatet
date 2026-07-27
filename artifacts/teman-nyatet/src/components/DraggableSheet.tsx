@@ -11,10 +11,10 @@ const NAV_OFFSET = 108;
 type SnapState = 'collapsed' | 'half' | 'expanded';
 
 const ACTIONS = [
-  { label: 'Tambah Catatan',  section: 'note'    as const, path: '/catatan',   icon: NotebookPen, bg: '#E8F2DF', color: '#3D6B4F', ring: '#C4DAB2' },
-  { label: 'Tambah Keuangan', section: 'keuangan' as const, path: '/keuangan',  icon: Wallet,      bg: '#FFF8D6', color: '#8B6914', ring: '#E8DBA1' },
-  { label: 'Tambah To-Do',    section: 'todo'    as const, path: '/todo',      icon: CheckSquare, bg: '#E1F0FF', color: '#3D6B96', ring: '#B7D4F2' },
-  { label: 'Tambah Link',     section: 'link'    as const, path: '/linksaver', icon: Link2,       bg: '#FFE4E1', color: '#963D3D', ring: '#F2BFB7' },
+  { label: 'Tambah Catatan',  section: 'note'    as const, path: '/catatan',   icon: NotebookPen, iconBg: 'bg-primary/15',    iconColor: 'text-primary',        border: 'border-primary/25' },
+  { label: 'Tambah Keuangan', section: 'keuangan' as const, path: '/keuangan',  icon: Wallet,      iconBg: 'bg-finance/15',    iconColor: 'text-finance-text',   border: 'border-finance/25' },
+  { label: 'Tambah To-Do',    section: 'todo'    as const, path: '/todo',      icon: CheckSquare, iconBg: 'bg-todo/15',       iconColor: 'text-todo-text',      border: 'border-todo/25' },
+  { label: 'Tambah Link',     section: 'link'    as const, path: '/linksaver', icon: Link2,       iconBg: 'bg-linksaver/15',  iconColor: 'text-linksaver-text', border: 'border-linksaver/25' },
 ];
 
 export default function DraggableSheet() {
@@ -160,7 +160,7 @@ export default function DraggableSheet() {
         }}
         draggable={isPeek ? 'false' : undefined}
       >
-        <div className="bg-white rounded-t-[36px] shadow-[0_-12px_60px_-12px_rgba(0,0,0,0.25),0_-4px_24px_-8px_rgba(0,0,0,0.12)] h-full flex flex-col overflow-hidden border-t border-black/[0.04]">
+        <div className="bg-card rounded-t-[36px] shadow-[0_-12px_60px_-12px_rgba(0,0,0,0.35),0_-4px_24px_-8px_rgba(0,0,0,0.18)] h-full flex flex-col overflow-hidden border-t border-border/50">
 
           {/* Drag handle — only this area is draggable */}
           <div
@@ -235,25 +235,15 @@ export default function DraggableSheet() {
                     transition={{ delay: 0.04 + i * 0.035, type: 'spring', stiffness: 360, damping: 30, mass: 0.6 }}
                     // transition-shadow (not transition-all) so framer-motion
                     // owns the transform and hover shadow still animates.
-                    className="relative flex items-center gap-3 p-4 rounded-2xl text-left bg-white border transition-shadow duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md"
-                    style={{
-                      borderColor: action.ring,
-                      boxShadow: `0 1px 0 0 ${action.bg} inset, 0 1px 2px 0 rgba(0,0,0,0.04)`,
-                    }}
+                    className={`relative flex items-center gap-3 p-4 rounded-2xl text-left bg-card border transition-shadow duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md ${action.border}`}
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
-                    <div
-                      className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: action.bg }}
-                    >
-                      <Icon size={20} style={{ color: action.color }} strokeWidth={2.4} />
+                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 ${action.iconBg}`}>
+                      <Icon size={20} className={action.iconColor} strokeWidth={2.4} />
                     </div>
                     <div className="min-w-0">
-                      <span
-                        className="block text-sm font-bold leading-tight"
-                        style={{ color: action.color }}
-                      >
+                      <span className={`block text-sm font-bold leading-tight ${action.iconColor}`}>
                         {action.label}
                       </span>
                       <span className="block text-[10px] font-medium text-muted-foreground mt-0.5 leading-tight">

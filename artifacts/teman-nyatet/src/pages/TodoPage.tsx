@@ -30,7 +30,7 @@ type TodoFormValues = z.infer<typeof todoSchema>;
 // The type returned by useTodos
 type Todo = { id: string; title: string; description: string | null; due_date: string | null; due_time: string | null; is_done: boolean; created_at: string };
 
-const INP = 'w-full bg-white border border-border rounded-xl py-3 px-4 outline-none focus:border-todo focus:ring-2 focus:ring-todo/20 text-sm font-bold text-foreground transition-all';
+const INP = 'w-full bg-card border border-border rounded-xl py-3 px-4 outline-none focus:border-todo focus:ring-2 focus:ring-todo/20 text-sm font-bold text-foreground transition-all [color-scheme:light] dark:[color-scheme:dark]';
 
 export default function TodoPage() {
   const { user } = useAuthContext();
@@ -170,7 +170,7 @@ export default function TodoPage() {
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-todo focus-visible:ring-offset-2 ${
           todo.is_done
             ? 'bg-todo border-todo text-white scale-110'
-            : 'border-muted-foreground/30 hover:border-todo bg-white'
+            : 'border-muted-foreground/30 hover:border-todo bg-background'
         }`}
       >
         {todo.is_done && <Check size={16} strokeWidth={3} />}
@@ -342,7 +342,7 @@ export default function TodoPage() {
                           <input
                             {...editForm.register('due_date')}
                             type="date"
-                            className="w-full min-h-11 bg-muted/50 border border-border rounded-xl py-2.5 px-3.5 outline-none focus:border-todo text-sm font-bold text-foreground transition-all [color-scheme:light]"
+                            className="w-full min-h-11 bg-muted/50 border border-border rounded-xl py-2.5 px-3.5 outline-none focus:border-todo text-sm font-bold text-foreground transition-all [color-scheme:light] dark:[color-scheme:dark]"
                           />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -350,7 +350,7 @@ export default function TodoPage() {
                           <input
                             {...editForm.register('due_time')}
                             type="time"
-                            className="w-full min-h-11 bg-muted/50 border border-border rounded-xl py-2.5 px-3.5 outline-none focus:border-todo text-sm font-bold text-foreground transition-all [color-scheme:light]"
+                            className="w-full min-h-11 bg-muted/50 border border-border rounded-xl py-2.5 px-3.5 outline-none focus:border-todo text-sm font-bold text-foreground transition-all [color-scheme:light] dark:[color-scheme:dark]"
                           />
                         </div>
                       </div>
@@ -362,7 +362,7 @@ export default function TodoPage() {
                         type="button"
                         onClick={() => handleDelete(selectedTodo.id)}
                         disabled={deletingId === selectedTodo.id}
-                        className="w-full flex items-center justify-center gap-2 text-red-500 font-bold text-sm py-2.5 rounded-2xl bg-red-50/70 hover:bg-red-100/80 transition-colors disabled:opacity-70"
+                        className="w-full flex items-center justify-center gap-2 text-destructive font-bold text-sm py-2.5 rounded-2xl bg-destructive/10 hover:bg-destructive/15 transition-colors disabled:opacity-70"
                       >
                         {deletingId === selectedTodo.id ? (
                           <>
@@ -383,7 +383,7 @@ export default function TodoPage() {
                   <Button
                     onClick={() => setIsEditOpen(false)}
                     variant="secondary"
-                    className="rounded-full shadow-lg bg-white/80 hover:bg-white border border-border/50"
+                    className="rounded-full shadow-lg bg-card/80 hover:bg-card border border-border/50"
                   >
                     <X size={16} strokeWidth={2.5} />
                     Tutup

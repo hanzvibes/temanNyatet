@@ -244,7 +244,7 @@ export default function KeuanganPage() {
                             onTouchMove={handlePressEnd}
                           >
                             {deletingId === tx.id && (
-                              <div className="absolute inset-0 z-10 bg-white/90 backdrop-blur-[1px] flex items-center justify-center gap-2 text-red-500 font-bold text-sm">
+                              <div className="absolute inset-0 z-10 bg-card/90 backdrop-blur-[1px] flex items-center justify-center gap-2 text-destructive font-bold text-sm">
                                 <Loader2 size={16} className="animate-spin" /> Menghapus...
                               </div>
                             )}
@@ -296,7 +296,7 @@ export default function KeuanganPage() {
                   type="button"
                   onClick={() => { setTxType('expense'); form.setValue('type', 'expense'); form.setValue('category', ''); }}
                   className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${
-                    txType === 'expense' ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    txType === 'expense' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   Pengeluaran
@@ -305,7 +305,7 @@ export default function KeuanganPage() {
                   type="button"
                   onClick={() => { setTxType('income'); form.setValue('type', 'income'); form.setValue('category', ''); }}
                   className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${
-                    txType === 'income' ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    txType === 'income' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   Pemasukan
@@ -322,7 +322,7 @@ export default function KeuanganPage() {
                     type="text"
                     inputMode="numeric"
                     placeholder="0"
-                    className="w-full text-4xl font-bold bg-white border border-border rounded-[1.5rem] py-5 pl-16 pr-5 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 transition-all text-foreground"
+                    className="w-full text-4xl font-bold bg-card border border-border rounded-[1.5rem] py-5 pl-16 pr-5 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 transition-all text-foreground"
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, '');
                       const formatted = val ? new Intl.NumberFormat('id-ID').format(Number(val)) : '';
@@ -342,14 +342,14 @@ export default function KeuanganPage() {
                   <input
                     {...form.register('date')}
                     type="date"
-                    className="w-full bg-white border border-border rounded-xl py-3 px-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 text-sm font-bold text-foreground [color-scheme:light]"
+                    className="w-full bg-card border border-border rounded-xl py-3 px-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 text-sm font-bold text-foreground [color-scheme:light] dark:[color-scheme:dark]"
                   />
                 </div>
                 <div className="flex-1">
                   <label className="text-pill-label mb-2 block">Sumber</label>
                   <select
                     {...form.register('source')}
-                    className="w-full bg-white border border-border rounded-xl py-3 px-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 text-sm font-bold text-foreground appearance-none"
+                    className="w-full bg-card border border-border rounded-xl py-3 px-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 text-sm font-bold text-foreground appearance-none"
                   >
                     {DEFAULT_PAYMENT_SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
@@ -368,7 +368,7 @@ export default function KeuanganPage() {
                         type="button"
                         onClick={() => form.setValue('category', cat, { shouldValidate: true })}
                         className={`min-h-11 flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl transition-all border ${
-                          isSelected ? 'bg-finance/10 border-finance shadow-sm' : 'bg-white border-border hover:bg-secondary'
+                          isSelected ? 'bg-finance/10 border-finance shadow-sm' : 'bg-card border-border hover:bg-secondary'
                         }`}
                       >
                         {(() => {
@@ -396,7 +396,7 @@ export default function KeuanganPage() {
                   {...form.register('note')}
                   type="text"
                   placeholder="Misal: Beli kopi susu..."
-                  className="w-full bg-white border border-border rounded-xl py-4 px-5 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 text-sm font-medium"
+                  className="w-full bg-card border border-border rounded-xl py-4 px-5 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 text-sm font-medium text-foreground"
                 />
               </div>
 

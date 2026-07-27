@@ -214,7 +214,7 @@ export default function CatatanPage() {
               >
                 {/* Card */}
                 <div
-                  className="rounded-[1.5rem] overflow-hidden shadow-elevated flex flex-col border border-black/5"
+                  className="rounded-[1.5rem] overflow-hidden shadow-elevated flex flex-col border border-border/30"
                   style={{ backgroundColor: selectedNoteColor, maxHeight: '72vh' }}
                 >
                   {isEditing ? (
@@ -232,7 +232,7 @@ export default function CatatanPage() {
                         <span className="text-pill-label !text-muted-foreground">Edit Catatan</span>
                         <button
                           type="submit"
-                          className="min-h-11 text-sm font-bold text-foreground bg-card/70 hover:bg-white/90 px-4 rounded-xl transition-colors shadow-elevation-1"
+                          className="min-h-11 text-sm font-bold text-foreground bg-card/70 hover:bg-card px-4 rounded-xl transition-colors shadow-elevation-1"
                         >
                           Simpan
                         </button>
@@ -271,7 +271,7 @@ export default function CatatanPage() {
                                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
                                     isSel
                                       ? 'bg-foreground/80 text-background border-foreground/80'
-                                      : 'bg-muted/50 text-muted-foreground border-border/50 hover:bg-white/80'
+                                      : 'bg-muted/50 text-muted-foreground border-border/50 hover:bg-muted'
                                   }`}
                                 ><Icon size={14} strokeWidth={2.4} className="flex-shrink-0" />{tag}</button>
                               );
@@ -306,17 +306,17 @@ export default function CatatanPage() {
                         )}
                       </div>
 
-                      <div className="flex gap-3 px-5 sm:px-7 pb-6 pt-4 flex-shrink-0 border-t border-black/10">
+                      <div className="flex gap-3 px-5 sm:px-7 pb-6 pt-4 flex-shrink-0 border-t border-border/40">
                         <button
                           onClick={() => handleStartEdit(selectedNote)}
-                          className="flex-1 min-h-11 bg-card/70 text-foreground font-bold rounded-xl hover:bg-white/90 active:scale-[0.98] transition-all text-sm shadow-elevation-1"
+                          className="flex-1 min-h-11 bg-card/70 text-foreground font-bold rounded-xl hover:bg-card active:scale-[0.98] transition-all text-sm shadow-elevation-1"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(selectedNote.id)}
                           disabled={deletingId === selectedNote.id}
-                          className="flex-1 min-h-11 bg-red-100/70 text-red-600 font-bold rounded-xl hover:bg-red-100 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 text-sm shadow-elevation-1 disabled:opacity-70"
+                          className="flex-1 min-h-11 bg-destructive/10 text-destructive font-bold rounded-xl hover:bg-destructive/15 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 text-sm shadow-elevation-1 disabled:opacity-70"
                         >
                           {deletingId === selectedNote.id ? (
                             <>
@@ -404,7 +404,7 @@ export default function CatatanPage() {
                           className={`inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-bold transition-all border ${
                             isSelected
                               ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                              : 'bg-white text-muted-foreground border-border hover:border-primary/50'
+                              : 'bg-secondary text-muted-foreground border-border hover:border-primary/50'
                           }`}
                         >
                           <Icon size={16} strokeWidth={2.4} className="flex-shrink-0" />

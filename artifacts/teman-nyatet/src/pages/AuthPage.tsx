@@ -183,7 +183,7 @@ export default function AuthPage() {
         </div>
 
         {confirmedFromEmail && !pendingEmail && (
-          <div className="w-full bg-success/10 text-success border border-success/20 rounded-2xl p-4 mb-6 text-center">
+          <div className="w-full bg-income/10 text-income border border-income/20 rounded-2xl p-4 mb-6 text-center">
             <p className="font-semibold">Email berhasil diverifikasi!</p>
             <p className="text-sm mt-1">Silakan masuk dengan email dan password kamu.</p>
           </div>

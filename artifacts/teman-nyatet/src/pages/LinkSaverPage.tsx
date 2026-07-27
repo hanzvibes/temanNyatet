@@ -168,7 +168,7 @@ export default function LinkSaverPage() {
                                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-2"
                   >
                     {deletingId === link.id && (
-                      <div className="absolute inset-0 z-10 bg-white/90 backdrop-blur-[1px] flex items-center justify-center gap-2 text-red-500 font-bold text-sm">
+                      <div className="absolute inset-0 z-10 bg-card/90 backdrop-blur-[1px] flex items-center justify-center gap-2 text-destructive font-bold text-sm">
                         <Loader2 size={16} className="animate-spin" /> Menghapus...
                       </div>
                     )}

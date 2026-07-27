@@ -30,10 +30,9 @@ import {
 import { toast } from 'sonner';
 
 // ─── Shared input style helpers ───────────────────────────────────────────────
-// [color-scheme:light] forces browser-native controls (date, time, select)
-// to render their internal text in the light-mode palette so the text is
-// always dark/readable against our white bg-white backgrounds.
-const inp  = 'w-full bg-white border border-border rounded-xl py-2.5 px-3.5 outline-none text-sm font-bold text-foreground transition-all [color-scheme:light]';
+// [color-scheme:light] + dark:[color-scheme:dark] keeps browser-native controls
+// (date, time, select) readable in both light and dark mode.
+const inp  = 'w-full bg-card border border-border rounded-xl py-2.5 px-3.5 outline-none text-sm font-bold text-foreground transition-all [color-scheme:light] dark:[color-scheme:dark]';
 const inpFocus = (color: string) => `${inp} focus:border-${color} focus:ring-2 focus:ring-${color}/20`;
 
 // ─── Note Form ────────────────────────────────────────────────────────────────
@@ -75,7 +74,7 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
       <textarea
         {...form.register('content')}
         placeholder="Apa yang ingin kamu catat?"
-        className="flex-1 min-h-[80px] resize-none bg-white border border-border rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all leading-relaxed"
+        className="flex-1 min-h-[80px] resize-none bg-card border border-border rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all leading-relaxed"
       />
       {form.formState.errors.content && (
         <FormError size="xs">{form.formState.errors.content.message}</FormError>
@@ -88,7 +87,7 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
             <button key={tag} type="button"
               onClick={() => form.setValue('tags', sel ? tags.filter(t => t !== tag) : [...tags, tag])}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                sel ? 'bg-primary text-primary-foreground border-primary' : 'bg-white text-muted-foreground border-border'
+                sel ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-muted-foreground border-border'
               }`}
             ><Icon size={14} strokeWidth={2.4} className="flex-shrink-0" />{tag}</button>
           );
@@ -169,7 +168,7 @@ function KeuanganSheetForm({ onSuccess }: { onSuccess: () => void }) {
           <button key={t} type="button"
             onClick={() => switchType(t)}
             className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
-              txType === t ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground'
+              txType === t ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
             }`}
           >
             {t === 'income' ? 'Pemasukan' : 'Pengeluaran'}
@@ -185,7 +184,7 @@ function KeuanganSheetForm({ onSuccess }: { onSuccess: () => void }) {
           type="text"
           inputMode="numeric"
           placeholder="0"
-          className="w-full text-2xl font-bold bg-white border border-border rounded-xl py-3 pl-12 pr-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 transition-all"
+          className="w-full text-2xl font-bold bg-card border border-border rounded-xl py-3 pl-12 pr-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 transition-all text-foreground"
           onChange={(e) => {
             const val = e.target.value.replace(/\D/g, '');
             form.setValue('amount', val ? new Intl.NumberFormat('id-ID').format(Number(val)) : '', { shouldValidate: true });
@@ -218,7 +217,7 @@ function KeuanganSheetForm({ onSuccess }: { onSuccess: () => void }) {
                 className={`inline-flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
                   cat === c
                     ? 'bg-finance/20 border-finance text-finance-text'
-                    : 'bg-white border-border text-muted-foreground'
+                    : 'bg-card border-border text-muted-foreground'
                 }`}
               ><Icon size={14} strokeWidth={2.4} className="flex-shrink-0" />{c}</button>
             );
@@ -287,7 +286,7 @@ function TodoSheetForm({ onSuccess }: { onSuccess: () => void }) {
       <textarea
         {...form.register('description')}
         placeholder="Catatan tambahan (opsional)"
-        className="min-h-[60px] resize-none bg-white border border-border rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
+        className="min-h-[60px] resize-none bg-card border border-border rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
       />
       <div className="flex gap-2">
         <div className="flex-1">
@@ -361,7 +360,7 @@ function LinkSheetForm({ onSuccess }: { onSuccess: () => void }) {
       <textarea
         {...form.register('note')}
         placeholder="Catatan (opsional)"
-        className="min-h-[60px] resize-none bg-white border border-border rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-linksaver focus:ring-2 focus:ring-linksaver/20 transition-all"
+        className="min-h-[60px] resize-none bg-card border border-border rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-linksaver focus:ring-2 focus:ring-linksaver/20 transition-all"
       />
       <Button type="submit" className="w-full bg-linksaver text-white hover:bg-linksaver/90 mt-auto">
         Simpan Link 🔗

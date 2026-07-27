@@ -1,13 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { AnimatePresence } from 'framer-motion';
 import { AnimatedListItem } from '@/components/AnimatedListItem';
+import { SwipeableTransactionRow } from '@/components/SwipeableTransactionRow';
 import SettingsSheet from '@/components/SettingsSheet';
 import { useCreate } from '@/contexts/CreateContext';
 import { useTransactions } from '@/hooks/useTransactions';
 import { format, isToday, isYesterday } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Loader2, Wallet, ArrowDown, ArrowUp, Hand, Plus } from 'lucide-react';
+import { Wallet, ArrowDown, ArrowUp, Plus } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
 import { CATEGORY_ICON, FALLBACK_CATEGORY_ICON } from '@/lib/categoryIcons';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
@@ -128,19 +129,13 @@ export default function KeuanganPage() {
     return format(date, 'd MMMM yyyy', { locale: id });
   };
 
-  const pressTimer = useRef<NodeJS.Timeout | null>(null);
-  const handlePressStart = (id: string) => {
-    pressTimer.current = setTimeout(async () => {
-      setDeletingId(id);
-      try {
-        await deleteTransaction(id);
-      } finally {
-        setDeletingId(null);
-      }
-    }, 800);
-  };
-  const handlePressEnd = () => {
-    if (pressTimer.current) clearTimeout(pressTimer.current);
+  const handleSwipeDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      await deleteTransaction(id);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
@@ -224,52 +219,40 @@ export default function KeuanganPage() {
                     <div className="space-y-3">
                       <AnimatePresence>
                         {groupedTx[dateStr].map(tx => (
-                          <AnimatedListItem
+                          <SwipeableTransactionRow
                             key={tx.id}
-                            // tabIndex={0} promotes the row into the tab order so keyboard
-                            // users can land on it; focus-visible ring confirms position.
-                            // No onKeyDown activation: long-press delete is mouse/touch only —
-                            // the row lacks an onClick handler, so there is no tap-to-edit
-                            // affordance to mirror with a keyboard shortcut (tracked separately).
-                            tabIndex={0}
-                            role="group"
-                            aria-label={`Transaksi ${tx.category} ${formatRupiah(tx.amount)}`}
-                             className="relative bg-card rounded-[1.25rem] p-4 flex items-center justify-between shadow-elevation-1 border border-card-border hover:bg-secondary/50 hover:shadow-elevation-2 transition-all active:scale-[0.98] select-none overflow-hidden
-                                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-finance focus-visible:ring-offset-2"
-                            onMouseDown={() => handlePressStart(tx.id)}
-                            onMouseUp={handlePressEnd}
-                            onMouseLeave={handlePressEnd}
-                            onTouchStart={() => handlePressStart(tx.id)}
-                            onTouchEnd={handlePressEnd}
-                            onTouchMove={handlePressEnd}
+                            transactionId={tx.id}
+                            isDeleting={deletingId === tx.id}
+                            onDelete={handleSwipeDelete}
                           >
-                            {deletingId === tx.id && (
-                              <div className="absolute inset-0 z-10 bg-card/90 backdrop-blur-[1px] flex items-center justify-center gap-2 text-destructive font-bold text-sm">
-                                <Loader2 size={16} className="animate-spin" /> Menghapus...
-                              </div>
-                            )}
-                            <div className="flex items-center gap-4">
-                               <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-elevation-1 ${getCategoryColor(tx.type)}`}>
-                                {(() => { const Icon = CATEGORY_ICON[tx.category] ?? FALLBACK_CATEGORY_ICON; return <Icon size={20} className="text-white" strokeWidth={2.2} />; })()}
-                              </div>
-                              <div>
-                                <p className="font-bold text-foreground text-base mb-0.5">{tx.category}</p>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-secondary text-muted-foreground rounded-md border border-border">
-                                    {tx.source}
-                                  </span>
-                                  {tx.note && <span className="text-xs font-medium text-muted-foreground line-clamp-1">{tx.note}</span>}
+                            <AnimatedListItem
+                              // tabIndex={0} promotes the row into the tab order so
+                              // keyboard users can land on it.
+                              tabIndex={0}
+                              role="group"
+                              aria-label={`Transaksi ${tx.category} ${formatRupiah(tx.amount)}`}
+                              className="bg-card rounded-[1.25rem] p-4 flex items-center justify-between shadow-elevation-1 border border-card-border hover:bg-secondary/50 hover:shadow-elevation-2 transition-all active:scale-[0.98] select-none overflow-hidden
+                                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-finance focus-visible:ring-offset-2"
+                            >
+                              <div className="flex items-center gap-4 min-w-0">
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-elevation-1 shrink-0 ${getCategoryColor(tx.type)}`}>
+                                  {(() => { const Icon = CATEGORY_ICON[tx.category] ?? FALLBACK_CATEGORY_ICON; return <Icon size={20} className="text-white" strokeWidth={2.2} />; })()}
                                 </div>
-                                <p className="flex items-center gap-1 text-[10px] text-muted-foreground/45 mt-1 select-none" aria-hidden="true">
-                                  <Hand size={10} strokeWidth={2.5} />
-                                  Tahan untuk hapus
-                                </p>
+                                <div className="min-w-0">
+                                  <p className="font-bold text-foreground text-base mb-0.5 truncate">{tx.category}</p>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-secondary text-muted-foreground rounded-md border border-border shrink-0">
+                                      {tx.source}
+                                    </span>
+                                    {tx.note && <span className="text-xs font-medium text-muted-foreground truncate">{tx.note}</span>}
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                             <div className={`font-bold text-lg tabular-nums ${tx.type === 'income' ? 'text-income' : 'text-foreground'}`}>
-                              {tx.type === 'income' ? '+' : '-'}{formatRupiah(tx.amount)}
-                            </div>
-                          </AnimatedListItem>
+                              <div className={`font-bold text-lg tabular-nums shrink-0 ml-3 ${tx.type === 'income' ? 'text-income' : 'text-foreground'}`}>
+                                {tx.type === 'income' ? '+' : '-'}{formatRupiah(tx.amount)}
+                              </div>
+                            </AnimatedListItem>
+                          </SwipeableTransactionRow>
                         ))}
                       </AnimatePresence>
                     </div>

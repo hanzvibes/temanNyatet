@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { Drawer as DrawerPrimitive } from 'vaul';
 
 const Drawer = ({
-  shouldScaleBackground = true,
+  shouldScaleBackground = false,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
   <DrawerPrimitive.Root
@@ -25,7 +25,11 @@ const DrawerOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Overlay
     ref={ref}
-    className={cn('fixed inset-0 z-50 bg-black/80', className)}
+    className={cn(
+      // Soft dim with a hint of gradient + 3px blur — matches the rest of the app.
+      'fixed inset-0 z-50 bg-gradient-to-t from-black/45 via-black/15 to-transparent backdrop-blur-[3px]',
+      className,
+    )}
     {...props}
   />
 ));
@@ -40,17 +44,21 @@ const DrawerContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background',
+        // Premium sheet look — bigger radius, soft top border + elevated shadow.
+        'fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[28px] border border-border/70 border-b-0 bg-card shadow-elevated outline-none',
         className,
       )}
       {...props}
     >
-      <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+      {/* Larger, higher-contrast handle with a subtle pull-line for emphasis. */}
+      <div className="mx-auto mt-4 flex h-5 w-full items-center justify-center" aria-hidden>
+        <div className="h-[5px] w-[40px] rounded-full bg-muted-foreground/35" />
+      </div>
       {children}
     </DrawerPrimitive.Content>
   </DrawerPortal>
 ));
-DrawerContent.displayName = 'DrawerContent';
+DrawerContent.displayName = DrawerPrimitive.Content.displayName;
 
 const DrawerHeader = ({
   className,

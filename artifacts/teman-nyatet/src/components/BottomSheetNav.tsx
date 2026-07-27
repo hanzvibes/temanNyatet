@@ -5,8 +5,8 @@ import { NotebookPen, Wallet, CheckSquare, Link2 } from 'lucide-react';
 import SheetFormContent from '@/components/SheetFormContent';
 
 // Fixed heights (px)
-const HANDLE_H    = 28;
-const NAV_H       = 68;
+const HANDLE_H    = 32;
+const NAV_H       = 64;
 const COLLAPSED_H = HANDLE_H + NAV_H; // 96 — only this is visible when collapsed
 
 const NAV_ITEMS = [
@@ -113,16 +113,16 @@ export default function BottomSheetNav() {
 
   return (
     <div className="lg:hidden">
-      {/* Dim backdrop */}
+      {/* Soft dim backdrop — gradient + light blur. Tapping collapses pill. */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            key="backdrop"
-            className="fixed inset-0 z-40 bg-black/20"
+            key="pnav-backdrop"
+            className="fixed inset-0 z-40 bg-gradient-to-t from-black/45 via-black/15 to-transparent backdrop-blur-[2px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
             onClick={() => snapTo('collapsed')}
           />
         )}
@@ -130,46 +130,65 @@ export default function BottomSheetNav() {
 
       {/* Floating pill */}
       <motion.div
-        className="fixed left-1/2 z-50 -translate-x-1/2 w-[calc(100%-2.5rem)] max-w-sm md:max-w-md"
+        className="fixed left-1/2 z-50 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm md:max-w-md"
         style={{
-          bottom: 20,
+          bottom: 12,
           height: h,
-          borderRadius: 24,
+          borderRadius: 28,
           overflow: 'hidden',
         }}
+        // Soft elevation animated by hover/state for cohesive depth.
+        initial={{ y: 24, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.1, type: 'spring', stiffness: 220, damping: 26 }}
       >
         <div
-            className="bg-card/95 border border-border/70 shadow-elevated h-full flex flex-col backdrop-blur-xl"
-          style={{ borderRadius: 24 }}
+            className="bg-card/95 border border-border/60 shadow-elevated h-full flex flex-col backdrop-blur-xl"
+          style={{ borderRadius: 28 }}
         >
-          {/* Drag Handle */}
+          {/* Drag Handle — wider, more prominent, with subtle pulse on idle */}
           <div
-            className="flex-shrink-0 flex justify-center items-center cursor-grab active:cursor-grabbing touch-none select-none"
+            className="flex-shrink-0 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none pt-2.5 pb-1.5"
             style={{ height: HANDLE_H }}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
+            role="button"
+            aria-label={isOpen ? 'Tutup panel' : 'Buka panel'}
           >
-            <div className="w-10 h-1.5 rounded-full bg-muted-foreground/35" />
+            <div
+              className={`rounded-full transition-all duration-200 ${
+                isOpen ? 'w-2.5 h-1 bg-muted-foreground/70' : 'w-10 h-1.5 bg-muted-foreground/45'
+              }`}
+            />
           </div>
 
           {/* Inline form — only rendered when sheet is open */}
           <div className="flex-1 min-h-0 overflow-hidden">
-            {isOpen && (
-              <div className="h-full overflow-y-auto overflow-x-hidden px-4 pb-3 pt-1">
-                <SheetFormContent
-                  path={location}
-                  onSuccess={() => snapTo('collapsed')}
-                />
-              </div>
-            )}
+            <AnimatePresence>
+              {isOpen && (
+                <motion.div
+                  key="pnav-form"
+                  className="h-full overflow-y-auto overflow-x-hidden px-4 pb-3 pt-1"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 4 }}
+                  transition={{ duration: 0.18, ease: 'easeOut' }}
+                >
+                  <SheetFormContent
+                    path={location}
+                    onSuccess={() => snapTo('collapsed')}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Nav Tabs — always pinned at the bottom of the pill */}
           <div
-            className="flex-shrink-0 border-t border-border/60 flex justify-around items-center px-1 bg-card/95"
-            style={{ height: NAV_H, borderRadius: '0 0 24px 24px' }}
+            className="flex-shrink-0 border-t border-border/60 flex justify-around items-center px-1.5 bg-card/95"
+            style={{ height: NAV_H, borderRadius: '0 0 28px 28px' }}
           >
             {NAV_ITEMS.map((item) => {
               const isActive = location.startsWith(item.path);
@@ -179,18 +198,43 @@ export default function BottomSheetNav() {
                   key={item.path}
                   href={item.path}
                   aria-label={item.name}
-                  className={`flex flex-col items-center justify-center flex-1 h-full gap-1 rounded-xl transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${isActive ? 'bg-primary/12' : 'hover:bg-muted'}`}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`group relative flex flex-col items-center justify-center flex-1 h-full gap-0.5 rounded-2xl transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring press:scale-[0.94] active:scale-[0.94] hover:bg-muted/60 ${
+                    isActive ? 'bg-primary/12' : ''
+                  }`}
                 >
-                  <div className="w-11 h-9 flex items-center justify-center rounded-xl transition-colors">
+                  {/* Icon halo — colored circle behind the icon, scales up only when active. */}
+                  <div className="relative flex items-center justify-center w-11 h-7">
+                    <span
+                      aria-hidden
+                      className={`absolute inset-0 rounded-full transition-all duration-300 ease-out ${
+                        isActive
+                          ? 'bg-primary/25 scale-100 opacity-100'
+                          : 'bg-transparent scale-50 opacity-0'
+                      }`}
+                    />
                     <Icon
                       size={22}
-                      className={isActive ? 'text-primary' : 'text-muted-foreground'}
-                      strokeWidth={isActive ? 2.5 : 2}
+                      strokeWidth={isActive ? 2.4 : 1.9}
+                      className={`relative transition-colors duration-200 ${
+                        isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+                      }`}
                     />
                   </div>
-                  <span className={`text-[10px] font-semibold tracking-wide leading-none ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
+                  <span
+                    className={`text-[10px] font-semibold tracking-wide leading-none transition-colors duration-200 ${
+                      isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+                    }`}
+                  >
                     {item.name}
                   </span>
+                  {/* Active indicator dot — small pill under the label. */}
+                  <span
+                    aria-hidden
+                    className={`absolute -bottom-0.5 h-[3px] rounded-full bg-primary transition-all duration-300 ease-out ${
+                      isActive ? 'w-4 opacity-100' : 'w-0 opacity-0'
+                    }`}
+                  />
                 </Link>
               );
             })}

@@ -1,20 +1,20 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, useMotionValue, animate, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'wouter';
-import { NotebookPen, Wallet, CheckSquare, Link2, ChevronUp } from 'lucide-react';
+import { NotebookPen, Wallet, CheckSquare, Link2, ChevronUp, X } from 'lucide-react';
 import { useCreate } from '@/contexts/CreateContext';
 
-const PEEK_HEIGHT = 80;
-// BottomNav: fixed bottom-5 (20px) + h-[68px] = 88px from bottom
-const NAV_OFFSET = 88;
+const PEEK_HEIGHT = 92;
+// BottomNav: fixed bottom-3 (12px) + h-16 (64 nav) + 32 (handle) = 108 from bottom edge.
+const NAV_OFFSET = 108;
 
 type SnapState = 'collapsed' | 'half' | 'expanded';
 
 const ACTIONS = [
-  { label: 'Tambah Catatan', section: 'note' as const, path: '/catatan', icon: NotebookPen, bg: '#E8F2DF', color: '#3D6B4F' },
-  { label: 'Tambah Keuangan', section: 'keuangan' as const, path: '/keuangan', icon: Wallet, bg: '#FFF8D6', color: '#8B6914' },
-  { label: 'Tambah To-Do', section: 'todo' as const, path: '/todo', icon: CheckSquare, bg: '#E1F0FF', color: '#3D6B96' },
-  { label: 'Tambah Link', section: 'link' as const, path: '/linksaver', icon: Link2, bg: '#FFE4E1', color: '#963D3D' },
+  { label: 'Tambah Catatan',  section: 'note'    as const, path: '/catatan',   icon: NotebookPen, bg: '#E8F2DF', color: '#3D6B4F', ring: '#C4DAB2' },
+  { label: 'Tambah Keuangan', section: 'keuangan' as const, path: '/keuangan',  icon: Wallet,      bg: '#FFF8D6', color: '#8B6914', ring: '#E8DBA1' },
+  { label: 'Tambah To-Do',    section: 'todo'    as const, path: '/todo',      icon: CheckSquare, bg: '#E1F0FF', color: '#3D6B96', ring: '#B7D4F2' },
+  { label: 'Tambah Link',     section: 'link'    as const, path: '/linksaver', icon: Link2,       bg: '#FFE4E1', color: '#963D3D', ring: '#F2BFB7' },
 ];
 
 export default function DraggableSheet() {
@@ -48,8 +48,8 @@ export default function DraggableSheet() {
   const snapTo = (state: SnapState) => {
     animate(y, SNAP[state], {
       type: 'spring',
-      stiffness: 350,
-      damping: 38,
+      stiffness: 340,
+      damping: 36,
       restDelta: 0.5,
     });
     setSnapState(state);
@@ -115,19 +115,20 @@ export default function DraggableSheet() {
   };
 
   const showBackdrop = snapState !== 'collapsed';
+  const isPeek = snapState === 'collapsed';
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop — gradient + blur so it reads as depth, not flat dim. */}
       <AnimatePresence>
         {showBackdrop && (
           <motion.div
             key="sheet-backdrop"
-            className="fixed inset-0 z-20 bg-black/20"
+            className="fixed inset-0 z-20 bg-gradient-to-t from-black/55 via-black/20 to-transparent backdrop-blur-[3px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.24, ease: [0.32, 0.72, 0, 1] }}
             onClick={() => snapTo('collapsed')}
           />
         )}
@@ -141,48 +142,110 @@ export default function DraggableSheet() {
           height: SHEET_H,
           y,
         }}
+        draggable={isPeek ? 'false' : undefined}
       >
-        <div className="bg-white rounded-t-[32px] shadow-[0_-8px_48px_rgba(0,0,0,0.13)] h-full flex flex-col overflow-hidden">
+        <div className="bg-white rounded-t-[36px] shadow-[0_-12px_60px_-12px_rgba(0,0,0,0.25),0_-4px_24px_-8px_rgba(0,0,0,0.12)] h-full flex flex-col overflow-hidden border-t border-black/[0.04]">
 
           {/* Drag handle — only this area is draggable */}
           <div
-            className="flex-shrink-0 flex flex-col items-center pt-3 pb-3 cursor-grab active:cursor-grabbing touch-none"
+            className="flex-shrink-0 flex flex-col items-center pt-3 pb-2.5 cursor-grab active:cursor-grabbing touch-none relative"
             onPointerDown={onHandlePointerDown}
             onPointerMove={onHandlePointerMove}
             onPointerUp={onHandlePointerUp}
             onPointerCancel={onHandlePointerUp}
+            role="button"
+            aria-label={showBackdrop ? 'Tutup panel Tambah Baru' : 'Buka panel Tambah Baru'}
           >
-            <div className="w-10 h-1.5 rounded-full bg-muted mb-3" />
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <ChevronUp size={13} strokeWidth={2.5} />
-              <span className="text-[11px] font-bold uppercase tracking-widest">Tambah Baru</span>
+            <motion.div
+              className="rounded-full bg-muted-foreground/40"
+              animate={{ width: isPeek ? 44 : 56, height: 5 }}
+              transition={{ type: 'spring', stiffness: 280, damping: 28 }}
+            />
+            <div className="mt-3 flex items-center justify-center gap-1.5 text-foreground/80 w-full px-5">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <div
+                  className={`transition-transform duration-300 ${
+                    isPeek ? 'rotate-0' : '-rotate-180'
+                  }`}
+                >
+                  <ChevronUp size={13} strokeWidth={2.5} />
+                </div>
+                <span className="text-[11px] font-bold uppercase tracking-[0.14em]">
+                  {isPeek ? 'Tarik untuk melihat aksi' : 'Tambah Baru'}
+                </span>
+              </div>
+              {/* Close button only when open — gives a clear dismiss affordance. */}
+              {!isPeek && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    snapTo('collapsed');
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-[60%] h-8 w-8 rounded-full bg-muted/70 hover:bg-muted active:scale-95 transition-all flex items-center justify-center"
+                  aria-label="Tutup"
+                >
+                  <X size={15} strokeWidth={2.4} className="text-muted-foreground" />
+                </button>
+              )}
             </div>
           </div>
 
+          {/* Subtle ambient hint on peek — horizontal divider to suggest more content. */}
+          {isPeek && (
+            <div className="px-5 -mt-1 mb-1">
+              <div className="h-px bg-gradient-to-r from-transparent via-border/70 to-transparent" />
+            </div>
+          )}
+
           {/* Action grid — scrollable, does not trigger drag */}
-          <div className="flex-1 overflow-y-auto px-5 pb-8 pt-1">
-            <div className="grid grid-cols-2 gap-3">
-              {ACTIONS.map((action) => {
+          <div className="flex-1 overflow-y-auto px-5 pb-10 pt-1">
+            <div className="grid grid-cols-2 gap-3.5">
+              {ACTIONS.map((action, i) => {
                 const Icon = action.icon;
                 return (
-                  <button
+                  <motion.button
                     key={action.section}
+                    type="button"
                     onClick={() => handleAction(action.section, action.path)}
-                    className="flex items-center gap-3 p-4 rounded-2xl text-left transition-all active:scale-[0.95] hover:brightness-95"
-                    style={{ backgroundColor: action.bg }}
+                    className="relative flex items-center gap-3 p-4 rounded-2xl text-left bg-white border transition-all duration-200 ease-out active:scale-[0.96] hover:-translate-y-0.5 hover:shadow-md"
+                    style={{
+                      borderColor: action.ring,
+                      boxShadow: `0 1px 0 0 ${action.bg} inset, 0 1px 2px 0 rgba(0,0,0,0.04)`,
+                    }}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.08 + i * 0.05, type: 'spring', stiffness: 280, damping: 28 }}
                   >
                     <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-white/50"
+                      className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: action.bg }}
                     >
-                      <Icon size={20} style={{ color: action.color }} strokeWidth={2.5} />
+                      <Icon size={20} style={{ color: action.color }} strokeWidth={2.4} />
                     </div>
-                    <span className="text-sm font-bold leading-tight" style={{ color: action.color }}>
-                      {action.label}
-                    </span>
-                  </button>
+                    <div className="min-w-0">
+                      <span
+                        className="block text-sm font-bold leading-tight"
+                        style={{ color: action.color }}
+                      >
+                        {action.label}
+                      </span>
+                      <span className="block text-[10px] font-medium text-muted-foreground mt-0.5 leading-tight">
+                        {action.path === '/catatan'   && 'Buat catatan baru'}
+                        {action.path === '/keuangan'  && 'Catat transaksi'}
+                        {action.path === '/todo'      && 'Tambah daftar tugas'}
+                        {action.path === '/linksaver' && 'Simpan tautan'}
+                      </span>
+                    </div>
+                  </motion.button>
                 );
               })}
             </div>
+
+            {/* Footer hint — discoverability for the swipe gesture. */}
+            <p className="mt-6 text-center text-[10px] uppercase tracking-[0.18em] font-semibold text-muted-foreground/70">
+              Tarik ke atas untuk melihat semua aksi
+            </p>
           </div>
         </div>
       </motion.div>

@@ -45,12 +45,19 @@ export default function DraggableSheet() {
     y.set(SNAP[snapState]);
   }, [screenH]);
 
-  const snapTo = (state: SnapState) => {
+  // Stiffness 280 / damping 32 / mass 0.85 → damping ratio ζ ≈ 0.96 (just below
+  // critical). The release-side velocity passthrough lets a flick carry straight
+  // through release instead of restarting from rest, which previously felt like
+  // a brief hesitation before the sheet settled on its snap target.
+  const snapTo = (state: SnapState, initialVelocity = 0) => {
     animate(y, SNAP[state], {
       type: 'spring',
-      stiffness: 340,
-      damping: 36,
+      stiffness: 280,
+      damping: 32,
+      mass: 0.85,
       restDelta: 0.5,
+      restSpeed: 0.01,
+      velocity: initialVelocity,
     });
     setSnapState(state);
   };
@@ -78,33 +85,38 @@ export default function DraggableSheet() {
 
   const onHandlePointerUp = () => {
     const current = y.get();
-
-    // Compute velocity (px/s)
     const samples = pointerSamples.current;
-    let velocity = 0;
+
+    // Release velocity in px/s. framer-motion's `y` is translateY — positive
+    // means the element moves down — which lines up 1:1 with client-y so we
+    // can hand the raw sample-derived value straight to the spring's velocity.
+    let releaseVelocity = 0;
     if (samples.length >= 2) {
       const first = samples[0];
       const last = samples[samples.length - 1];
       const dt = (last.t - first.t) / 1000;
-      if (dt > 0) velocity = (last.y - first.y) / dt;
+      if (dt > 0) releaseVelocity = (last.y - first.y) / dt;
     }
 
-    if (velocity > 500) {
+    let target: SnapState;
+    if (releaseVelocity > 500) {
       // Fast flick down → collapse
-      snapTo('collapsed');
-    } else if (velocity < -500) {
-      // Fast flick up → next level
-      if (snapState === 'collapsed') snapTo('half');
-      else snapTo('expanded');
+      target = 'collapsed';
+    } else if (releaseVelocity < -500) {
+      // Fast flick up → next open state
+      target = snapState === 'collapsed' ? 'half' : 'expanded';
     } else {
-      // Snap to nearest
-      const nearest = (Object.entries(SNAP) as [SnapState, number][]).reduce(
+      // Snap to nearest of the current rest position
+      target = (Object.entries(SNAP) as [SnapState, number][]).reduce(
         (best, [k, v]) =>
           Math.abs(current - v) < Math.abs(current - SNAP[best]) ? k : best,
         'collapsed' as SnapState
       );
-      snapTo(nearest);
     }
+
+    // Carry the user's fling into the spring so a flick keeps moving on
+    // release instead of starting from rest.
+    snapTo(target, releaseVelocity);
   };
 
   const handleAction = (section: typeof ACTIONS[0]['section'], path: string) => {

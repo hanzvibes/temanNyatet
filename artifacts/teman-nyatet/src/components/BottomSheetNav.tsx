@@ -61,8 +61,20 @@ export default function BottomSheetNav() {
     }
   }, [location]);
 
-  const snapTo = (state: SnapState) => {
-    animate(h, SNAP[state], { type: 'spring', stiffness: 320, damping: 36, restDelta: 0.5 });
+  // Stiffness 280 / damping 32 / mass 0.85 → damping ratio ζ ≈ 0.96 (just below
+  // critical). The release-side velocity passthrough lets a flick carry straight
+  // through release instead of restarting from rest, which previously felt like
+  // a brief hesitation before the pill settled on its snap target.
+  const snapTo = (state: SnapState, initialVelocity = 0) => {
+    animate(h, SNAP[state], {
+      type: 'spring',
+      stiffness: 280,
+      damping: 32,
+      mass: 0.85,
+      restDelta: 0.5,
+      restSpeed: 0.01,
+      velocity: initialVelocity,
+    });
     setSnapState(state);
   };
 
@@ -92,25 +104,36 @@ export default function BottomSheetNav() {
 
   const onPointerUp = (e: React.PointerEvent) => {
     if (!isDragging.current && Math.abs(dragStartClientY.current - e.clientY) < 4) {
+      // Tap on handle → toggle between collapsed and half.
       snapTo(snapState === 'collapsed' ? 'half' : 'collapsed');
       return;
     }
     const cur = h.get();
-    let vel = 0;
+    // Samples store clientY. The motion value we animate is `h` (height), and
+    // h grows when the user drags UP — opposite to client-y. Flip the sign
+    // before handing the velocity to the spring so a flick up keeps opening.
+    let clientVel = 0;
     if (samples.current.length >= 2) {
       const a = samples.current[0], b = samples.current[samples.current.length - 1];
       const dt = (b.t - a.t) / 1000;
-      if (dt > 0) vel = (b.y - a.y) / dt;
+      if (dt > 0) clientVel = (b.y - a.y) / dt;
     }
-    if (vel > 500) {
-      snapTo('collapsed');
-    } else if (vel < -400) {
-      snapTo(snapState === 'collapsed' ? 'half' : 'expanded');
+    const heightVel = -clientVel;
+
+    let target: SnapState;
+    if (clientVel > 500) {
+      // Fast flick down → close
+      target = 'collapsed';
+    } else if (clientVel < -500) {
+      // Fast flick up → open further (was -400, harmonized with DraggableSheet)
+      target = snapState === 'collapsed' ? 'half' : 'expanded';
     } else {
-      const nearest = (Object.entries(SNAP) as [SnapState, number][])
+      target = (Object.entries(SNAP) as [SnapState, number][])
         .reduce((best, [k, v]) => Math.abs(cur - v) < Math.abs(cur - SNAP[best]) ? k : best, 'collapsed' as SnapState);
-      snapTo(nearest);
     }
+    // Hand the height-direction velocity to the spring so a flick keeps
+    // moving on release instead of starting from rest.
+    snapTo(target, heightVel);
   };
 
   const isOpen = snapState !== 'collapsed';

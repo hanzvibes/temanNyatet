@@ -40,12 +40,16 @@ Email + password only. OAuth social providers are not configured.
 ```
 1. User submits email + password on /login (AuthPage)
 2. supabase.auth.signUp() → creates auth.users row
-3. Supabase sends confirmation email (emailRedirectTo: <SITE_URL>/login?confirmed=true)
+3. Supabase sends confirmation email with link to <SITE_URL>/auth/confirm?token_hash=<hash>&type=email
 4. Trigger creates profiles row with subscription_status: 'pending'
-5. User clicks confirmation link → email confirmed
-6. User logs in → session issued
-7. AuthContext detects unconfirmed email → signs user out (enforced client-side)
+5. User clicks confirmation link → lands on AuthConfirmPage (/auth/confirm)
+6. AuthConfirmPage calls supabase.auth.verifyOtp({ token_hash, type }) → email confirmed
+7. AuthConfirmPage redirects to /login on success
+8. User logs in → session issued
 ```
+
+> ⚠️ The Supabase email template must use the token_hash OTP format, not `{{ .ConfirmationURL }}`.
+> See the Supabase configuration checklist below for the correct template.
 
 ### Session management (frontend)
 
@@ -88,11 +92,13 @@ apiClient.setTokenGetter(async () => {
 
 | State | Redirect |
 |---|---|
-| Not authenticated | `/login` |
+| Not authenticated (not on a public route) | `/login` |
 | Authenticated, `spreadsheet_id` is null | `/connect-sheet` |
 | `subscription_status === 'pending'` | `/payment` |
 | `subscription_status === 'archived'` | `/archived` |
 | `subscription_status === 'active'`, on auth-only route | `/catatan` |
+
+**Public routes** (no auth required, unauthenticated users are not redirected): `/login`, `/auth/confirm`.
 
 ---
 
@@ -206,7 +212,16 @@ Subscription activation is triggered by the Mayar webhook (`POST /api/mayar-webh
 | Provider | Email enabled |
 | Confirm email | **Must be ON** |
 | Site URL | `https://teman-nyatet.vercel.app` (or your custom domain) |
-| Redirect URLs | `https://teman-nyatet.vercel.app/login`, `https://*.vercel.app/login`, `https://*.vercel.app/**`, `https://*.replit.dev/**` |
+| Redirect URLs | `https://teman-nyatet.vercel.app/**`, `https://*.vercel.app/**`, `https://*.replit.dev/**`, `http://localhost:5000/**`, `http://localhost:5173/**` |
+
+**Email template — Confirm signup**: Must use the token_hash OTP format so `AuthConfirmPage` can verify the email:
+
+```html
+<h2>Konfirmasi email kamu</h2>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email">Konfirmasi Email</a></p>
+```
+
+Do **not** use `{{ .ConfirmationURL }}` — that redirects to the Site URL root, bypassing `AuthConfirmPage`.
 
 If "Confirm email" is off, users can log in without verifying — the client-side check in `AuthContext` will still sign them out, creating a confusing loop.
 

@@ -40,7 +40,7 @@ The API server refuses to start if any of these required secrets are missing:
 - `MAYAR_WEBHOOK_SECRET` — Mayar webhook signing secret (`/api/mayar-webhook` fails closed if unset)
 - `VITE_MAYAR_PAYMENT_URL` — Mayar payment page URL (frontend falls back to `#` if unset)
 - `VITE_API_SERVER_URL` — only needed when the frontend and API are deployed to different origins; leave unset in Replit dev because the Vite proxy handles `/api` → `localhost:8080`
-- `GOOGLE_REDIRECT_URI` — OAuth callback URL registered in Google Cloud Console (defaults to `https://<REPLIT_DEV_DOMAIN>/api/auth/google/callback` or `http://localhost:5000/api/auth/google/callback` if unset)
+- `GOOGLE_REDIRECT_URI` — OAuth callback URL registered in Google Cloud Console. **Pre-configured**: this is set as a `[userenv.shared]` variable in `.replit` (not a Secret) pointing to the current workspace's dev domain. You only need to register this URI in Google Cloud Console. On Vercel production, set it explicitly as `https://teman-nyatet-api-server.vercel.app/api/auth/google/callback`.
 - `FRONTEND_URL` — used by the API server when redirecting the browser after OAuth callback (defaults to `https://<REPLIT_DEV_DOMAIN>` or `http://localhost:5000` if unset)
 - `ALLOWED_ORIGINS` — comma-separated CORS allowlist (defaults to allow all origins when unset)
 - `PORT` — the API server defaults to `8080`; the frontend Vite server defaults to `5173` and is typically overridden to `5000` by Replit

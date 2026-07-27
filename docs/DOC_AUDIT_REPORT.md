@@ -1,7 +1,7 @@
 # Documentation Audit Report
 
-**Last updated:** 2026-07-26 (full documentation synchronization wave)  
-**Previous audit:** 2026-07-26 (Vercel production deploy wave)  
+**Last updated:** 2026-07-27 (AuthConfirmPage + GOOGLE_REDIRECT_URI documentation)  
+**Previous audit:** 2026-07-26 (full documentation synchronization wave)  
 **Original audit:** 2026-07-23  
 **Auditor:** Replit Agent  
 **Mode:** Strict — source code is the only source of truth.  
@@ -119,7 +119,16 @@
 
 ### Outdated documentation found and addressed
 
-- **None found** in this wave — previous audits (July 23 + July 26 Vercel wave) had already corrected the major inaccuracies (service account → per-user OAuth, Supabase tables → Google Sheets, env var names).
+**July 2026-07-27 wave:**
+
+1. **`AuthConfirmPage` at `/auth/confirm` missing from all docs** — the page exists in `App.tsx` `ROUTE_ENTRIES` and `src/pages/` but was never documented. It uses `supabase.auth.verifyOtp({ token_hash, type })` (PKCE OTP flow) to verify email confirmation links. Fixed in: `ARCHITECTURE.md`, `AI_CONTEXT.md`, `AUTH.md`, `TESTING.md`, `TROUBLESHOOTING.md`, `SUPABASE-SETUP.md`, `CHANGELOG.md`.
+
+2. **Supabase email template documented as `{{ .ConfirmationURL }}`** — this redirects to Site URL root and bypasses `AuthConfirmPage`, leaving `token_hash` unverified and email unconfirmed. Correct format is `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email`. Fixed in: `AUTH.md`, `SUPABASE-SETUP.md`.
+
+3. **`GOOGLE_REDIRECT_URI` pre-configuration undocumented** — `.replit` sets this as `[userenv.shared]` (not a Secret), pre-populated for the workspace's Replit dev domain. Fixed in: `ENVIRONMENT.md`, `docs/replit.md`.
+
+**Previous wave (2026-07-26):**
+- **None found** — previous audits (July 23 + July 26 Vercel wave) had already corrected the major inaccuracies (service account → per-user OAuth, Supabase tables → Google Sheets, env var names).
 
 ### Unverifiable items (explicitly marked in generated docs)
 

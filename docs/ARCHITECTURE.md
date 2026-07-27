@@ -86,6 +86,7 @@ Route table lives in `ROUTE_ENTRIES` in `App.tsx`. Adding a new page = one line.
 ```
 ROUTE_ENTRIES paths:
   /login          → AuthPage
+  /auth/confirm   → AuthConfirmPage   ← email OTP verification landing page
   /payment        → PaymentPage
   /archived       → ArchivedPage
   /connect-sheet  → ConnectSheetPage
@@ -100,13 +101,19 @@ ROUTE_ENTRIES paths:
 
 ```
 Loading?           → spinner
-No user            → /login
+No user            → /login (public routes /login and /auth/confirm pass through)
 Has user, no profile.spreadsheet_id → /connect-sheet
 profile.subscription_status === 'pending'  → /payment
 profile.subscription_status === 'archived' → /archived
 profile.subscription_status === 'active'   → feature pages
   └─ if on /login, /payment, /archived     → /catatan
 ```
+
+Public routes (no auth required): `/login`, `/auth/confirm`
+
+`/auth/confirm` is the email OTP verification landing page. Supabase emails link to
+`<SITE_URL>/auth/confirm?token_hash=<hash>&type=email`. The page calls
+`supabase.auth.verifyOtp({ token_hash, type })` then redirects to `/login` on success.
 
 Spreadsheet access errors from data hooks dispatch `teman-nyatet:spreadsheet-error` window event → redirect to `/connect-sheet?error=<code>`.
 

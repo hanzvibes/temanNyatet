@@ -64,7 +64,7 @@ Give Indonesian users a private, mobile-first productivity app where their data 
 │   │       ├── main.tsx       # Entry: theme init, Supabase token wiring, SW registration
 │   │       ├── contexts/      # AuthContext, CreateContext
 │   │       ├── hooks/         # useNotes, useTransactions, useTodos, useLinks
-│   │       ├── pages/         # One file per route
+│   │       ├── pages/         # One file per route (AuthPage, AuthConfirmPage, CatatanPage, …)
 │   │       ├── components/    # BottomSheetNav, SidebarNav, DraggableSheet, PageStates, ui/
 │   │       └── lib/           # apiClient.ts, supabase.ts, database.types.ts
 │   └── api-server/            # Express 5 API server
@@ -110,7 +110,7 @@ API Server (Express 5)
 ```
 
 - **Data storage**: App data (notes, transactions, todos, links) lives in 4 tabs of each user's own Google Spreadsheet. Supabase only stores the `profiles` row (subscription, tokens, spreadsheet ID).
-- **Auth guard flow**: unauthenticated → `/login`; no spreadsheet → `/connect-sheet`; `pending` → `/payment`; `archived` → `/archived`; `active` → feature pages.
+- **Auth guard flow**: unauthenticated → `/login` (public: `/login`, `/auth/confirm`); no spreadsheet → `/connect-sheet`; `pending` → `/payment`; `archived` → `/archived`; `active` → feature pages.
 - **Navigation**: CachedSwitch keeps all visited pages mounted (DOM `hidden` toggle), React Query cache stays alive. Bottom sheet nav on mobile, sidebar on desktop (lg+).
 - **Polling**: Data hooks poll every 15 s. TanStack Query `staleTime: 30 s`, `gcTime: 30 min`.
 
@@ -150,7 +150,8 @@ API Server (Express 5)
 ## Current priorities (July 2026)
 
 1. UX improvements to the four feature pages (empty states, form UX, mobile polish)
-2. Documentation accuracy (this audit)
+2. Setting up the external cron scheduler (TASK-001)
+3. Publishing the Google OAuth consent screen beyond 100 test users (TASK-002)
 
 ## Files AI should read first
 
@@ -170,5 +171,5 @@ API Server (Express 5)
 - **Do not use `useQuery` from TanStack Query** for the four data modules — use the existing hooks (`useNotes`, `useTransactions`, etc.) which have their own cache.
 - **Do not add `VITE_` prefix to API server env vars** — frontend uses `VITE_SUPABASE_*`, API server uses `SUPABASE_*`.
 - **Do not use `Switch`/`Route` from wouter** — routing uses the custom `CachedSwitch` (DOM `hidden` toggle) defined in `App.tsx`.
-- **Do not create new page files without adding them to `ROUTE_ENTRIES`** in `App.tsx`.
+- **Do not create new page files without adding them to `ROUTE_ENTRIES`** in `App.tsx`. If the page is public (no auth required), also add its path to `PUBLIC_ROUTES` in `AuthGuard`.
 - **Do not hardcode `localhost`** in app code — use relative URLs (`/api/...`) and let the Vite proxy handle dev routing.

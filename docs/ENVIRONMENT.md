@@ -84,6 +84,16 @@ On Replit, secrets are set in the Secrets panel (not `.env.local` files). The fo
 | `MAYAR_WEBHOOK_SECRET` | Mayar webhook secret (optional) |
 | `VITE_MAYAR_PAYMENT_URL` | Mayar payment page URL (optional) |
 
+### Pre-configured Replit environment variables
+
+`GOOGLE_REDIRECT_URI` is set as a **shared environment variable** (not a Secret) in the `.replit` file under `[userenv.shared]`. It is pre-populated with the current Replit workspace's dev domain callback URL:
+
+```
+GOOGLE_REDIRECT_URI=https://<replit-dev-domain>/api/auth/google/callback
+```
+
+This means you do **not** need to set `GOOGLE_REDIRECT_URI` as a Secret in Replit — it is already configured for the dev environment. You do still need to register this URI in Google Cloud Console → Authorized redirect URIs for Google OAuth to work in development.
+
 ---
 
 ## Vercel environment variables — quick reference

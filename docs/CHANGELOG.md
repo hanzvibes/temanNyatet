@@ -1,5 +1,25 @@
 # Changelog
 
+## Documentation Update — 2026-07-27
+
+### Fixed
+- **`AuthConfirmPage` (`/auth/confirm`) missing from all documentation** — this page handles email OTP verification via `supabase.auth.verifyOtp({ token_hash, type })` (Supabase PKCE flow). Added to:
+  - `ARCHITECTURE.md` — route table + auth guard public routes
+  - `AI_CONTEXT.md` — pages listing, auth guard flow description, `PUBLIC_ROUTES` note in common mistakes
+  - `AUTH.md` — sign-up flow steps, auth guard table, Supabase checklist email template instructions
+  - `TESTING.md` — manual test checklist (5 new `/auth/confirm` test cases)
+  - `TROUBLESHOOTING.md` — new "Confirmation link says Verifikasi Gagal" section; updated "Email not confirmed loop" with correct template format
+  - `SUPABASE-SETUP.md` — email template section now shows `token_hash`/`type` OTP format (replaces `{{ .ConfirmationURL }}` which breaks the PKCE flow)
+- **Supabase email template instructions incorrect** — previous docs said to use `{{ .ConfirmationURL }}`; corrected to `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email` in `AUTH.md` and `SUPABASE-SETUP.md`.
+- **`GOOGLE_REDIRECT_URI` pre-configuration undocumented** — the `.replit` file sets `GOOGLE_REDIRECT_URI` as a `[userenv.shared]` variable (not a Secret) pre-populated with the current workspace's dev domain. Documented in `ENVIRONMENT.md` (new "Pre-configured Replit environment variables" section) and `docs/replit.md`.
+
+### Updated
+- **`ROADMAP.md`** — moved "Documentation synchronization" from In Progress to Completed.
+- **`AI_CONTEXT.md`** — updated "Current priorities" to reflect documentation audit completion.
+- **`DOC_AUDIT_REPORT.md`** — updated for this wave.
+
+---
+
 ## Documentation Audit & Synchronization — 2026-07-26
 
 ### Added

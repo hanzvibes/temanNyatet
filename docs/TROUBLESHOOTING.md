@@ -24,7 +24,20 @@
 1. Check Supabase → Authentication → Users. Find the user.
 2. If email is unconfirmed, click "Send confirmation email" or manually confirm.
 3. Ensure Supabase → Authentication → Settings → "Confirm email" is ON.
-4. Check Email Templates → "Confirm signup" uses `{{ .ConfirmationURL }}` (not a hardcoded URL).
+4. Check Email Templates → "Confirm signup" uses the token_hash OTP format pointing to `/auth/confirm`:
+   ```
+   {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email
+   ```
+   If the template still uses `{{ .ConfirmationURL }}`, users will land on the wrong page and verification won't complete.
+
+### Confirmation link says "Verifikasi Gagal"
+
+**Symptom**: User clicks the email confirmation link but `AuthConfirmPage` shows an error.  
+**Cause**: The link has already been used, is expired, or the email template format is wrong.  
+**Fix**:
+1. Links are single-use. Ask the user to request a new confirmation email and click the fresh link.
+2. Confirm the Supabase email template uses `token_hash={{ .TokenHash }}&type=email` — not `{{ .ConfirmationURL }}`.
+3. If expired, check Supabase → Auth → Settings → "Email OTP expiry" (default 3600 s).
 
 ### "infinite recursion detected in policy for relation profiles"
 

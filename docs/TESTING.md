@@ -27,10 +27,13 @@ This is tracked as a documentation debt item. The priorities below are ordered b
 ### Auth flows
 
 - [ ] Sign up with new email → confirmation email received
-- [ ] Click confirmation link → email confirmed
+- [ ] Confirmation email link goes to `/auth/confirm?token_hash=…&type=email` (not `/login?confirmed=true`)
+- [ ] Click confirmation link → `AuthConfirmPage` shows "Memverifikasi email…" spinner
+- [ ] Verification succeeds → shows "Email Terverifikasi" → redirects to `/login` after 1.5 s
+- [ ] Confirmation link already used or expired → shows "Verifikasi Gagal" + "Kembali ke Login" button
+- [ ] `/auth/confirm` accessible without being logged in (public route, no redirect)
 - [ ] Log in with confirmed email → lands on `/connect-sheet` (first time) or feature page (returning user)
 - [ ] Log in with unconfirmed email → immediately logged out (AuthContext enforcement)
-- [ ] Password reset flow (if Supabase email templates are configured)
 - [ ] Session persists across browser refresh
 - [ ] Session expires → redirected to `/login`
 

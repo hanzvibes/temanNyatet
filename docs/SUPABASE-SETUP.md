@@ -31,16 +31,19 @@ If you encounter `infinite recursion detected in policy for relation "profiles"`
 4. Set **Site URL** to your production domain.
    - Current production (Vercel): `https://teman-nyatet.vercel.app`
    - Custom domain (when configured): `https://temannyatet.id`
-5. Add **Redirect URLs** so Supabase accepts the URLs the app sends. The app sends `emailRedirectTo: <SITE_URL>/login?confirmed=true` for sign-up and resend-verification emails, so every environment you deploy to must be listed here:
-   - Production: `https://teman-nyatet.vercel.app/login` and `https://teman-nyatet.vercel.app/**` (or your custom domain)
-   - Vercel previews: `https://*.vercel.app/login` and `https://*.vercel.app/**`
-   - Replit: `https://*.replit.dev/login` and `https://*.replit.dev/**`
-   - Local dev: `http://localhost:5173/login`, `http://localhost:5173/**`, `http://localhost:5000/login`, and `http://localhost:5000/**`
+5. Add **Redirect URLs** so Supabase accepts the callback URLs. Add a broad wildcard per environment:
+   - Production: `https://teman-nyatet.vercel.app/**`
+   - Vercel previews: `https://*.vercel.app/**`
+   - Replit: `https://*.replit.dev/**`
+   - Local dev: `http://localhost:5000/**` and `http://localhost:5173/**`
 
    **Important:** If the redirect URL is not allowed, Supabase falls back to the **Site URL**, which defaults to `http://localhost:3000`. That is why confirmation emails may contain `localhost:3000`.
-6. Check **Authentication → Email Templates** → **Confirm signup**. Make sure the link uses the default `{{ .ConfirmationURL }}` variable instead of a hardcoded `http://localhost:3000` URL. The same applies to **Reset password** and **Magic link** templates if you use them.
-   - Recommended **Confirm signup** template: `<h2>Confirm your signup</h2><p><a href="{{ .ConfirmationURL }}">Confirm your email</a></p>`
-   - `{{ .ConfirmationURL }}` will point to Supabase's verification endpoint and then redirect back to the URL the app sent (`<SITE_URL>/login?confirmed=true`).
+6. Check **Authentication → Email Templates** → **Confirm signup**. The app uses Supabase's `verifyOtp` PKCE flow — the link must include `token_hash` and `type` parameters pointing to `/auth/confirm`:
+   ```html
+   <h2>Konfirmasi email kamu</h2>
+   <p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email">Konfirmasi Email</a></p>
+   ```
+   **Do NOT use `{{ .ConfirmationURL }}`** — that bypasses `AuthConfirmPage` and lands the user on the Site URL root, leaving the email unverified.
 
 ## 4. Set Environment Variables
 

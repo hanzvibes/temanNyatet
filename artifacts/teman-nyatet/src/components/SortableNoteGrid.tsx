@@ -240,6 +240,7 @@ export function SortableNoteGrid({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isOverDelete, setIsOverDelete] = useState(false);
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
+  const [pendingDeleteNote, setPendingDeleteNote] = useState<Note | null>(null);
 
   // Refs to avoid stale closures inside drag handlers
   const notesRef = useRef(notes);
@@ -281,16 +282,22 @@ export function SortableNoteGrid({
       const draggedId = String(event.active.id);
 
       // ── Delete-on-drop via useDroppable ────────────────────────────────
-      // dnd-kit's built‑in collision detection (customCollisionDetection)
-      // returns the delete‑zone droppable when the pointer is inside it.
-      // Checking event.over?.id is the canonical, reliable way to detect
-      // drops — no manual coordinate extraction needed.
       if (event.over?.id === 'delete-zone' && onDeleteNoteRef.current) {
+        // Preserve the note data so the DragOverlay can keep rendering
+        // during the 700ms delete animation even after optimistic removal.
+        const noteData = notesRef.current.find(n => n.id === draggedId);
+        if (noteData) setPendingDeleteNote(noteData);
+
         setDeleteConfirmed(true);
+        // 700ms: slam (300ms) + check (200ms) + vanish (200ms)
         setTimeout(() => {
           setActiveId(null);
           setIsOverDelete(false);
-        }, 280);
+          setDeleteConfirmed(false);
+          setPendingDeleteNote(null);
+        }, 700);
+        // Fire optimistic removal quickly so the card exit animation
+        // plays alongside the trash-animation.
         setTimeout(() => onDeleteNoteRef.current!(draggedId), 20);
         return;
       }
@@ -317,7 +324,11 @@ export function SortableNoteGrid({
     setDeleteConfirmed(false);
   }, []);
 
-  const activeNote = activeId ? notes.find((n) => n.id === activeId) : null;
+  // Fall back to pendingDeleteNote while the delete animation plays,
+  // because the note is optimistically removed from `notes` almost immediately.
+  const activeNote = activeId
+    ? (notes.find((n) => n.id === activeId) || pendingDeleteNote)
+    : null;
 
   return (
     <DndContext
@@ -378,7 +389,16 @@ export function SortableNoteGrid({
 
       <DragOverlay>
         {activeNote ? (
-          <DragOverlayCard note={activeNote} color={activeNote.color || colorForNoteId(activeNote.id)} />
+          <motion.div
+            animate={
+              deleteConfirmed
+                ? { opacity: 0, scale: 0.35, y: 30 }
+                : { opacity: 1, scale: 1, y: 0 }
+            }
+            transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+          >
+            <DragOverlayCard note={activeNote} color={activeNote.color || colorForNoteId(activeNote.id)} />
+          </motion.div>
         ) : null}
       </DragOverlay>
 

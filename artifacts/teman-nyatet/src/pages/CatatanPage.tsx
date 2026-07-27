@@ -292,7 +292,7 @@ export default function CatatanPage() {
       </div>
 
       {/* Content */}
-      <div className="px-5 sm:px-6 lg:px-10 flex-1 pt-5 lg:pt-7 max-w-screen-xl mx-auto w-full">
+      <div className="px-5 sm:px-6 lg:px-10 flex-1 flex flex-col pt-5 lg:pt-7 max-w-screen-xl mx-auto w-full">
         {loading ? (
           <PageLoading accent="catatan" label="Memuat catatan…" />
         ) : filteredNotes.length === 0 ? (
@@ -311,19 +311,41 @@ export default function CatatanPage() {
               </Button>
             ) : undefined}
           />
-        ) : viewMode === 'grid' ? (
-          <SortableNoteGrid
-            notes={filteredNotes}
-            onReorder={reorderNotes}
-            onClickNote={handleOpenDetail}
-            onDeleteNote={handleDeleteFromDrag}
-            disabled={!!search}
-          />
         ) : (
-          <StickyNoteWall
-            notes={filteredNotes}
-            onClickNote={handleOpenDetail}
-          />
+          <AnimatePresence mode="wait">
+            {viewMode === 'grid' ? (
+              <motion.div
+                key="grid"
+                className="flex-1"
+                initial={{ opacity: 0, filter: 'blur(4px)' }}
+                animate={{ opacity: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, filter: 'blur(4px)' }}
+                transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+              >
+                <SortableNoteGrid
+                  notes={filteredNotes}
+                  onReorder={reorderNotes}
+                  onClickNote={handleOpenDetail}
+                  onDeleteNote={handleDeleteFromDrag}
+                  disabled={!!search}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="sticky"
+                className="flex items-center flex-1"
+                initial={{ opacity: 0, filter: 'blur(4px)' }}
+                animate={{ opacity: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, filter: 'blur(4px)' }}
+                transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+              >
+                <StickyNoteWall
+                  notes={filteredNotes}
+                  onClickNote={handleOpenDetail}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         )}
       </div>
 

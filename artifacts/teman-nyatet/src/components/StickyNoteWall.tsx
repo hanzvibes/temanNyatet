@@ -38,8 +38,7 @@ export function StickyNoteWall({ notes, onClickNote }: StickyNoteWallProps) {
 
   return (
     <div
-      className="overflow-x-auto overflow-y-hidden overscroll-x-none select-none
-                 -mx-5 sm:-mx-6 lg:-mx-10 px-5 sm:px-6 lg:px-10 pt-4 pb-6"
+      className="overflow-x-auto overflow-y-hidden overscroll-x-none select-none flex items-stretch w-full"
       style={{
         scrollbarWidth: 'thin',
         scrollbarColor: 'var(--border) transparent',
@@ -47,7 +46,11 @@ export function StickyNoteWall({ notes, onClickNote }: StickyNoteWallProps) {
         contain: 'layout style paint',
       }}
     >
-      <div className="flex gap-6 lg:gap-8 items-stretch" style={{ minHeight: 260 }}>
+      {/* Left spacer — centers cards when they fit */}
+      <div className="flex-1 min-w-0" />
+
+      {/* Cards */}
+      <div className="flex gap-6 lg:gap-8 shrink-0 items-stretch" style={{ minHeight: 260 }}>
         {notes.map((note) => {
           const color = note.color || colorForNoteId(note.id);
           const rot = stickyRotation(note.id);
@@ -63,6 +66,9 @@ export function StickyNoteWall({ notes, onClickNote }: StickyNoteWallProps) {
           );
         })}
       </div>
+
+      {/* Right spacer — mirrors left for perfect centering */}
+      <div className="flex-1 min-w-0" />
     </div>
   );
 }

@@ -30,7 +30,10 @@ import {
 import { toast } from 'sonner';
 
 // ─── Shared input style helpers ───────────────────────────────────────────────
-const inp  = 'w-full bg-white border border-border rounded-xl py-2.5 px-3.5 outline-none text-sm font-bold text-foreground transition-all';
+// [color-scheme:light] forces browser-native controls (date, time, select)
+// to render their internal text in the light-mode palette so the text is
+// always dark/readable against our white bg-white backgrounds.
+const inp  = 'w-full bg-white border border-border rounded-xl py-2.5 px-3.5 outline-none text-sm font-bold text-foreground transition-all [color-scheme:light]';
 const inpFocus = (color: string) => `${inp} focus:border-${color} focus:ring-2 focus:ring-${color}/20`;
 
 // ─── Note Form ────────────────────────────────────────────────────────────────

@@ -7,8 +7,9 @@ import { useCreate } from '@/contexts/CreateContext';
 import { useTransactions } from '@/hooks/useTransactions';
 import { format, isToday, isYesterday } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Loader2, Wallet, ArrowDown, ArrowUp, Briefcase, Coffee, ShoppingBag, Car, HeartPulse, Laptop, Gamepad2, Gift, Receipt, Home, MoreHorizontal, BookOpen, Hand, Plus } from 'lucide-react';
+import { Loader2, Wallet, ArrowDown, ArrowUp, Hand, Plus } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
+import { CATEGORY_ICON, FALLBACK_CATEGORY_ICON } from '@/lib/categoryIcons';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { Button } from '@/components/ui/button';
 import { Drawer } from 'vaul';
@@ -18,25 +19,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import SearchBar from '@/components/SearchBar';
 
-// Using proper lucide icons instead of emojis
-const getCategoryIcon = (category: string) => {
-  switch (category) {
-    case 'Gaji': return <Briefcase size={20} className="text-white" />;
-    case 'Freelance': return <Laptop size={20} className="text-white" />;
-    case 'Bisnis': return <Home size={20} className="text-white" />;
-    case 'Investasi': return <ArrowUp size={20} className="text-white" />;
-    case 'Hadiah': return <Gift size={20} className="text-white" />;
-    case 'Makanan': return <Coffee size={20} className="text-white" />;
-    case 'Transport': return <Car size={20} className="text-white" />;
-    case 'Belanja': return <ShoppingBag size={20} className="text-white" />;
-    case 'Tagihan': return <Receipt size={20} className="text-white" />;
-    case 'Kesehatan': return <HeartPulse size={20} className="text-white" />;
-    case 'Hiburan': return <Gamepad2 size={20} className="text-white" />;
-    case 'Pendidikan': return <BookOpen size={20} className="text-white" />;
-    default: return <MoreHorizontal size={20} className="text-white" />;
-  }
-};
-
+// Resolves a LucideIcon for any category string.
 const getCategoryColor = (type: TransactionType) => {
   return type === 'income' ? 'bg-income' : 'bg-expense';
 };
@@ -267,7 +250,7 @@ export default function KeuanganPage() {
                             )}
                             <div className="flex items-center gap-4">
                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-elevation-1 ${getCategoryColor(tx.type)}`}>
-                                {getCategoryIcon(tx.category)}
+                                {(() => { const Icon = CATEGORY_ICON[tx.category] ?? FALLBACK_CATEGORY_ICON; return <Icon size={20} className="text-white" strokeWidth={2.2} />; })()}
                               </div>
                               <div>
                                 <p className="font-bold text-foreground text-base mb-0.5">{tx.category}</p>
@@ -359,7 +342,7 @@ export default function KeuanganPage() {
                   <input
                     {...form.register('date')}
                     type="date"
-                    className="w-full bg-white border border-border rounded-xl py-3 px-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 text-sm font-bold text-foreground"
+                    className="w-full bg-white border border-border rounded-xl py-3 px-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 text-sm font-bold text-foreground [color-scheme:light]"
                   />
                 </div>
                 <div className="flex-1">
@@ -388,9 +371,14 @@ export default function KeuanganPage() {
                           isSelected ? 'bg-finance/10 border-finance shadow-sm' : 'bg-white border-border hover:bg-secondary'
                         }`}
                       >
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? getCategoryColor(txType) : 'bg-secondary text-muted-foreground'}`}>
-                           {isSelected ? getCategoryIcon(cat) : <div className="text-muted-foreground opacity-50">{getCategoryIcon(cat)}</div>}
-                        </div>
+                        {(() => {
+                            const Icon = CATEGORY_ICON[cat] ?? FALLBACK_CATEGORY_ICON;
+                            return (
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? getCategoryColor(txType) : 'bg-muted-foreground/15'}`}>
+                                <Icon size={18} strokeWidth={2.2} className={isSelected ? 'text-white' : 'text-muted-foreground'} />
+                              </div>
+                            );
+                          })()}
                         <span className={`text-[10px] font-bold text-center uppercase tracking-wider ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>{cat}</span>
                       </button>
                     );

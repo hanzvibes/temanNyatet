@@ -333,7 +333,7 @@ export default function CatatanPage() {
             ) : (
               <motion.div
                 key="sticky"
-                className="flex items-center flex-1"
+                className="flex-1 flex flex-col min-h-0"
                 initial={{ opacity: 0, filter: 'blur(4px)' }}
                 animate={{ opacity: 1, filter: 'blur(0px)' }}
                 exit={{ opacity: 0, filter: 'blur(4px)' }}

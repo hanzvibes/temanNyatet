@@ -37,38 +37,41 @@ export function StickyNoteWall({ notes, onClickNote }: StickyNoteWallProps) {
   if (notes.length === 0) return null;
 
   return (
-    <div
-      className="overflow-x-auto overflow-y-hidden overscroll-x-none select-none flex items-stretch w-full"
-      style={{
-        scrollbarWidth: 'thin',
-        scrollbarColor: 'var(--border) transparent',
-        WebkitOverflowScrolling: 'touch',
-        contain: 'layout style paint',
-      }}
-    >
-      {/* Left spacer — centers cards when they fit */}
-      <div className="flex-1 min-w-0" />
+    <div className="w-full h-full flex flex-col min-h-0">
+      <div
+        className="overflow-x-auto overflow-y-hidden overscroll-x-none select-none
+                   flex items-stretch flex-1 min-h-0"
+        style={{
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'var(--border) transparent',
+          WebkitOverflowScrolling: 'touch',
+          contain: 'layout style paint',
+        }}
+      >
+        {/* Left spacer — centers cards when they fit */}
+        <div className="flex-1 min-w-0" />
 
-      {/* Cards */}
-      <div className="flex gap-6 lg:gap-8 shrink-0 items-stretch" style={{ minHeight: 260 }}>
-        {notes.map((note) => {
-          const color = note.color || colorForNoteId(note.id);
-          const rot = stickyRotation(note.id);
+        {/* Cards */}
+        <div className="flex gap-4 sm:gap-6 lg:gap-8 shrink-0 items-stretch h-full min-h-[200px]">
+          {notes.map((note) => {
+            const color = note.color || colorForNoteId(note.id);
+            const rot = stickyRotation(note.id);
 
-          return (
-            <StickyNoteCard
-              key={note.id}
-              note={note}
-              color={color}
-              rotation={rot}
-              onClick={() => onClickNote(note, color)}
-            />
-          );
-        })}
+            return (
+              <StickyNoteCard
+                key={note.id}
+                note={note}
+                color={color}
+                rotation={rot}
+                onClick={() => onClickNote(note, color)}
+              />
+            );
+          })}
+        </div>
+
+        {/* Right spacer — mirrors left for perfect centering */}
+        <div className="flex-1 min-w-0" />
       </div>
-
-      {/* Right spacer — mirrors left for perfect centering */}
-      <div className="flex-1 min-w-0" />
     </div>
   );
 }
@@ -87,9 +90,10 @@ function StickyNoteCard({
 }) {
   return (
     <div
-      className="shrink-0 w-[240px] sm:w-[270px] lg:w-[290px] rounded-none relative
+      className="shrink-0 w-[180px] xs:w-[220px] sm:w-[250px] lg:w-[280px]
+                 h-full rounded-none relative
                  cursor-pointer transition-transform duration-150 ease-out
-                 active:scale-[0.97] hover:scale-[1.02]
+                 active:scale-[0.97] hover:scale-[1.02] flex flex-col
                  before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2 before:-translate-y-[5px]
                  before:w-9 before:h-[10px] before:rounded-b-sm before:bg-white/65 dark:before:bg-white/10
                  before:shadow-[0_1px_2px_rgba(0,0,0,0.04)]
@@ -117,44 +121,51 @@ function StickyNoteCard({
         }
       }}
     >
-      {/* Content */}
-      <div className="p-5 pt-7">
+      {/* Content — flex column fills the card height completely */}
+      <div className="p-4 pt-7 sm:p-5 sm:pt-7 flex flex-col flex-1 min-h-0">
         {note.title && (
           <h3
-            className="font-bold text-foreground mb-2 leading-tight text-base"
+            className="font-bold text-foreground mb-2 leading-tight text-sm sm:text-base"
             style={{ fontFamily: "'Segoe Print', 'Comic Sans MS', 'Marker Felt', cursive, sans-serif" }}
           >
             {note.title}
           </h3>
         )}
-        <p
-          className="text-sm text-foreground/90 line-clamp-5 whitespace-pre-wrap leading-relaxed"
-          style={{ fontFamily: "'Segoe Print', 'Comic Sans MS', 'Marker Felt', cursive, sans-serif" }}
-        >
-          {note.content}
-        </p>
+
+        {/* Content body — pushes tags/date down when short, scrolls when long */}
+        <div className="flex-1 min-h-0">
+          <p
+            className="text-xs sm:text-sm text-foreground/90 line-clamp-4 sm:line-clamp-5
+                       whitespace-pre-wrap leading-relaxed"
+            style={{ fontFamily: "'Segoe Print', 'Comic Sans MS', 'Marker Felt', cursive, sans-serif" }}
+          >
+            {note.content}
+          </p>
+        </div>
 
         {/* Tags */}
         {note.tags && note.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-4">
+          <div className="flex flex-wrap gap-1 mt-3 sm:mt-4">
             {note.tags.slice(0, 2).map((tag) => (
               <span
                 key={tag}
-                className="text-[10px] px-2.5 py-1 rounded-full bg-white/50 dark:bg-black/15 text-muted-foreground font-bold uppercase tracking-wider"
+                className="text-[9px] sm:text-[10px] px-2 py-1 sm:px-2.5 sm:py-1 rounded-full
+                           bg-white/50 dark:bg-black/15 text-muted-foreground font-bold uppercase tracking-wider"
               >
                 {tag}
               </span>
             ))}
             {note.tags.length > 2 && (
-              <span className="text-[10px] px-2 py-1 rounded-full bg-white/50 dark:bg-black/15 text-muted-foreground font-bold">
+              <span className="text-[9px] sm:text-[10px] px-2 py-1 rounded-full
+                               bg-white/50 dark:bg-black/15 text-muted-foreground font-bold">
                 +{note.tags.length - 2}
               </span>
             )}
           </div>
         )}
 
-        {/* Date */}
-        <div className="mt-4 text-[10px] text-muted-foreground font-bold opacity-70">
+        {/* Date — always at the bottom */}
+        <div className="mt-auto pt-3 text-[9px] sm:text-[10px] text-muted-foreground font-bold opacity-70">
           {format(new Date(note.created_at), 'd MMM yyyy', { locale: id })}
         </div>
       </div>

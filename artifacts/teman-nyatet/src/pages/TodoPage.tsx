@@ -293,76 +293,76 @@ export default function TodoPage() {
                 transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
               >
                 {/* Card */}
-                <div className="bg-todo/15 rounded-[24px] overflow-hidden shadow-2xl">
+                <div className="bg-card rounded-[24px] overflow-hidden shadow-2xl border border-todo/20">
                   <form onSubmit={editForm.handleSubmit(onSubmitEdit)} className="flex flex-col">
                     {/* Header row */}
-                    <div className="flex items-center justify-between px-6 pt-6 pb-3">
+                    <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-todo/10">
                       <button
                         type="button"
                         onClick={() => setIsEditOpen(false)}
-                        className="text-sm font-bold text-todo-text hover:text-todo-text/80 transition-colors"
+                        className="text-sm font-bold text-muted-foreground hover:text-foreground transition-colors"
                       >
                         Batal
                       </button>
-                      <span className="text-[10px] font-bold text-todo-text uppercase tracking-widest">Edit To-Do</span>
+                      <span className="text-[11px] font-bold text-todo-text uppercase tracking-widest">Edit To-Do</span>
                       <Button
                         type="submit"
                         size="sm"
-                        className="rounded-full bg-white/80 text-todo-text hover:bg-white shadow-sm"
+                        className="rounded-full bg-todo text-white hover:bg-todo/90 shadow-sm"
                       >
                         Simpan
                       </Button>
                     </div>
 
                     {/* Fields */}
-                    <div className="px-6 pb-5 space-y-4 max-h-[60vh] overflow-y-auto">
+                    <div className="px-5 pb-5 space-y-4 max-h-[60vh] overflow-y-auto">
                       {/* Title */}
-                   <input
+                      <input
                         {...editForm.register('title')}
                         placeholder="Apa yang harus dikerjakan?"
-                     aria-label="Judul to-do"
-                     className="w-full text-input-title bg-transparent border-b-2 border-todo/40 pb-2.5 outline-none focus:border-todo transition-colors placeholder:text-muted-foreground/60 text-foreground"
+                        aria-label="Judul to-do"
+                        className="w-full text-input-title bg-transparent border-b-2 border-todo/40 pb-2.5 outline-none focus:border-todo transition-colors placeholder:text-muted-foreground/60 text-foreground"
                       />
                       {editForm.formState.errors.title && (
                         <FormError size="xs" className="-mt-1">{editForm.formState.errors.title.message}</FormError>
                       )}
 
                       {/* Description */}
-                       <textarea
+                      <textarea
                         {...editForm.register('description')}
                         placeholder="Catatan tambahan (opsional)"
-                         aria-label="Deskripsi to-do"
-                         className="w-full h-20 resize-none bg-muted/50 border border-todo/30 rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/60 text-foreground focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
+                        aria-label="Deskripsi to-do"
+                        className="w-full h-20 resize-none bg-muted/50 border border-border rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/60 text-foreground focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
                       />
 
                       {/* Date + Time */}
                       <div className="flex gap-3">
                         <div className="flex-1 min-w-0">
-                          <label className="text-[10px] font-bold text-todo-text uppercase tracking-widest mb-1.5 block">Tanggal</label>
+                          <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">Tanggal</label>
                           <input
                             {...editForm.register('due_date')}
                             type="date"
-                            className="w-full min-h-11 bg-muted/50 border border-todo/30 rounded-xl py-2.5 px-3.5 outline-none focus:border-todo text-sm font-bold text-foreground transition-all [color-scheme:light]"
+                            className="w-full min-h-11 bg-muted/50 border border-border rounded-xl py-2.5 px-3.5 outline-none focus:border-todo text-sm font-bold text-foreground transition-all [color-scheme:light]"
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <label className="text-[10px] font-bold text-todo-text uppercase tracking-widest mb-1.5 block">Waktu</label>
+                          <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">Waktu</label>
                           <input
                             {...editForm.register('due_time')}
                             type="time"
-                            className="w-full min-h-11 bg-muted/50 border border-todo/30 rounded-xl py-2.5 px-3.5 outline-none focus:border-todo text-sm font-bold text-foreground transition-all [color-scheme:light]"
+                            className="w-full min-h-11 bg-muted/50 border border-border rounded-xl py-2.5 px-3.5 outline-none focus:border-todo text-sm font-bold text-foreground transition-all [color-scheme:light]"
                           />
                         </div>
                       </div>
                     </div>
 
                     {/* Delete row */}
-                    <div className="border-t border-todo/20 px-6 py-4">
+                    <div className="border-t border-todo/10 px-5 py-4">
                       <button
                         type="button"
                         onClick={() => handleDelete(selectedTodo.id)}
                         disabled={deletingId === selectedTodo.id}
-                        className="w-full flex items-center justify-center gap-2 text-red-500 font-bold text-sm py-2 rounded-2xl bg-red-50/70 hover:bg-red-100/80 transition-colors disabled:opacity-70"
+                        className="w-full flex items-center justify-center gap-2 text-red-500 font-bold text-sm py-2.5 rounded-2xl bg-red-50/70 hover:bg-red-100/80 transition-colors disabled:opacity-70"
                       >
                         {deletingId === selectedTodo.id ? (
                           <>
@@ -383,7 +383,7 @@ export default function TodoPage() {
                   <Button
                     onClick={() => setIsEditOpen(false)}
                     variant="secondary"
-                    className="rounded-full shadow-lg"
+                    className="rounded-full shadow-lg bg-white/80 hover:bg-white border border-border/50"
                   >
                     <X size={16} strokeWidth={2.5} />
                     Tutup

@@ -1,0 +1,58 @@
+# TemanNyatet
+
+A note-taking SaaS PWA for Indonesian users. Four core modules: Catatan (Notes), Keuangan (Finance), To Do List, and Link Saver. Mobile-first with bottom sheet patterns ("sat-set" UX). Each user stores their own data in a private Google Spreadsheet created automatically by the app in their own Google Drive via OAuth2.
+
+## Quick start
+
+Both services are already configured as Replit workflows and should run in parallel:
+
+- **Frontend** (`artifacts/teman-nyatet: web`): `pnpm --filter @workspace/teman-nyatet run dev` — Vite dev server, visible on port `5000`
+- **API Server** (`artifacts/api-server: API Server`): `pnpm --filter @workspace/api-server run dev` — Express on port `8080`
+
+If the workflows are stopped, restart them from the Workflows panel or by asking the agent to restart them.
+
+## Required secrets
+
+The API server refuses to start if any of these required secrets are missing. They are usually pre-populated on Replit:
+
+- `VITE_SUPABASE_URL` — Supabase project URL (frontend)
+- `VITE_SUPABASE_ANON_KEY` — Supabase anon/public key (frontend)
+- `SUPABASE_URL` — same value as `VITE_SUPABASE_URL` (API server)
+- `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key (API server)
+- `GOOGLE_CLIENT_ID` — OAuth2 client ID from Google Cloud Console
+- `GOOGLE_CLIENT_SECRET` — OAuth2 client secret from Google Cloud Console
+- `GOOGLE_OAUTH_STATE_SECRET` — random hex string for HMAC-signing OAuth state params
+- `CRON_SECRET` — random string securing `/api/cron/archive-expired`
+- `MAYAR_WEBHOOK_SECRET` — Mayar webhook signing secret (required for `/api/mayar-webhook`)
+
+### Optional env vars
+
+- `VITE_MAYAR_PAYMENT_URL` — Mayar payment page URL (frontend falls back to `#` if unset)
+- `VITE_API_SERVER_URL` — only needed when frontend and API are on different origins; leave unset in Replit dev
+- `GOOGLE_REDIRECT_URI` — OAuth callback URL registered in Google Cloud Console (defaults to `https://<REPLIT_DEV_DOMAIN>/api/auth/google/callback`)
+- `FRONTEND_URL` — used by the API server for OAuth redirects (defaults to `https://<REPLIT_DEV_DOMAIN>`)
+- `ALLOWED_ORIGINS` — comma-separated CORS allowlist (defaults to allow all origins when unset)
+- `PORT` — API server defaults to `8080`; frontend Vite server defaults to `5173` and is typically overridden to `5000` by Replit
+- `LOG_LEVEL` — defaults to `info`
+
+## Detailed documentation
+
+- Full project overview: [`README.md`](./README.md)
+- Environment variables & secrets: [`docs/ENVIRONMENT.md`](./docs/ENVIRONMENT.md)
+- Replit-specific setup & troubleshooting: [`docs/replit.md`](./docs/replit.md)
+- Google Cloud OAuth setup: [`docs/GOOGLE-CLOUD-OAUTH.md`](./docs/GOOGLE-CLOUD-OAUTH.md)
+- Supabase setup & migrations: [`docs/SUPABASE-SETUP.md`](./docs/SUPABASE-SETUP.md)
+- Vercel deployment runbook: [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md)
+
+## Stack
+
+- **Frontend:** React 19 + Vite 7, TypeScript, Tailwind CSS 4, Wouter, Vaul, Recharts, TanStack Query, React Hook Form, Zod
+- **Backend:** Express 5
+- **Auth:** Supabase Auth
+- **App data:** per-user Google Spreadsheet via OAuth2
+- **Subscription/profile data:** Supabase Postgres (`profiles` table)
+- **Package manager:** pnpm 10.26.1 (monorepo)
+
+## User preferences
+
+_Record user preferences here as they come up._

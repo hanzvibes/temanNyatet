@@ -1,0 +1,14 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "xt_sbnXfuhI6cQksXUhUo"
+uri = "file://screenshots/teman-nyatet-home.jpg"
+type = "image"
+title = "TemanNyatet home page"
+
+[[outputs]]
+id = "8EpIciEuhTNt7fKC-iX0h"
+uri = "file://screenshots/teman-nyatet-login.jpg"
+type = "image"
+title = "TemanNyatet login page"

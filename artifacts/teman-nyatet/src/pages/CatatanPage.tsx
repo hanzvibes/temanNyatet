@@ -18,6 +18,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SortableNoteGrid } from '@/components/SortableNoteGrid';
+import { toast } from 'sonner';
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
 // Hash-based fallback colours (CSS vars so they flip with the theme).
@@ -222,6 +223,31 @@ export default function CatatanPage() {
     }
   };
 
+  const handleDeleteFromDrag = async (noteId: string) => {
+    const deletedNote = notes.find(n => n.id === noteId);
+    if (!deletedNote) return;
+
+    // Optimistic delete is already handled by deleteNote
+    await deleteNote(noteId);
+
+    // Show undo toast
+    const toastId = toast('Catatan dihapus', {
+      description: deletedNote.title || 'Catatan tanpa judul',
+      action: {
+        label: 'Urungkan',
+        onClick: async () => {
+          await createNote({
+            title: deletedNote.title || undefined,
+            content: deletedNote.content,
+            tags: deletedNote.tags,
+            color: deletedNote.color,
+          });
+        },
+      },
+      duration: 5000,
+    });
+  };
+
   return (
     <div className="flex flex-col h-full bg-background min-h-dvh pb-32 lg:pb-16">
       {/* Header */}
@@ -263,6 +289,7 @@ export default function CatatanPage() {
             notes={filteredNotes}
             onReorder={reorderNotes}
             onClickNote={handleOpenDetail}
+            onDeleteNote={handleDeleteFromDrag}
             disabled={!!search}
           />
         )}

@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useState } from 'react';
+import React, { memo, useCallback, useMemo, useState, useRef } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -8,6 +8,7 @@ import {
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
+  type DragMoveEvent,
   DragOverlay,
 } from '@dnd-kit/core';
 import {
@@ -18,10 +19,12 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { motion, AnimatePresence } from 'framer-motion';
 import { GripVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import type { Note } from '@/lib/database.types';
+import { DeleteTarget } from './DeleteTarget';
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 // Four soft sticky-note colours. Index-based mapping keeps the surface calm and
@@ -230,11 +233,19 @@ function DragOverlayCard({ note, color }: { note: Note; color: string }) {
   );
 }
 
+// ── Delete zone parameters ─────────────────────────────────────────────────────
+// The delete target activates when the pointer enters the bottom 150 px of the
+// viewport, centred horizontally in a 280 px-wide band — wide enough to feel
+// forgiving on mobile, narrow enough to avoid accidental triggers.
+const DELETE_ZONE_BOTTOM = 150;
+const DELETE_ZONE_HALF_WIDTH = 140; // half of the 280 px band
+
 // ── Sortable grid ──────────────────────────────────────────────────────────────
 type SortableNoteGridProps = {
   notes: Note[];
   onReorder: (orderedIds: string[]) => void;
   onClickNote: (note: Note, color: string) => void;
+  onDeleteNote?: (noteId: string) => void;
   disabled?: boolean;
 };
 
@@ -242,9 +253,24 @@ export function SortableNoteGrid({
   notes,
   onReorder,
   onClickNote,
+  onDeleteNote,
   disabled,
 }: SortableNoteGridProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isOverDelete, setIsOverDelete] = useState(false);
+  const [deleteConfirmed, setDeleteConfirmed] = useState(false);
+
+  // Refs to avoid stale closures inside drag handlers
+  const notesRef = useRef(notes);
+  notesRef.current = notes;
+  const onReorderRef = useRef(onReorder);
+  onReorderRef.current = onReorder;
+  const onDeleteNoteRef = useRef(onDeleteNote);
+  onDeleteNoteRef.current = onDeleteNote;
+  const onClickNoteRef = useRef(onClickNote);
+  onClickNoteRef.current = onClickNote;
+  const isOverDeleteRef = useRef(false);
+  const activeIdRef = useRef<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -260,32 +286,80 @@ export function SortableNoteGrid({
 
   const handleCardClick = useCallback(
     (noteId: string) => {
-      const note = notes.find((n) => n.id === noteId);
+      const note = notesRef.current.find((n) => n.id === noteId);
       if (!note) return;
-      onClickNote(note, note.color || colorForNoteId(noteId));
+      onClickNoteRef.current(note, note.color || colorForNoteId(noteId));
     },
-    [notes, onClickNote],
+    [],
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
-    setActiveId(String(event.active.id));
+    const id = String(event.active.id);
+    setActiveId(id);
+    activeIdRef.current = id;
+    setIsOverDelete(false);
+    isOverDeleteRef.current = false;
+    setDeleteConfirmed(false);
+  }, []);
+
+  const handleDragMove = useCallback((event: DragMoveEvent) => {
+    const ev = event.activatorEvent;
+    // Only pointer/touch events have meaningful coordinates; keyboard
+    // sort operations should not trigger the delete zone.
+    if ('clientY' in ev && 'clientX' in ev) {
+      const x = (ev as PointerEvent).clientX;
+      const y = (ev as PointerEvent).clientY;
+      const nearBottom = window.innerHeight - y < DELETE_ZONE_BOTTOM;
+      const nearCenter = Math.abs(x - window.innerWidth / 2) < DELETE_ZONE_HALF_WIDTH;
+      const isNear = nearBottom && nearCenter;
+      setIsOverDelete(isNear);
+      isOverDeleteRef.current = isNear;
+    }
   }, []);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
+      const wasOverDelete = isOverDeleteRef.current;
+      const draggedId = String(event.active.id);
+
+      if (wasOverDelete && onDeleteNoteRef.current) {
+        // Brief confirmation flash before resetting
+        setDeleteConfirmed(true);
+        setTimeout(() => {
+          setActiveId(null);
+          setIsOverDelete(false);
+          isOverDeleteRef.current = false;
+          activeIdRef.current = null;
+        }, 280);
+        // Fire the delete callback so the exit animation can play
+        // while the API call is in-flight.
+        setTimeout(() => onDeleteNoteRef.current!(draggedId), 20);
+        return;
+      }
+
       setActiveId(null);
+      setIsOverDelete(false);
+      isOverDeleteRef.current = false;
+
       const { active, over } = event;
       if (!over || active.id === over.id) return;
-      const oldIndex = notes.findIndex((n) => n.id === active.id);
-      const newIndex = notes.findIndex((n) => n.id === over.id);
+      const currentNotes = notesRef.current;
+      const oldIndex = currentNotes.findIndex((n) => n.id === active.id);
+      const newIndex = currentNotes.findIndex((n) => n.id === over.id);
       if (oldIndex === -1 || newIndex === -1) return;
-      const reordered = arrayMove(notes, oldIndex, newIndex);
-      onReorder(reordered.map((n) => n.id));
+      const reordered = arrayMove(currentNotes, oldIndex, newIndex);
+      onReorderRef.current(reordered.map((n) => n.id));
     },
-    [notes, onReorder],
+    [],
   );
 
-  const handleDragCancel = useCallback(() => setActiveId(null), []);
+  const handleDragCancel = useCallback(() => {
+    setActiveId(null);
+    setIsOverDelete(false);
+    isOverDeleteRef.current = false;
+    activeIdRef.current = null;
+    setDeleteConfirmed(false);
+  }, []);
 
   const activeNote = activeId ? notes.find((n) => n.id === activeId) : null;
 
@@ -294,6 +368,7 @@ export function SortableNoteGrid({
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
       // Localised screen-reader announcements. dnd-kit wires these into a
@@ -327,15 +402,23 @@ export function SortableNoteGrid({
           className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start"
           data-notes-version={itemsKey}
         >
-          {notes.map((note) => (
-            <MemoSortableNoteCard
-              key={note.id}
-              note={note}
-              color={note.color || colorForNoteId(note.id)}
-              onClick={() => handleCardClick(note.id)}
-              disabled={disabled}
-            />
-          ))}
+          <AnimatePresence>
+            {notes.map((note) => (
+              <motion.div
+                key={note.id}
+                exit={{ opacity: 0, scale: 0.45, y: 40 }}
+                transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+                className="contents"
+              >
+                <MemoSortableNoteCard
+                  note={note}
+                  color={note.color || colorForNoteId(note.id)}
+                  onClick={() => handleCardClick(note.id)}
+                  disabled={disabled}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       </SortableContext>
 
@@ -344,6 +427,12 @@ export function SortableNoteGrid({
           <DragOverlayCard note={activeNote} color={activeNote.color || colorForNoteId(activeNote.id)} />
         ) : null}
       </DragOverlay>
+
+      <DeleteTarget
+        isDragging={activeId !== null || deleteConfirmed}
+        isOverDelete={isOverDelete}
+        deleteConfirmed={deleteConfirmed}
+      />
     </DndContext>
   );
 }

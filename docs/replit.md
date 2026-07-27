@@ -110,6 +110,13 @@ OAuth and the data API will fail closed until the `google_refresh_token` column 
 - **Production lives on Vercel**: dua project (`teman-nyatet` frontend + `teman-nyatet-api-server` API) dari satu repo ini, Root Directory berbeda. Replit env berfungsi sebagai development/staging. Lihat [`docs/GOOGLE-CLOUD-OAUTH.md`](./GOOGLE-CLOUD-OAUTH.md) dan bagian "Deploy ke Vercel" di [`README.md`](../README.md) untuk produksi
 - `vercel.json` di tiap artifact hanya di-baca Vercel, tidak memengaruhi workflow Replit
 
+## Performance notes
+
+- The frontend production build keeps route-only navigation, charts, drag-and-drop, date formatting, motion, and toaster code out of the smallest startup entry where possible.
+- Service-worker registration is scheduled after the first render during browser idle time; this preserves PWA updates without delaying the initial UI.
+- API development workflows intentionally retain Pino pretty logs and source maps for debugging. Production builds (`NODE_ENV=production`) omit those development-only artifacts.
+- Use the existing typecheck/build commands plus a production browser performance run to measure FCP, LCP, TTI, and scroll smoothness after deployment.
+
 ## User preferences
 
 _Populate as you build._

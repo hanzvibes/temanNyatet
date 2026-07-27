@@ -1,14 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/sonner';
-import { TooltipProvider } from '@/components/ui/tooltip';
 import { Router as WouterRouter, useLocation } from 'wouter';
 import { AuthProvider, useAuthContext } from '@/contexts/AuthContext';
 import { CreateProvider } from '@/contexts/CreateContext';
 import { Loader2 } from 'lucide-react';
 import React, { Suspense, useEffect, useState } from 'react';
 
-import BottomSheetNav from '@/components/BottomSheetNav';
-import SidebarNav from '@/components/SidebarNav';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import PwaUpdatePrompt from '@/components/PwaUpdatePrompt';
 import OfflineIndicator from '@/components/OfflineIndicator';
@@ -25,6 +21,13 @@ const KeuanganPage = React.lazy(() => import('@/pages/KeuanganPage'));
 const TodoPage = React.lazy(() => import('@/pages/TodoPage'));
 const LinkSaverPage = React.lazy(() => import('@/pages/LinkSaverPage'));
 const NotFound = React.lazy(() => import('@/pages/not-found'));
+const BottomSheetNav = React.lazy(() => import('@/components/BottomSheetNav'));
+const SidebarNav = React.lazy(() => import('@/components/SidebarNav'));
+const Toaster = React.lazy(() =>
+  import('@/components/ui/sonner').then(({ Toaster: Component }) => ({
+    default: Component,
+  })),
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -151,13 +154,17 @@ function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh bg-background lg:flex">
       {/* Fixed left sidebar — only rendered (and visible) on lg+ */}
-      <SidebarNav />
+      <Suspense fallback={null}>
+        <SidebarNav />
+      </Suspense>
 
       {/* Main content area — takes remaining width on desktop */}
       <main className="flex-1 min-w-0 relative overflow-x-hidden bg-background">
         {children}
         {/* Bottom sheet nav — hidden on desktop via lg:hidden inside the component */}
-        <BottomSheetNav />
+        <Suspense fallback={null}>
+          <BottomSheetNav />
+        </Suspense>
       </main>
     </div>
   );
@@ -246,23 +253,23 @@ function RouteSlot({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <CreateProvider>
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-              <AuthGuard>
-                <MainLayout>
-                  <OfflineIndicator />
-                  <Router />
-                  <PwaInstallPrompt />
-                  <PwaUpdatePrompt />
-                </MainLayout>
-              </AuthGuard>
-            </WouterRouter>
-          </CreateProvider>
-        </AuthProvider>
+      <AuthProvider>
+        <CreateProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+            <AuthGuard>
+              <MainLayout>
+                <OfflineIndicator />
+                <Router />
+                <PwaInstallPrompt />
+                <PwaUpdatePrompt />
+              </MainLayout>
+            </AuthGuard>
+          </WouterRouter>
+        </CreateProvider>
+      </AuthProvider>
+      <Suspense fallback={null}>
         <Toaster />
-      </TooltipProvider>
+      </Suspense>
     </QueryClientProvider>
   );
 }

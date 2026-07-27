@@ -76,9 +76,11 @@ function registerServiceWorker() {
   }
 }
 
-// Defer SW registration slightly so the initial paint is prioritized.
+// Defer SW registration so the initial paint is prioritized, but cap the
+// delay so offline/PWA behavior still becomes available on idle-constrained
+// browsers.
 if ('requestIdleCallback' in window) {
-  window.requestIdleCallback(registerServiceWorker);
+  window.requestIdleCallback(registerServiceWorker, { timeout: 4000 });
 } else {
   setTimeout(registerServiceWorker, 1000);
 }

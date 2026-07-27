@@ -234,11 +234,36 @@ function DragOverlayCard({ note, color }: { note: Note; color: string }) {
 }
 
 // ── Delete zone parameters ─────────────────────────────────────────────────────
-// The delete target activates when the pointer enters the bottom 150 px of the
-// viewport, centred horizontally in a 280 px-wide band — wide enough to feel
-// forgiving on mobile, narrow enough to avoid accidental triggers.
-const DELETE_ZONE_BOTTOM = 150;
-const DELETE_ZONE_HALF_WIDTH = 140; // half of the 280 px band
+// The delete target activates when the pointer enters the bottom 160 px of the
+// viewport, centred horizontally in a 500 px-wide band — very forgiving so it
+// works reliably across mouse, touch, and fast gestures.
+const DELETE_ZONE_BOTTOM = 160;
+const DELETE_ZONE_HALF_WIDTH = 250; // half of the 500 px band
+
+// ── Coordinate helpers ─────────────────────────────────────────────────────────
+// dnd-kit's activatorEvent can be a PointerEvent, MouseEvent, or TouchEvent
+// depending on the sensor and device. These helpers normalize them.
+function getPointerPosition(
+  ev: Event | PointerEvent | MouseEvent | TouchEvent | KeyboardEvent,
+): { x: number; y: number } | null {
+  if ('changedTouches' in ev && (ev as TouchEvent).changedTouches.length > 0) {
+    return {
+      x: (ev as TouchEvent).changedTouches[0].clientX,
+      y: (ev as TouchEvent).changedTouches[0].clientY,
+    };
+  }
+  if ('clientX' in ev && typeof (ev as MouseEvent).clientX === 'number') {
+    return { x: (ev as MouseEvent).clientX, y: (ev as MouseEvent).clientY };
+  }
+  return null;
+}
+
+function isOverDeleteZone(x: number, y: number): boolean {
+  return (
+    window.innerHeight - y < DELETE_ZONE_BOTTOM &&
+    Math.abs(x - window.innerWidth / 2) < DELETE_ZONE_HALF_WIDTH
+  );
+}
 
 // ── Sortable grid ──────────────────────────────────────────────────────────────
 type SortableNoteGridProps = {
@@ -303,24 +328,26 @@ export function SortableNoteGrid({
   }, []);
 
   const handleDragMove = useCallback((event: DragMoveEvent) => {
-    const ev = event.activatorEvent;
-    // Only pointer/touch events have meaningful coordinates; keyboard
-    // sort operations should not trigger the delete zone.
-    if ('clientY' in ev && 'clientX' in ev) {
-      const x = (ev as PointerEvent).clientX;
-      const y = (ev as PointerEvent).clientY;
-      const nearBottom = window.innerHeight - y < DELETE_ZONE_BOTTOM;
-      const nearCenter = Math.abs(x - window.innerWidth / 2) < DELETE_ZONE_HALF_WIDTH;
-      const isNear = nearBottom && nearCenter;
-      setIsOverDelete(isNear);
-      isOverDeleteRef.current = isNear;
+    const pos = getPointerPosition(event.activatorEvent);
+    if (pos) {
+      const near = isOverDeleteZone(pos.x, pos.y);
+      setIsOverDelete(near);
+      isOverDeleteRef.current = near;
     }
   }, []);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      const wasOverDelete = isOverDeleteRef.current;
       const draggedId = String(event.active.id);
+
+      // Check the REF (set during onDragMove) and also the FINAL coordinates
+      // from the release event itself. This catches fast drags where the
+      // last onDragMove didn't enter the zone but the drop position is
+      // inside it.
+      const finalPos = getPointerPosition(event.activatorEvent);
+      const wasOverDelete =
+        isOverDeleteRef.current ||
+        (finalPos !== null && isOverDeleteZone(finalPos.x, finalPos.y));
 
       if (wasOverDelete && onDeleteNoteRef.current) {
         // Brief confirmation flash before resetting

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -30,6 +30,8 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
 
+  const [confirmedFromEmail, setConfirmedFromEmail] = useState(false);
+
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(isLogin ? loginSchema : registerSchema),
     defaultValues: {
@@ -38,6 +40,17 @@ export default function AuthPage() {
       confirmPassword: '',
     },
   });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('confirmed') === 'true') {
+      setConfirmedFromEmail(true);
+      // Remove the query param from the URL so a refresh does not keep showing the banner.
+      const cleanUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, '', cleanUrl);
+    }
+  }, []);
 
   const mapAuthError = (message: string): string => {
     if (message.includes('Invalid login credentials')) return 'Email atau password salah';
@@ -73,13 +86,19 @@ export default function AuthPage() {
           email: data.email,
           password: data.password,
           options: {
-            emailRedirectTo: getEmailRedirectUrl('/login'),
+            emailRedirectTo: getEmailRedirectUrl('/login?confirmed=true'),
           },
         });
         if (error) throw error;
 
-        if (signUpData.session) {
-          // Email confirmations are disabled in Supabase or the user was already confirmed.
+        if (signUpData.session && !signUpData.user?.email_confirmed_at) {
+          // Defense-in-depth: Supabase returned a session but the email is not
+          // confirmed. Sign out immediately so the user cannot enter the app
+          // unverified, and show the verification UI instead.
+          await supabase.auth.signOut();
+          setPendingEmail(data.email);
+          toast.success('Pendaftaran berhasil — silakan cek email Anda dan klik link konfirmasi sebelum masuk.');
+        } else if (signUpData.session) {
           toast.success('Pendaftaran berhasil!');
         } else {
           setPendingEmail(data.email);
@@ -109,7 +128,7 @@ export default function AuthPage() {
         type: 'signup',
         email: pendingEmail,
         options: {
-          emailRedirectTo: getEmailRedirectUrl('/login'),
+          emailRedirectTo: getEmailRedirectUrl('/login?confirmed=true'),
         },
       });
       if (error) throw error;
@@ -162,6 +181,13 @@ export default function AuthPage() {
            <h1 className="text-display">TemanNyatet</h1>
           <p className="text-muted-foreground text-base mt-2 font-medium">Catat sat-set, urusan beres.</p>
         </div>
+
+        {confirmedFromEmail && !pendingEmail && (
+          <div className="w-full bg-success/10 text-success border border-success/20 rounded-2xl p-4 mb-6 text-center">
+            <p className="font-semibold">Email berhasil diverifikasi!</p>
+            <p className="text-sm mt-1">Silakan masuk dengan email dan password kamu.</p>
+          </div>
+        )}
 
         {pendingEmail ? (
           <div className="w-full text-center space-y-6">

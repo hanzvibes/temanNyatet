@@ -13,6 +13,7 @@ import OfflineIndicator from '@/components/OfflineIndicator';
 // paint on slow mobile networks (especially iPhone on 3G/4G) and avoids a
 // long white screen during PWA launch.
 const AuthPage = React.lazy(() => import('@/pages/AuthPage'));
+const AuthConfirmPage = React.lazy(() => import('@/pages/AuthConfirmPage'));
 const PaymentPage = React.lazy(() => import('@/pages/PaymentPage'));
 const ArchivedPage = React.lazy(() => import('@/pages/ArchivedPage'));
 const ConnectSheetPage = React.lazy(() => import('@/pages/ConnectSheetPage'));
@@ -57,6 +58,7 @@ const queryClient = new QueryClient({
 // BottomSheetNav tabs) follows automatically.
 const ROUTE_ENTRIES: Array<{ path: string; component: React.ComponentType }> = [
   { path: '/login',         component: AuthPage         },
+  { path: '/auth/confirm',  component: AuthConfirmPage  },
   { path: '/payment',       component: PaymentPage      },
   { path: '/archived',      component: ArchivedPage     },
   { path: '/connect-sheet', component: ConnectSheetPage },
@@ -88,11 +90,13 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('teman-nyatet:spreadsheet-error', handler);
   }, [location, setLocation]);
 
+  const PUBLIC_ROUTES = new Set(['/login', '/auth/confirm']);
+
   useEffect(() => {
     if (loading) return;
 
     if (!user) {
-      if (location !== '/login') setLocation('/login');
+      if (!PUBLIC_ROUTES.has(location)) setLocation('/login');
       return;
     }
 

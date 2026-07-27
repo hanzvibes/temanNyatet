@@ -12,3 +12,27 @@ id = "8EpIciEuhTNt7fKC-iX0h"
 uri = "file://screenshots/teman-nyatet-login.jpg"
 type = "image"
 title = "TemanNyatet login page"
+
+[[outputs]]
+id = "CA9CE3UaZ_vTjWEPuwjCF"
+uri = "file://screenshots/login-normal.jpg"
+type = "image"
+title = "Login page"
+
+[[outputs]]
+id = "Q3t9QjZhpEAukcyXhC2iu"
+uri = "file://screenshots/login-confirmed.jpg"
+type = "image"
+title = "Login page after email confirmation (confirmed=true)"
+
+[[outputs]]
+id = "uQ3gbDYgOcN0hwwAXjXKh"
+uri = "file://screenshots/auth-confirm-success.jpg"
+type = "image"
+title = "Email confirmation success page"
+
+[[outputs]]
+id = "Pj6sq2zTdQek3ZaUBDz26"
+uri = "file://screenshots/auth-confirm-error.jpg"
+type = "image"
+title = "Email confirmation error page (invalid token)"

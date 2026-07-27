@@ -40,7 +40,7 @@ Email + password only. OAuth social providers are not configured.
 ```
 1. User submits email + password on /login (AuthPage)
 2. supabase.auth.signUp() → creates auth.users row
-3. Supabase sends confirmation email (emailRedirectTo: <SITE_URL>/login)
+3. Supabase sends confirmation email (emailRedirectTo: <SITE_URL>/login?confirmed=true)
 4. Trigger creates profiles row with subscription_status: 'pending'
 5. User clicks confirmation link → email confirmed
 6. User logs in → session issued

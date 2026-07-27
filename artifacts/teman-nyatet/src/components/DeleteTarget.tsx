@@ -6,30 +6,22 @@ interface DeleteTargetProps {
   isDragging: boolean;
   isOverDelete: boolean;
   deleteConfirmed: boolean;
-  zonePos: { x: number; y: number } | null;
 }
 
-const SIZE = 56;
-
 /**
- * A floating trash icon that appears ABOVE the drag start position.
- * The user must drag the note upward toward this icon to delete —
- * preventing accidental deletion of notes near the bottom of the page.
+ * Icon-only floating delete target. Three modes:
  *
- * States:
- * 1. Idle    — small translucent circle, gentle bob
- * 2. Hot     — red glow + wobble, cursor is inside the zone
- * 3. Slam    — trash scales up with wobble + flash burst
- * 4. Check   — checkmark springs in
- * 5. Vanish  — everything fades + shrinks
+ * 1. Idle (dragging, far)   — translucent circle, gentle bob
+ * 2. Hot (dragging, near)   — red glow, wobble, ripple rings
+ * 3. Confirmed (deleting)   — slam → flash → checkmark → vanish
  */
 export function DeleteTarget({
   isDragging,
   isOverDelete,
   deleteConfirmed,
-  zonePos,
 }: DeleteTargetProps) {
-  // Internal phase so the "slam" plays BEFORE the checkmark
+  // Internal phase so the "slam" plays BEFORE the checkmark appears,
+  // giving a satisfying "trash swallows the note" feel.
   const [phase, setPhase] = useState<'slam' | 'check' | 'vanish' | null>(null);
   const prevDeleteRef = useRef(false);
 
@@ -45,19 +37,10 @@ export function DeleteTarget({
     return;
   }, [deleteConfirmed, phase]);
 
-  // Don't render anything if we don't have a zone position yet.
-  if (!zonePos && !deleteConfirmed) return null;
-
   return (
     <AnimatePresence>
-      {isDragging && zonePos && (
-        <div
-          className="fixed z-[200] pointer-events-none"
-          style={{
-            left: zonePos.x - SIZE / 2,
-            top: zonePos.y - SIZE / 2,
-          }}
-        >
+      {isDragging && (
+        <div className="fixed bottom-36 lg:bottom-24 left-1/2 -translate-x-1/2 z-[200] pointer-events-none flex flex-col items-center">
           {/* ── Expanding ripple rings when hot ── */}
           <AnimatePresence>
             {isOverDelete && !deleteConfirmed && (
@@ -70,8 +53,8 @@ export function DeleteTarget({
                     key={i}
                     className="absolute rounded-full border-2"
                     style={{
-                      width: SIZE,
-                      height: SIZE,
+                      width: 56,
+                      height: 56,
                       borderColor:
                         i === 0
                           ? 'hsl(var(--destructive) / 0.3)'
@@ -98,7 +81,7 @@ export function DeleteTarget({
             <motion.div
               key="flash-burst"
               className="absolute rounded-full bg-destructive/20"
-              initial={{ width: SIZE, height: SIZE, opacity: 0.6 }}
+              initial={{ width: 56, height: 56, opacity: 0.6 }}
               animate={{ width: 220, height: 220, opacity: 0 }}
               transition={{ duration: 0.35, ease: 'easeOut' }}
             />
@@ -124,7 +107,7 @@ export function DeleteTarget({
                     ? { scale: [1.05, 0.9, 0.3], opacity: [1, 0.8, 0] }
                     : isOverDelete
                       ? { opacity: 1, scale: 1.18 }
-                      : { opacity: 0.55, scale: 0.85, y: [0, -4, 0] }
+                      : { opacity: 0.5, scale: 0.82, y: [0, -3, 0] }
             }
             exit={{ opacity: 0, scale: 0.15, transition: { duration: 0.12 } }}
             transition={
@@ -144,9 +127,10 @@ export function DeleteTarget({
                           y: { duration: 1.8, repeat: Infinity, ease: 'easeInOut' },
                         }
             }
-            style={{ width: SIZE, height: SIZE }}
+            style={{ width: 56, height: 56 }}
           >
-            {phase === 'slam' || (phase === null && !deleteConfirmed && !isOverDelete) ? (
+            {/* ── Trash or Checkmark ── */}
+            {phase === 'slam' || phase === null || (!deleteConfirmed && !isOverDelete) ? (
               <motion.div
                 animate={
                   phase === 'slam'

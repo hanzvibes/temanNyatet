@@ -1,15 +1,17 @@
-import React, { memo, useCallback, useMemo, useState, useRef } from 'react';
+import React, { memo, useCallback, useMemo, useState, useRef, useEffect } from 'react';
 import {
   DndContext,
   closestCenter,
+  pointerWithin,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
   type DragEndEvent,
   type DragStartEvent,
-  type DragMoveEvent,
   DragOverlay,
+  type CollisionDetection,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -38,47 +40,65 @@ function colorForNoteId(noteId: string): string {
 }
 
 // ─── Animation tuning ─────────────────────────────────────────────────────────
+const SORT_SPRING = { type: 'spring', stiffness: 380, damping: 32, mass: 0.8 } as const;
 const OVERLAY_SCALE = 1.04;
 const OVERLAY_ROTATE_DEG = -1.5;
 const POINTER_ACTIVATION_DISTANCE = 5;
 
-// ── Delete zone ────────────────────────────────────────────────────────────────
-// The delete target appears ABOVE where the user started dragging (not fixed at
-// the bottom of the screen). This prevents accidental deletion of notes near the
-// page bottom — the user must deliberately drag the note UPWARD to reach the zone.
-const ZONE_ABOVE_DRAG_START = 180; // px above drag-start Y
-const ZONE_HALF = 55; // 110×110 px hit area
+// ── Collision detection ────────────────────────────────────────────────────────
+// When the pointer is inside the delete‑zone droppable, return only that
+// collision so the drop registers as a delete gesture. Otherwise fall back
+// to closestCenter for normal sortable re‑ordering.
+const customCollisionDetection: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+  const deleteZoneCollision = pointerCollisions.find(
+    (c) => c.id === 'delete-zone',
+  );
+  if (deleteZoneCollision) return [deleteZoneCollision];
+  return closestCenter(args);
+};
 
-function getPointerPosition(
-  ev: Event | PointerEvent | MouseEvent | TouchEvent | KeyboardEvent,
-): { x: number; y: number } | null {
-  if ('changedTouches' in ev && (ev as TouchEvent).changedTouches.length > 0) {
-    return {
-      x: (ev as TouchEvent).changedTouches[0].clientX,
-      y: (ev as TouchEvent).changedTouches[0].clientY,
-    };
-  }
-  if ('clientX' in ev && typeof (ev as MouseEvent).clientX === 'number') {
-    return { x: (ev as MouseEvent).clientX, y: (ev as MouseEvent).clientY };
-  }
-  return null;
-}
+// ── Invisible droppable that makes the bottom area a delete target ─────────────
+// Rendered as a sibling of SortableContext so dnd-kit detects it during drag.
+// The `isOver` state is synced to the parent via onIsOverChange for visual
+// feedback in the DeleteTarget component.
+const DELETE_ZONE_W = 500;
+const DELETE_ZONE_H = 170;
 
-function calcZoneCenter(startX: number, startY: number, vw: number, vh: number) {
-  const zoneX = startX;
-  const zoneY = Math.max(startY - ZONE_ABOVE_DRAG_START, 60);
-  return { x: zoneX, y: zoneY };
-}
+function DeleteDroppable({
+  activeId,
+  onIsOverChange,
+}: {
+  activeId: string | null;
+  onIsOverChange: (over: boolean) => void;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: 'delete-zone' });
 
-function isCursorInZone(
-  cx: number,
-  cy: number,
-  zoneX: number,
-  zoneY: number,
-): boolean {
+  // Stable callback ref so the useEffect doesn't re‑run on every render.
+  const onIsOverChangeRef = useRef(onIsOverChange);
+  onIsOverChangeRef.current = onIsOverChange;
+
+  useEffect(() => {
+    // Only report isOver while a drag is active — we never want stale
+    // hover state when the user isn't dragging anything.
+    if (activeId) {
+      onIsOverChangeRef.current(isOver);
+    }
+  }, [isOver, activeId]);
+
   return (
-    Math.abs(cx - zoneX) < ZONE_HALF &&
-    Math.abs(cy - zoneY) < ZONE_HALF
+    <div
+      ref={setNodeRef}
+      className="fixed left-1/2 z-[199]"
+      style={{
+        bottom: '9rem',
+        width: DELETE_ZONE_W,
+        height: DELETE_ZONE_H,
+        transform: 'translateX(-50%)',
+        // Invisible — never block the visual delete pill or any other UI.
+        pointerEvents: 'none',
+      }}
+    />
   );
 }
 
@@ -221,7 +241,6 @@ export function SortableNoteGrid({
   const [isOverDelete, setIsOverDelete] = useState(false);
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
   const [pendingDeleteNote, setPendingDeleteNote] = useState<Note | null>(null);
-  const [zonePos, setZonePos] = useState<{ x: number; y: number } | null>(null);
 
   // Refs to avoid stale closures inside drag handlers
   const notesRef = useRef(notes);
@@ -256,57 +275,36 @@ export function SortableNoteGrid({
     setActiveId(id);
     setIsOverDelete(false);
     setDeleteConfirmed(false);
-
-    // Record drag start position; the delete zone will appear above this point.
-    const pos = getPointerPosition(event.activatorEvent);
-    if (pos) {
-      setZonePos(
-        calcZoneCenter(pos.x, pos.y, window.innerWidth, window.innerHeight),
-      );
-    }
-  }, []);
-
-  const handleDragMove = useCallback((event: DragMoveEvent) => {
-    const pos = getPointerPosition(event.activatorEvent);
-    if (!pos || !zonePosRef.current) return;
-    setIsOverDelete(isCursorInZone(pos.x, pos.y, zonePosRef.current.x, zonePosRef.current.y));
   }, []);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const draggedId = String(event.active.id);
 
-      // ── Delete detection (coordinate-based) ──────────────────────────
-      // Check whether the pointer is inside the floating delete zone.
-      // Zone position is set once on drag start and stays fixed.
-      const finalPos = getPointerPosition(event.activatorEvent);
-      const zone = zonePosRef.current;
-      const shouldDelete =
-        finalPos &&
-        zone &&
-        isCursorInZone(finalPos.x, finalPos.y, zone.x, zone.y) &&
-        onDeleteNoteRef.current;
-
-      if (shouldDelete) {
+      // ── Delete-on-drop via useDroppable ────────────────────────────────
+      if (event.over?.id === 'delete-zone' && onDeleteNoteRef.current) {
+        // Preserve the note data so the DragOverlay can keep rendering
+        // during the 700ms delete animation even after optimistic removal.
         const noteData = notesRef.current.find(n => n.id === draggedId);
         if (noteData) setPendingDeleteNote(noteData);
 
         setDeleteConfirmed(true);
+        // 700ms: slam (300ms) + check (200ms) + vanish (200ms)
         setTimeout(() => {
           setActiveId(null);
           setIsOverDelete(false);
           setDeleteConfirmed(false);
           setPendingDeleteNote(null);
-          setZonePos(null);
         }, 700);
+        // Fire optimistic removal quickly so the card exit animation
+        // plays alongside the trash-animation.
         setTimeout(() => onDeleteNoteRef.current!(draggedId), 20);
         return;
       }
 
-      // ── Normal reorder ──────────────────────────────────────────────
+      // ── Normal reorder ─────────────────────────────────────────────────
       setActiveId(null);
       setIsOverDelete(false);
-      setZonePos(null);
 
       const { active, over } = event;
       if (!over || active.id === over.id) return;
@@ -324,14 +322,10 @@ export function SortableNoteGrid({
     setActiveId(null);
     setIsOverDelete(false);
     setDeleteConfirmed(false);
-    setZonePos(null);
   }, []);
 
-  // Refs that stay in sync with state for use inside stable callbacks.
-  const zonePosRef = useRef(zonePos);
-  zonePosRef.current = zonePos;
-
-  // Fall back to pendingDeleteNote while the delete animation plays.
+  // Fall back to pendingDeleteNote while the delete animation plays,
+  // because the note is optimistically removed from `notes` almost immediately.
   const activeNote = activeId
     ? (notes.find((n) => n.id === activeId) || pendingDeleteNote)
     : null;
@@ -339,9 +333,8 @@ export function SortableNoteGrid({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={customCollisionDetection}
       onDragStart={handleDragStart}
-      onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
       accessibility={{
@@ -409,12 +402,17 @@ export function SortableNoteGrid({
         ) : null}
       </DragOverlay>
 
-      {/* Floating trash target — positioned ABOVE the drag start */}
+      {/* Invisible droppable that makes the bottom area a delete target */}
+      <DeleteDroppable
+        activeId={activeId}
+        onIsOverChange={setIsOverDelete}
+      />
+
+      {/* Visual delete pill */}
       <DeleteTarget
         isDragging={activeId !== null || deleteConfirmed}
         isOverDelete={isOverDelete}
         deleteConfirmed={deleteConfirmed}
-        zonePos={zonePos}
       />
     </DndContext>
   );

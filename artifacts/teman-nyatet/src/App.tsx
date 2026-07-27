@@ -3,7 +3,8 @@ import { Router as WouterRouter, useLocation } from 'wouter';
 import { AuthProvider, useAuthContext } from '@/contexts/AuthContext';
 import { CreateProvider } from '@/contexts/CreateContext';
 import { Loader2 } from 'lucide-react';
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import PwaUpdatePrompt from '@/components/PwaUpdatePrompt';
@@ -183,6 +184,14 @@ function PageLoading() {
   );
 }
 
+// Track the previous value of a boolean prop so RouteSlot can animate only
+// when a page becomes active, not on every re-render.
+function usePrevious<T>(value: T): T | undefined {
+  const ref = useRef<T | undefined>(undefined);
+  useEffect(() => { ref.current = value; });
+  return ref.current;
+}
+
 // ── Cached route switch ──────────────────────────────────────────────────
 // wouter's <Switch> remounts every <Route> on each navigation, which costs:
 //   • A TanStack-Query refetch of data we just fetched seconds ago (default
@@ -247,9 +256,23 @@ function RouteSlot({
   active: boolean;
   children: React.ReactNode;
 }) {
+  const prevActive = usePrevious(active);
+  const entering = active && !prevActive;
+
   return (
     <div hidden={!active} aria-hidden={!active}>
-      <Suspense fallback={<PageLoading />}>{children}</Suspense>
+      {active ? (
+        <motion.div
+          key="active"
+          initial={entering ? { opacity: 0, y: 16 } : false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+        >
+          <Suspense fallback={<PageLoading />}>{children}</Suspense>
+        </motion.div>
+      ) : (
+        <Suspense fallback={null}>{children}</Suspense>
+      )}
     </div>
   );
 }

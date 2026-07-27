@@ -3,6 +3,7 @@ import { motion, useMotionValue, animate, AnimatePresence } from 'framer-motion'
 import { useLocation } from 'wouter';
 import { NotebookPen, Wallet, CheckSquare, Link2, ChevronUp, X } from 'lucide-react';
 import { useCreate } from '@/contexts/CreateContext';
+import { useHaptic, HAPTIC } from '@/hooks/useHaptic';
 
 const PEEK_HEIGHT = 92;
 // BottomNav: fixed bottom-3 (12px) + h-16 (64 nav) + 32 (handle) = 108 from bottom edge.
@@ -20,6 +21,7 @@ const ACTIONS = [
 export default function DraggableSheet() {
   const [, navigate] = useLocation();
   const { triggerCreate } = useCreate();
+  const haptic = useHaptic();
 
   const [screenH, setScreenH] = useState(window.innerHeight);
 
@@ -124,6 +126,7 @@ export default function DraggableSheet() {
   };
 
   const handleAction = (section: typeof ACTIONS[0]['section'], path: string) => {
+    haptic(HAPTIC.tap);
     snapTo('collapsed');
     navigate(path);
     // Use rAF so navigation re-render settles first
@@ -154,7 +157,7 @@ export default function DraggableSheet() {
       <motion.div
         className="fixed left-0 right-0 max-w-md mx-auto z-30"
         style={{
-          bottom: NAV_OFFSET,
+          bottom: 'calc(108px + env(safe-area-inset-bottom))',
           height: SHEET_H,
           y,
         }}

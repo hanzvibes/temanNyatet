@@ -10,6 +10,7 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { useTodos }        from '@/hooks/useTodos';
 import { useLinks }        from '@/hooks/useLinks';
 import { useForm }         from 'react-hook-form';
+import { useHaptic, HAPTIC } from '@/hooks/useHaptic';
 import { zodResolver }     from '@hookform/resolvers/zod';
 import * as z              from 'zod';
 import { format }          from 'date-fns';
@@ -32,7 +33,9 @@ import { toast } from 'sonner';
 // ─── Shared input style helpers ───────────────────────────────────────────────
 // [color-scheme:light] + dark:[color-scheme:dark] keeps browser-native controls
 // (date, time, select) readable in both light and dark mode.
-const inp  = 'w-full bg-card border border-border rounded-xl py-2.5 px-3.5 outline-none text-sm font-bold text-foreground transition-all [color-scheme:light] dark:[color-scheme:dark]';
+// text-base (16px) is the minimum font size that prevents iOS Safari from
+// auto-zooming inputs on focus, keeping the native-app feel.
+const inp  = 'w-full bg-card border border-border rounded-xl py-2.5 px-3.5 outline-none text-base font-bold text-foreground transition-all [color-scheme:light] dark:[color-scheme:dark]';
 const inpFocus = (color: string) => `${inp} focus:border-${color} focus:ring-2 focus:ring-${color}/20`;
 
 // ─── Note Form ────────────────────────────────────────────────────────────────
@@ -47,6 +50,7 @@ type NoteForm = z.infer<typeof noteSchema>;
 function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
   const { user } = useAuthContext();
   const { createNote } = useNotes(user?.id);
+  const haptic = useHaptic();
   const form = useForm<NoteForm>({
     resolver: zodResolver(noteSchema),
     defaultValues: { title: '', content: '', tags: [] },
@@ -74,7 +78,7 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
       <textarea
         {...form.register('content')}
         placeholder="Apa yang ingin kamu catat?"
-        className="flex-1 min-h-[80px] resize-none bg-card border border-border rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all leading-relaxed"
+        className="flex-1 min-h-[80px] resize-none bg-card border border-border rounded-xl p-3 outline-none text-base font-medium placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all leading-relaxed"
       />
       {form.formState.errors.content && (
         <FormError size="xs">{form.formState.errors.content.message}</FormError>
@@ -93,7 +97,7 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
           );
         })}
       </div>
-      <Button type="submit" className="w-full mt-auto">
+      <Button type="submit" className="w-full mt-auto" onClick={() => haptic(HAPTIC.tap)}>
         Simpan Catatan
       </Button>
     </form>
@@ -114,6 +118,7 @@ type TxForm = z.infer<typeof txSchema>;
 function KeuanganSheetForm({ onSuccess }: { onSuccess: () => void }) {
   const { user } = useAuthContext();
   const { createTransaction } = useTransactions(user?.id);
+  const haptic = useHaptic();
   const [txType, setTxType] = useState<TransactionType>('expense');
 
   const form = useForm<TxForm>({
@@ -233,7 +238,7 @@ function KeuanganSheetForm({ onSuccess }: { onSuccess: () => void }) {
         placeholder="Catatan tambahan (opsional)"
         className={inpFocus('finance')} />
 
-      <Button type="submit" className="w-full bg-finance text-finance-text hover:bg-finance/90 mt-auto">
+      <Button type="submit" className="w-full bg-finance text-finance-text hover:bg-finance/90 mt-auto" onClick={() => haptic(HAPTIC.tap)}>
         Simpan Transaksi 💾
       </Button>
     </form>
@@ -252,6 +257,7 @@ type TodoFormVals = z.infer<typeof todoSchema>;
 function TodoSheetForm({ onSuccess }: { onSuccess: () => void }) {
   const { user } = useAuthContext();
   const { createTodo } = useTodos(user?.id);
+  const haptic = useHaptic();
   const form = useForm<TodoFormVals>({
     resolver: zodResolver(todoSchema),
     defaultValues: { title: '', description: '', due_date: '', due_time: '' },
@@ -286,7 +292,7 @@ function TodoSheetForm({ onSuccess }: { onSuccess: () => void }) {
       <textarea
         {...form.register('description')}
         placeholder="Catatan tambahan (opsional)"
-        className="min-h-[60px] resize-none bg-card border border-border rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
+        className="min-h-[60px] resize-none bg-card border border-border rounded-xl p-3 outline-none text-base font-medium placeholder:text-muted-foreground/50 focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
       />
       <div className="flex gap-2">
         <div className="flex-1">
@@ -300,7 +306,7 @@ function TodoSheetForm({ onSuccess }: { onSuccess: () => void }) {
             className={inpFocus('todo')} />
         </div>
       </div>
-      <Button type="submit" className="w-full bg-todo text-white hover:bg-todo/90 mt-auto">
+      <Button type="submit" className="w-full bg-todo text-white hover:bg-todo/90 mt-auto" onClick={() => haptic(HAPTIC.tap)}>
         Simpan To-Do ✓
       </Button>
     </form>
@@ -318,6 +324,7 @@ type LinkFormVals = z.infer<typeof linkSchema>;
 function LinkSheetForm({ onSuccess }: { onSuccess: () => void }) {
   const { user } = useAuthContext();
   const { createLink } = useLinks(user?.id);
+  const haptic = useHaptic();
   const form = useForm<LinkFormVals>({
     resolver: zodResolver(linkSchema),
     defaultValues: { title: '', url: '', note: '' },
@@ -360,9 +367,9 @@ function LinkSheetForm({ onSuccess }: { onSuccess: () => void }) {
       <textarea
         {...form.register('note')}
         placeholder="Catatan (opsional)"
-        className="min-h-[60px] resize-none bg-card border border-border rounded-xl p-3 outline-none text-sm font-medium placeholder:text-muted-foreground/50 focus:border-linksaver focus:ring-2 focus:ring-linksaver/20 transition-all"
+        className="min-h-[60px] resize-none bg-card border border-border rounded-xl p-3 outline-none text-base font-medium placeholder:text-muted-foreground/50 focus:border-linksaver focus:ring-2 focus:ring-linksaver/20 transition-all"
       />
-      <Button type="submit" className="w-full bg-linksaver text-white hover:bg-linksaver/90 mt-auto">
+      <Button type="submit" className="w-full bg-linksaver text-white hover:bg-linksaver/90 mt-auto" onClick={() => haptic(HAPTIC.tap)}>
         Simpan Link 🔗
       </Button>
     </form>

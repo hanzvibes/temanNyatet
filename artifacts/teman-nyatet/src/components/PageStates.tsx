@@ -5,6 +5,14 @@
 import React from 'react';
 import { AlertCircle, Loader2, type LucideIcon } from 'lucide-react';
 
+function SkeletonShimmer({ className = '' }: { className?: string }) {
+  return (
+    <div className={`relative overflow-hidden rounded-xl bg-muted/60 ${className}`}>
+      <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-muted-foreground/10 to-transparent" />
+    </div>
+  );
+}
+
 export type SectionAccent = 'catatan' | 'keuangan' | 'todo' | 'link';
 
 // Per-section accent palettes using theme tokens. In light mode the icon
@@ -132,12 +140,42 @@ export function PageLoading({ accent = 'catatan', label = 'Memuat…' }: PageLoa
     <div
       role="status"
       aria-live="polite"
-      className="flex flex-col items-center justify-center min-h-[40vh] gap-3"
+      className="flex flex-col items-center justify-center min-h-[40vh] gap-3 px-6"
     >
-      <Loader2 className={`w-7 h-7 animate-spin ${t.spinnerText}`} aria-hidden="true" />
+      <div className="relative">
+        <SkeletonShimmer className="absolute inset-0 -m-6 w-[calc(100%+3rem)] h-[calc(100%+3rem)] rounded-3xl opacity-60" />
+        <Loader2 className={`relative w-7 h-7 animate-spin ${t.spinnerText}`} aria-hidden="true" />
+      </div>
       <p className="text-xs font-semibold text-muted-foreground tracking-wide">
         {label}
       </p>
+    </div>
+  );
+}
+
+interface SkeletonPageProps {
+  accent?: SectionAccent;
+}
+
+/**
+ * Native-style skeleton page with section-tinted shimmer blocks.
+ * Use while the first page payload is still loading.
+ */
+export function SkeletonPage({ accent = 'catatan' }: SkeletonPageProps) {
+  const t = SECTION_THEME[accent];
+  const tint = t.spinnerText.replace('text-', 'bg-');
+  return (
+    <div className="flex flex-col gap-4 px-5 sm:px-6 lg:px-10 pt-5 lg:pt-7 animate-in fade-in duration-300">
+      <div className="flex items-center justify-between">
+        <SkeletonShimmer className="h-8 w-36 rounded-lg" />
+        <SkeletonShimmer className="h-10 w-10 rounded-full" />
+      </div>
+      <SkeletonShimmer className="h-11 w-full rounded-2xl" />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 pt-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className={`h-40 rounded-[1.5rem] ${tint}/15 animate-pulse`} />
+        ))}
+      </div>
     </div>
   );
 }

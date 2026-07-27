@@ -3,6 +3,7 @@ import { motion, useMotionValue, animate, AnimatePresence } from 'framer-motion'
 import { Link, useLocation } from 'wouter';
 import { NotebookPen, Wallet, CheckSquare, Link2 } from 'lucide-react';
 import SheetFormContent from '@/components/SheetFormContent';
+import { useHaptic, HAPTIC } from '@/hooks/useHaptic';
 
 // Fixed heights (px)
 // Bottom-nav geometry matches the value in index.css (`--bottom-nav-collapsed-h`).
@@ -24,12 +25,19 @@ type SnapState = 'collapsed' | 'half' | 'expanded';
 
 export default function BottomSheetNav() {
   const [location, navigate] = useLocation();
+  const haptic = useHaptic();
 
-  const [screenH, setScreenH] = useState(window.innerHeight);
+  // Use visualViewport when available so the sheet shrinks correctly when
+  // the mobile keyboard opens, instead of staying behind it.
+  const [screenH, setScreenH] = useState(() => window.visualViewport?.height ?? window.innerHeight);
   useEffect(() => {
-    const onResize = () => setScreenH(window.innerHeight);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+    const update = () => setScreenH(window.visualViewport?.height ?? window.innerHeight);
+    window.visualViewport?.addEventListener('resize', update);
+    window.addEventListener('resize', update);
+    return () => {
+      window.visualViewport?.removeEventListener('resize', update);
+      window.removeEventListener('resize', update);
+    };
   }, []);
 
   const SNAP: Record<SnapState, number> = {
@@ -161,7 +169,7 @@ export default function BottomSheetNav() {
                    w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)]
                    max-w-sm md:max-w-md"
         style={{
-          bottom: 12,
+          bottom: 'max(12px, env(safe-area-inset-bottom))',
           height: h,
           borderRadius: 28,
           overflow: 'hidden',
@@ -207,7 +215,10 @@ export default function BottomSheetNav() {
                 >
                   <SheetFormContent
                     path={location}
-                    onSuccess={() => snapTo('collapsed')}
+                    onSuccess={() => {
+                      haptic(HAPTIC.success);
+                      snapTo('collapsed');
+                    }}
                   />
                 </motion.div>
               )}
@@ -234,6 +245,7 @@ export default function BottomSheetNav() {
                 >
                   <Link
                     href={item.path}
+                    onClick={() => haptic(HAPTIC.tap)}
                     aria-label={item.name}
                     aria-current={isActive ? 'page' : undefined}
                     className={`group relative flex flex-col items-center justify-center w-full h-full gap-0.5 rounded-2xl transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-muted/60 ${

@@ -1,9 +1,11 @@
 import React from 'react';
 import { NotebookPen, Wallet, CheckSquare, Link2 } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
+import { useHaptic, HAPTIC } from '@/hooks/useHaptic';
 
 export default function BottomNav() {
   const [location] = useLocation();
+  const haptic = useHaptic();
 
   const navItems = [
     { name: 'Catatan', path: '/catatan', icon: NotebookPen },
@@ -13,7 +15,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[calc(100%-2.5rem)] max-w-sm z-50">
+    <nav className="fixed left-1/2 -translate-x-1/2 w-[calc(100%-2.5rem)] max-w-sm z-50" style={{ bottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
       <div className="bg-card rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-border/50 flex justify-around items-center h-[68px] px-2">
         {navItems.map((item) => {
           const isActive = location.startsWith(item.path);
@@ -22,7 +24,8 @@ export default function BottomNav() {
             <Link
               key={item.path}
               href={item.path}
-              className="flex flex-col items-center justify-center flex-1 h-full gap-1 relative"
+              onClick={() => haptic(HAPTIC.tap)}
+              className="flex flex-col items-center justify-center flex-1 h-full gap-1 relative active:scale-[0.96] transition-transform duration-150"
             >
               <div className={`p-2 rounded-xl transition-all duration-200 ${isActive ? 'bg-primary/15 scale-105' : 'bg-transparent'}`}>
                 <Icon

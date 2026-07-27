@@ -168,8 +168,8 @@ function QuickAddForm({
                 <Button
                   type="submit"
                   disabled={!title.trim() || submitting}
-                  size="sm"
-                  className="rounded-full bg-todo text-white hover:bg-todo/90 px-5 h-10 shrink-0 disabled:opacity-40"
+                  size="default"
+                  className="rounded-full bg-todo text-white hover:bg-todo/90 px-5 shrink-0 disabled:opacity-40"
                 >
                   {submitting ? (
                     <Loader2 size={14} className="animate-spin" />
@@ -189,11 +189,11 @@ function QuickAddForm({
           <Button
             type="submit"
             disabled={submitting}
-            size="sm"
-            className="rounded-full bg-todo text-white hover:bg-todo/90 px-4 py-1.5 text-xs disabled:opacity-40"
+            size="default"
+            className="rounded-full bg-todo text-white hover:bg-todo/90 px-5 disabled:opacity-40"
           >
             {submitting ? (
-              <Loader2 size={12} className="animate-spin mr-1" />
+              <Loader2 size={14} className="animate-spin mr-1" />
             ) : null}
             {submitting ? 'Menyimpan...' : 'Tambahkan'}
           </Button>
@@ -228,8 +228,8 @@ function FilterBar({
           aria-selected={active === key}
           onClick={() => onChange(key)}
           className={[
-            'flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 text-xs font-bold rounded-xl transition-all select-none',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-todo/40',
+            'flex-1 flex items-center justify-center gap-1.5 py-3 px-3 text-xs font-bold rounded-xl transition-all select-none',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-todo/40 focus-visible:ring-offset-2',
             active === key
               ? 'bg-card text-foreground shadow-sm'
               : 'text-muted-foreground hover:text-foreground',

@@ -70,7 +70,7 @@ function NoteColorPicker({
               aria-pressed={isSelected}
               onClick={() => onChange(colorVal)}
               className={[
-                'w-10 h-10 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+                'w-11 h-11 min-w-[44px] min-h-[44px] rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                 isSelected
                   ? 'ring-2 ring-foreground/60 ring-offset-2 scale-[1.18] shadow-md'
                   : 'ring-1 ring-foreground/15 hover:scale-[1.08] hover:ring-foreground/30',
@@ -399,11 +399,13 @@ export default function CatatanPage() {
                                         : [...currentTags, tag],
                                     )
                                   }
-                                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                                  className={`inline-flex items-center justify-center gap-1.5 px-4 py-2 min-h-[44px] rounded-full text-xs font-bold border transition-all ${
                                     isSel
                                       ? 'bg-foreground/80 text-background border-foreground/80'
                                       : 'bg-muted/50 text-muted-foreground border-border/50 hover:bg-muted'
                                   }`}
+                                  aria-label={`Tag ${tag}${isSel ? ', dipilih' : ''}`}
+                                  aria-pressed={isSel}
                                 >
                                   <Icon
                                     size={14}
@@ -608,11 +610,13 @@ export default function CatatanPage() {
                               ]);
                             }
                           }}
-                          className={`inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-bold transition-all border ${
+                          className={`inline-flex items-center justify-center gap-1.5 px-5 py-2 min-h-[44px] rounded-full text-sm font-bold transition-all border ${
                             isSelected
                               ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                               : 'bg-secondary text-muted-foreground border-border hover:border-primary/50'
                           }`}
+                          aria-label={`Tag ${tag}${isSelected ? ', dipilih' : ''}`}
+                          aria-pressed={isSelected}
                         >
                           <Icon
                             size={16}

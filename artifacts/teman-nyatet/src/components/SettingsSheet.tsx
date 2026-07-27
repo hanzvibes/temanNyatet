@@ -507,9 +507,10 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                           </p>
                           <button
                             onClick={loadSubscription}
-                            className="inline-flex items-center gap-2 font-bold text-primary text-[clamp(0.8125rem,2.5vw,0.9375rem)] hover:underline focus-visible:outline-none"
+                            aria-label="Coba lagi muat status langganan"
+                            className="inline-flex items-center justify-center gap-2 font-bold text-primary text-[clamp(0.8125rem,2.5vw,0.9375rem)] hover:underline min-h-[44px] min-w-[44px] px-4 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                           >
-                            <Loader2 size={14} strokeWidth={2.5} /> Coba Lagi
+                            <Loader2 size={16} strokeWidth={2.5} /> Coba Lagi
                           </button>
                         </div>
                       ) : subError === 'offline' ? (
@@ -521,9 +522,10 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                           </p>
                           <button
                             onClick={loadSubscription}
-                            className="inline-flex items-center gap-2 font-bold text-primary text-[clamp(0.8125rem,2.5vw,0.9375rem)] hover:underline focus-visible:outline-none"
+                            aria-label="Coba lagi muat status langganan"
+                            className="inline-flex items-center justify-center gap-2 font-bold text-primary text-[clamp(0.8125rem,2.5vw,0.9375rem)] hover:underline min-h-[44px] min-w-[44px] px-4 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                           >
-                            <Loader2 size={14} strokeWidth={2.5} /> Coba Lagi
+                            <Loader2 size={16} strokeWidth={2.5} /> Coba Lagi
                           </button>
                         </div>
                       ) : (
@@ -536,7 +538,8 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                               </p>
                               <button
                                 onClick={loadSubscription}
-                                className="text-primary font-bold text-[clamp(0.75rem,2.5vw,0.875rem)] whitespace-nowrap hover:underline focus-visible:outline-none flex-shrink-0"
+                                aria-label="Muat ulang status langganan"
+                                className="inline-flex items-center justify-center text-primary font-bold text-[clamp(0.75rem,2.5vw,0.875rem)] whitespace-nowrap hover:underline min-h-[44px] min-w-[44px] px-4 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 flex-shrink-0"
                               >
                                 Muat Ulang
                               </button>

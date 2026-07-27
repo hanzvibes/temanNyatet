@@ -286,10 +286,10 @@ export default function KeuanganPage() {
       <Drawer.Root open={isFormOpen} onOpenChange={setIsFormOpen}>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" />
-             <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] z-50 outline-none border-t border-border/70 shadow-elevated">
+          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-full z-50 outline-none border-t border-border/70 shadow-elevated">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-6 mt-4" />
-            
-            <form onSubmit={form.handleSubmit(onSubmitForm)} className="flex flex-col px-6 pb-8 overflow-y-auto">
+
+            <form onSubmit={form.handleSubmit(onSubmitForm)} className="flex flex-col px-5 sm:px-6 pb-8 overflow-y-auto">
               {/* Type Toggle */}
               <div className="flex bg-secondary p-1.5 rounded-[1.25rem] mb-6">
                 <button
@@ -359,7 +359,7 @@ export default function KeuanganPage() {
               {/* Category Grid */}
               <div className="mb-6">
                 <label className="text-pill-label mb-3 block">Kategori</label>
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-4 gap-2 sm:gap-3">
                   {(txType === 'expense' ? DEFAULT_EXPENSE_CATEGORIES : DEFAULT_INCOME_CATEGORIES).map(cat => {
                     const isSelected = form.watch('category') === cat;
                     return (
@@ -367,19 +367,19 @@ export default function KeuanganPage() {
                         key={cat}
                         type="button"
                         onClick={() => form.setValue('category', cat, { shouldValidate: true })}
-                        className={`flex flex-col items-center gap-2 p-3 rounded-2xl transition-all border ${
+                        className={`min-h-11 flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl transition-all border ${
                           isSelected ? 'bg-finance/10 border-finance shadow-sm' : 'bg-white border-border hover:bg-secondary'
                         }`}
                       >
                         {(() => {
                             const Icon = CATEGORY_ICON[cat] ?? FALLBACK_CATEGORY_ICON;
                             return (
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelected ? getCategoryColor(txType) : 'bg-muted-foreground/15'}`}>
-                                <Icon size={18} strokeWidth={2.2} className={isSelected ? 'text-white' : 'text-muted-foreground'} />
+                              <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${isSelected ? getCategoryColor(txType) : 'bg-muted-foreground/15'}`}>
+                                <Icon size={16} strokeWidth={2.2} className={isSelected ? 'text-white' : 'text-muted-foreground'} />
                               </div>
                             );
                           })()}
-                        <span className={`text-[10px] font-bold text-center uppercase tracking-wider ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>{cat}</span>
+                        <span className={`text-[10px] sm:text-[11px] font-bold text-center uppercase leading-tight truncate w-full ${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}>{cat}</span>
                       </button>
                     );
                   })}

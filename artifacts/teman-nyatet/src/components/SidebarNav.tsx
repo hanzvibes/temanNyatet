@@ -36,13 +36,13 @@ export default function SidebarNav() {
     : 'text-primary';
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 min-h-dvh bg-card/80 border-r border-border/70 sticky top-0 h-dvh shrink-0">
+    <aside className="hidden lg:flex flex-col w-64 xl:w-72 2xl:w-80 min-h-dvh bg-card/80 border-r border-border/70 sticky top-0 h-dvh shrink-0">
       {/* Brand */}
-      <div className="px-6 pt-8 pb-7">
+      <div className="px-6 pt-7 pb-6">
         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/70 mb-2">
           TemanNyatet
         </p>
-        <h1 className="text-xl font-bold text-foreground leading-tight tracking-[-0.02em]">
+        <h1 className="text-xl xl:text-[1.4rem] font-bold text-foreground leading-tight tracking-[-0.02em]">
           Sat-set, beres! ✓
         </h1>
       </div>
@@ -56,7 +56,7 @@ export default function SidebarNav() {
             <Link
               key={item.path}
               href={item.path}
-              className={`flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-150 text-sm font-semibold select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
+              className={`min-h-11 flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-150 text-sm font-semibold select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
                 isActive
                   ? 'bg-primary text-primary-foreground shadow-sm'
                    : 'text-muted-foreground hover:bg-muted hover:text-foreground hover:translate-x-0.5'
@@ -77,7 +77,7 @@ export default function SidebarNav() {
         {createSection && (
           <button
             onClick={() => triggerCreate(createSection)}
-            className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground
+            className="w-full min-h-11 flex items-center justify-center gap-2 bg-primary text-primary-foreground
                        rounded-xl py-3 font-semibold text-sm hover:bg-primary/90 active:scale-[0.98]
                        transition-all duration-150 shadow-sm
                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring

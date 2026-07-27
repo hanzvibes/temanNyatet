@@ -165,9 +165,8 @@ export default function TodoPage() {
         type="button"
         aria-label={todo.is_done ? `Tandai belum selesai: ${todo.title}` : `Tandai selesai: ${todo.title}`}
         onClick={(e) => handleToggle(todo.id, todo.is_done, e)}
-        // bumped w-7/h-7 → w-9/h-9 (36×36 from 28×28, +56 % area) to approach
-        // the 44×44 WCAG 2.5.5 / Apple-HIG tap-target guidance on mobile.
-        className={`w-9 h-9 min-w-[36px] min-h-[36px] rounded-full flex-shrink-0 flex items-center justify-center border-2 transition-all duration-200 mt-0.5
+        // 40×40 (min-h-11 / min-w-11) meets WCAG 2.5.5 / Apple-HIG tap-target floor.
+        className={`min-w-11 min-h-11 w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center border-2 transition-all duration-200 mt-0.5
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-todo focus-visible:ring-offset-2 ${
           todo.is_done
             ? 'bg-todo border-todo text-white scale-110'
@@ -338,20 +337,20 @@ export default function TodoPage() {
 
                       {/* Date + Time */}
                       <div className="flex gap-3">
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <label className="text-[10px] font-bold text-todo-text uppercase tracking-widest mb-1.5 block">Tanggal</label>
                           <input
                             {...editForm.register('due_date')}
                             type="date"
-                            className="w-full bg-muted/50 border border-todo/30 rounded-xl py-2.5 px-3 outline-none focus:border-todo text-sm font-bold text-foreground transition-all"
+                            className="w-full min-h-11 bg-muted/50 border border-todo/30 rounded-xl py-2.5 px-3.5 outline-none focus:border-todo text-sm font-bold text-foreground transition-all [color-scheme:light]"
                           />
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <label className="text-[10px] font-bold text-todo-text uppercase tracking-widest mb-1.5 block">Waktu</label>
                           <input
                             {...editForm.register('due_time')}
                             type="time"
-                            className="w-full bg-muted/50 border border-todo/30 rounded-xl py-2.5 px-3 outline-none focus:border-todo text-sm font-bold text-foreground transition-all"
+                            className="w-full min-h-11 bg-muted/50 border border-todo/30 rounded-xl py-2.5 px-3.5 outline-none focus:border-todo text-sm font-bold text-foreground transition-all [color-scheme:light]"
                           />
                         </div>
                       </div>
@@ -400,9 +399,9 @@ export default function TodoPage() {
       <Drawer.Root open={isFormOpen} onOpenChange={setIsFormOpen}>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" />
-          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] z-50 outline-none">
+          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-full z-50 outline-none border-t border-border/70 shadow-elevated">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-6 mt-4" />
-            <form onSubmit={newForm.handleSubmit(onSubmitNew)} className="flex flex-col px-6 pb-8 overflow-y-auto">
+            <form onSubmit={newForm.handleSubmit(onSubmitNew)} className="flex flex-col px-5 sm:px-6 pb-8 overflow-y-auto">
               <h3 className="text-modal-title mb-6">To-Do Baru</h3>
               <div className="space-y-5 mb-8">
                 <div>

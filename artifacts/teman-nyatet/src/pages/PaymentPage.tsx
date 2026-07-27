@@ -82,14 +82,14 @@ export default function PaymentPage() {
       <button
         onClick={handleSkip}
         disabled={skipping}
-        className="mt-6 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+        className="mt-6 min-h-11 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
       >
         {skipping ? 'Memproses...' : 'Lewati untuk sekarang →'}
       </button>
 
-      <button 
+      <button
         onClick={handleLogout}
-        className="mt-4 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
+        className="mt-4 min-h-11 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
       >
         <LogOut size={16} /> Keluar
       </button>

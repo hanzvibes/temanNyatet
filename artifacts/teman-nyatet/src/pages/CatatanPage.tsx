@@ -283,7 +283,7 @@ export default function CatatanPage() {
                   ) : (
                     /* ── Read mode ── */
                     <>
-                      <div className="overflow-y-auto flex-1 p-7">
+                      <div className="overflow-y-auto flex-1 p-5 sm:p-7">
                         {selectedNote.title && (
                           <h2 className="text-modal-title !text-foreground mb-3">
                             {selectedNote.title}
@@ -306,17 +306,17 @@ export default function CatatanPage() {
                         )}
                       </div>
 
-                      <div className="flex gap-3 px-7 pb-6 pt-4 flex-shrink-0 border-t border-black/10">
+                      <div className="flex gap-3 px-5 sm:px-7 pb-6 pt-4 flex-shrink-0 border-t border-black/10">
                         <button
                           onClick={() => handleStartEdit(selectedNote)}
-                          className="flex-1 bg-card/70 text-foreground font-bold min-h-11 rounded-xl hover:bg-white/90 transition-colors text-sm shadow-elevation-1"
+                          className="flex-1 min-h-11 bg-card/70 text-foreground font-bold rounded-xl hover:bg-white/90 active:scale-[0.98] transition-all text-sm shadow-elevation-1"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(selectedNote.id)}
                           disabled={deletingId === selectedNote.id}
-                          className="flex-1 bg-red-100/70 text-red-600 font-bold min-h-11 rounded-xl hover:bg-red-100 transition-colors flex items-center justify-center gap-1.5 text-sm shadow-elevation-1 disabled:opacity-70"
+                          className="flex-1 min-h-11 bg-red-100/70 text-red-600 font-bold rounded-xl hover:bg-red-100 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 text-sm shadow-elevation-1 disabled:opacity-70"
                         >
                           {deletingId === selectedNote.id ? (
                             <>
@@ -354,13 +354,13 @@ export default function CatatanPage() {
       <Drawer.Root open={isFormOpen} onOpenChange={setIsFormOpen}>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" />
-          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] h-[90vh] z-50 outline-none border-t border-border/70 shadow-elevated">
+          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] h-[90vh] sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-full z-50 outline-none border-t border-border/70 shadow-elevated">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-4 mt-4" />
 
-            <form onSubmit={form.handleSubmit(onSubmitForm)} className="flex flex-col flex-1 px-6 pb-6 overflow-hidden">
-              <div className="flex justify-between items-center mb-6 flex-shrink-0">
-                <h3 className="text-section-title">{selectedNote ? 'Edit Catatan' : 'Catatan Baru'}</h3>
-                <button type="submit" className="text-primary font-bold px-5 py-2 bg-primary/10 rounded-full hover:bg-primary/20 transition-colors">
+            <form onSubmit={form.handleSubmit(onSubmitForm)} className="flex flex-col flex-1 px-5 sm:px-6 pb-6 overflow-hidden">
+              <div className="flex justify-between items-center mb-6 flex-shrink-0 gap-3">
+                <h3 className="text-section-title flex-1 min-w-0 truncate">{selectedNote ? 'Edit Catatan' : 'Catatan Baru'}</h3>
+                <button type="submit" className="min-h-11 text-primary font-bold px-5 py-2.5 bg-primary/10 rounded-full hover:bg-primary/20 active:scale-95 transition-all">
                   Simpan
                 </button>
               </div>

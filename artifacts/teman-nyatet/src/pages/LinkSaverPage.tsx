@@ -211,15 +211,14 @@ export default function LinkSaverPage() {
         )}
       </div>
 
-
       {/* Form Sheet */}
       <Drawer.Root open={isFormOpen} onOpenChange={setIsFormOpen}>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" />
-          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] z-50 outline-none border-t border-border/70 shadow-elevated">
+          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-full z-50 outline-none border-t border-border/70 shadow-elevated">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-6 mt-4" />
-            
-            <form onSubmit={form.handleSubmit(onSubmitForm)} className="flex flex-col px-6 pb-8 overflow-y-auto">
+
+            <form onSubmit={form.handleSubmit(onSubmitForm)} className="flex flex-col px-5 sm:px-6 pb-8 overflow-y-auto">
               <h3 className="text-modal-title mb-6">Simpan Link Baru</h3>
               
               <div className="space-y-6 mb-8">

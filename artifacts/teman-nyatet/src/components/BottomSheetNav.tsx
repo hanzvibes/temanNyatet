@@ -5,6 +5,10 @@ import { NotebookPen, Wallet, CheckSquare, Link2 } from 'lucide-react';
 import SheetFormContent from '@/components/SheetFormContent';
 
 // Fixed heights (px)
+// Bottom-nav geometry matches the value in index.css (`--bottom-nav-collapsed-h`).
+// Note: previously was HANDLE=32 + NAV=64 = 96, but the visual breathing room for
+// the elevated pill at bottom-3 needs 12 (gap) + 64 (nav) + 32 (handle) = 108 in
+// some accessories (DraggableSheet); keep both in sync if you change these.
 const HANDLE_H    = 32;
 const NAV_H       = 64;
 const COLLAPSED_H = HANDLE_H + NAV_H; // 96 — only this is visible when collapsed
@@ -130,7 +134,9 @@ export default function BottomSheetNav() {
 
       {/* Floating pill */}
       <motion.div
-        className="fixed left-1/2 z-50 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm md:max-w-md"
+        className="fixed left-1/2 z-50 -translate-x-1/2
+                   w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)]
+                   max-w-sm md:max-w-md"
         style={{
           bottom: 12,
           height: h,

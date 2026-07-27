@@ -223,48 +223,57 @@ export default function BottomSheetNav() {
               const isActive = location.startsWith(item.path);
               const Icon = item.icon;
               return (
-                <Link
+                // Press wrapper — framer-motion whileTap gives a spring-driven
+                // scale-down that releases smoothly. The CSS :active pseudo-class
+                // only snaps the transform on tap so it always felt a beat late.
+                <motion.div
                   key={item.path}
-                  href={item.path}
-                  aria-label={item.name}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={`group relative flex flex-col items-center justify-center flex-1 h-full gap-0.5 rounded-2xl transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring press:scale-[0.94] active:scale-[0.94] hover:bg-muted/60 ${
-                    isActive ? 'bg-primary/12' : ''
-                  }`}
+                  className="flex-1 h-full"
+                  whileTap={{ scale: 0.94 }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 28, mass: 0.7 }}
                 >
-                  {/* Icon halo — colored circle behind the icon, scales up only when active. */}
-                  <div className="relative flex items-center justify-center w-11 h-7">
-                    <span
-                      aria-hidden
-                      className={`absolute inset-0 rounded-full transition-all duration-300 ease-out ${
-                        isActive
-                          ? 'bg-primary/25 scale-100 opacity-100'
-                          : 'bg-transparent scale-50 opacity-0'
-                      }`}
-                    />
-                    <Icon
-                      size={22}
-                      strokeWidth={isActive ? 2.4 : 1.9}
-                      className={`relative transition-colors duration-200 ${
-                        isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
-                      }`}
-                    />
-                  </div>
-                  <span
-                    className={`text-[10px] font-semibold tracking-wide leading-none transition-colors duration-200 ${
-                      isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+                  <Link
+                    href={item.path}
+                    aria-label={item.name}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`group relative flex flex-col items-center justify-center w-full h-full gap-0.5 rounded-2xl transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-muted/60 ${
+                      isActive ? 'bg-primary/10' : ''
                     }`}
                   >
-                    {item.name}
-                  </span>
-                  {/* Active indicator dot — small pill under the label. */}
-                  <span
-                    aria-hidden
-                    className={`absolute -bottom-0.5 h-[3px] rounded-full bg-primary transition-all duration-300 ease-out ${
-                      isActive ? 'w-4 opacity-100' : 'w-0 opacity-0'
-                    }`}
-                  />
-                </Link>
+                    {/* Icon halo — colored circle behind the icon, springs in/out when active. */}
+                    <div className="relative flex items-center justify-center w-12 h-8">
+                      <motion.span
+                        aria-hidden
+                        className="absolute inset-0 rounded-full bg-primary/25"
+                        initial={false}
+                        animate={{ scale: isActive ? 1 : 0.4, opacity: isActive ? 1 : 0 }}
+                        transition={{ type: 'spring', stiffness: 320, damping: 26, mass: 0.6 }}
+                      />
+                      <Icon
+                        size={22}
+                        strokeWidth={isActive ? 2.4 : 1.9}
+                        className={`relative transition-colors duration-200 ${
+                          isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+                        }`}
+                      />
+                    </div>
+                    <span
+                      className={`text-[11px] font-semibold tracking-wide leading-none transition-colors duration-200 ${
+                        isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+                      }`}
+                    >
+                      {item.name}
+                    </span>
+                    {/* Active indicator dot — small pill under the label, springs in. */}
+                    <motion.span
+                      aria-hidden
+                      className="absolute -bottom-0.5 h-[3px] rounded-full bg-primary"
+                      initial={false}
+                      animate={{ width: isActive ? 16 : 0, opacity: isActive ? 1 : 0 }}
+                      transition={{ type: 'spring', stiffness: 320, damping: 26, mass: 0.6 }}
+                    />
+                  </Link>
+                </motion.div>
               );
             })}
           </div>

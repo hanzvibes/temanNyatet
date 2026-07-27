@@ -175,30 +175,35 @@ export default function DraggableSheet() {
             />
             <div className="mt-3 flex items-center justify-center gap-1.5 text-foreground/80 w-full px-5">
               <div className="flex items-center gap-1.5 text-muted-foreground">
-                <div
-                  className={`transition-transform duration-300 ${
-                    isPeek ? 'rotate-0' : '-rotate-180'
-                  }`}
+                {/* Chevron flips on peek/expand via a spring so the rotation
+                    doesn't snap mid-frame the way a CSS transition timing can. */}
+                <motion.div
+                  animate={{ rotate: isPeek ? 0 : -180 }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 26 }}
                 >
                   <ChevronUp size={13} strokeWidth={2.5} />
-                </div>
+                </motion.div>
                 <span className="text-[11px] font-bold uppercase tracking-[0.14em]">
                   {isPeek ? 'Tarik untuk melihat aksi' : 'Tambah Baru'}
                 </span>
               </div>
               {/* Close button only when open — gives a clear dismiss affordance. */}
               {!isPeek && (
-                <button
+                <motion.button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     snapTo('collapsed');
                   }}
-                  className="absolute right-4 top-1/2 -translate-y-[60%] h-8 w-8 rounded-full bg-muted/70 hover:bg-muted active:scale-95 transition-all flex items-center justify-center"
+                  // whileTap keeps the close press spring-driven; hover bg
+                  // animates via Tailwind while motion owns the transform.
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 24 }}
+                  className="absolute right-4 top-1/2 -translate-y-[60%] h-8 w-8 rounded-full bg-muted/70 hover:bg-muted flex items-center justify-center"
                   aria-label="Tutup"
                 >
                   <X size={15} strokeWidth={2.4} className="text-muted-foreground" />
-                </button>
+                </motion.button>
               )}
             </div>
           </div>
@@ -220,14 +225,19 @@ export default function DraggableSheet() {
                     key={action.section}
                     type="button"
                     onClick={() => handleAction(action.section, action.path)}
-                    className="relative flex items-center gap-3 p-4 rounded-2xl text-left bg-white border transition-all duration-200 ease-out active:scale-[0.96] hover:-translate-y-0.5 hover:shadow-md"
+                    // whileTap replaces the CSS :active pseudo-class snap so
+                    // the press-down lifts cleanly on release.
+                    whileTap={{ scale: 0.96 }}
+                    transition={{ delay: 0.08 + i * 0.05, type: 'spring', stiffness: 320, damping: 26 }}
+                    // transition-shadow (not transition-all) so framer-motion
+                    // owns the transform and hover shadow still animates.
+                    className="relative flex items-center gap-3 p-4 rounded-2xl text-left bg-white border transition-shadow duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md"
                     style={{
                       borderColor: action.ring,
                       boxShadow: `0 1px 0 0 ${action.bg} inset, 0 1px 2px 0 rgba(0,0,0,0.04)`,
                     }}
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.08 + i * 0.05, type: 'spring', stiffness: 280, damping: 28 }}
                   >
                     <div
                       className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"

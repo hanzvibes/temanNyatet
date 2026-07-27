@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
     <title>TemanNyatet</title>
     <meta
@@ -30,6 +30,15 @@
       name="twitter:description"
       content="Catatan cepat dan sederhana untuk semua orang."
     />
+    <script>
+      // Disable pinch-to-zoom and double-tap zoom on mobile browsers where
+      // the viewport meta tag alone is not enough (notably iOS Safari).
+      // Desktop keyboard zoom (Ctrl/Cmd + +/-) is intentionally left alone
+      // so accessibility settings remain available to users who need them.
+      ['gesturestart', 'gesturechange', 'gestureend'].forEach((eventName) => {
+        document.addEventListener(eventName, (event) => event.preventDefault(), { passive: false });
+      });
+    </script>
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />

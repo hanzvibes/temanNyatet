@@ -4,7 +4,7 @@ import { useNotes } from '@/hooks/useNotes';
 import { useCreate } from '@/contexts/CreateContext';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Loader2, BookOpen, Trash2, X, Plus } from 'lucide-react';
+import { Loader2, BookOpen, Trash2, X, Plus, LayoutGrid, StickyNote } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SortableNoteGrid } from '@/components/SortableNoteGrid';
+import { StickyNoteWall } from '@/components/StickyNoteWall';
 import { toast } from 'sonner';
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
@@ -105,6 +106,21 @@ export default function CatatanPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // ── View mode (grid vs sticky wall) ──────────────────────────────────────
+  const [viewMode, setViewMode] = useState<'grid' | 'sticky'>(() => {
+    if (typeof window === 'undefined') return 'grid';
+    const saved = localStorage.getItem('catatan-view');
+    return saved === 'grid' || saved === 'sticky' ? saved : 'grid';
+  });
+
+  const toggleViewMode = () => {
+    setViewMode(prev => {
+      const next = prev === 'grid' ? 'sticky' : 'grid';
+      localStorage.setItem('catatan-view', next);
+      return next;
+    });
+  };
 
   const form = useForm<NoteFormValues>({
     resolver: zodResolver(noteSchema),
@@ -258,7 +274,18 @@ export default function CatatanPage() {
               <div className="text-pill-label mb-1.5 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">Catatan</h1>
             </div>
-            <SettingsSheet avatarBg="bg-primary/10" avatarTextColor="text-primary" />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleViewMode}
+                aria-label={viewMode === 'grid' ? 'Tampilan catatan tempel' : 'Tampilan grid'}
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full
+                           text-muted-foreground/60 hover:text-foreground hover:bg-muted
+                           transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              >
+                {viewMode === 'grid' ? <StickyNote size={20} strokeWidth={2.2} /> : <LayoutGrid size={20} strokeWidth={2.2} />}
+              </button>
+              <SettingsSheet avatarBg="bg-primary/10" avatarTextColor="text-primary" />
+            </div>
           </div>
           <SearchBar value={search} onChange={setSearch} placeholder="Cari catatan..." />
         </div>
@@ -284,13 +311,18 @@ export default function CatatanPage() {
               </Button>
             ) : undefined}
           />
-        ) : (
+        ) : viewMode === 'grid' ? (
           <SortableNoteGrid
             notes={filteredNotes}
             onReorder={reorderNotes}
             onClickNote={handleOpenDetail}
             onDeleteNote={handleDeleteFromDrag}
             disabled={!!search}
+          />
+        ) : (
+          <StickyNoteWall
+            notes={filteredNotes}
+            onClickNote={handleOpenDetail}
           />
         )}
       </div>

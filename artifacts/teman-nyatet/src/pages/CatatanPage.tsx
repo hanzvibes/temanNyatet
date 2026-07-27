@@ -4,7 +4,7 @@ import { useNotes } from '@/hooks/useNotes';
 import { useCreate } from '@/contexts/CreateContext';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Loader2, BookOpen, Trash2, X, Plus, LayoutGrid, StickyNote } from 'lucide-react';
+import { Loader2, BookOpen, Trash2, X, Plus } from 'lucide-react';
 import { AlertCircle } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SortableNoteGrid } from '@/components/SortableNoteGrid';
-import { StickyNoteWall } from '@/components/StickyNoteWall';
 import { toast } from 'sonner';
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
@@ -106,21 +105,6 @@ export default function CatatanPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  // ── View mode (grid vs sticky wall) ──────────────────────────────────────
-  const [viewMode, setViewMode] = useState<'grid' | 'sticky'>(() => {
-    if (typeof window === 'undefined') return 'grid';
-    const saved = localStorage.getItem('catatan-view');
-    return saved === 'grid' || saved === 'sticky' ? saved : 'grid';
-  });
-
-  const toggleViewMode = () => {
-    setViewMode(prev => {
-      const next = prev === 'grid' ? 'sticky' : 'grid';
-      localStorage.setItem('catatan-view', next);
-      return next;
-    });
-  };
 
   const form = useForm<NoteFormValues>({
     resolver: zodResolver(noteSchema),
@@ -274,25 +258,14 @@ export default function CatatanPage() {
               <div className="text-pill-label mb-1.5 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">Catatan</h1>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={toggleViewMode}
-                aria-label={viewMode === 'grid' ? 'Tampilan catatan tempel' : 'Tampilan grid'}
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full
-                           text-muted-foreground/60 hover:text-foreground hover:bg-muted
-                           transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-              >
-                {viewMode === 'grid' ? <StickyNote size={20} strokeWidth={2.2} /> : <LayoutGrid size={20} strokeWidth={2.2} />}
-              </button>
-              <SettingsSheet avatarBg="bg-primary/10" avatarTextColor="text-primary" />
-            </div>
+            <SettingsSheet avatarBg="bg-primary/10" avatarTextColor="text-primary" />
           </div>
           <SearchBar value={search} onChange={setSearch} placeholder="Cari catatan..." />
         </div>
       </div>
 
       {/* Content */}
-      <div className="px-5 sm:px-6 lg:px-10 flex-1 flex flex-col pt-5 lg:pt-7 max-w-screen-xl mx-auto w-full">
+      <div className="px-5 sm:px-6 lg:px-10 flex-1 pt-5 lg:pt-7 max-w-screen-xl mx-auto w-full">
         {loading ? (
           <PageLoading accent="catatan" label="Memuat catatan…" />
         ) : filteredNotes.length === 0 ? (
@@ -312,40 +285,13 @@ export default function CatatanPage() {
             ) : undefined}
           />
         ) : (
-          <AnimatePresence mode="wait">
-            {viewMode === 'grid' ? (
-              <motion.div
-                key="grid"
-                className="flex-1"
-                initial={{ opacity: 0, filter: 'blur(4px)' }}
-                animate={{ opacity: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, filter: 'blur(4px)' }}
-                transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-              >
-                <SortableNoteGrid
-                  notes={filteredNotes}
-                  onReorder={reorderNotes}
-                  onClickNote={handleOpenDetail}
-                  onDeleteNote={handleDeleteFromDrag}
-                  disabled={!!search}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="sticky"
-                className="flex-1 flex flex-col min-h-0"
-                initial={{ opacity: 0, filter: 'blur(4px)' }}
-                animate={{ opacity: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, filter: 'blur(4px)' }}
-                transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-              >
-                <StickyNoteWall
-                  notes={filteredNotes}
-                  onClickNote={handleOpenDetail}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <SortableNoteGrid
+            notes={filteredNotes}
+            onReorder={reorderNotes}
+            onClickNote={handleOpenDetail}
+            onDeleteNote={handleDeleteFromDrag}
+            disabled={!!search}
+          />
         )}
       </div>
 

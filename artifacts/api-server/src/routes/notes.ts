@@ -35,7 +35,8 @@ router.post('/notes', requireAuth, userRateLimit, async (req, res) => {
     const content = requireString(body.content, 'content', CONTENT_MAX);
     const title = optionalString(body.title, 'title', TITLE_MAX);
     const tags = optionalTags(body.tags);
-    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, { title, content, tags }, req.sheetsClient!);
+    const color = optionalString(body.color, 'color', 100);
+    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, { title, content, tags, color }, req.sheetsClient!);
     res.status(201).json({ data: row });
   } catch (err) {
     if (err instanceof ValidationError) {
@@ -58,6 +59,7 @@ router.put('/notes/:id', requireAuth, userRateLimit, async (req, res) => {
     if ('title' in body) updates.title = optionalString(body.title, 'title', TITLE_MAX);
     if ('content' in body) updates.content = requireString(body.content, 'content', CONTENT_MAX);
     if ('tags' in body) updates.tags = optionalTags(body.tags);
+    if ('color' in body) updates.color = optionalString(body.color, 'color', 100);
     const row = await updateRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, updates, req.sheetsClient!);
     if (!row) {
       res.status(404).json({ error: 'Note not found' });

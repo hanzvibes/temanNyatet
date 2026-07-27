@@ -262,7 +262,7 @@ export function SortableNoteGrid({
     (noteId: string) => {
       const note = notes.find((n) => n.id === noteId);
       if (!note) return;
-      onClickNote(note, colorForNoteId(noteId));
+      onClickNote(note, note.color || colorForNoteId(noteId));
     },
     [notes, onClickNote],
   );
@@ -331,7 +331,7 @@ export function SortableNoteGrid({
             <MemoSortableNoteCard
               key={note.id}
               note={note}
-              color={colorForNoteId(note.id)}
+              color={note.color || colorForNoteId(note.id)}
               onClick={() => handleCardClick(note.id)}
               disabled={disabled}
             />
@@ -341,7 +341,7 @@ export function SortableNoteGrid({
 
       <DragOverlay>
         {activeNote ? (
-          <DragOverlayCard note={activeNote} color={colorForNoteId(activeNote.id)} />
+          <DragOverlayCard note={activeNote} color={activeNote.color || colorForNoteId(activeNote.id)} />
         ) : null}
       </DragOverlay>
     </DndContext>

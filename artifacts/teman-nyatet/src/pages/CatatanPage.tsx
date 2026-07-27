@@ -19,22 +19,79 @@ import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SortableNoteGrid } from '@/components/SortableNoteGrid';
 
+// ─── Palette ─────────────────────────────────────────────────────────────────
+// Hash-based fallback colours (CSS vars so they flip with the theme).
 const PALETTE = [
   'var(--note-card-1)',
   'var(--note-card-2)',
   'var(--note-card-3)',
   'var(--note-card-4)',
 ];
+
+// Preset colours exposed in the colour picker.
+// Values are CSS-var strings so they automatically adapt to light / dark mode.
+const NOTE_COLORS = [
+  { value: 'var(--note-card-1)', label: 'Kuning' },
+  { value: 'var(--note-card-2)', label: 'Hijau' },
+  { value: 'var(--note-card-3)', label: 'Merah Muda' },
+  { value: 'var(--note-card-4)', label: 'Biru' },
+];
+
 const AVAILABLE_TAGS = NOTE_TAGS;
 
+// ─── Schema ───────────────────────────────────────────────────────────────────
 const noteSchema = z.object({
   title: z.string().optional(),
   content: z.string().min(1, 'Konten tidak boleh kosong'),
   tags: z.array(z.string()).default([]),
+  color: z.string().optional(),
 });
 
 type NoteFormValues = z.infer<typeof noteSchema>;
 
+// ─── NoteColorPicker ─────────────────────────────────────────────────────────
+// Renders a row of colour swatches. The selected swatch is scaled up and
+// outlined with a ring derived from the foreground token so it works in both
+// light and dark modes. Uses CSS-variable backgrounds so swatches always
+// show the correct theme-appropriate hue.
+function NoteColorPicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (color: string) => void;
+}) {
+  return (
+    <div>
+      <label className="text-pill-label !text-muted-foreground mb-3 block">
+        Warna Catatan
+      </label>
+      <div className="flex gap-3">
+        {NOTE_COLORS.map(({ value: colorVal, label }) => {
+          const isSelected = value === colorVal;
+          return (
+            <button
+              key={colorVal}
+              type="button"
+              aria-label={`Warna ${label}${isSelected ? ', dipilih' : ''}`}
+              aria-pressed={isSelected}
+              onClick={() => onChange(colorVal)}
+              className={[
+                'w-10 h-10 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+                isSelected
+                  ? 'ring-2 ring-foreground/60 ring-offset-2 scale-[1.18] shadow-md'
+                  : 'ring-1 ring-foreground/15 hover:scale-[1.08] hover:ring-foreground/30',
+              ].join(' ')}
+              style={{ backgroundColor: colorVal }}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function CatatanPage() {
   const { user } = useAuthContext();
   const { notes, loading, createNote, updateNote, deleteNote, reorderNotes } = useNotes(user?.id);
@@ -50,8 +107,11 @@ export default function CatatanPage() {
 
   const form = useForm<NoteFormValues>({
     resolver: zodResolver(noteSchema),
-    defaultValues: { title: '', content: '', tags: [] },
+    defaultValues: { title: '', content: '', tags: [], color: '' },
   });
+
+  // Watch the color field for live background preview in the create drawer.
+  const formColor = form.watch('color');
 
   const filteredNotes = useMemo(() => {
     if (!search) return notes;
@@ -91,16 +151,24 @@ export default function CatatanPage() {
       title: note.title || '',
       content: note.content,
       tags: note.tags || [],
+      // selectedNoteColor already reflects note.color (or hash fallback) from
+      // when the note was opened — use it as the initial edit colour value.
+      color: selectedNoteColor,
     });
     setIsEditing(true);
   };
 
   const handleOpenForm = (note?: Note) => {
     if (note) {
-      form.reset({ title: note.title || '', content: note.content, tags: note.tags || [] });
+      form.reset({
+        title: note.title || '',
+        content: note.content,
+        tags: note.tags || [],
+        color: note.color || '',
+      });
       setSelectedNote(note);
     } else {
-      form.reset({ title: '', content: '', tags: [] });
+      form.reset({ title: '', content: '', tags: [], color: '' });
       setSelectedNote(null);
     }
     setIsFormOpen(true);
@@ -110,19 +178,33 @@ export default function CatatanPage() {
   const onSubmitForm = async (data: NoteFormValues) => {
     try {
       if (selectedNote) {
-        await updateNote(selectedNote.id, {
+        const saved = await updateNote(selectedNote.id, {
           title: data.title,
           content: data.content,
           tags: data.tags,
+          color: data.color || null,
         });
-        // Update local state so the modal reflects the saved changes
-        setSelectedNote(prev => prev
-          ? { ...prev, title: data.title || null, content: data.content, tags: data.tags }
-          : prev
+        // Update local state so the modal reflects the saved changes instantly.
+        setSelectedNote(prev =>
+          prev
+            ? {
+                ...prev,
+                title: data.title || null,
+                content: data.content,
+                tags: data.tags,
+                color: data.color || null,
+              }
+            : prev
         );
+        // selectedNoteColor already updated live during editing via the picker.
         setIsEditing(false);
       } else {
-        await createNote({ title: data.title, content: data.content, tags: data.tags });
+        await createNote({
+          title: data.title,
+          content: data.content,
+          tags: data.tags,
+          color: data.color || null,
+        });
         setIsFormOpen(false);
       }
     } catch (e) {
@@ -186,7 +268,7 @@ export default function CatatanPage() {
         )}
       </div>
 
-      {/* Note Detail Modal */}
+      {/* ── Note Detail Modal ─────────────────────────────────────────────── */}
       <AnimatePresence>
         {isDetailOpen && selectedNote && (
           <>
@@ -212,9 +294,9 @@ export default function CatatanPage() {
                 exit={{ opacity: 0, scale: 0.88 }}
                 transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
               >
-                {/* Card */}
+                {/* Card — background transitions smoothly when colour changes */}
                 <div
-                  className="rounded-[1.5rem] overflow-hidden shadow-elevated flex flex-col border border-border/30"
+                  className="rounded-[1.5rem] overflow-hidden shadow-elevated flex flex-col border border-border/30 transition-colors duration-200"
                   style={{ backgroundColor: selectedNoteColor, maxHeight: '72vh' }}
                 >
                   {isEditing ? (
@@ -254,8 +336,12 @@ export default function CatatanPage() {
                           autoFocus
                         />
                         {form.formState.errors.content && (
-                          <FormError size="xs" className="-mt-1"><AlertCircle className="hidden" aria-hidden />{form.formState.errors.content.message}</FormError>
+                          <FormError size="xs" className="-mt-1">
+                            <AlertCircle className="hidden" aria-hidden />
+                            {form.formState.errors.content.message}
+                          </FormError>
                         )}
+
                         {/* Tags */}
                         <div>
                           <label className="text-pill-tag !text-muted-foreground mb-2 block">Tags</label>
@@ -278,6 +364,16 @@ export default function CatatanPage() {
                             })}
                           </div>
                         </div>
+
+                        {/* ── Colour picker ── */}
+                        <NoteColorPicker
+                          value={form.watch('color') ?? ''}
+                          onChange={(color) => {
+                            form.setValue('color', color);
+                            // Live preview: update the modal background immediately.
+                            setSelectedNoteColor(color);
+                          }}
+                        />
                       </div>
                     </form>
                   ) : (
@@ -350,11 +446,18 @@ export default function CatatanPage() {
         )}
       </AnimatePresence>
 
-      {/* Form Sheet */}
+      {/* ── Create / Edit Form Sheet ──────────────────────────────────────── */}
       <Drawer.Root open={isFormOpen} onOpenChange={setIsFormOpen}>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" />
-          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] h-[90vh] sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-full z-50 outline-none border-t border-border/70 shadow-elevated">
+          {/* Background colour transitions live as the user picks a colour */}
+          <Drawer.Content
+            className="flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] h-[90vh] sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-full z-50 outline-none border-t border-border/70 shadow-elevated"
+            style={{
+              backgroundColor: formColor || 'hsl(var(--card))',
+              transition: 'background-color 0.2s ease',
+            }}
+          >
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-4 mt-4" />
 
             <form onSubmit={form.handleSubmit(onSubmitForm)} className="flex flex-col flex-1 px-5 sm:px-6 pb-6 overflow-hidden">
@@ -368,22 +471,23 @@ export default function CatatanPage() {
               <div className="flex-1 overflow-y-auto space-y-5 pb-4">
                 <input
                   {...form.register('title')}
-                   placeholder="Judul (opsional)"
-                   aria-label="Judul catatan"
-                   className="w-full text-2xl font-bold bg-transparent outline-none placeholder:text-muted-foreground/60 border-b border-border/70 focus:border-primary pb-2 transition-colors"
+                  placeholder="Judul (opsional)"
+                  aria-label="Judul catatan"
+                  className="w-full text-2xl font-bold bg-transparent outline-none placeholder:text-muted-foreground/60 border-b border-border/70 focus:border-primary pb-2 transition-colors"
                 />
 
                 <textarea
                   {...form.register('content')}
-                   placeholder="Apa yang ingin kamu catat?"
-                   aria-label="Isi catatan"
-                   className="w-full h-48 resize-none bg-transparent outline-none text-lg font-medium placeholder:text-muted-foreground/60 leading-relaxed"
+                  placeholder="Apa yang ingin kamu catat?"
+                  aria-label="Isi catatan"
+                  className="w-full h-48 resize-none bg-transparent outline-none text-lg font-medium placeholder:text-muted-foreground/60 leading-relaxed"
                   autoFocus
                 />
                 {form.formState.errors.content && (
                   <FormError className="">{form.formState.errors.content.message}</FormError>
                 )}
 
+                {/* Tags */}
                 <div>
                   <label className="text-pill-label mb-3 block">Tags</label>
                   <div className="flex flex-wrap gap-2">
@@ -414,6 +518,12 @@ export default function CatatanPage() {
                     })}
                   </div>
                 </div>
+
+                {/* ── Colour picker ── */}
+                <NoteColorPicker
+                  value={formColor ?? ''}
+                  onChange={(color) => form.setValue('color', color)}
+                />
               </div>
             </form>
           </Drawer.Content>

@@ -12,7 +12,7 @@ import { logger } from './logger.js';
 // ─── Sheet schemas ──────────────────────────────────────────────────────────
 
 export const SHEET_SCHEMAS: Record<string, string[]> = {
-  '📝 Notes':        ['id', 'user_id', 'title', 'content', 'tags', 'created_at', 'updated_at', 'position'],
+  '📝 Notes':        ['id', 'user_id', 'title', 'content', 'tags', 'created_at', 'updated_at', 'position', 'color'],
   '💰 Transactions': ['id', 'user_id', 'type', 'amount', 'category', 'source', 'note', 'date', 'created_at'],
   '✅ Todos':        ['id', 'user_id', 'title', 'description', 'due_date', 'due_time', 'is_done', 'created_at'],
   '🔗 Links':        ['id', 'user_id', 'title', 'url', 'note', 'created_at'],

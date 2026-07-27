@@ -309,6 +309,38 @@
   .overscroll-contain { overscroll-behavior: contain; }
   .overscroll-none { overscroll-behavior: none; }
 
+  /* Orientation-aware sheet height: comfortable in portrait, shorter in
+     landscape phones so the user can still see the page behind it. */
+  .max-h-sheet {
+    max-height: min(90dvh, 720px);
+  }
+  @media (orientation: landscape) and (max-height: 520px) {
+    .max-h-sheet {
+      max-height: 75dvh;
+    }
+  }
+  @media (orientation: landscape) and (max-height: 400px) {
+    .max-h-sheet {
+      max-height: 65dvh;
+    }
+  }
+
+  /* Hide content that should only appear in one orientation. */
+  .portrait-only { display: none; }
+  .landscape-only { display: none; }
+  @media (orientation: portrait) {
+    .portrait-only { display: block; }
+  }
+  @media (orientation: landscape) {
+    .landscape-only { display: block; }
+  }
+  @media (orientation: portrait) {
+    .portrait-only-inline { display: inline; }
+  }
+  @media (orientation: landscape) {
+    .landscape-only-inline { display: inline; }
+  }
+
   .shadow-soft {
     box-shadow: var(--shadow-2);
   }

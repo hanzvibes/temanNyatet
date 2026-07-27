@@ -15,7 +15,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav className="fixed left-1/2 -translate-x-1/2 w-[calc(100%-2.5rem)] max-w-sm z-50" style={{ bottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
+    <nav className="fixed left-1/2 -translate-x-1/2 w-[calc(100%-2.5rem)] max-w-sm z-50 transition-all duration-300" style={{ bottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
       <div className="bg-card rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-border/50 flex justify-around items-center h-[68px] px-2">
         {navItems.map((item) => {
           const isActive = location.startsWith(item.path);

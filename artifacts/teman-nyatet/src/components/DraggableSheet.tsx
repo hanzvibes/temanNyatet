@@ -4,6 +4,7 @@ import { useLocation } from 'wouter';
 import { NotebookPen, Wallet, CheckSquare, Link2, ChevronUp, X } from 'lucide-react';
 import { useCreate } from '@/contexts/CreateContext';
 import { useHaptic, HAPTIC } from '@/hooks/useHaptic';
+import { useOrientation } from '@/hooks/useOrientation';
 
 const PEEK_HEIGHT = 92;
 // BottomNav: fixed bottom-3 (12px) + h-16 (64 nav) + 32 (handle) = 108 from bottom edge.
@@ -22,6 +23,7 @@ export default function DraggableSheet() {
   const [, navigate] = useLocation();
   const { triggerCreate } = useCreate();
   const haptic = useHaptic();
+  const { isLandscape } = useOrientation();
 
   const [screenH, setScreenH] = useState(window.innerHeight);
 
@@ -31,7 +33,8 @@ export default function DraggableSheet() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const SHEET_H = Math.round(screenH * 0.9);
+  // In landscape, don't let the quick-action sheet obscure the entire page.
+  const SHEET_H = Math.round(screenH * (isLandscape ? 0.62 : 0.9));
 
   const SNAP: Record<SnapState, number> = {
     collapsed: SHEET_H - PEEK_HEIGHT,

@@ -4,6 +4,7 @@ import { Link, useLocation } from 'wouter';
 import { NotebookPen, Wallet, CheckSquare, Link2 } from 'lucide-react';
 import SheetFormContent from '@/components/SheetFormContent';
 import { useHaptic, HAPTIC } from '@/hooks/useHaptic';
+import { useOrientation } from '@/hooks/useOrientation';
 
 // Fixed heights (px)
 // Bottom-nav geometry matches the value in index.css (`--bottom-nav-collapsed-h`).
@@ -26,6 +27,7 @@ type SnapState = 'collapsed' | 'half' | 'expanded';
 export default function BottomSheetNav() {
   const [location, navigate] = useLocation();
   const haptic = useHaptic();
+  const { isLandscape } = useOrientation();
 
   // Use visualViewport when available so the sheet shrinks correctly when
   // the mobile keyboard opens, instead of staying behind it.
@@ -40,10 +42,12 @@ export default function BottomSheetNav() {
     };
   }, []);
 
+  // In landscape the viewport is short, so keep the sheet lower so the page
+  // behind it remains usable. In portrait we can expand nearly to the top.
   const SNAP: Record<SnapState, number> = {
     collapsed: COLLAPSED_H,
-    half:      Math.round(screenH * 0.58),
-    expanded:  Math.round(screenH * 0.88),
+    half:      Math.round(screenH * (isLandscape ? 0.40 : 0.58)),
+    expanded:  Math.round(screenH * (isLandscape ? 0.60 : 0.88)),
   };
 
   // Animate HEIGHT — pill grows upward since it's bottom-anchored.

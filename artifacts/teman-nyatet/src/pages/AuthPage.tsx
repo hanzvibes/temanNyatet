@@ -167,12 +167,12 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center p-5 sm:p-6 bg-background">
-      <div className="w-full max-w-sm flex flex-col items-center">
+    <div className="min-h-dvh flex flex-col items-center justify-center p-5 sm:p-6 bg-background landscape:justify-start landscape:overflow-y-auto">
+      <div className="w-full max-w-sm flex flex-col items-center landscape:py-4">
 
         {/* Logo Section */}
-        <div className="flex flex-col items-center mb-9">
-          <div className="w-20 h-20 bg-primary rounded-[1.5rem] flex items-center justify-center mb-5 shadow-elevated relative rotate-[-3deg]">
+        <div className="flex flex-col items-center mb-9 landscape:mb-4">
+          <div className="w-20 h-20 bg-primary rounded-[1.5rem] flex items-center justify-center mb-5 shadow-elevated relative rotate-[-3deg] landscape:w-16 landscape:h-16 landscape:mb-3">
              {/* Yellow Notebook Icon Placeholder */}
              <div className="absolute w-12 h-14 bg-finance rounded-md shadow-sm border border-finance-text/50 flex items-center justify-center transform -rotate-6">
                 <BookOpen size={24} className="text-white" />

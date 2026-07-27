@@ -5,6 +5,7 @@ import { CreateProvider } from '@/contexts/CreateContext';
 import { Loader2 } from 'lucide-react';
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useOrientation } from '@/hooks/useOrientation';
 
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import PwaUpdatePrompt from '@/components/PwaUpdatePrompt';
@@ -144,20 +145,31 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuthContext();
   const showNav = user && profile?.subscription_status === 'active';
+  const { isLandscape } = useOrientation();
 
   // Unauthenticated / onboarding pages (login, payment, connect-sheet, archived):
   // narrow centered card — keeps the mobile-app feel on all screen sizes.
+  // In landscape, allow the card to scroll if the viewport is short instead of
+  // centering with huge margins that can push content off-screen.
   if (!showNav) {
     return (
-      <div className="max-w-md mx-auto bg-background min-h-dvh sm:shadow-2xl relative overflow-hidden">
+      <div className={`
+        max-w-md mx-auto bg-background min-h-dvh sm:shadow-2xl relative overflow-x-hidden
+        landscape:overflow-y-auto landscape:justify-start landscape:pt-[max(1.5rem,env(safe-area-inset-top))]
+      `}>
         {children}
       </div>
     );
   }
 
   // Authenticated + active subscription: sidebar on desktop, full-width on mobile/tablet.
+  // In landscape, force the layout row to fill the dynamic viewport so the
+  // bottom sheet never shrinks the main content.
   return (
-    <div className="min-h-dvh bg-background lg:flex">
+    <div className={`
+      min-h-dvh bg-background lg:flex
+      ${isLandscape ? 'landscape:flex' : ''}
+    `}>
       {/* Fixed left sidebar — only rendered (and visible) on lg+ */}
       <Suspense fallback={null}>
         <SidebarNav />

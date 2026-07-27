@@ -287,8 +287,7 @@ export default function CatatanPage() {
             <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-5 pointer-events-none">
               <motion.div
                 key="modal"
-                className="w-full max-w-sm flex flex-col pointer-events-auto"
-                style={{ maxHeight: '80vh' }}
+                className="w-full max-w-sm flex flex-col pointer-events-auto max-h-[80dvh] landscape:max-h-[75dvh]"
                 initial={{ opacity: 0, scale: 0.88 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.88 }}
@@ -296,8 +295,8 @@ export default function CatatanPage() {
               >
                 {/* Card — background transitions smoothly when colour changes */}
                 <div
-                  className="rounded-[1.5rem] overflow-hidden shadow-elevated flex flex-col border border-border/30 transition-colors duration-200"
-                  style={{ backgroundColor: selectedNoteColor, maxHeight: '72vh' }}
+                  className="rounded-[1.5rem] overflow-hidden shadow-elevated flex flex-col border border-border/30 transition-colors duration-200 max-h-[72dvh] landscape:max-h-[65dvh]"
+                  style={{ backgroundColor: selectedNoteColor }}
                 >
                   {isEditing ? (
                     /* ── Edit mode ── */
@@ -452,7 +451,7 @@ export default function CatatanPage() {
           <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" />
           {/* Background colour transitions live as the user picks a colour */}
           <Drawer.Content
-            className="flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-[90vh] h-[90vh] sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-full z-50 outline-none border-t border-border/70 shadow-elevated"
+            className="flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-sheet h-[90dvh] landscape:h-[75dvh] sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-full z-50 outline-none border-t border-border/70 shadow-elevated"
             style={{
               backgroundColor: formColor || 'hsl(var(--card))',
               transition: 'background-color 0.2s ease',

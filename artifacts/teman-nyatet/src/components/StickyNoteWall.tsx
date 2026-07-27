@@ -113,7 +113,7 @@ export function StickyNoteWall({ notes, onClickNote }: StickyNoteWallProps) {
         )}
 
         {/* Current card — draggable */}
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence>
           <SwipeCard
             key={current.id}
             note={current}
@@ -179,7 +179,6 @@ function SwipeCard({
         willChange: 'transform',
         backfaceVisibility: 'hidden',
       }}
-      layout
       initial={{
         opacity: 0,
         scale: 0.85,

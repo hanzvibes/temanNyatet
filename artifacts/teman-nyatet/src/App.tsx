@@ -3,7 +3,7 @@ import { Router as WouterRouter, useLocation } from 'wouter';
 import { AuthProvider, useAuthContext } from '@/contexts/AuthContext';
 import { CreateProvider } from '@/contexts/CreateContext';
 import { Loader2 } from 'lucide-react';
-import React, { Suspense, useEffect, useRef, useState } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useOrientation } from '@/hooks/useOrientation';
 
@@ -35,20 +35,19 @@ const Toaster = React.lazy(() =>
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // 30s freshness window. While fresh, React Query treats cached data as
-      // authoritative and skips refetch on remount — exactly the contract our
-      // CachedSwitch below relies on for instant tab switches.
-      staleTime: 30_000,
-      // Retain caches 30 minutes after the last subscriber unmounts so even a
-      // tab that's fully unmounted renders from cache when re-visited, while a
-      // fresh fetch happens silently in the background.
+      // Keep recently visited pages instant without constantly re-requesting
+      // the same Google Sheets-backed data on tab switches.
+      staleTime: 60_000,
+      // Preserve cache data after a route unmounts so returning to a tab paints
+      // immediately while the next request refreshes it in the background.
       gcTime: 30 * 60 * 1000,
-      // When the browser tab regains focus, refetch stale entries in the
-      // background — keeps long-lived tabs honest without blocking the paint.
-      // 'always' is the default; setting it makes the intent explicit.
-      refetchOnWindowFocus: 'always',
-      // One retry on transient network errors; we surface the cached data
-      // gracefully if the network stays down.
+      // Focus events are noisy on mobile (keyboard, app switcher, PWA resume).
+      // Re-fetching every time creates visible loading churn and unnecessary
+      // API work; reconnect still refreshes stale data when connectivity returns.
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+      // One retry on transient network errors; cached data remains usable while
+      // the retry happens.
       retry: 1,
     },
   },
@@ -196,38 +195,14 @@ function PageLoading() {
   );
 }
 
-// Track the previous value of a boolean prop so RouteSlot can animate only
-// when a page becomes active, not on every re-render.
-function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T | undefined>(undefined);
-  useEffect(() => { ref.current = value; });
-  return ref.current;
-}
-
-// ── Cached route switch ──────────────────────────────────────────────────
-// wouter's <Switch> remounts every <Route> on each navigation, which costs:
-//   • A TanStack-Query refetch of data we just fetched seconds ago (default
-//     staleTime is 0, so even short back-tab trips produce network thrash)
-//   • A blank-page flash while each page's hooks re-fire
-//   • A lazy chunk re-evaluation pass for each visited page
-//
-// CachedSwitch keeps every previously-visited page mounted in the DOM (only
-// the `hidden` attribute toggles), so React Query hooks keep their cache and
-// returning to a page paints instantly from in-memory data. Fresh data
-// revalidates in the background via `refetchOnWindowFocus` and mutation
-// invalidation — never blocking the active paint.
+// ── Lightweight route switch ─────────────────────────────────────────────
+// Only the active page is mounted. Keeping every visited page alive made the
+// app progressively more expensive during a session: all hidden pages kept
+// effects, subscriptions, motion values, and event listeners running. React
+// Query's cache now provides the instant return path without that memory and
+// CPU cost.
 function Router() {
   const [location] = useLocation();
-
-  // Track visited locations so the rendered tree grows over a session rather
-  // than shrinking back to one page on every nav. The 404 sentinel gets its
-  // own key so unrelated unknown URLs share one NotFound mount.
-  const [visited, setVisited] = useState<Set<string>>(() => new Set());
-  useEffect(() => {
-    const matched = ROUTE_ENTRIES.find(e => e.path === location);
-    const key = matched?.path ?? NOT_FOUND_KEY;
-    setVisited(prev => (prev.has(key) ? prev : new Set(prev).add(key)));
-  }, [location]);
 
   // Reset scroll on every navigation so newly-shown pages always start at the
   // top. Without this, every page shares one document scroll position and a
@@ -238,54 +213,32 @@ function Router() {
 
   const activeKey =
     ROUTE_ENTRIES.find(e => e.path === location)?.path ?? NOT_FOUND_KEY;
+  const activeEntry = ROUTE_ENTRIES.find(e => e.path === activeKey);
 
   return (
-    <>
-      {ROUTE_ENTRIES.map(({ path, component: Comp }) =>
-        visited.has(path) ? (
-          <RouteSlot key={path} active={path === activeKey}>
-            <Comp />
-          </RouteSlot>
-        ) : null,
-      )}
-      {visited.has(NOT_FOUND_KEY) && (
-        <RouteSlot key={NOT_FOUND_KEY} active={activeKey === NOT_FOUND_KEY}>
-          <NotFound />
-        </RouteSlot>
-      )}
-    </>
+    <RouteSlot key={activeKey}>
+      {activeEntry
+        ? React.createElement(activeEntry.component)
+        : <NotFound />}
+    </RouteSlot>
   );
 }
 
-// One route = one always-mounted wrapper. `hidden` removes it from layout
-// and paint but keeps it in the React tree, so its hooks stay alive and
-// React Query keeps its cache. `aria-hidden` mirrors DOM visibility for
-// screen readers.
+// One route = one active wrapper. The page unmounts when navigating away, while
+// React Query retains its data cache so returning to it can paint immediately.
 function RouteSlot({
-  active,
   children,
 }: {
-  active: boolean;
   children: React.ReactNode;
 }) {
-  const prevActive = usePrevious(active);
-  const entering = active && !prevActive;
-
   return (
-    <div hidden={!active} aria-hidden={!active}>
-      {active ? (
-        <motion.div
-          key="active"
-          initial={entering ? { opacity: 0, y: 16 } : false}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-        >
-          <Suspense fallback={<PageLoading />}>{children}</Suspense>
-        </motion.div>
-      ) : (
-        <Suspense fallback={null}>{children}</Suspense>
-      )}
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+    >
+      <Suspense fallback={<PageLoading />}>{children}</Suspense>
+    </motion.div>
   );
 }
 

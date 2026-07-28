@@ -10,6 +10,9 @@ interface SwipeableTransactionRowProps {
   isDeleting: boolean;
   onDelete: (id: string) => void;
   children: ReactNode;
+  /** Outer wrapper className. Default gives rounded corners for standalone cards.
+   *  Pass `"relative overflow-hidden"` (no radius) when the parent card handles rounding. */
+  className?: string;
 }
 
 /**
@@ -28,6 +31,7 @@ export function SwipeableTransactionRow({
   isDeleting,
   onDelete,
   children,
+  className = 'relative overflow-hidden rounded-[1.25rem]',
 }: SwipeableTransactionRowProps) {
   const x = useMotionValue(0);
 
@@ -65,9 +69,9 @@ export function SwipeableTransactionRow({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-[1.25rem]">
+    <div className={className}>
       {/* ── Trash zone (always present, hidden behind the card) ── */}
-      <div className="absolute inset-y-0 right-0 z-0 flex items-center justify-center w-[130px] bg-destructive/10 rounded-r-[1.25rem] border-l border-destructive/20">
+      <div className="absolute inset-y-0 right-0 z-0 flex items-center justify-center w-[130px] bg-destructive/10 border-l border-destructive/20">
         <motion.div
           style={{ scale: trashScale, opacity: trashOpacity }}
           className="flex flex-col items-center gap-1.5 select-none"

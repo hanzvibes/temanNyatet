@@ -73,35 +73,26 @@ function BalanceCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
-      className="relative overflow-hidden rounded-[2rem] p-6 shadow-elevation-3"
-      style={{
-        background:
-          'linear-gradient(140deg, hsl(var(--foreground)) 0%, hsl(150 18% 20%) 55%, hsl(var(--foreground)) 100%)',
-      }}
+      className="relative overflow-hidden rounded-[2rem] border border-card-border bg-card p-6 shadow-elevation-2"
     >
-      {/* Ambient glow — finance gold top-right */}
+      {/* Theme-aware ambient accents */}
       <div
-        className="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full"
-        style={{
-          background: 'radial-gradient(circle, hsl(var(--finance) / 0.22) 0%, transparent 68%)',
-        }}
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full bg-finance/10 blur-3xl"
       />
-      {/* Ambient glow — income green bottom-left */}
       <div
-        className="pointer-events-none absolute -left-10 bottom-2 h-40 w-40 rounded-full"
-        style={{
-          background: 'radial-gradient(circle, hsl(var(--income) / 0.16) 0%, transparent 68%)',
-        }}
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-10 bottom-2 h-40 w-40 rounded-full bg-income/10 blur-3xl"
       />
 
       <div className="relative">
         {/* Header row */}
         <div className="flex items-center justify-between">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
             Total Saldo
           </p>
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10">
-            <Wallet size={15} className="text-white/55" strokeWidth={2.2} />
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-finance/15 text-finance-text">
+            <Wallet size={15} strokeWidth={2.2} />
           </div>
         </div>
 
@@ -111,7 +102,7 @@ function BalanceCard({
           initial={{ opacity: 0.4, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          className="mt-3 truncate text-[clamp(2.1rem,7vw,2.75rem)] font-black tracking-[-0.055em] text-white tabular-nums"
+          className="mt-3 truncate text-[clamp(2.1rem,7vw,2.75rem)] font-black tracking-[-0.055em] text-foreground tabular-nums"
         >
           {formatRupiah(balance)}
         </motion.h2>
@@ -133,16 +124,16 @@ function BalanceCard({
 
         {/* Income / Expense panels */}
         <div className="mt-5 grid grid-cols-2 gap-2.5">
-          <div className="rounded-2xl bg-white/[0.07] px-4 py-3">
-            <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/35">
+          <div className="rounded-2xl bg-surface px-4 py-3">
+            <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
               Pemasukan
             </p>
             <p className="mt-1.5 truncate text-sm font-bold tabular-nums text-income">
               {formatRupiah(income)}
             </p>
           </div>
-          <div className="rounded-2xl bg-white/[0.07] px-4 py-3">
-            <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/35">
+          <div className="rounded-2xl bg-surface px-4 py-3">
+            <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
               Pengeluaran
             </p>
             <p className="mt-1.5 truncate text-sm font-bold tabular-nums text-expense">
@@ -153,7 +144,7 @@ function BalanceCard({
 
         {/* Progress bar */}
         <div className="mt-5">
-          <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+          <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${incomeRatio}%` }}
@@ -161,7 +152,7 @@ function BalanceCard({
               className="h-full rounded-full bg-income"
             />
           </div>
-          <div className="mt-1.5 flex justify-between text-[9px] font-semibold text-white/30">
+          <div className="mt-1.5 flex justify-between text-[9px] font-semibold text-muted-foreground">
             <span>Masuk {incomeRatio}%</span>
             <span>Keluar {100 - incomeRatio}%</span>
           </div>

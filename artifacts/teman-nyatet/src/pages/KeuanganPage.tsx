@@ -10,12 +10,7 @@ import { format, isToday, isYesterday } from 'date-fns';
 import { id } from 'date-fns/locale';
 import {
   Activity,
-  ArrowDownRight,
-  ArrowUpRight,
-  PiggyBank,
   Plus,
-  TrendingDown,
-  TrendingUp,
   Wallet,
 } from 'lucide-react';
 import { CATEGORY_ICON, FALLBACK_CATEGORY_ICON } from '@/lib/categoryIcons';
@@ -58,59 +53,6 @@ const txSchema = z.object({
 });
 
 type TxFormValues = z.infer<typeof txSchema>;
-
-// ─── Finance summary ──────────────────────────────────────────────────────────
-function MetricCard({
-  label,
-  value,
-  caption,
-  icon: Icon,
-  tone,
-  trend,
-}: {
-  label: string;
-  value: number;
-  caption: string;
-  icon: typeof TrendingUp;
-  tone: 'income' | 'expense' | 'savings';
-  trend?: 'up' | 'down';
-}) {
-  const toneStyles = {
-    income: {
-      icon: 'bg-income/12 text-income',
-      value: 'text-income',
-    },
-    expense: {
-      icon: 'bg-expense/12 text-expense',
-      value: 'text-foreground',
-    },
-    savings: {
-      icon: 'bg-finance/15 text-finance-text',
-      value: value >= 0 ? 'text-foreground' : 'text-expense',
-    },
-  }[tone];
-
-  return (
-    <div className="min-w-[172px] flex-1 rounded-[1.25rem] border border-card-border bg-card p-4 shadow-elevation-1 sm:min-w-0">
-      <div className="mb-4 flex items-start justify-between gap-2">
-        <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${toneStyles.icon}`}>
-          <Icon size={17} strokeWidth={2.4} />
-        </div>
-        {trend && (
-          <span className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${trend === 'up' ? 'text-income' : 'text-expense'}`}>
-            {trend === 'up' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-            Bulan ini
-          </span>
-        )}
-      </div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
-      <p className={`mt-1 truncate text-lg font-extrabold tracking-[-0.03em] tabular-nums ${toneStyles.value}`}>
-        {formatRupiah(value)}
-      </p>
-      <p className="mt-1 text-[11px] font-medium text-muted-foreground/75">{caption}</p>
-    </div>
-  );
-}
 
 function BalanceCard({
   balance,
@@ -167,6 +109,22 @@ function BalanceCard({
               {net >= 0 ? '+' : '-'}{formatRupiah(Math.abs(net))}
             </span>
           </div>
+            <div className="mb-4 grid grid-cols-3 gap-2 border-b border-border/60 pb-4">
+              <div className="min-w-0">
+                <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Masuk</p>
+                <p className="mt-1 truncate text-xs font-bold text-income tabular-nums">{formatRupiah(income)}</p>
+              </div>
+              <div className="min-w-0 border-l border-border/60 pl-2">
+                <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Keluar</p>
+                <p className="mt-1 truncate text-xs font-bold text-expense tabular-nums">{formatRupiah(expense)}</p>
+              </div>
+              <div className="min-w-0 border-l border-border/60 pl-2">
+                <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Tabungan</p>
+                <p className={`mt-1 truncate text-xs font-bold tabular-nums ${net >= 0 ? 'text-foreground' : 'text-expense'}`}>
+                  {formatRupiah(net)}
+                </p>
+              </div>
+            </div>
           <div className="h-2 overflow-hidden rounded-full bg-expense/15">
             <motion.div
               initial={{ width: 0 }}
@@ -355,38 +313,6 @@ export default function KeuanganPage() {
             expense={monthlySummary.expense}
           />
 
-          <div className="-mx-1 flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible lg:grid-cols-2">
-            <MetricCard
-              label="Pemasukan"
-              value={monthlySummary.income}
-              caption="Total bulan ini"
-              icon={TrendingUp}
-              tone="income"
-              trend="up"
-            />
-            <MetricCard
-              label="Pengeluaran"
-              value={monthlySummary.expense}
-              caption="Total bulan ini"
-              icon={TrendingDown}
-              tone="expense"
-              trend="down"
-            />
-            <MetricCard
-              label="Tabungan"
-              value={monthlySummary.income - monthlySummary.expense}
-              caption="Sisa pemasukan bulan ini"
-              icon={PiggyBank}
-              tone="savings"
-            />
-            <MetricCard
-              label="Cash flow"
-              value={monthlySummary.income - monthlySummary.expense}
-              caption="Pemasukan dikurangi pengeluaran"
-              icon={Activity}
-              tone="savings"
-            />
-          </div>
         </div>
 
         {/* ── Transactions ── */}

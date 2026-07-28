@@ -103,35 +103,30 @@ router.post('/notes/:id/summarize', requireAuth, userRateLimit, async (req, res)
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
 
-    let providerResponse: Awaited<ReturnType<typeof fetch>>;
-    try {
-      providerResponse = await fetch(`${AI_BASE_URL}/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: AI_MODEL,
-          temperature: 0.2,
-          max_tokens: 180,
-          messages: [
-            {
-              role: 'system',
-              content:
-                'Anda adalah asisten peringkas catatan. Ringkas catatan dalam bahasa Indonesia menjadi 2–3 kalimat yang singkat dan jelas. Jangan menambahkan informasi yang tidak ada di catatan. Kembalikan hanya ringkasannya tanpa judul, bullet, atau pengantar.',
-            },
-            {
-              role: 'user',
-              content: `Catatan yang harus diringkas:\n\n${content}`,
-            },
-          ],
-        }),
-        signal: controller.signal,
-      });
-    } finally {
-      clearTimeout(timeout);
-    }
+    const providerResponse = await fetch(`${AI_BASE_URL}/v1/chat/completions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: AI_MODEL,
+        temperature: 0.2,
+        max_tokens: 180,
+        messages: [
+          {
+            role: 'system',
+            content:
+              'Anda adalah asisten peringkas catatan. Ringkas catatan dalam bahasa Indonesia menjadi 2–3 kalimat yang singkat dan jelas. Jangan menambahkan informasi yang tidak ada di catatan. Kembalikan hanya ringkasannya tanpa judul, bullet, atau pengantar.',
+          },
+          {
+            role: 'user',
+            content: `Catatan yang harus diringkas:\n\n${content}`,
+          },
+        ],
+      }),
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeout));
 
     if (!providerResponse.ok) {
       req.log.warn({ status: providerResponse.status }, 'OpenAI summarization request failed');

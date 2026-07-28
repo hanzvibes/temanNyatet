@@ -434,11 +434,11 @@ export default function KeuanganPage() {
                                       tabIndex={0}
                                       role="group"
                                       aria-label={`Transaksi ${tx.category} ${formatRupiah(tx.amount)}`}
-                                      className="grid min-h-[4.5rem] grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 px-4 py-3 transition-colors hover:bg-muted/25 active:bg-muted/45 select-none focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-finance max-[379px]:grid-cols-[3rem_minmax(0,1fr)]"
+                                      className="grid min-h-[4.5rem] grid-cols-[3rem_minmax(0,1fr)_minmax(5.5rem,auto)] items-center gap-x-3 px-4 py-3 transition-colors hover:bg-muted/25 active:bg-muted/45 select-none focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-finance max-[379px]:grid-cols-[3rem_minmax(0,1fr)_minmax(5.25rem,auto)] max-[379px]:gap-x-2"
                                     >
                                       {/* Category icon — rounded-square premium */}
                                       <div
-                                        className={`row-span-2 flex h-12 w-12 shrink-0 items-center justify-center self-center rounded-2xl max-[379px]:self-start ${
+                                        className={`flex h-12 w-12 shrink-0 items-center justify-center self-center rounded-2xl ${
                                           tx.type === 'income'
                                             ? 'bg-income/12'
                                             : 'bg-expense/10'
@@ -474,9 +474,9 @@ export default function KeuanganPage() {
                                       </div>
 
                                       {/* Amount — right-aligned */}
-                                      <div className="max-w-[48%] min-w-0 shrink-0 text-right max-[379px]:col-start-2 max-[379px]:row-start-2 max-[379px]:mt-1 max-[379px]:max-w-full max-[379px]:justify-self-start max-[379px]:text-left">
+                                      <div className="min-w-0 max-w-[10rem] shrink-0 text-right max-[379px]:max-w-[6.5rem]">
                                         <p
-                                          className={`break-words text-sm font-bold tabular-nums leading-5 ${
+                                          className={`break-words text-sm font-bold tabular-nums leading-5 max-[379px]:text-[13px] ${
                                             tx.type === 'income'
                                               ? 'text-income'
                                               : 'text-foreground'

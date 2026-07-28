@@ -38,6 +38,11 @@ export function SwipeableTransactionRow({
   // Progress 0→1 as x goes from 0 to -SWIPE_THRESHOLD.
   // Past threshold = 1 (clamped).
   const progress = useTransform(x, [0, -SWIPE_THRESHOLD], [0, 1]);
+  const trashZoneOpacity = useTransform(
+    progress,
+    [0, 0.08, 0.45, 1],
+    [0, 0.04, 0.35, 1],
+  );
   const trashScale = useTransform(progress, [0, 0.75, 1], [0.35, 0.95, 1.15]);
   const trashOpacity = useTransform(progress, [0, 0.4, 1], [0, 0.35, 1]);
 
@@ -69,9 +74,13 @@ export function SwipeableTransactionRow({
   };
 
   return (
-    <div className={className}>
+    <div className={`${className} w-full min-w-0`}>
       {/* ── Trash zone (always present, hidden behind the card) ── */}
-      <div className="absolute inset-y-0 right-0 z-0 flex items-center justify-center w-[130px] bg-destructive/10 border-l border-destructive/20">
+      <motion.div
+        aria-hidden="true"
+        style={{ opacity: trashZoneOpacity }}
+        className="pointer-events-none absolute inset-y-0 right-0 z-0 flex w-[130px] items-center justify-center border-l border-destructive/20 bg-destructive/10"
+      >
         <motion.div
           style={{ scale: trashScale, opacity: trashOpacity }}
           className="flex flex-col items-center gap-1.5 select-none"
@@ -91,7 +100,7 @@ export function SwipeableTransactionRow({
             </>
           )}
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* ── Foreground card (draggable) ── */}
       <motion.div
@@ -100,7 +109,7 @@ export function SwipeableTransactionRow({
         dragElastic={0.12}
         style={{ x }}
         onDragEnd={handleDragEnd}
-        className="relative z-10 will-change-transform"
+        className="relative z-10 w-full min-w-0 bg-card touch-pan-y will-change-transform"
       >
         {children}
       </motion.div>

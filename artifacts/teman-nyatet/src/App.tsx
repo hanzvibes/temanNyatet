@@ -23,7 +23,6 @@ const CatatanPage = React.lazy(() => import('@/pages/CatatanPage'));
 const KeuanganPage = React.lazy(() => import('@/pages/KeuanganPage'));
 const TodoPage = React.lazy(() => import('@/pages/TodoPage'));
 const LinkSaverPage = React.lazy(() => import('@/pages/LinkSaverPage'));
-const NotFound = React.lazy(() => import('@/pages/not-found'));
 const BottomSheetNav = React.lazy(() => import('@/components/BottomSheetNav'));
 const SidebarNav = React.lazy(() => import('@/components/SidebarNav'));
 const Toaster = React.lazy(() =>
@@ -68,10 +67,6 @@ const ROUTE_ENTRIES: Array<{ path: string; component: React.ComponentType }> = [
   { path: '/todo',          component: TodoPage         },
   { path: '/linksaver',     component: LinkSaverPage    },
 ];
-// Sentinel used for any unmatched URL. Distinct from real paths so unknown
-// routes share a single NotFound instance in the rendered tree.
-const NOT_FOUND_KEY = '__notfound__';
-
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuthContext();
   const [location, setLocation] = useLocation();
@@ -211,15 +206,17 @@ function Router() {
     window.scrollTo({ top: 0, left: 0 });
   }, [location]);
 
-  const activeKey =
-    ROUTE_ENTRIES.find(e => e.path === location)?.path ?? NOT_FOUND_KEY;
+  const activeKey = ROUTE_ENTRIES.find(e => e.path === location)?.path;
   const activeEntry = ROUTE_ENTRIES.find(e => e.path === activeKey);
+
+  // AuthGuard redirects unknown URLs according to the user's current access
+  // state. Render nothing during that navigation instead of showing the
+  // generic template 404 screen.
+  if (!activeKey) return null;
 
   return (
     <RouteSlot key={activeKey}>
-      {activeEntry
-        ? React.createElement(activeEntry.component)
-        : <NotFound />}
+      {React.createElement(activeEntry!.component)}
     </RouteSlot>
   );
 }

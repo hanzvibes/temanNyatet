@@ -1,5 +1,30 @@
 # Changelog
 
+## Project Setup & Vercel Build Fix — 2026-07-28
+
+### Added
+- **Root `replit.md`** — quick-start reference to `docs/replit.md` for Replit dev environment.
+- **`OPENAI_API_KEY` secret** — added to Replit Secrets panel for note summarization feature (`POST /api/notes/:id/summarize` using SumoPod-compatible endpoint with `gpt-4o-mini`).
+
+### Changed
+- **Port isolation** — `PORT` removed from `[userenv.shared]` in `.replit`. Each workflow pins its own port in the command (`PORT=5000` for frontend, `PORT=8080` for API server). Eliminates port conflicts between the two services.
+- **`artifacts/api-server/tsconfig.json`** — added `"lib": ["es2022", "dom"]` to compilerOptions. Required for Vercel's `@vercel/node` build environment where `Response` resolves to a different type than local `@types/node` v25. Without `"dom"`, `fetch()` response properties (`.ok`, `.status`, `.json()`) trigger `TS2339` errors on Vercel.
+
+### Fixed
+- **`artifacts/api-server/src/routes/notes.ts`** — collapsed `try/finally` timeout cleanup into `.finally()` on the fetch call, removing the explicit `let providerResponse: Response` pre-declaration. Prevents TypeScript name-resolution conflict on Vercel (TS2339 errors).
+- **Workflow port conflicts** — both workflows can now start simultaneously without `EADDRINUSE` errors.
+
+### Documentation updated
+- `docs/replit.md` — port isolation, OPENAI_API_KEY, Vercel TS gotcha, known issues (graphify)
+- `docs/ENVIRONMENT.md` — OPENAI_API_KEY, updated PORT note, pre-configured env vars section expanded
+- `docs/TROUBLESHOOTING.md` — Vercel TS build error section, Graphify MCP server section
+- `docs/AI_CONTEXT.md` — technical debt table (added graphify + tsconfig items), recent changes section
+- `docs/DEPLOYMENT.md` — tsconfig lib fix noted in API server deploy steps
+- `README.md` — run commands now show explicit PORT= values
+
+### Known issues
+- **Graphify MCP server** (`graphify: MCP server` workflow) fails with `ModuleNotFoundError: No module named 'graphify'`. Python package needs to be installed.
+
 ## Tooling Setup — 2026-07-27
 
 ### Added

@@ -146,12 +146,20 @@ API Server (Express 5)
 | `fix_profiles_rls_recursion.sql` is ad-hoc | Not in numbered sequence | `supabase/migrations/` |
 | In-process sheet lock | Won't work horizontally scaled | `artifacts/api-server/src/lib/sheet-store.ts` |
 | Data hooks use module-level Map cache + polling | Custom caching layer parallel to TanStack Query | `artifacts/teman-nyatet/src/hooks/` |
+| Graphify MCP server won't start | `ModuleNotFoundError: No module named 'graphify'` — Python package not installed | `.replit` (workflow definition) |
+| API server tsconfig needs `"dom"` lib | Vercel build fails without it; local `@types/node` v25 masks the issue locally | `artifacts/api-server/tsconfig.json` |
 
 ## Current priorities (July 2026)
 
 1. UX improvements to the four feature pages (empty states, form UX, mobile polish)
 2. Setting up the external cron scheduler (TASK-001)
 3. Publishing the Google OAuth consent screen beyond 100 test users (TASK-002)
+
+## Recent changes
+
+- **Port isolation**: `PORT` removed from `[userenv.shared]` in `.replit`. Each workflow pins its own port (`PORT=5000` frontend, `PORT=8080` API server) to prevent conflicts.
+- **Vercel build fix**: Added `"lib": ["es2022", "dom"]` to `artifacts/api-server/tsconfig.json` to fix `Response` type errors on Vercel. The `"dom"` lib ensures the W3C `Response` type (with `.ok`, `.status`, `.json()`) is in scope.
+- **Note summarization**: `OPENAI_API_KEY` secret added to enable `POST /api/notes/:id/summarize` (SumoPod-compatible endpoint, model `gpt-4o-mini`).
 
 ## Files AI should read first
 

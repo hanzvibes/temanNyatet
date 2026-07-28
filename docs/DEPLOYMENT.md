@@ -53,6 +53,7 @@ The repo deploys as **two separate Vercel projects** from the same GitHub reposi
 3. `app.listen()` is gated on `process.env.VERCEL !== '1'` — no code changes needed
 4. `export default app` in `src/index.ts` is required for `@vercel/node`
 5. Set all required environment variables (see `ENVIRONMENT.md` → Vercel API server section)
+6. **Important**: The API server's `tsconfig.json` adds `"lib": ["es2022", "dom"]` to its `compilerOptions`. This is required for Vercel's build environment — without `"dom"`, TypeScript errors on `fetch()` response properties (`.ok`, `.status`, `.json()`) will block deployment. The base tsconfig only includes `"es2022"`, which lacks Web API types.
 
 ### pnpm version
 

@@ -5,10 +5,12 @@ A note-taking SaaS web app + PWA for Indonesian users. Four core modules: Catata
 ## Run & Operate
 
 - `pnpm install` — install dependencies
-- `pnpm --filter @workspace/teman-nyatet run dev` — frontend (Vite dev server, port configured via `PORT` env var, defaults to `5173`)
-- `pnpm --filter @workspace/api-server run dev` — API server (builds then starts, defaults to port `8080`)
+- `PORT=5000 pnpm --filter @workspace/teman-nyatet run dev` — frontend (Vite dev server, port 5000)
+- `PORT=8080 pnpm --filter @workspace/api-server run dev` — API server (builds then starts, port 8080)
 - `pnpm run typecheck` — full typecheck across workspace
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API client from OpenAPI spec
+
+> In Replit dev, both ports are pinned explicitly in the workflow commands. `PORT` is no longer set as a shared environment variable — each service manages its own port.
 
 ## Stack
 

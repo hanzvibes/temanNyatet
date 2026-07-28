@@ -60,9 +60,10 @@ Create `.env.local` in `artifacts/api-server/` for local development. On Vercel,
 | `GOOGLE_REDIRECT_URI` | `https://<REPLIT_DEV_DOMAIN>/api/auth/google/callback` or `http://localhost:5000/api/auth/google/callback` | OAuth callback URL. **Must be set explicitly on Vercel production** — Vercel has no `REPLIT_DEV_DOMAIN`. Must match byte-for-byte the URI registered in Google Cloud Console. |
 | `FRONTEND_URL` | `https://<REPLIT_DEV_DOMAIN>` or `http://localhost:5000` | URL the API server redirects to after successful OAuth callback. Set to production frontend URL on Vercel. |
 | `ALLOWED_ORIGINS` | _(allow all origins)_ | Comma-separated CORS allowlist. Example: `https://teman-nyatet.vercel.app`. Leave unset in dev. Set for production to restrict cross-origin requests. |
-| `PORT` | `8080` | API server port. Do not set on Vercel (Vercel assigns its own port). |
+| `PORT` | `8080` | API server port. In Replit dev, both services have their port pinned in the workflow command (`PORT=5000` for frontend, `PORT=8080` for API). Do not set on Vercel (Vercel assigns its own port). |
 | `LOG_LEVEL` | `info` | Pino log level: `trace`, `debug`, `info`, `warn`, `error`, `fatal`. |
 | `NODE_ENV` | _(unset)_ | Set to `production` on Vercel to disable dev-only behaviors. |
+| `OPENAI_API_KEY` | _(none)_ | API key for note summarization (`POST /api/notes/:id/summarize`). If unset, the endpoint returns `503`. Default endpoint is SumoPod-compatible at `https://ai.sumopod.com/v1/chat/completions` with model `gpt-4o-mini`. Override with `OPENAI_BASE_URL` and `OPENAI_MODEL`. |
 
 ---
 
@@ -83,6 +84,7 @@ On Replit, secrets are set in the Secrets panel (not `.env.local` files). The fo
 | `CRON_SECRET` | Cron endpoint bearer token |
 | `MAYAR_WEBHOOK_SECRET` | Mayar webhook secret (optional) |
 | `VITE_MAYAR_PAYMENT_URL` | Mayar payment page URL (optional) |
+| `OPENAI_API_KEY` | AI summarization API key (optional, adds `gpt-4o-mini` note summarization) |
 
 ### Pre-configured Replit environment variables
 
@@ -93,6 +95,8 @@ GOOGLE_REDIRECT_URI=https://<replit-dev-domain>/api/auth/google/callback
 ```
 
 This means you do **not** need to set `GOOGLE_REDIRECT_URI` as a Secret in Replit — it is already configured for the dev environment. You do still need to register this URI in Google Cloud Console → Authorized redirect URIs for Google OAuth to work in development.
+
+`PORT` was previously set in `[userenv.shared]` but has been removed — each workflow now pins its own port explicitly in the workflow command (`PORT=5000` for frontend, `PORT=8080` for API server). This prevents port conflicts between the two services.
 
 ---
 

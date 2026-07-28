@@ -1,20 +1,24 @@
 # TemanNyatet — Replit Dev Environment
 
-A note-taking SaaS PWA for Indonesian users (Notes, Finance, To-Do, Link Saver). Production is deployed on Vercel; this Replit environment is for development.
+A note-taking SaaS PWA for Indonesian users (Notes, Finance, To-Do, Link Saver).
+Production is deployed on Vercel; this Replit environment is for development and staging.
 
-Full documentation is in [`docs/replit.md`](docs/replit.md).
+Full run instructions, secrets list, and architecture notes are in [`docs/replit.md`](docs/replit.md).
 
 ## Quick start
 
-Both workflows should be running:
-- **`artifacts/teman-nyatet: web`** — Vite dev server on port 5000 (frontend)
-- **`artifacts/api-server: API Server`** — Express API on port 8080
+Two workflows are configured and will auto-start when you open the project:
 
-The Vite proxy forwards `/api` requests to the API server, so you can use relative URLs in the frontend.
+| Workflow | Command | Port |
+|---|---|---|
+| `artifacts/teman-nyatet: web` | `PORT=5000 pnpm --filter @workspace/teman-nyatet run dev` | 5000 |
+| `artifacts/api-server: API Server` | `PORT=8080 pnpm --filter @workspace/api-server run dev` | 8080 |
+
+The Vite dev server proxies `/api/*` → `localhost:8080`, so both services share one origin.
 
 ## Required secrets
 
-All secrets are configured. See [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md) for the full list.
+All secrets are configured in the Replit Secrets panel. See [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md) for the full list.
 
 ## User preferences
 

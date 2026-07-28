@@ -15,13 +15,16 @@ A note-taking SaaS PWA for Indonesian users. Four core modules: Catatan (Notes),
 
 ## How to run
 
-Three services are available as workflows. Start the ones you need:
+Two services are configured as Replit workflows and will auto-start:
 
-- **Frontend** (`artifacts/teman-nyatet: web`): `pnpm --filter @workspace/teman-nyatet run dev` — Vite dev server (defaults to `5173`; on Replit it runs on the port configured by the `PORT` env var, typically `5000`)
-- **API Server** (`artifacts/api-server: API Server`): `pnpm --filter @workspace/api-server run dev` — Express on port `8080` (builds first with `build.mjs`, then starts)
-- **Graphify MCP server** (`graphify: MCP server`): `graphify serve graphify-out/graph.json --transport http --host 0.0.0.0 --port 8099 --stateless` — serves the knowledge graph over HTTP for AI agents to query (port `8099`)
+| Workflow | Command | Port |
+|---|---|---|
+| `artifacts/teman-nyatet: web` | `PORT=5000 pnpm --filter @workspace/teman-nyatet run dev` | 5000 |
+| `artifacts/api-server: API Server` | `PORT=8080 pnpm --filter @workspace/api-server run dev` | 8080 |
 
-Replit normally remembers the last workflow state, so if the workflows were running when you left the project they should auto-start when you reopen it. If they ever appear stopped, restart them from the Workflows panel (or ask the agent to restart them).
+Each workflow has its port pinned explicitly in the command, so there is no port conflict between the two services. The Vite dev server proxies `/api/*` → `localhost:8080`, meaning both services share one origin in the browser.
+
+A third workflow (`graphify: MCP server`) is configured but currently broken — the `graphify` Python package is not installed in the Replit environment (see TROUBLESHOOTING.md).
 
 ## Required secrets
 
@@ -38,13 +41,14 @@ The API server refuses to start if any of these required secrets are missing:
 
 ### Optional / not strictly required
 
+- `OPENAI_API_KEY` — API key for note summarization (AI feature). If unset, `POST /api/notes/:id/summarize` returns `503`. Defaults to SumoPod-compatible endpoint.
 - `MAYAR_WEBHOOK_SECRET` — Mayar webhook signing secret (`/api/mayar-webhook` fails closed if unset)
 - `VITE_MAYAR_PAYMENT_URL` — Mayar payment page URL (frontend falls back to `#` if unset)
 - `VITE_API_SERVER_URL` — only needed when the frontend and API are deployed to different origins; leave unset in Replit dev because the Vite proxy handles `/api` → `localhost:8080`
 - `GOOGLE_REDIRECT_URI` — OAuth callback URL registered in Google Cloud Console. **Pre-configured**: this is set as a `[userenv.shared]` variable in `.replit` (not a Secret) pointing to the current workspace's dev domain. You only need to register this URI in Google Cloud Console. On Vercel production, set it explicitly as `https://teman-nyatet-api-server.vercel.app/api/auth/google/callback`.
 - `FRONTEND_URL` — used by the API server when redirecting the browser after OAuth callback (defaults to `https://<REPLIT_DEV_DOMAIN>` or `http://localhost:5000` if unset)
 - `ALLOWED_ORIGINS` — comma-separated CORS allowlist (defaults to allow all origins when unset)
-- `PORT` — the API server defaults to `8080`; the frontend Vite server defaults to `5173` and is typically overridden to `5000` by Replit
+- `PORT` — both services have their port pinned in the workflow command (`PORT=5000` for frontend, `PORT=8080` for API server). No longer set in `[userenv.shared]`.
 - `LOG_LEVEL` — defaults to `info`
 
 ## Supabase migration
@@ -108,6 +112,8 @@ OAuth and the data API will fail closed until the `google_refresh_token` column 
 - pnpm pinned to `10.26.1` (matching installed version) with `manage-package-manager-versions=false` in `.npmrc`
 - Node.js 22 required — Supabase's realtime client needs native WebSocket (Node 22+)
 - Vite config already has `host: 0.0.0.0` and `allowedHosts: true` for Replit proxy compatibility
+- Ports are **not** shared via `[userenv.shared]` — each workflow pins its own port in the command. This eliminates port conflicts between the two services.
+- `GOOGLE_REDIRECT_URI` remains in `[userenv.shared]` in `.replit` — it is pre-populated with the current workspace's dev domain callback URL.
 - **Production lives on Vercel**: dua project (`teman-nyatet` frontend + `teman-nyatet-api-server` API) dari satu repo ini, Root Directory berbeda. Replit env berfungsi sebagai development/staging. Lihat [`docs/GOOGLE-CLOUD-OAUTH.md`](./GOOGLE-CLOUD-OAUTH.md) dan bagian "Deploy ke Vercel" di [`README.md`](../README.md) untuk produksi
 - `vercel.json` di tiap artifact hanya di-baca Vercel, tidak memengaruhi workflow Replit
 
@@ -117,6 +123,14 @@ OAuth and the data API will fail closed until the `google_refresh_token` column 
 - Service-worker registration is scheduled after the first render during browser idle time; this preserves PWA updates without delaying the initial UI.
 - API development workflows intentionally retain Pino pretty logs and source maps for debugging. Production builds (`NODE_ENV=production`) omit those development-only artifacts.
 - Use the existing typecheck/build commands plus a production browser performance run to measure FCP, LCP, TTI, and scroll smoothness after deployment.
+
+## Vercel build — TypeScript gotcha
+
+The API server's `tsconfig.json` explicitly adds `"lib": ["es2022", "dom"]` (inheriting `es2022` from the base config). The `"dom"` lib is required for Vercel's `@vercel/node` build environment, which resolves `Response` from the global scope differently than local `@types/node` v25. Without it, `fetch()` response properties (`.ok`, `.status`, `.json()`) trigger `TS2339` errors on Vercel even though they pass locally. See `TROUBLESHOOTING.md` for details.
+
+## Known issues
+
+- **Graphify MCP server** (`graphify: MCP server` workflow) fails at startup with `ModuleNotFoundError: No module named 'graphify'`. The `graphify` Python package needs to be installed in the environment. The graph data files (`graphify-out/graph.json`) are present and valid.
 
 ## User preferences
 

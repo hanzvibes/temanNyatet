@@ -52,7 +52,6 @@ attached_assets/
 # project archives / uploaded media
 *.zip
 screenshots/
-.worktrees/
 
 # build output (PWA dev build)
 dev-dist/

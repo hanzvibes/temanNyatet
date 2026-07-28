@@ -6,3 +6,4 @@
 - [Vercel Express entry point pattern](vercel-express-entry-point.md) — api-server src/index.ts must `export default app` and gate `app.listen()` on `VERCEL !== "1"` so @vercel/node can wrap it serverlessly.
 - [Production API build artifacts](production-api-build-artifacts.md) — keep readable Pino workers/source maps in development, but omit them from production output to reduce deploy artifacts.
 - [Supabase email redirect configuration](supabase-email-redirect-config.md) — confirmation emails point to `localhost:3000` when the Supabase Site URL/Redirect URL allowlist is wrong, not because of frontend code.
+- [Cold-start workflow port ownership](coldstart-workflow-port-ownership.md) — only the registered TemanNyatet web workflow should bind port 5000; duplicates can surface as cold-start 404s.

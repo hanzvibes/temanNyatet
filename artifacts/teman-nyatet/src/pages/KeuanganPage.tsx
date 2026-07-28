@@ -76,21 +76,21 @@ function BalanceCard({
       className="relative overflow-hidden rounded-[2rem] p-6 shadow-elevation-3"
       style={{
         background:
-          'linear-gradient(140deg, hsl(150 18% 13%) 0%, hsl(158 22% 17%) 55%, hsl(150 16% 14%) 100%)',
+          'linear-gradient(140deg, hsl(var(--foreground)) 0%, hsl(150 18% 20%) 55%, hsl(var(--foreground)) 100%)',
       }}
     >
-      {/* Ambient glow — gold top-right */}
+      {/* Ambient glow — finance gold top-right */}
       <div
         className="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full"
         style={{
-          background: 'radial-gradient(circle, hsl(43 83% 58% / 0.20) 0%, transparent 68%)',
+          background: 'radial-gradient(circle, hsl(var(--finance) / 0.22) 0%, transparent 68%)',
         }}
       />
-      {/* Ambient glow — green bottom-left */}
+      {/* Ambient glow — income green bottom-left */}
       <div
         className="pointer-events-none absolute -left-10 bottom-2 h-40 w-40 rounded-full"
         style={{
-          background: 'radial-gradient(circle, hsl(146 54% 42% / 0.14) 0%, transparent 68%)',
+          background: 'radial-gradient(circle, hsl(var(--income) / 0.16) 0%, transparent 68%)',
         }}
       />
 
@@ -121,8 +121,8 @@ function BalanceCard({
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tabular-nums ${
               net >= 0
-                ? 'bg-emerald-400/15 text-emerald-300'
-                : 'bg-rose-400/15 text-rose-300'
+                ? 'bg-income/20 text-income'
+                : 'bg-expense/20 text-expense'
             }`}
           >
             <Activity size={9} strokeWidth={2.5} />
@@ -137,7 +137,7 @@ function BalanceCard({
             <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/35">
               Pemasukan
             </p>
-            <p className="mt-1.5 truncate text-sm font-bold tabular-nums text-emerald-300">
+            <p className="mt-1.5 truncate text-sm font-bold tabular-nums text-income">
               {formatRupiah(income)}
             </p>
           </div>
@@ -145,7 +145,7 @@ function BalanceCard({
             <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-white/35">
               Pengeluaran
             </p>
-            <p className="mt-1.5 truncate text-sm font-bold tabular-nums text-rose-300">
+            <p className="mt-1.5 truncate text-sm font-bold tabular-nums text-expense">
               {formatRupiah(expense)}
             </p>
           </div>
@@ -158,7 +158,7 @@ function BalanceCard({
               initial={{ width: 0 }}
               animate={{ width: `${incomeRatio}%` }}
               transition={{ duration: 0.65, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-              className="h-full rounded-full bg-emerald-400"
+              className="h-full rounded-full bg-income"
             />
           </div>
           <div className="mt-1.5 flex justify-between text-[9px] font-semibold text-white/30">

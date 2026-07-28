@@ -103,7 +103,7 @@ router.post('/notes/:id/summarize', requireAuth, userRateLimit, async (req, res)
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
 
-    let providerResponse: Response;
+    let providerResponse: Awaited<ReturnType<typeof fetch>>;
     try {
       providerResponse = await fetch(`${AI_BASE_URL}/v1/chat/completions`, {
         method: 'POST',

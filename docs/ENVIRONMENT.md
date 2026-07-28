@@ -30,7 +30,7 @@ Create `.env.local` in `artifacts/teman-nyatet/` for local development. On Verce
 | Variable | Default | Description |
 |---|---|---|
 | `VITE_SITE_URL` | Current browser origin | Canonical domain sent as `emailRedirectTo` in Supabase sign-up emails. Leave unset in Replit/Vercel preview — the app uses `window.location.origin`. Set to `https://temannyatet.id` if using a custom domain. |
-| `VITE_API_SERVER_URL` | _(none — uses relative `/api/*`)_ | API server base URL when frontend and API are on different origins. Leave unset in Replit dev (Vite proxies `/api` → `localhost:8080`). Set for Vercel production only if CORS is an issue. |
+| `VITE_API_SERVER_URL` | Replit: relative `/api/*`; production: `https://teman-nyatet-api-server.vercel.app` | API server base URL when frontend and API are on different origins. Leave unset in Replit dev (Vite proxies `/api` → `localhost:8080`). Set it explicitly in the Vercel frontend project; the production build also has this same URL as a code fallback. |
 | `VITE_MAYAR_PAYMENT_URL` | `#` (no-op link) | Mayar payment page URL shown on `/payment`. Example: `https://mayar.id/your-payment-page` |
 | `PORT` | `5173` | Vite dev server port. Replit sets this to `5000` automatically. |
 | `BASE_PATH` | `/` | Vite `base` option. Leave unset unless deploying to a subpath. |
@@ -108,8 +108,7 @@ This means you do **not** need to set `GOOGLE_REDIRECT_URI` as a Secret in Repli
 VITE_SUPABASE_URL=https://<project>.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon-key>
 VITE_MAYAR_PAYMENT_URL=https://mayar.id/your-payment-page
-# Only if frontend and API are on different origins AND Vite proxy isn't available:
-# VITE_API_SERVER_URL=https://teman-nyatet-api-server.vercel.app
+VITE_API_SERVER_URL=https://teman-nyatet-api-server.vercel.app
 ```
 
 ### API server project (`teman-nyatet-api-server`)
@@ -122,6 +121,10 @@ GOOGLE_CLIENT_SECRET=GOCSPX-<secret>
 GOOGLE_OAUTH_STATE_SECRET=<openssl rand -hex 32>
 MAYAR_WEBHOOK_SECRET=<from-mayar-dashboard>
 CRON_SECRET=<openssl rand -hex 32>
+OPENAI_API_KEY=<server-only-sumopod-compatible-key>
+# Optional overrides:
+# OPENAI_BASE_URL=https://ai.sumopod.com
+# OPENAI_MODEL=gpt-4o-mini
 GOOGLE_REDIRECT_URI=https://teman-nyatet-api-server.vercel.app/api/auth/google/callback
 FRONTEND_URL=https://teman-nyatet.vercel.app
 ALLOWED_ORIGINS=https://teman-nyatet.vercel.app
@@ -147,3 +150,14 @@ FRONTEND_URL priority:
 ```
 
 On Vercel, `REPLIT_DEV_DOMAIN` is not set, so without explicit env vars the fallback is `localhost:5000` — which is wrong for production. **Always set `GOOGLE_REDIRECT_URI` and `FRONTEND_URL` on Vercel.**
+
+The frontend/API origin behavior is separate from the OAuth fallbacks:
+
+```
+Frontend API base priority:
+  1. VITE_API_SERVER_URL
+  2. production build: https://teman-nyatet-api-server.vercel.app
+  3. development: relative /api (Vite proxy → localhost:8080)
+```
+
+`OPENAI_API_KEY` is not shared automatically between Replit and Vercel. Add it separately to the Vercel API project and redeploy after changing it.

@@ -47,7 +47,7 @@ A note-taking SaaS web app + PWA for Indonesian users. Four core modules: Catata
 - `artifacts/api-server/src/routes/spreadsheet.ts` — `GET /spreadsheet/status`, `POST /spreadsheet/validate`, `POST /spreadsheet/repair`
 - `artifacts/api-server/src/routes/profile.ts` — `POST /profile/avatar` (uploads to Supabase Storage `avatars` bucket)
 - `artifacts/api-server/src/routes/subscription.ts` — `GET /subscription/status`
-- `artifacts/api-server/src/routes/health.ts` — `GET /healthz`
+- `artifacts/api-server/src/routes/health.ts` — `GET /api/healthz` (router mounted under `/api`)
 
 ## Architecture decisions
 
@@ -98,7 +98,8 @@ VITE_SITE_URL=https://temannyatet.id
 
 # Optional: API server base URL when frontend and API are on different origins.
 # Leave unset in Replit dev; the Vite dev server proxies /api to localhost:8080.
-# VITE_API_SERVER_URL=https://your-api-server.example.com
+# In production, the app defaults to the API Vercel project below if this is unset.
+VITE_API_SERVER_URL=https://teman-nyatet-api-server.vercel.app
 
 VITE_MAYAR_PAYMENT_URL=https://mayar.id/your-payment-page
 ```
@@ -175,7 +176,7 @@ Repo ini punya dua deployable yang beda kebutuhan build-nya, jadi deploy sebagai
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
   - `VITE_MAYAR_PAYMENT_URL`
-  - `VITE_API_SERVER_URL` (jika frontend dan API di domain berbeda)
+  - `VITE_API_SERVER_URL=https://teman-nyatet-api-server.vercel.app` (disarankan; production fallback juga tersedia)
 
 ### 2. API server — `artifacts/api-server`
 
@@ -192,7 +193,11 @@ Repo ini punya dua deployable yang beda kebutuhan build-nya, jadi deploy sebagai
   - `FRONTEND_URL` (production frontend URL — used for OAuth callback redirects)
   - `ALLOWED_ORIGINS` (production frontend URL — gates CORS)
   - `GOOGLE_REDIRECT_URI` (production callback URI — must match Google Cloud Console byte-for-byte)
+  - `OPENAI_API_KEY` (required to enable note summarization)
+  - `OPENAI_BASE_URL` (optional; defaults to `https://ai.sumopod.com`)
+  - `OPENAI_MODEL` (optional; defaults to `gpt-4o-mini`)
 - Setelah live, update webhook URL di dashboard Mayar ke `https://<domain-api-server>/api/mayar-webhook`
+- Setelah live, verify the API with `https://teman-nyatet-api-server.vercel.app/api/healthz`. The API project root returns service metadata; health is mounted under `/api`.
 - Endpoint `/api/cron/archive-expired` masih pakai pola POST + Bearer token (`CRON_SECRET`), jadi tetap dipanggil dari scheduler eksternal (GitHub Actions cron, cron-job.org, dll) — bukan Vercel Cron Jobs bawaan (yang cuma bisa GET). Kalau mau pindah ke Vercel Cron, endpoint ini perlu ditambah handler GET.
 
 ### Production domains (July 2026)
@@ -205,6 +210,8 @@ Saat ini live di Vercel sebagai dua project dengan domain tetap (tidak berubah s
 | API server | `https://teman-nyatet-api-server.vercel.app` | `@vercel/node` serverless function |
 
 Supabase Redirect URLs (Auth → Settings) harus menyertakan keduanya plus `https://*.vercel.app/login` dan `https://*.vercel.app/**` untuk preview branches.
+
+The frontend API client uses `/api` through the Vite proxy in Replit development. In a production build it uses `VITE_API_SERVER_URL`, or falls back to `https://teman-nyatet-api-server.vercel.app` when that variable is absent. The API server must allow the frontend origin through `ALLOWED_ORIGINS`.
 
 Google Cloud Console Authorized redirect URI untuk OAuth credential **wajib** persis byte-for-byte sama dengan `GOOGLE_REDIRECT_URI` di Vercel. Lihat [`docs/GOOGLE-CLOUD-OAUTH.md`](./docs/GOOGLE-CLOUD-OAUTH.md) untuk checklist lengkap (setup, verifikasi, rotasi secret).
 

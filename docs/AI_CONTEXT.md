@@ -160,6 +160,8 @@ API Server (Express 5)
 - **Port isolation**: `PORT` removed from `[userenv.shared]` in `.replit`. Each workflow pins its own port (`PORT=5000` frontend, `PORT=8080` API server) to prevent conflicts.
 - **Vercel build fix**: Added `"lib": ["es2022", "dom"]` to `artifacts/api-server/tsconfig.json` to fix `Response` type errors on Vercel. The `"dom"` lib ensures the W3C `Response` type (with `.ok`, `.status`, `.json()`) is in scope.
 - **Note summarization**: `OPENAI_API_KEY` secret added to enable `POST /api/notes/:id/summarize` (SumoPod-compatible endpoint, model `gpt-4o-mini`).
+- **Production API routing**: Replit development uses the Vite `/api` proxy to port 8080. Production uses `VITE_API_SERVER_URL`, with a fallback to `https://teman-nyatet-api-server.vercel.app`. Set the variable explicitly in the Vercel frontend project.
+- **Production AI configuration**: `OPENAI_API_KEY` must be set separately in the Vercel API project; Replit Secrets are not copied to Vercel. `OPENAI_BASE_URL` and `OPENAI_MODEL` are optional overrides.
 
 ## Files AI should read first
 

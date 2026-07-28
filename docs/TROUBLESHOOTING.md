@@ -116,7 +116,7 @@
 **Symptom**: `PageLoading` spinner doesn't resolve.  
 **Cause**: API server not running, or Google Sheets API call failing.  
 **Fix**:
-1. Check `GET /healthz` → should return `{"status":"ok"}`.
+1. Check `GET /api/healthz` → should return `{"status":"ok"}`. In production use `https://teman-nyatet-api-server.vercel.app/api/healthz`.
 2. Check `GET /api/auth/google/status` → should show `connected: true`.
 3. Check API server logs for Google API errors.
 4. Try `POST /api/spreadsheet/repair` to fix missing tabs.

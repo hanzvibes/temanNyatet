@@ -25,7 +25,7 @@
 │  artifacts/teman-nyatet/                            │
 └────────────────────┬────────────────────────────────┘
                      │ HTTPS  Bearer: <supabase-jwt>
-                     │ /api/* (Vite proxy in dev)
+                      │ /api/* (Vite proxy in dev; direct API origin in prod)
 ┌────────────────────▼────────────────────────────────┐
 │              API Server (Express 5)                  │
 │  artifacts/api-server/                              │
@@ -249,7 +249,7 @@ Replit is used for development only. Workflows:
 - `artifacts/teman-nyatet: web` → `pnpm --filter @workspace/teman-nyatet run dev` (port 5000)
 - `artifacts/api-server: API Server` → `pnpm --filter @workspace/api-server run dev` (port 8080)
 
-Vite dev server proxies `/api/*` → `localhost:8080` so frontend and API share an origin in dev.
+Vite dev server proxies `/api/*` → `localhost:8080` so frontend and API share an origin in dev. Production uses `VITE_API_SERVER_URL`; if it is missing, `src/lib/apiClient.ts` falls back to `https://teman-nyatet-api-server.vercel.app`.
 
 ---
 

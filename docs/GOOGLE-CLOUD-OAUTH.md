@@ -115,6 +115,7 @@ GOOGLE_OAUTH_STATE_SECRET=$(openssl rand -hex 32)
 
 MAYAR_WEBHOOK_SECRET=<from-mayar-dashboard>
 CRON_SECRET=$(openssl rand -hex 32)
+OPENAI_API_KEY=<server-only-sumopod-compatible-key>
 
 # Production-specific
 GOOGLE_REDIRECT_URI=https://teman-nyatet-api-server.vercel.app/api/auth/google/callback
@@ -133,7 +134,7 @@ NODE_ENV=production
 
 End-to-end smoke test:
 
-1. `curl -i https://teman-nyatet-api-server.vercel.app/healthz` → 200 OK with `{"status":"ok"}`
+1. `curl -i https://teman-nyatet-api-server.vercel.app/api/healthz` → 200 OK with `{"status":"ok"}`
 2. Browser open `https://teman-nyatet.vercel.app`
 3. Log in to Supabase (email/password)
 4. Navigate to `/connect-sheet`, click "Hubungkan Google Drive"

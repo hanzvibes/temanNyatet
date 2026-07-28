@@ -1,6 +1,6 @@
 # Documentation Audit Report
 
-**Last updated:** 2026-07-27 (AuthConfirmPage + GOOGLE_REDIRECT_URI documentation)  
+**Last updated:** 2026-07-28 (production API routing, AI environment, and health-check synchronization)
 **Previous audit:** 2026-07-26 (full documentation synchronization wave)  
 **Original audit:** 2026-07-23  
 **Auditor:** Replit Agent  
@@ -90,6 +90,13 @@
 ---
 
 ## Findings
+
+### Current-state synchronization — 2026-07-28
+
+1. **Production API routing**: the frontend uses the Vite `/api` proxy in Replit development. Production builds use `VITE_API_SERVER_URL`, with a code fallback to `https://teman-nyatet-api-server.vercel.app`. The Vercel frontend project should still set the variable explicitly.
+2. **AI summarization configuration**: `OPENAI_API_KEY` is required in the API deployment to enable `POST /api/notes/:id/summarize`; `OPENAI_BASE_URL` and `OPENAI_MODEL` are optional overrides with SumoPod-compatible defaults.
+3. **Health endpoint path**: because the health router is mounted at `/api`, the production health check is `/api/healthz`. The API root `/` returns service metadata.
+4. **Deployment secret boundary**: Replit Secrets and Vercel environment variables are separate stores. Production AI configuration must be added to the Vercel API project and followed by a redeploy.
 
 ### Architecture observations
 

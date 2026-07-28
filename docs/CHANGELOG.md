@@ -1,5 +1,13 @@
 # Changelog
 
+## Production Documentation Sync — 2026-07-28
+
+### Updated
+- Documented the current two-project Vercel architecture and API origin behavior: Replit uses the Vite `/api` proxy, while production uses `VITE_API_SERVER_URL` or the built-in API fallback.
+- Added `OPENAI_API_KEY`, `OPENAI_BASE_URL`, and `OPENAI_MODEL` to the Vercel API configuration and clarified that Replit Secrets do not propagate to Vercel.
+- Corrected health-check examples to use `/api/healthz`.
+- Added the `POST /api/notes/:id/summarize` API reference and its AI-provider requirements.
+
 ## Project Setup & Vercel Build Fix — 2026-07-28
 
 ### Added

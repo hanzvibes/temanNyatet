@@ -41,7 +41,7 @@ Rate limit: 120 requests/minute per user (per-user, in-memory). Global limit: 30
 
 ## Health
 
-### `GET /healthz`
+### `GET /api/healthz`
 
 Public. No auth required.
 
@@ -58,6 +58,8 @@ Public. Returns API info.
 ```json
 { "name": "TemanNyatet API", "status": "running", "health": "/api/healthz" }
 ```
+
+The API project root is `https://teman-nyatet-api-server.vercel.app/`. Health checks are mounted below `/api`, so use `/api/healthz` rather than `/healthz`.
 
 ---
 
@@ -229,6 +231,27 @@ Soft-deletes the note (moves to `_Archive` tab).
 ```
 
 **Error `404`** — note not found or belongs to another user
+
+---
+
+### `POST /api/notes/:id/summarize`
+
+Generates an Indonesian summary for an existing note through the configured OpenAI-compatible provider. Requires `OPENAI_API_KEY` on the API server.
+
+**Response `200`**
+```json
+{
+  "data": {
+    "summary": "Ringkasan catatan..."
+  }
+}
+```
+
+**Errors**
+
+- `404` — note not found or belongs to another user
+- `502` — AI provider returned a non-success response or an invalid response
+- `503` — `OPENAI_API_KEY` is not configured
 
 ---
 

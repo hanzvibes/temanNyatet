@@ -58,10 +58,17 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 
 # Optional: API server base URL when frontend and API are on different origins.
 # Leave unset in Replit dev; the Vite dev server proxies /api to localhost:8080.
-# VITE_API_SERVER_URL=https://your-api-server.example.com
+# For the Vercel frontend project, set:
+# VITE_API_SERVER_URL=https://teman-nyatet-api-server.vercel.app
+# Production also has this URL as a code fallback if the variable is absent.
 
 VITE_MAYAR_PAYMENT_URL=https://mayar.id/your-payment-page
 ```
+
+The API server's AI summarization feature is configured separately on the API
+deployment. Set `OPENAI_API_KEY` in the Vercel API project; Replit Secrets do
+not propagate to Vercel. `OPENAI_BASE_URL` defaults to
+`https://ai.sumopod.com`, and `OPENAI_MODEL` defaults to `gpt-4o-mini`.
 
 ### API Server — `.env.local` in `artifacts/api-server/`
 ```

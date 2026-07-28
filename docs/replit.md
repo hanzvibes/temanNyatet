@@ -44,7 +44,7 @@ The API server refuses to start if any of these required secrets are missing:
 - `OPENAI_API_KEY` — API key for note summarization (AI feature). If unset, `POST /api/notes/:id/summarize` returns `503`. Defaults to SumoPod-compatible endpoint.
 - `MAYAR_WEBHOOK_SECRET` — Mayar webhook signing secret (`/api/mayar-webhook` fails closed if unset)
 - `VITE_MAYAR_PAYMENT_URL` — Mayar payment page URL (frontend falls back to `#` if unset)
-- `VITE_API_SERVER_URL` — only needed when the frontend and API are deployed to different origins; leave unset in Replit dev because the Vite proxy handles `/api` → `localhost:8080`
+- `VITE_API_SERVER_URL` — set to `https://teman-nyatet-api-server.vercel.app` for the Vercel frontend project. Leave unset in Replit dev because the Vite proxy handles `/api` → `localhost:8080`; production also has this URL as a fallback.
 - `GOOGLE_REDIRECT_URI` — OAuth callback URL registered in Google Cloud Console. **Pre-configured**: this is set as a `[userenv.shared]` variable in `.replit` (not a Secret) pointing to the current workspace's dev domain. You only need to register this URI in Google Cloud Console. On Vercel production, set it explicitly as `https://teman-nyatet-api-server.vercel.app/api/auth/google/callback`.
 - `FRONTEND_URL` — used by the API server when redirecting the browser after OAuth callback (defaults to `https://<REPLIT_DEV_DOMAIN>` or `http://localhost:5000` if unset)
 - `ALLOWED_ORIGINS` — comma-separated CORS allowlist (defaults to allow all origins when unset)
@@ -115,6 +115,7 @@ OAuth and the data API will fail closed until the `google_refresh_token` column 
 - Ports are **not** shared via `[userenv.shared]` — each workflow pins its own port in the command. This eliminates port conflicts between the two services.
 - `GOOGLE_REDIRECT_URI` remains in `[userenv.shared]` in `.replit` — it is pre-populated with the current workspace's dev domain callback URL.
 - **Production lives on Vercel**: dua project (`teman-nyatet` frontend + `teman-nyatet-api-server` API) dari satu repo ini, Root Directory berbeda. Replit env berfungsi sebagai development/staging. Lihat [`docs/GOOGLE-CLOUD-OAUTH.md`](./GOOGLE-CLOUD-OAUTH.md) dan bagian "Deploy ke Vercel" di [`README.md`](../README.md) untuk produksi
+- **Production API configuration**: set `VITE_API_SERVER_URL=https://teman-nyatet-api-server.vercel.app` in the frontend Vercel project, and set `OPENAI_API_KEY` separately in the API Vercel project. Replit Secrets are not automatically copied to Vercel.
 - `vercel.json` di tiap artifact hanya di-baca Vercel, tidak memengaruhi workflow Replit
 
 ## Performance notes

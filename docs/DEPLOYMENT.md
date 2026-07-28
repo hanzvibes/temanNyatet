@@ -54,6 +54,7 @@ The repo deploys as **two separate Vercel projects** from the same GitHub reposi
 4. `export default app` in `src/index.ts` is required for `@vercel/node`
 5. Set all required environment variables (see `ENVIRONMENT.md` → Vercel API server section)
 6. **Important**: The API server's `tsconfig.json` adds `"lib": ["es2022", "dom"]` to its `compilerOptions`. This is required for Vercel's build environment — without `"dom"`, TypeScript errors on `fetch()` response properties (`.ok`, `.status`, `.json()`) will block deployment. The base tsconfig only includes `"es2022"`, which lacks Web API types.
+7. Set `OPENAI_API_KEY` in the Vercel API project to enable note summarization. Replit Secrets do not propagate to Vercel. The optional `OPENAI_BASE_URL` defaults to `https://ai.sumopod.com`, and `OPENAI_MODEL` defaults to `gpt-4o-mini`.
 
 ### pnpm version
 
@@ -68,7 +69,7 @@ After first deploy (or after updating OAuth credentials):
 ### 1. Verify API server is alive
 
 ```bash
-curl -i https://teman-nyatet-api-server.vercel.app/healthz
+curl -i https://teman-nyatet-api-server.vercel.app/api/healthz
 # Expected: HTTP 200  {"status":"ok"}
 ```
 
@@ -140,8 +141,8 @@ Both workflows are configured in the Replit workspace:
 
 | Workflow | Command | Port |
 |---|---|---|
-| `artifacts/teman-nyatet: web` | `pnpm --filter @workspace/teman-nyatet run dev` | 5000 |
-| `artifacts/api-server: API Server` | `pnpm --filter @workspace/api-server run dev` | 8080 |
+| `artifacts/teman-nyatet: web` | `PORT=5000 pnpm --filter @workspace/teman-nyatet run dev` | 5000 |
+| `artifacts/api-server: API Server` | `PORT=8080 pnpm --filter @workspace/api-server run dev` | 8080 |
 
 The Vite dev server proxies `/api/*` → `localhost:8080`, so both services share one origin in the browser.
 
@@ -193,11 +194,12 @@ The `GOOGLE_REDIRECT_URI` defaults to `https://<REPLIT_DEV_DOMAIN>/api/auth/goog
 
 After deploying:
 
-- [ ] `GET /healthz` → `200 {"status":"ok"}`
+- [ ] `GET /api/healthz` → `200 {"status":"ok"}`
 - [ ] Frontend loads at `https://teman-nyatet.vercel.app`
 - [ ] Sign up → confirmation email received → email confirmed → login works
 - [ ] Connect Google Drive → consent screen URL contains the correct `redirect_uri`
 - [ ] After Google OAuth → spreadsheet created in user's Drive
 - [ ] Create a note → row appears in the user's spreadsheet
+- [ ] Summarize a note → API returns a summary (requires `OPENAI_API_KEY` in the Vercel API project)
 - [ ] Mayar payment flow → webhook received → `subscription_status` changes to `active`
 - [ ] Cron endpoint: `curl -X POST -H "Authorization: Bearer $CRON_SECRET" .../api/cron/archive-expired` → `{"archived": N}`

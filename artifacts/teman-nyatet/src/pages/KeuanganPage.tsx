@@ -376,11 +376,11 @@ export default function KeuanganPage() {
               ) : (
                 <div className="space-y-6">
                   {/* ── Section header ── */}
-                  <div className="flex items-center justify-between px-0.5">
-                    <h2 className="text-[12px] font-extrabold uppercase tracking-[0.13em] text-foreground/60">
+                  <div className="flex items-center justify-between px-1">
+                    <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-foreground/60">
                       Riwayat Transaksi
                     </h2>
-                    <span className="text-[11px] font-semibold text-muted-foreground">
+                    <span className="text-xs font-semibold text-muted-foreground">
                       {filteredTransactions.length} transaksi
                     </span>
                   </div>
@@ -396,15 +396,15 @@ export default function KeuanganPage() {
                     return (
                       <div key={dateStr}>
                         {/* ── Date header — centered with flanking rules ── */}
-                        <div className="mb-3 flex items-center gap-2.5 px-0.5">
-                          <div className="h-px flex-1 bg-border/50" />
-                          <span className="shrink-0 text-[10.5px] font-bold uppercase tracking-[0.14em] text-muted-foreground/70">
+                        <div className="mb-3 flex items-center gap-2 px-1 max-[379px]:justify-between">
+                          <div className="h-px min-w-4 flex-1 bg-border/50 max-[379px]:hidden" />
+                          <span className="shrink-0 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70">
                             {getFormatDate(dateStr)}
                           </span>
-                          <div className="h-px flex-1 bg-border/50" />
+                          <div className="h-px min-w-4 flex-1 bg-border/50 max-[379px]:hidden" />
                           {/* Daily net chip */}
                           <span
-                            className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tabular-nums ${
+                            className={`inline-flex max-w-[48%] shrink-0 items-center truncate rounded-full px-2 py-1 text-[11px] font-bold tabular-nums ${
                               dayNet >= 0
                                 ? 'bg-income/15 text-income'
                                 : 'bg-expense/12 text-expense'
@@ -416,7 +416,7 @@ export default function KeuanganPage() {
                         </div>
 
                         {/* ── Grouped transaction card ── */}
-                        <div className="overflow-hidden rounded-[1.5rem] border border-card-border bg-card shadow-elevation-1">
+                        <div className="overflow-hidden rounded-2xl border border-card-border bg-card shadow-elevation-1">
                           <AnimatePresence>
                             {dayTxs.map((tx, i, arr) => {
                               const Icon =
@@ -434,18 +434,18 @@ export default function KeuanganPage() {
                                       tabIndex={0}
                                       role="group"
                                       aria-label={`Transaksi ${tx.category} ${formatRupiah(tx.amount)}`}
-                                      className="flex min-h-[4.25rem] items-center gap-3.5 px-4 py-3.5 transition-colors hover:bg-muted/25 active:bg-muted/45 select-none focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-finance"
+                                      className="grid min-h-[4.5rem] grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 px-4 py-3 transition-colors hover:bg-muted/25 active:bg-muted/45 select-none focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-finance max-[379px]:grid-cols-[3rem_minmax(0,1fr)]"
                                     >
                                       {/* Category icon — rounded-square premium */}
                                       <div
-                                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
+                                        className={`row-span-2 flex h-12 w-12 shrink-0 items-center justify-center self-center rounded-2xl max-[379px]:self-start ${
                                           tx.type === 'income'
                                             ? 'bg-income/12'
                                             : 'bg-expense/10'
                                         }`}
                                       >
                                         <Icon
-                                          size={19}
+                                          size={20}
                                           className={
                                             tx.type === 'income'
                                               ? 'text-income'
@@ -456,17 +456,17 @@ export default function KeuanganPage() {
                                       </div>
 
                                       {/* Category + source/note */}
-                                      <div className="min-w-0 flex-1">
-                                        <p className="truncate text-[13.5px] font-semibold leading-snug text-foreground">
+                                      <div className="min-w-0">
+                                        <p className="truncate text-sm font-semibold leading-5 text-foreground">
                                           {tx.category}
                                         </p>
-                                        <div className="mt-1 flex min-w-0 items-center gap-1.5">
+                                        <div className="mt-1 flex min-w-0 items-center gap-2">
                                           {/* Source badge */}
-                                          <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
+                                          <span className="shrink-0 rounded-md bg-muted px-2 py-1 text-[11px] font-bold uppercase leading-none tracking-wide text-muted-foreground">
                                             {tx.source}
                                           </span>
                                           {tx.note && (
-                                            <span className="min-w-0 truncate text-[11px] text-muted-foreground/60">
+                                            <span className="min-w-0 truncate text-[11px] leading-4 text-muted-foreground/60">
                                               {tx.note}
                                             </span>
                                           )}
@@ -474,9 +474,9 @@ export default function KeuanganPage() {
                                       </div>
 
                                       {/* Amount — right-aligned */}
-                                      <div className="ml-2 shrink-0 text-right">
+                                      <div className="max-w-[48%] min-w-0 shrink-0 text-right max-[379px]:col-start-2 max-[379px]:row-start-2 max-[379px]:mt-1 max-[379px]:max-w-full max-[379px]:justify-self-start max-[379px]:text-left">
                                         <p
-                                          className={`text-[14px] font-bold tabular-nums leading-snug ${
+                                          className={`break-words text-sm font-bold tabular-nums leading-5 ${
                                             tx.type === 'income'
                                               ? 'text-income'
                                               : 'text-foreground'
@@ -485,7 +485,7 @@ export default function KeuanganPage() {
                                           {tx.type === 'income' ? '+' : '−'}
                                           {formatRupiah(tx.amount)}
                                         </p>
-                                        <p className="mt-0.5 text-[9.5px] font-semibold text-muted-foreground/50 uppercase tracking-wide">
+                                        <p className="mt-1 text-[11px] font-semibold uppercase leading-4 tracking-wide text-muted-foreground/50">
                                           {tx.type === 'income' ? 'masuk' : 'keluar'}
                                         </p>
                                       </div>
@@ -494,7 +494,7 @@ export default function KeuanganPage() {
 
                                   {/* Inset divider — aligns to text, not full-bleed */}
                                   {i < arr.length - 1 && (
-                                    <div className="ml-[3.875rem] border-b border-border/40" />
+                                    <div className="ml-16 border-b border-border/40" />
                                   )}
                                 </div>
                               );

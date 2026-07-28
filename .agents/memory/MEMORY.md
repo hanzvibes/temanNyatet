@@ -9,3 +9,4 @@
 - [Cold-start workflow port ownership](coldstart-workflow-port-ownership.md) — only the registered TemanNyatet web workflow should bind port 5000; duplicates can surface as cold-start 404s.
 - [Performance route cache policy](performance-route-cache-policy.md) — unmount inactive pages and rely on retained query cache instead of keeping hidden route trees alive.
 - [Light UI treatment](light-ui-treatment.md) — favor restrained elevation and transform/opacity motion for a lighter native-feeling interface.
+- [PWA performance benchmarking](pwa-performance-benchmarking.md) — preview verifies code and startup, but installed-PWA smoothness needs a real mobile-device benchmark.

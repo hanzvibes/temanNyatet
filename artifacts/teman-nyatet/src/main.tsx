@@ -44,6 +44,11 @@ const root = createRoot(document.getElementById('root')!);
 root.render(<App />);
 
 function registerServiceWorker() {
+  // Development uses Vite's module graph directly. Registering a synthetic
+  // service worker there adds cache checks and can make local/PWA-like previews
+  // feel slower without improving the production install.
+  if (!import.meta.env.PROD) return;
+
   if (!('serviceWorker' in navigator)) {
     console.log('[PWA] Service workers are not supported in this browser.');
     return;

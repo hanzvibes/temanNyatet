@@ -212,20 +212,22 @@ export default function KeuanganPage() {
   // Use the visual viewport so the transaction sheet moves above the
   // on-screen keyboard in mobile browsers and installed PWAs.
   useEffect(() => {
+    let frame = 0;
     const updateViewportHeight = () => {
-      setSheetViewportHeight(
-        window.visualViewport?.height ?? window.innerHeight,
-      );
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        setSheetViewportHeight(window.visualViewport?.height ?? window.innerHeight);
+      });
     };
 
     updateViewportHeight();
     window.visualViewport?.addEventListener('resize', updateViewportHeight);
-    window.visualViewport?.addEventListener('scroll', updateViewportHeight);
     window.addEventListener('resize', updateViewportHeight);
 
     return () => {
+      if (frame) window.cancelAnimationFrame(frame);
       window.visualViewport?.removeEventListener('resize', updateViewportHeight);
-      window.visualViewport?.removeEventListener('scroll', updateViewportHeight);
       window.removeEventListener('resize', updateViewportHeight);
     };
   }, []);

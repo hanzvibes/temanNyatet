@@ -1,29 +1,23 @@
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
 
 type Orientation = 'portrait' | 'landscape';
 
 function getOrientation(): Orientation {
   if (typeof window === 'undefined') return 'portrait';
-  // Prefer the official Screen Orientation API when available.
-  const angle = Math.abs(window.screen.orientation?.angle ?? 0);
-  if (angle === 90 || angle === 270) return 'landscape';
-  // Fallback to viewport aspect ratio (handles older devices / iOS).
-  const vp = window.visualViewport;
-  const width = vp?.width ?? window.innerWidth;
-  const height = vp?.height ?? window.innerHeight;
-  return width > height ? 'landscape' : 'portrait';
+  return window.matchMedia('(orientation: landscape)').matches
+    ? 'landscape'
+    : 'portrait';
 }
 
 function subscribe(callback: () => void) {
-  const onChange = () => callback();
-  window.addEventListener('orientationchange', onChange);
-  window.addEventListener('resize', onChange);
-  window.visualViewport?.addEventListener('resize', onChange);
-  return () => {
-    window.removeEventListener('orientationchange', onChange);
-    window.removeEventListener('resize', onChange);
-    window.visualViewport?.removeEventListener('resize', onChange);
-  };
+  const mediaQuery = window.matchMedia('(orientation: landscape)');
+  if (mediaQuery.addEventListener) {
+    mediaQuery.addEventListener('change', callback);
+    return () => mediaQuery.removeEventListener('change', callback);
+  }
+  // Safari versions used by older installed PWAs expose the legacy listener.
+  mediaQuery.addListener(callback);
+  return () => mediaQuery.removeListener(callback);
 }
 
 export function useOrientation() {

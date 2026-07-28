@@ -33,10 +33,18 @@ export default function BottomSheetNav() {
   // the mobile keyboard opens, instead of staying behind it.
   const [screenH, setScreenH] = useState(() => window.visualViewport?.height ?? window.innerHeight);
   useEffect(() => {
-    const update = () => setScreenH(window.visualViewport?.height ?? window.innerHeight);
+    let frame = 0;
+    const update = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        setScreenH(window.visualViewport?.height ?? window.innerHeight);
+      });
+    };
     window.visualViewport?.addEventListener('resize', update);
     window.addEventListener('resize', update);
     return () => {
+      if (frame) window.cancelAnimationFrame(frame);
       window.visualViewport?.removeEventListener('resize', update);
       window.removeEventListener('resize', update);
     };
@@ -171,7 +179,7 @@ export default function BottomSheetNav() {
       <motion.div
         className="fixed left-1/2 z-50 -translate-x-1/2
                    w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)]
-                   max-w-sm md:max-w-md"
+                   max-w-sm md:max-w-md will-change-[height,transform,opacity]"
         style={{
           bottom: 'max(12px, env(safe-area-inset-bottom))',
           height: h,
@@ -211,7 +219,7 @@ export default function BottomSheetNav() {
               {isOpen && (
                 <motion.div
                   key="pnav-form"
-                  className="h-full overflow-y-auto overflow-x-hidden px-4 pb-3 pt-1"
+                  className="h-full overflow-y-auto overflow-x-hidden px-4 pb-3 pt-1 overscroll-contain"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 4 }}

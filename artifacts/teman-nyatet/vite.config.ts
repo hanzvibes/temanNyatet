@@ -22,16 +22,20 @@ export default defineConfig({
       // Use 'prompt' strategy: registerSW in main.tsx controls when to update.
       registerType: 'prompt',
       injectRegister: false, // We register manually in main.tsx
-      // Enable in dev so the install flow can be tested without building.
+      // Keep development previews free of a synthetic SW precache pass. The
+      // production build still emits the full PWA service worker.
       devOptions: {
-        enabled: true,
+        enabled: false,
         type: 'module',
         navigateFallback: 'index.html',
       },
       manifest: false, // We manage manifest.json in public/ ourselves
       workbox: {
         // Precache all Vite-built assets automatically.
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        // Keep the install-time precache small. Fonts and image assets are
+        // fetched on demand and cached by the browser, so they do not delay
+        // the first interactive PWA launch.
+        globPatterns: ['index.html', 'assets/**/*.{js,css}'],
         // Navigation fallback: SPA routes unknown to the SW resolve to index.html
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],

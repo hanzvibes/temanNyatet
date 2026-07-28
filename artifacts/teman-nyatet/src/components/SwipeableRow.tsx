@@ -79,7 +79,7 @@ export function SwipeableRow({
         dragElastic={0.12}
         style={{ x }}
         onDragEnd={handleDragEnd}
-        className="relative z-10"
+        className="relative z-10 will-change-transform"
       >
         {children}
       </motion.div>

@@ -9,7 +9,10 @@ type AnimatedListItemProps = HTMLMotionProps<'div'> & {
 // enter or leave the list.
 export function AnimatedListItem({
   index = 0,
-  layout = true,
+  // Layout projection measures every sibling during enter/exit. That is
+  // expensive on mobile lists, while the opacity/transform animation already
+  // provides the same visual feedback.
+  layout = false,
   ...props
 }: AnimatedListItemProps) {
   return (

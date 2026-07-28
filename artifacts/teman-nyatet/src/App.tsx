@@ -203,7 +203,10 @@ function Router() {
   // top. Without this, every page shares one document scroll position and a
   // long Catatan listing would leave Keuangan scrolled into the middle.
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0 });
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [location]);
 
   const activeKey = ROUTE_ENTRIES.find(e => e.path === location)?.path;
@@ -230,6 +233,7 @@ function RouteSlot({
 }) {
   return (
     <motion.div
+      className="will-change-[transform,opacity]"
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}

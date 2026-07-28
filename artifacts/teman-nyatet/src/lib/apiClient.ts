@@ -11,7 +11,14 @@
 //   3. If refresh fails, signs the user out so AuthContext redirects to login.
 import { supabase } from './supabase';
 
-const API_BASE = (import.meta.env.VITE_API_SERVER_URL as string | undefined)?.replace(/\/$/, '') ?? '';
+const configuredApiBase = (import.meta.env.VITE_API_SERVER_URL as string | undefined)?.replace(/\/$/, '');
+// The frontend and API are separate Vercel projects in production. Keep local
+// development on the relative /api path so Vite can proxy to localhost:8080,
+// but never let a production build send API requests into the frontend SPA
+// rewrite, which returns index.html instead of an API response.
+const API_BASE = configuredApiBase ?? (
+  import.meta.env.PROD ? 'https://teman-nyatet-api-server.vercel.app' : ''
+);
 
 // Warn once in non-production if the API base isn't configured, so developers
 // know why all API calls are going to relative /api/… paths.

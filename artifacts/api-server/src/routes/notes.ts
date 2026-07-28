@@ -129,7 +129,16 @@ router.post('/notes/:id/summarize', requireAuth, userRateLimit, async (req, res)
     }).finally(() => clearTimeout(timeout));
 
     if (!providerResponse.ok) {
-      req.log.warn({ status: providerResponse.status }, 'OpenAI summarization request failed');
+      const providerError = await providerResponse.text().catch(() => '');
+      req.log.warn(
+        {
+          status: providerResponse.status,
+          provider: AI_BASE_URL,
+          model: AI_MODEL,
+          response: providerError.slice(0, 500),
+        },
+        'AI summarization provider request failed',
+      );
       res.status(502).json({ error: 'AI summary could not be generated' });
       return;
     }

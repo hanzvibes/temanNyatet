@@ -374,10 +374,19 @@ export default function KeuanganPage() {
                   }
                 />
               ) : (
-                <div className="space-y-5">
+                <div className="space-y-6">
+                  {/* ── Section header ── */}
+                  <div className="flex items-center justify-between px-0.5">
+                    <h2 className="text-[12px] font-extrabold uppercase tracking-[0.13em] text-foreground/60">
+                      Riwayat Transaksi
+                    </h2>
+                    <span className="text-[11px] font-semibold text-muted-foreground">
+                      {filteredTransactions.length} transaksi
+                    </span>
+                  </div>
+
                   {sortedDates.map((dateStr) => {
                     const dayTxs = groupedTx[dateStr];
-                    // Daily net for the date label
                     const dayNet = dayTxs.reduce(
                       (acc, tx) =>
                         tx.type === 'income' ? acc + tx.amount : acc - tx.amount,
@@ -386,14 +395,19 @@ export default function KeuanganPage() {
 
                     return (
                       <div key={dateStr}>
-                        {/* Date header */}
-                        <div className="mb-2.5 flex items-center justify-between px-1">
-                          <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                        {/* ── Date header — centered with flanking rules ── */}
+                        <div className="mb-3 flex items-center gap-2.5 px-0.5">
+                          <div className="h-px flex-1 bg-border/50" />
+                          <span className="shrink-0 text-[10.5px] font-bold uppercase tracking-[0.14em] text-muted-foreground/70">
                             {getFormatDate(dateStr)}
-                          </h3>
+                          </span>
+                          <div className="h-px flex-1 bg-border/50" />
+                          {/* Daily net chip */}
                           <span
-                            className={`text-[11px] font-bold tabular-nums ${
-                              dayNet >= 0 ? 'text-income' : 'text-expense'
+                            className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tabular-nums ${
+                              dayNet >= 0
+                                ? 'bg-income/15 text-income'
+                                : 'bg-expense/12 text-expense'
                             }`}
                           >
                             {dayNet >= 0 ? '+' : ''}
@@ -401,91 +415,90 @@ export default function KeuanganPage() {
                           </span>
                         </div>
 
-                        {/* Grouped list card */}
+                        {/* ── Grouped transaction card ── */}
                         <div className="overflow-hidden rounded-[1.5rem] border border-card-border bg-card shadow-elevation-1">
                           <AnimatePresence>
-                            {dayTxs.map((tx, i, arr) => (
-                              <div
-                                key={tx.id}
-                                className={
-                                  i < arr.length - 1
-                                    ? 'border-b border-border/50'
-                                    : ''
-                                }
-                              >
-                                <SwipeableTransactionRow
-                                  transactionId={tx.id}
-                                  isDeleting={deletingId === tx.id}
-                                  onDelete={handleSwipeDelete}
-                                  className="relative overflow-hidden"
-                                >
-                                  <AnimatedListItem
-                                    tabIndex={0}
-                                    role="group"
-                                    aria-label={`Transaksi ${tx.category} ${formatRupiah(tx.amount)}`}
-                                    className="flex min-h-[4rem] items-center gap-3.5 px-4 py-3.5 transition-colors hover:bg-secondary/40 active:bg-secondary/60 select-none focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-finance"
+                            {dayTxs.map((tx, i, arr) => {
+                              const Icon =
+                                CATEGORY_ICON[tx.category] ??
+                                FALLBACK_CATEGORY_ICON;
+                              return (
+                                <div key={tx.id}>
+                                  <SwipeableTransactionRow
+                                    transactionId={tx.id}
+                                    isDeleting={deletingId === tx.id}
+                                    onDelete={handleSwipeDelete}
+                                    className="relative overflow-hidden"
                                   >
-                                    {/* Category icon — soft tint circle */}
-                                    <div
-                                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
-                                        tx.type === 'income'
-                                          ? 'bg-income/12'
-                                          : 'bg-expense/10'
-                                      }`}
+                                    <AnimatedListItem
+                                      tabIndex={0}
+                                      role="group"
+                                      aria-label={`Transaksi ${tx.category} ${formatRupiah(tx.amount)}`}
+                                      className="flex min-h-[4.25rem] items-center gap-3.5 px-4 py-3.5 transition-colors hover:bg-muted/25 active:bg-muted/45 select-none focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-finance"
                                     >
-                                      {(() => {
-                                        const Icon =
-                                          CATEGORY_ICON[tx.category] ??
-                                          FALLBACK_CATEGORY_ICON;
-                                        return (
-                                          <Icon
-                                            size={18}
-                                            className={
-                                              tx.type === 'income'
-                                                ? 'text-income'
-                                                : 'text-expense'
-                                            }
-                                            strokeWidth={2.2}
-                                          />
-                                        );
-                                      })()}
-                                    </div>
+                                      {/* Category icon — rounded-square premium */}
+                                      <div
+                                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
+                                          tx.type === 'income'
+                                            ? 'bg-income/12'
+                                            : 'bg-expense/10'
+                                        }`}
+                                      >
+                                        <Icon
+                                          size={19}
+                                          className={
+                                            tx.type === 'income'
+                                              ? 'text-income'
+                                              : 'text-expense'
+                                          }
+                                          strokeWidth={2.1}
+                                        />
+                                      </div>
 
-                                    {/* Label + source */}
-                                    <div className="min-w-0 flex-1">
-                                      <p className="truncate text-sm font-semibold text-foreground">
-                                        {tx.category}
-                                      </p>
-                                      <div className="mt-0.5 flex items-center gap-1.5">
-                                        <span className="text-[10px] font-semibold text-muted-foreground/60">
-                                          {tx.source}
-                                        </span>
-                                        {tx.note && (
-                                          <>
-                                            <span className="text-muted-foreground/30 text-[10px]">·</span>
-                                            <span className="truncate text-[11px] text-muted-foreground/55">
+                                      {/* Category + source/note */}
+                                      <div className="min-w-0 flex-1">
+                                        <p className="truncate text-[13.5px] font-semibold leading-snug text-foreground">
+                                          {tx.category}
+                                        </p>
+                                        <div className="mt-1 flex min-w-0 items-center gap-1.5">
+                                          {/* Source badge */}
+                                          <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
+                                            {tx.source}
+                                          </span>
+                                          {tx.note && (
+                                            <span className="min-w-0 truncate text-[11px] text-muted-foreground/60">
                                               {tx.note}
                                             </span>
-                                          </>
-                                        )}
+                                          )}
+                                        </div>
                                       </div>
-                                    </div>
 
-                                    {/* Amount */}
-                                    <div
-                                      className={`ml-1 shrink-0 text-sm font-bold tabular-nums ${
-                                        tx.type === 'income'
-                                          ? 'text-income'
-                                          : 'text-foreground'
-                                      }`}
-                                    >
-                                      {tx.type === 'income' ? '+' : '−'}
-                                      {formatRupiah(tx.amount)}
-                                    </div>
-                                  </AnimatedListItem>
-                                </SwipeableTransactionRow>
-                              </div>
-                            ))}
+                                      {/* Amount — right-aligned */}
+                                      <div className="ml-2 shrink-0 text-right">
+                                        <p
+                                          className={`text-[14px] font-bold tabular-nums leading-snug ${
+                                            tx.type === 'income'
+                                              ? 'text-income'
+                                              : 'text-foreground'
+                                          }`}
+                                        >
+                                          {tx.type === 'income' ? '+' : '−'}
+                                          {formatRupiah(tx.amount)}
+                                        </p>
+                                        <p className="mt-0.5 text-[9.5px] font-semibold text-muted-foreground/50 uppercase tracking-wide">
+                                          {tx.type === 'income' ? 'masuk' : 'keluar'}
+                                        </p>
+                                      </div>
+                                    </AnimatedListItem>
+                                  </SwipeableTransactionRow>
+
+                                  {/* Inset divider — aligns to text, not full-bleed */}
+                                  {i < arr.length - 1 && (
+                                    <div className="ml-[3.875rem] border-b border-border/40" />
+                                  )}
+                                </div>
+                              );
+                            })}
                           </AnimatePresence>
                         </div>
                       </div>

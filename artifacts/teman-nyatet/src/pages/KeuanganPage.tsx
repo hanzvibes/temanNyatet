@@ -206,6 +206,11 @@ export default function KeuanganPage() {
   const [txType, setTxType] = useState<TransactionType>('expense');
   const [search, setSearch] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sheetViewportHeight, setSheetViewportHeight] = useState(() =>
+    typeof window !== 'undefined'
+      ? window.visualViewport?.height ?? window.innerHeight
+      : 800,
+  );
 
   const form = useForm<TxFormValues>({
     resolver: zodResolver(txSchema),
@@ -226,6 +231,27 @@ export default function KeuanganPage() {
       clearCreate();
     }
   }, [pendingCreate]);
+
+  // Use the visual viewport so the transaction sheet moves above the
+  // on-screen keyboard in mobile browsers and installed PWAs.
+  useEffect(() => {
+    const updateViewportHeight = () => {
+      setSheetViewportHeight(
+        window.visualViewport?.height ?? window.innerHeight,
+      );
+    };
+
+    updateViewportHeight();
+    window.visualViewport?.addEventListener('resize', updateViewportHeight);
+    window.visualViewport?.addEventListener('scroll', updateViewportHeight);
+    window.addEventListener('resize', updateViewportHeight);
+
+    return () => {
+      window.visualViewport?.removeEventListener('resize', updateViewportHeight);
+      window.visualViewport?.removeEventListener('scroll', updateViewportHeight);
+      window.removeEventListener('resize', updateViewportHeight);
+    };
+  }, []);
 
   const filteredTransactions = useMemo(
     () =>
@@ -511,15 +537,22 @@ export default function KeuanganPage() {
       <Drawer.Root open={isFormOpen} onOpenChange={setIsFormOpen}>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" />
-          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-sheet h-[90dvh] landscape:h-[90dvh] sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-full z-50 outline-none border-t border-border/70 shadow-elevated">
-            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-6 mt-4" />
+          <Drawer.Content
+            style={{
+              height: `${Math.min(Math.max(sheetViewportHeight * 0.92, 360), 720)}px`,
+              maxHeight: 'calc(100dvh - env(safe-area-inset-top))',
+            }}
+            className="fixed bottom-0 left-0 right-0 z-50 flex min-h-0 flex-col overflow-hidden rounded-t-[2rem] border-t border-border/70 bg-card shadow-elevated outline-none sm:left-1/2 sm:right-auto sm:w-full sm:max-w-md sm:-translate-x-1/2"
+          >
+            <div className="mx-auto mt-3 mb-3 h-1.5 w-12 flex-shrink-0 rounded-full bg-muted-foreground/20 sm:mb-5 sm:mt-4" />
 
             <form
               onSubmit={form.handleSubmit(onSubmitForm)}
-              className="flex flex-col px-5 sm:px-6 pb-8 overflow-y-auto"
+              className="flex min-h-0 flex-1 flex-col"
             >
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5 sm:px-6 sm:pb-6">
               {/* Type Toggle */}
-              <div className="flex bg-muted/60 p-1 rounded-[1.25rem] mb-6">
+              <div className="mb-5 flex min-h-12 rounded-[1.25rem] bg-muted/60 p-1 sm:mb-6">
                 <button
                   type="button"
                   onClick={() => {
@@ -527,7 +560,7 @@ export default function KeuanganPage() {
                     form.setValue('type', 'expense');
                     form.setValue('category', '');
                   }}
-                  className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${
+                  className={`min-h-10 flex-1 rounded-xl py-2.5 text-sm font-bold transition-all ${
                     txType === 'expense'
                       ? 'bg-card text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -542,7 +575,7 @@ export default function KeuanganPage() {
                     form.setValue('type', 'income');
                     form.setValue('category', '');
                   }}
-                  className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${
+                  className={`min-h-10 flex-1 rounded-xl py-2.5 text-sm font-bold transition-all ${
                     txType === 'income'
                       ? 'bg-card text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -553,7 +586,7 @@ export default function KeuanganPage() {
               </div>
 
               {/* Amount */}
-              <div className="mb-6">
+              <div className="mb-5 sm:mb-6">
                 <label className="text-pill-label mb-2 block">Nominal</label>
                 <div className="relative">
                   <span className="absolute left-5 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground/50 pointer-events-none select-none">
@@ -564,7 +597,7 @@ export default function KeuanganPage() {
                     type="text"
                     inputMode="numeric"
                     placeholder="0"
-                    className="w-full text-4xl font-bold bg-card border border-border rounded-[1.5rem] py-5 pl-16 pr-5 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 transition-all text-foreground shadow-sm"
+                    className="w-full min-w-0 rounded-[1.5rem] border border-border bg-card py-4 pl-14 pr-4 text-[clamp(1.75rem,8vw,2.25rem)] font-bold text-foreground shadow-sm outline-none transition-all focus:border-finance focus:ring-2 focus:ring-finance/20 sm:py-5 sm:pl-16 sm:pr-5"
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, '');
                       const formatted = val
@@ -584,7 +617,7 @@ export default function KeuanganPage() {
               </div>
 
               {/* Date & Source */}
-              <div className="flex gap-4 mb-6">
+              <div className="mb-5 grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 sm:mb-6">
                 <div className="flex-1">
                   <label className="text-pill-label mb-2 block">Tanggal</label>
                   <input
@@ -609,9 +642,9 @@ export default function KeuanganPage() {
               </div>
 
               {/* Category Grid */}
-              <div className="mb-6">
+              <div className="mb-5 sm:mb-6">
                 <label className="text-pill-label mb-3 block">Kategori</label>
-                <div className="grid grid-cols-4 gap-2 sm:gap-3">
+                <div className="grid grid-cols-2 gap-2 min-[380px]:grid-cols-4 sm:gap-3">
                   {(txType === 'expense'
                     ? DEFAULT_EXPENSE_CATEGORIES
                     : DEFAULT_INCOME_CATEGORIES
@@ -676,7 +709,7 @@ export default function KeuanganPage() {
               </div>
 
               {/* Note */}
-              <div className="mb-8">
+              <div className="mb-2">
                 <label className="text-pill-label mb-2 block">
                   Catatan Tambahan
                 </label>
@@ -688,13 +721,16 @@ export default function KeuanganPage() {
                 />
               </div>
 
-              <Button
-                type="submit"
-                disabled={form.formState.isSubmitting}
-                className="w-full bg-finance text-finance-text hover:bg-finance/90 text-base font-bold py-4 rounded-[1.25rem] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {form.formState.isSubmitting ? 'Menyimpan…' : 'Simpan Transaksi'}
-              </Button>
+              </div>
+              <div className="flex-shrink-0 border-t border-border/70 bg-card px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pb-5">
+                <Button
+                  type="submit"
+                  disabled={form.formState.isSubmitting}
+                  className="min-h-12 w-full rounded-[1.25rem] bg-finance py-3.5 text-base font-bold text-finance-text hover:bg-finance/90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {form.formState.isSubmitting ? 'Menyimpan…' : 'Simpan Transaksi'}
+                </Button>
+              </div>
             </form>
           </Drawer.Content>
         </Drawer.Portal>

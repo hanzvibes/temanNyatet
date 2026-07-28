@@ -8,6 +8,9 @@ const router = Router();
 const SHEET = '📝 Notes';
 const TITLE_MAX = 200;
 const CONTENT_MAX = 50_000;
+const SUMMARY_CONTENT_MAX = 50_000;
+const OPENAI_MODEL = 'gpt-4o-mini';
+const OPENAI_TIMEOUT_MS = 30_000;
 
 router.get('/notes', requireAuth, userRateLimit, async (req, res) => {
   try {
@@ -77,6 +80,90 @@ router.put('/notes/:id', requireAuth, userRateLimit, async (req, res) => {
     }
     req.log.error({ err }, 'Failed to update note');
     res.status(500).json({ error: 'Failed to update note' });
+  }
+});
+
+router.post('/notes/:id/summarize', requireAuth, userRateLimit, async (req, res) => {
+  try {
+    const apiKey = process.env['OPENAI_API_KEY'];
+    if (!apiKey) {
+      res.status(503).json({ error: 'AI summarization is not configured' });
+      return;
+    }
+
+    const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!, req.sheetsClient!);
+    const note = rows.find((row) => row.id === req.params.id);
+    if (!note) {
+      res.status(404).json({ error: 'Note not found' });
+      return;
+    }
+
+    const content = requireString(note.content, 'content', SUMMARY_CONTENT_MAX);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
+
+    let providerResponse: Response;
+    try {
+      providerResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: OPENAI_MODEL,
+          temperature: 0.2,
+          max_tokens: 180,
+          messages: [
+            {
+              role: 'system',
+              content:
+                'Anda adalah asisten peringkas catatan. Ringkas catatan dalam bahasa Indonesia menjadi 2–3 kalimat yang singkat dan jelas. Jangan menambahkan informasi yang tidak ada di catatan. Kembalikan hanya ringkasannya tanpa judul, bullet, atau pengantar.',
+            },
+            {
+              role: 'user',
+              content: `Catatan yang harus diringkas:\n\n${content}`,
+            },
+          ],
+        }),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (!providerResponse.ok) {
+      req.log.warn({ status: providerResponse.status }, 'OpenAI summarization request failed');
+      res.status(502).json({ error: 'AI summary could not be generated' });
+      return;
+    }
+
+    const providerBody = (await providerResponse.json()) as {
+      choices?: Array<{ message?: { content?: unknown } }>;
+    };
+    const summary = providerBody.choices?.[0]?.message?.content;
+    if (typeof summary !== 'string' || !summary.trim()) {
+      req.log.warn('OpenAI returned an empty summary');
+      res.status(502).json({ error: 'AI summary returned no usable content' });
+      return;
+    }
+
+    res.status(200).json({ data: { summary: summary.trim() } });
+  } catch (err) {
+    if (err instanceof ValidationError) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    if (err instanceof Error && err.name === 'AbortError') {
+      res.status(504).json({ error: 'AI summary request timed out' });
+      return;
+    }
+    if (err instanceof SheetsAccessError) {
+      res.status(503).json({ error: err.code, message: err.message });
+      return;
+    }
+    req.log.error({ err }, 'Failed to summarize note');
+    res.status(500).json({ error: 'Failed to generate AI summary' });
   }
 });
 

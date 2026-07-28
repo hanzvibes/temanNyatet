@@ -4,7 +4,7 @@ import { useNotes } from '@/hooks/useNotes';
 import { useCreate } from '@/contexts/CreateContext';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Loader2, BookOpen, Plus } from 'lucide-react';
+import { Loader2, BookOpen, Plus, Sparkles } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { Button } from '@/components/ui/button';
 import { NOTE_TAGS } from '@/lib/categoryIcons';
@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { SortableNoteGrid } from '@/components/SortableNoteGrid';
 import { toast } from 'sonner';
 import { NOTE_COLORS, NOTE_COLOR_PALETTE } from '@/lib/noteColors';
+import { apiPost } from '@/lib/apiClient';
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
 const PALETTE = NOTE_COLOR_PALETTE;
@@ -87,6 +88,9 @@ export default function CatatanPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
 
   const form = useForm<NoteFormValues>({
     resolver: zodResolver(noteSchema),
@@ -125,8 +129,27 @@ export default function CatatanPage() {
   const handleOpenDetail = (note: Note, color: string) => {
     setSelectedNote(note);
     setSelectedNoteColor(color);
+    setSummary(null);
+    setSummaryError(null);
     setIsEditing(false);
     setIsDetailOpen(true);
+  };
+
+  const handleSummarize = async () => {
+    if (!selectedNote || !selectedNote.content.trim()) return;
+    setIsSummarizing(true);
+    setSummaryError(null);
+    try {
+      const response = await apiPost<{ summary: string }>(
+        `/notes/${encodeURIComponent(selectedNote.id)}/summarize`,
+        {},
+      );
+      setSummary(response.summary);
+    } catch {
+      setSummaryError('Ringkasan belum berhasil dibuat. Coba lagi.');
+    } finally {
+      setIsSummarizing(false);
+    }
   };
 
   const handleStartEdit = (note: Note) => {
@@ -453,6 +476,27 @@ export default function CatatanPage() {
                         <p className="text-base text-foreground/95 whitespace-pre-wrap leading-relaxed font-medium mb-6">
                           {selectedNote.content}
                         </p>
+                      {(summary || summaryError) && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="rounded-2xl bg-card/55 border border-border/45 p-4 mb-5"
+                        >
+                          <div className="flex items-center gap-2 text-sm font-bold text-foreground mb-2">
+                            <Sparkles size={16} className="text-primary" />
+                            Ringkasan AI
+                          </div>
+                          {summary ? (
+                            <p className="text-sm leading-relaxed text-foreground/85">
+                              {summary}
+                            </p>
+                          ) : (
+                            <p className="text-sm leading-relaxed text-destructive">
+                              {summaryError}
+                            </p>
+                          )}
+                        </motion.div>
+                      )}
                         {selectedNote.tags &&
                           selectedNote.tags.length > 0 && (
                             <div className="flex flex-wrap gap-2 mb-2">
@@ -470,6 +514,19 @@ export default function CatatanPage() {
 
                       {/* Action buttons */}
                       <div className="flex gap-3 px-5 sm:px-7 pb-6 pt-4 flex-shrink-0 border-t border-border/40">
+                        <button
+                          onClick={handleSummarize}
+                          disabled={isSummarizing || !selectedNote.content.trim()}
+                          className="min-h-11 px-3 bg-primary/10 text-primary font-bold rounded-xl hover:bg-primary/15 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 text-sm shadow-sm disabled:opacity-60"
+                          aria-label="Ringkas catatan dengan AI"
+                        >
+                          {isSummarizing ? (
+                            <Loader2 size={16} className="animate-spin" />
+                          ) : (
+                            <Sparkles size={16} />
+                          )}
+                          {isSummarizing ? 'Merangkum...' : 'Ringkas AI'}
+                        </button>
                         <button
                           onClick={() => handleStartEdit(selectedNote)}
                           className="flex-1 min-h-11 bg-card/70 text-foreground font-bold rounded-xl hover:bg-card active:scale-[0.98] transition-all text-sm shadow-sm"
@@ -519,6 +576,8 @@ export default function CatatanPage() {
                     onClick={() => {
                       setIsDetailOpen(false);
                       setIsEditing(false);
+                      setSummary(null);
+                      setSummaryError(null);
                     }}
                     variant="secondary"
                     className="rounded-full shadow-lg bg-card/80 hover:bg-card border border-border/50"

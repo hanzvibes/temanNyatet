@@ -303,10 +303,10 @@ export default function KeuanganPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background min-h-dvh pb-32 lg:pb-16">
+    <div className="flex min-h-dvh h-full flex-col bg-background pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-border/50">
-        <div className="px-5 py-5 pb-4 space-y-4 sm:px-6 lg:px-10 lg:py-7 lg:pb-5 max-w-screen-xl mx-auto">
+        <div className="mx-auto max-w-screen-xl space-y-3 px-4 py-4 pb-3 sm:px-6 sm:py-5 sm:pb-4 lg:px-10 lg:py-7 lg:pb-5">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
@@ -320,7 +320,7 @@ export default function KeuanganPage() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-screen-xl space-y-7 px-5 pb-8 pt-5 sm:px-6 lg:px-10 lg:pt-7">
+      <div className="mx-auto w-full max-w-screen-xl space-y-6 px-4 pb-6 pt-4 sm:space-y-7 sm:px-6 sm:pb-8 sm:pt-5 lg:px-10 lg:pt-7">
         {/* ── Dashboard summary ── */}
         <div className="grid gap-4 lg:grid-cols-[minmax(280px,0.85fr)_minmax(0,1.55fr)]">
           <BalanceCard
@@ -329,7 +329,7 @@ export default function KeuanganPage() {
             expense={monthlySummary.expense}
           />
 
-          <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible lg:grid-cols-2">
+          <div className="-mx-1 flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible lg:grid-cols-2">
             <MetricCard
               label="Pemasukan"
               value={monthlySummary.income}
@@ -365,7 +365,7 @@ export default function KeuanganPage() {
 
         {/* ── Transactions ── */}
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.34fr)] lg:items-start">
-          <div className="order-2 space-y-6 lg:order-1">
+          <div className="order-2 space-y-5 lg:order-1">
           <SearchBar
             value={search}
             onChange={setSearch}
@@ -402,13 +402,13 @@ export default function KeuanganPage() {
                 }
               />
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-5">
                 {sortedDates.map((dateStr) => (
                   <div key={dateStr}>
-                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-3 px-1">
+                    <h3 className="mb-2.5 px-1 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground sm:text-sm sm:tracking-widest">
                       {getFormatDate(dateStr)}
                     </h3>
-                    <div className="space-y-3">
+                    <div className="space-y-2.5">
                       <AnimatePresence>
                         {groupedTx[dateStr].map((tx) => (
                           <SwipeableTransactionRow
@@ -421,11 +421,11 @@ export default function KeuanganPage() {
                               tabIndex={0}
                               role="group"
                               aria-label={`Transaksi ${tx.category} ${formatRupiah(tx.amount)}`}
-                              className="bg-card rounded-[1.25rem] p-4 flex items-center justify-between shadow-sm border border-card-border hover:border-finance/30 hover:shadow-md transition-all active:scale-[0.98] select-none overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-finance focus-visible:ring-offset-2"
+                              className="flex min-h-[4.25rem] items-center justify-between overflow-hidden rounded-[1.15rem] border border-card-border bg-card p-3 shadow-sm transition-all hover:border-finance/30 hover:shadow-md active:scale-[0.99] select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-finance focus-visible:ring-offset-2 sm:min-h-0 sm:rounded-[1.25rem] sm:p-4"
                             >
-                              <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                              <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <div
-                                  className={`w-11 h-11 rounded-xl flex items-center justify-center shadow-sm shrink-0 ${getCategoryColor(tx.type)}`}
+                                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-sm ${getCategoryColor(tx.type)}`}
                                 >
                                   {(() => {
                                     const Icon = CATEGORY_ICON[tx.category] ?? FALLBACK_CATEGORY_ICON;
@@ -455,7 +455,7 @@ export default function KeuanganPage() {
                                 </div>
                               </div>
                               <div
-                                className={`font-extrabold text-base tabular-nums shrink-0 ml-3 ${
+                                className={`ml-3 shrink-0 text-sm font-extrabold tabular-nums sm:text-base ${
                                   tx.type === 'income'
                                     ? 'text-income'
                                     : 'text-foreground'

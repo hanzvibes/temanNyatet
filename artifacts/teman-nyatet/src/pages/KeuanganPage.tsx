@@ -9,9 +9,13 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { format, isToday, isYesterday } from 'date-fns';
 import { id } from 'date-fns/locale';
 import {
-  Activity,
+  ArrowDownLeft,
+  ArrowUpRight,
   Plus,
   Wallet,
+  TrendingUp,
+  TrendingDown,
+  CalendarDays,
 } from 'lucide-react';
 import { CATEGORY_ICON, FALLBACK_CATEGORY_ICON } from '@/lib/categoryIcons';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
@@ -29,9 +33,6 @@ import * as z from 'zod';
 import SearchBar from '@/components/SearchBar';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const getCategoryColor = (type: TransactionType) =>
-  type === 'income' ? 'bg-income' : 'bg-expense';
-
 const formatRupiah = (amount: number) =>
   new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -39,8 +40,19 @@ const formatRupiah = (amount: number) =>
     maximumFractionDigits: 0,
   }).format(amount);
 
+const formatRupiahCompact = (amount: number) => {
+  if (Math.abs(amount) >= 1_000_000)
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      notation: 'compact',
+      maximumFractionDigits: 1,
+    }).format(amount);
+  return formatRupiah(amount);
+};
+
 const INP =
-  'w-full bg-card border border-border rounded-xl py-3 px-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 text-sm font-bold text-foreground transition-all';
+  'w-full bg-card border border-border rounded-xl py-3 px-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 text-sm font-semibold text-foreground transition-all placeholder:text-muted-foreground/50';
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 const txSchema = z.object({
@@ -54,8 +66,8 @@ const txSchema = z.object({
 
 type TxFormValues = z.infer<typeof txSchema>;
 
-// ─── Balance Card ─────────────────────────────────────────────────────────────
-function BalanceCard({
+// ─── Balance Hero ─────────────────────────────────────────────────────────────
+function BalanceHero({
   balance,
   income,
   expense,
@@ -67,106 +79,104 @@ function BalanceCard({
   const net = income - expense;
   const totalActivity = income + expense;
   const incomeRatio = totalActivity > 0 ? Math.round((income / totalActivity) * 100) : 50;
+  const isPositive = net >= 0;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
+    <motion.section
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
-      className="relative overflow-hidden rounded-[2rem] border border-card-border bg-card p-6 shadow-elevation-2"
+      transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+      aria-label="Ringkasan saldo bulan ini"
     >
-      {/* Theme-aware ambient accents */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-14 -top-14 h-48 w-48 rounded-full bg-finance/10 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -left-10 bottom-2 h-40 w-40 rounded-full bg-income/10 blur-3xl"
-      />
+      {/* Eyebrow */}
+      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground/70 mb-3">
+        {format(new Date(), 'MMMM yyyy', { locale: id })}
+      </p>
 
-      <div className="relative">
-        {/* Header row */}
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-            Total Saldo
-          </p>
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-finance/15 text-finance-text">
-            <Wallet size={15} strokeWidth={2.2} />
-          </div>
-        </div>
+      {/* Balance */}
+      <motion.p
+        key={balance}
+        initial={{ opacity: 0.5, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+        className="text-[clamp(2.4rem,9vw,3.25rem)] font-black tracking-[-0.055em] text-foreground tabular-nums leading-none"
+      >
+        {formatRupiah(balance)}
+      </motion.p>
 
-        {/* Balance number */}
-        <motion.h2
-          key={balance}
-          initial={{ opacity: 0.4, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          className="mt-3 truncate text-[clamp(2.1rem,7vw,2.75rem)] font-black tracking-[-0.055em] text-foreground tabular-nums"
+      {/* Net flow line */}
+      <div className="mt-2 flex items-center gap-1.5">
+        {isPositive ? (
+          <TrendingUp size={13} strokeWidth={2.5} className="text-income shrink-0" />
+        ) : (
+          <TrendingDown size={13} strokeWidth={2.5} className="text-expense shrink-0" />
+        )}
+        <span
+          className={`text-[12px] font-semibold tabular-nums ${
+            isPositive ? 'text-income' : 'text-expense'
+          }`}
         >
-          {formatRupiah(balance)}
-        </motion.h2>
+          {isPositive ? '+' : ''}
+          {formatRupiahCompact(net)} bulan ini
+        </span>
+      </div>
 
-        {/* Net flow chip */}
-        <div className="mt-2.5">
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tabular-nums ${
-              net >= 0
-                ? 'bg-income/20 text-income'
-                : 'bg-expense/20 text-expense'
-            }`}
-          >
-            <Activity size={9} strokeWidth={2.5} />
-            {net >= 0 ? '+' : ''}
-            {formatRupiah(net)} bulan ini
-          </span>
-        </div>
+      {/* Hairline rule */}
+      <div className="mt-5 h-px bg-border/60" />
 
-        {/* Income / Expense panels */}
-        <div className="mt-5 grid grid-cols-2 gap-2.5">
-          <div className="rounded-2xl bg-surface px-4 py-3">
-            <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+      {/* Income / Expense stats */}
+      <div className="mt-4 grid grid-cols-2 gap-4">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-income/12">
+            <ArrowDownLeft size={15} strokeWidth={2.5} className="text-income" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/70">
               Pemasukan
             </p>
-            <p className="mt-1.5 truncate text-sm font-bold tabular-nums text-income">
-              {formatRupiah(income)}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-surface px-4 py-3">
-            <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Pengeluaran
-            </p>
-            <p className="mt-1.5 truncate text-sm font-bold tabular-nums text-expense">
-              {formatRupiah(expense)}
+            <p className="mt-0.5 truncate text-sm font-bold tabular-nums text-income">
+              {formatRupiahCompact(income)}
             </p>
           </div>
         </div>
 
-        {/* Progress bar */}
-        <div className="mt-5">
-          <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${incomeRatio}%` }}
-              transition={{ duration: 0.65, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-              className="h-full rounded-full bg-income"
-            />
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-expense/10">
+            <ArrowUpRight size={15} strokeWidth={2.5} className="text-expense" />
           </div>
-          <div className="mt-1.5 flex justify-between text-[9px] font-semibold text-muted-foreground">
-            <span>Masuk {incomeRatio}%</span>
-            <span>Keluar {100 - incomeRatio}%</span>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/70">
+              Pengeluaran
+            </p>
+            <p className="mt-0.5 truncate text-sm font-bold tabular-nums text-expense">
+              {formatRupiahCompact(expense)}
+            </p>
           </div>
         </div>
       </div>
-    </motion.div>
+
+      {/* Progress bar */}
+      <div className="mt-4">
+        <div className="h-1 overflow-hidden rounded-full bg-border/60">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${incomeRatio}%` }}
+            transition={{ duration: 0.6, delay: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
+            className="h-full rounded-full bg-income"
+          />
+        </div>
+        <div className="mt-1.5 flex justify-between text-[9px] font-semibold tracking-wide text-muted-foreground/60">
+          <span>Masuk {incomeRatio}%</span>
+          <span>Keluar {100 - incomeRatio}%</span>
+        </div>
+      </div>
+    </motion.section>
   );
 }
 
 // ─── Date Label ────────────────────────────────────────────────────────────────
 function getFormatDate(dateStr: string) {
-  const date = new Date(
-    dateStr.length === 10 ? dateStr + 'T12:00:00' : dateStr,
-  );
+  const date = new Date(dateStr.length === 10 ? dateStr + 'T12:00:00' : dateStr);
   if (isToday(date)) return 'Hari Ini';
   if (isYesterday(date)) return 'Kemarin';
   return format(date, 'd MMMM yyyy', { locale: id });
@@ -185,7 +195,7 @@ export default function KeuanganPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [sheetViewportHeight, setSheetViewportHeight] = useState(() =>
     typeof window !== 'undefined'
-      ? window.visualViewport?.height ?? window.innerHeight
+      ? (window.visualViewport?.height ?? window.innerHeight)
       : 800,
   );
 
@@ -201,7 +211,6 @@ export default function KeuanganPage() {
     },
   });
 
-  // Open new transaction form when triggered from DraggableSheet
   useEffect(() => {
     if (pendingCreate === 'keuangan') {
       handleOpenForm('expense');
@@ -209,26 +218,22 @@ export default function KeuanganPage() {
     }
   }, [pendingCreate]);
 
-  // Use the visual viewport so the transaction sheet moves above the
-  // on-screen keyboard in mobile browsers and installed PWAs.
   useEffect(() => {
     let frame = 0;
-    const updateViewportHeight = () => {
+    const update = () => {
       if (frame) return;
       frame = window.requestAnimationFrame(() => {
         frame = 0;
         setSheetViewportHeight(window.visualViewport?.height ?? window.innerHeight);
       });
     };
-
-    updateViewportHeight();
-    window.visualViewport?.addEventListener('resize', updateViewportHeight);
-    window.addEventListener('resize', updateViewportHeight);
-
+    update();
+    window.visualViewport?.addEventListener('resize', update);
+    window.addEventListener('resize', update);
     return () => {
       if (frame) window.cancelAnimationFrame(frame);
-      window.visualViewport?.removeEventListener('resize', updateViewportHeight);
-      window.removeEventListener('resize', updateViewportHeight);
+      window.visualViewport?.removeEventListener('resize', update);
+      window.removeEventListener('resize', update);
     };
   }, []);
 
@@ -289,7 +294,6 @@ export default function KeuanganPage() {
       },
       {} as Record<string, typeof transactions>,
     );
-
     return {
       groupedTx: grouped,
       sortedDates: Object.keys(grouped).sort(
@@ -309,9 +313,10 @@ export default function KeuanganPage() {
 
   return (
     <div className="flex min-h-dvh h-full flex-col bg-background pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-border/50">
-        <div className="mx-auto max-w-screen-xl space-y-3 px-4 py-4 pb-3 sm:px-6 sm:py-5 sm:pb-4 lg:px-10 lg:py-7 lg:pb-5">
+
+      {/* ── Header ── */}
+      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-border/40">
+        <div className="mx-auto max-w-screen-xl px-5 py-4 sm:px-6 sm:py-5 lg:px-10 lg:py-6">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
@@ -325,25 +330,28 @@ export default function KeuanganPage() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-screen-xl space-y-6 px-4 pb-6 pt-4 sm:space-y-7 sm:px-6 sm:pb-8 sm:pt-5 lg:px-10 lg:pt-7">
-        {/* ── Dashboard summary ── */}
-        <div className="grid gap-4 lg:grid-cols-[minmax(280px,0.85fr)_minmax(0,1.55fr)]">
-          <BalanceCard
-            balance={monthlySummary.balance}
-            income={monthlySummary.income}
-            expense={monthlySummary.expense}
-          />
-        </div>
+      {/* ── Body ── */}
+      <div className="mx-auto w-full max-w-screen-xl px-5 pt-6 pb-6 sm:px-6 sm:pt-8 sm:pb-8 lg:px-10 lg:pt-10">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.38fr)] lg:items-start">
 
-        {/* ── Transactions ── */}
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.34fr)] lg:items-start">
-          <div className="order-2 space-y-5 lg:order-1">
+          {/* ── Left column ── */}
+          <div className="space-y-8 lg:order-1">
+
+            {/* Balance hero */}
+            <BalanceHero
+              balance={monthlySummary.balance}
+              income={monthlySummary.income}
+              expense={monthlySummary.expense}
+            />
+
+            {/* Search */}
             <SearchBar
               value={search}
               onChange={setSearch}
               placeholder="Cari transaksi..."
             />
 
+            {/* Transaction list */}
             <div>
               {loading ? (
                 <PageLoading accent="keuangan" label="Memuat transaksi…" />
@@ -351,11 +359,7 @@ export default function KeuanganPage() {
                 <PageEmpty
                   accent="keuangan"
                   icon={Wallet}
-                  title={
-                    search
-                      ? 'Tidak ada hasil pencarian'
-                      : 'Belum ada transaksi bulan ini'
-                  }
+                  title={search ? 'Tidak ada hasil pencarian' : 'Belum ada transaksi bulan ini'}
                   description={
                     search
                       ? 'Coba kata kunci lain atau hapus filter.'
@@ -365,22 +369,22 @@ export default function KeuanganPage() {
                     !search ? (
                       <Button
                         onClick={() => handleOpenForm('expense')}
-                        className="bg-finance text-finance-text hover:bg-finance/90 rounded-full px-6 py-3.5"
+                        className="bg-finance text-finance-text hover:bg-finance/90 rounded-full px-6 py-3"
                       >
-                        <Plus size={18} strokeWidth={2.5} />
+                        <Plus size={16} strokeWidth={2.5} />
                         Catat Transaksi
                       </Button>
                     ) : undefined
                   }
                 />
               ) : (
-                <div className="space-y-6">
-                  {/* ── Section header ── */}
-                  <div className="flex items-center justify-between px-1">
-                    <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-foreground/60">
+                <div className="space-y-7">
+                  {/* Section meta */}
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
                       Riwayat Transaksi
                     </h2>
-                    <span className="text-xs font-semibold text-muted-foreground">
+                    <span className="text-[11px] font-semibold text-muted-foreground/60 tabular-nums">
                       {filteredTransactions.length} transaksi
                     </span>
                   </div>
@@ -395,33 +399,33 @@ export default function KeuanganPage() {
 
                     return (
                       <div key={dateStr}>
-                        {/* ── Date header — centered with flanking rules ── */}
-                        <div className="mb-3 flex items-center gap-2 px-1 max-[379px]:justify-between">
-                          <div className="h-px min-w-4 flex-1 bg-border/50 max-[379px]:hidden" />
-                          <span className="shrink-0 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70">
-                            {getFormatDate(dateStr)}
-                          </span>
-                          <div className="h-px min-w-4 flex-1 bg-border/50 max-[379px]:hidden" />
-                          {/* Daily net chip */}
+                        {/* Date row */}
+                        <div className="mb-2.5 flex items-center justify-between px-0.5">
+                          <div className="flex items-center gap-2">
+                            <CalendarDays
+                              size={11}
+                              strokeWidth={2.2}
+                              className="text-muted-foreground/50 shrink-0"
+                            />
+                            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground/60">
+                              {getFormatDate(dateStr)}
+                            </span>
+                          </div>
                           <span
-                            className={`inline-flex max-w-[48%] shrink-0 items-center truncate rounded-full px-2 py-1 text-[11px] font-bold tabular-nums ${
-                              dayNet >= 0
-                                ? 'bg-income/15 text-income'
-                                : 'bg-expense/12 text-expense'
+                            className={`text-[11px] font-bold tabular-nums ${
+                              dayNet >= 0 ? 'text-income' : 'text-expense'
                             }`}
                           >
                             {dayNet >= 0 ? '+' : ''}
-                            {formatRupiah(dayNet)}
+                            {formatRupiahCompact(dayNet)}
                           </span>
                         </div>
 
-                        {/* ── Grouped transaction card ── */}
-                        <div className="overflow-hidden rounded-2xl border border-card-border bg-card shadow-elevation-1">
+                        {/* Transaction group — flat card */}
+                        <div className="overflow-hidden rounded-2xl border border-border/50 bg-card">
                           <AnimatePresence>
                             {dayTxs.map((tx, i, arr) => {
-                              const Icon =
-                                CATEGORY_ICON[tx.category] ??
-                                FALLBACK_CATEGORY_ICON;
+                              const Icon = CATEGORY_ICON[tx.category] ?? FALLBACK_CATEGORY_ICON;
                               return (
                                 <div key={tx.id}>
                                   <SwipeableTransactionRow
@@ -434,67 +438,69 @@ export default function KeuanganPage() {
                                       tabIndex={0}
                                       role="group"
                                       aria-label={`Transaksi ${tx.category} ${formatRupiah(tx.amount)}`}
-                                      className="grid min-h-[4.5rem] grid-cols-[3rem_minmax(0,1fr)_minmax(5.5rem,auto)] items-center gap-x-3 px-4 py-3 transition-colors hover:bg-muted/25 active:bg-muted/45 select-none focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-finance max-[379px]:grid-cols-[3rem_minmax(0,1fr)_minmax(5.25rem,auto)] max-[379px]:gap-x-2"
+                                      className="grid min-h-[4.25rem] grid-cols-[2.75rem_minmax(0,1fr)_minmax(5rem,auto)] items-center gap-x-3.5 px-4 py-3 transition-colors hover:bg-muted/20 active:bg-muted/40 select-none focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-finance"
                                     >
-                                      {/* Category icon — rounded-square premium */}
+                                      {/* Icon */}
                                       <div
-                                        className={`flex h-12 w-12 shrink-0 items-center justify-center self-center rounded-2xl ${
+                                        className={`flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-[0.875rem] ${
                                           tx.type === 'income'
-                                            ? 'bg-income/12'
-                                            : 'bg-expense/10'
+                                            ? 'bg-income/10'
+                                            : 'bg-expense/8'
                                         }`}
                                       >
                                         <Icon
-                                          size={20}
+                                          size={18}
+                                          strokeWidth={2}
                                           className={
                                             tx.type === 'income'
                                               ? 'text-income'
                                               : 'text-expense'
                                           }
-                                          strokeWidth={2.1}
                                         />
                                       </div>
 
-                                      {/* Category + source/note */}
+                                      {/* Category + meta */}
                                       <div className="min-w-0">
-                                        <p className="truncate text-sm font-semibold leading-5 text-foreground">
+                                        <p className="truncate text-[13.5px] font-semibold leading-5 text-foreground">
                                           {tx.category}
                                         </p>
-                                        <div className="mt-1 flex min-w-0 items-center gap-2">
-                                          {/* Source badge */}
-                                          <span className="shrink-0 rounded-md bg-muted px-2 py-1 text-[11px] font-bold uppercase leading-none tracking-wide text-muted-foreground">
+                                        <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
+                                          <span className="shrink-0 text-[11px] font-medium text-muted-foreground/70">
                                             {tx.source}
                                           </span>
                                           {tx.note && (
-                                            <span className="min-w-0 truncate text-[11px] leading-4 text-muted-foreground/60">
-                                              {tx.note}
-                                            </span>
+                                            <>
+                                              <span className="text-muted-foreground/30 text-[10px]">·</span>
+                                              <span className="min-w-0 truncate text-[11px] text-muted-foreground/55">
+                                                {tx.note}
+                                              </span>
+                                            </>
                                           )}
                                         </div>
                                       </div>
 
-                                      {/* Amount — right-aligned */}
-                                      <div className="min-w-0 max-w-[10rem] shrink-0 text-right max-[379px]:max-w-[6.5rem]">
+                                      {/* Amount */}
+                                      <div className="min-w-0 shrink-0 text-right">
                                         <p
-                                          className={`break-words text-sm font-bold tabular-nums leading-5 max-[379px]:text-[13px] ${
+                                          className={`text-[13.5px] font-bold tabular-nums leading-5 ${
                                             tx.type === 'income'
                                               ? 'text-income'
                                               : 'text-foreground'
                                           }`}
                                         >
                                           {tx.type === 'income' ? '+' : '−'}
-                                          {formatRupiah(tx.amount)}
+                                          {formatRupiahCompact(tx.amount)}
                                         </p>
-                                        <p className="mt-1 text-[11px] font-semibold uppercase leading-4 tracking-wide text-muted-foreground/50">
+                                        <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/45">
                                           {tx.type === 'income' ? 'masuk' : 'keluar'}
                                         </p>
                                       </div>
                                     </AnimatedListItem>
                                   </SwipeableTransactionRow>
 
-                                  {/* Inset divider — aligns to text, not full-bleed */}
+                                  {/* Inset divider */}
                                   {i < arr.length - 1 && (
-                                    <div className="ml-16 border-b border-border/40" />
+                                    <div className="ml-[3.75rem] border-b border-border/40" />
                                   )}
                                 </div>
                               );
@@ -509,49 +515,66 @@ export default function KeuanganPage() {
             </div>
           </div>
 
-          {/* Desktop sidebar summary */}
-          <aside className="order-1 hidden rounded-[1.25rem] border border-card-border bg-card p-5 shadow-elevation-1 lg:order-2 lg:block">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                  Ringkasan bulan
-                </p>
-                <p className="mt-1 text-sm font-bold text-foreground">
-                  {format(new Date(), 'MMMM yyyy', { locale: id })}
-                </p>
-              </div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-finance/15 text-finance-text">
-                <Activity size={17} />
-              </div>
-            </div>
-            <div className="mt-5 space-y-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Pemasukan</span>
-                <span className="font-bold text-income tabular-nums">
-                  {formatRupiah(monthlySummary.income)}
+          {/* ── Desktop sidebar ── */}
+          <aside className="order-first hidden rounded-2xl border border-border/50 bg-card p-5 lg:order-2 lg:block">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
+              Ringkasan bulan
+            </p>
+            <p className="mt-1 text-sm font-semibold text-foreground">
+              {format(new Date(), 'MMMM yyyy', { locale: id })}
+            </p>
+
+            <div className="mt-5 space-y-3.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-income/12">
+                    <ArrowDownLeft size={13} strokeWidth={2.5} className="text-income" />
+                  </div>
+                  <span className="text-sm text-muted-foreground">Pemasukan</span>
+                </div>
+                <span className="text-sm font-bold text-income tabular-nums">
+                  {formatRupiahCompact(monthlySummary.income)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Pengeluaran</span>
-                <span className="font-bold text-expense tabular-nums">
-                  {formatRupiah(monthlySummary.expense)}
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-expense/10">
+                    <ArrowUpRight size={13} strokeWidth={2.5} className="text-expense" />
+                  </div>
+                  <span className="text-sm text-muted-foreground">Pengeluaran</span>
+                </div>
+                <span className="text-sm font-bold text-expense tabular-nums">
+                  {formatRupiahCompact(monthlySummary.expense)}
                 </span>
               </div>
-              <div className="border-t border-border/70 pt-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-bold text-foreground">Sisa bulan ini</span>
+
+              <div className="pt-3 border-t border-border/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-foreground">Sisa bulan ini</span>
                   <span
-                    className={`font-extrabold tabular-nums ${
+                    className={`text-sm font-extrabold tabular-nums ${
                       monthlySummary.income - monthlySummary.expense >= 0
                         ? 'text-foreground'
                         : 'text-expense'
                     }`}
                   >
-                    {formatRupiah(monthlySummary.income - monthlySummary.expense)}
+                    {formatRupiahCompact(
+                      monthlySummary.income - monthlySummary.expense,
+                    )}
                   </span>
                 </div>
               </div>
             </div>
+
+            {/* Add button */}
+            <button
+              onClick={() => handleOpenForm('expense')}
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-finance/10 py-3 text-sm font-bold text-finance-text transition-colors hover:bg-finance/18 active:bg-finance/22 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-finance/40"
+            >
+              <Plus size={15} strokeWidth={2.5} />
+              Catat Transaksi
+            </button>
           </aside>
         </div>
       </div>
@@ -559,60 +582,50 @@ export default function KeuanganPage() {
       {/* ── Form Sheet ── */}
       <Drawer.Root open={isFormOpen} onOpenChange={setIsFormOpen}>
         <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" />
+          <Drawer.Overlay className="fixed inset-0 bg-black/35 z-50 backdrop-blur-[2px]" />
           <Drawer.Content
             style={{
               height: `${Math.min(Math.max(sheetViewportHeight * 0.92, 360), 720)}px`,
               maxHeight: 'calc(100dvh - env(safe-area-inset-top))',
             }}
-            className="fixed bottom-0 left-0 right-0 z-50 flex min-h-0 flex-col overflow-hidden rounded-t-[2rem] border-t border-border/70 bg-card shadow-elevated outline-none sm:left-1/2 sm:right-auto sm:w-full sm:max-w-md sm:-translate-x-1/2"
+            className="fixed bottom-0 left-0 right-0 z-50 flex min-h-0 flex-col overflow-hidden rounded-t-[1.75rem] border-t border-border/60 bg-card shadow-elevation-3 outline-none sm:left-1/2 sm:right-auto sm:w-full sm:max-w-md sm:-translate-x-1/2"
           >
-            <div className="mx-auto mt-3 mb-3 h-1.5 w-12 flex-shrink-0 rounded-full bg-muted-foreground/20 sm:mb-5 sm:mt-4" />
+            {/* Drag handle */}
+            <div className="mx-auto mt-3.5 mb-1 h-1 w-10 flex-shrink-0 rounded-full bg-muted-foreground/20" />
 
             <form
               onSubmit={form.handleSubmit(onSubmitForm)}
               className="flex min-h-0 flex-1 flex-col"
             >
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5 sm:px-6 sm:pb-6">
-                {/* Type Toggle */}
-                <div className="mb-5 flex min-h-12 rounded-[1.25rem] bg-muted/60 p-1 sm:mb-6">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTxType('expense');
-                      form.setValue('type', 'expense');
-                      form.setValue('category', '');
-                    }}
-                    className={`min-h-10 flex-1 rounded-xl py-2.5 text-sm font-bold transition-all ${
-                      txType === 'expense'
-                        ? 'bg-card text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    Pengeluaran
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTxType('income');
-                      form.setValue('type', 'income');
-                      form.setValue('category', '');
-                    }}
-                    className={`min-h-10 flex-1 rounded-xl py-2.5 text-sm font-bold transition-all ${
-                      txType === 'income'
-                        ? 'bg-card text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    Pemasukan
-                  </button>
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5 sm:px-6">
+
+                {/* ── Type Toggle ── */}
+                <div className="my-5 flex rounded-[1rem] bg-muted/50 p-1">
+                  {(['expense', 'income'] as const).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => {
+                        setTxType(t);
+                        form.setValue('type', t);
+                        form.setValue('category', '');
+                      }}
+                      className={`min-h-10 flex-1 rounded-[0.75rem] py-2.5 text-sm font-bold transition-all ${
+                        txType === t
+                          ? 'bg-card text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground/80'
+                      }`}
+                    >
+                      {t === 'expense' ? 'Pengeluaran' : 'Pemasukan'}
+                    </button>
+                  ))}
                 </div>
 
-                {/* Amount */}
-                <div className="mb-5 sm:mb-6">
-                  <label className="text-pill-label mb-2 block">Nominal</label>
+                {/* ── Amount ── */}
+                <div className="mb-5">
+                  <label className="text-pill-label mb-2.5 block">Nominal</label>
                   <div className="relative">
-                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground/50 pointer-events-none select-none">
+                    <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-xl font-bold text-muted-foreground/40 select-none">
                       Rp
                     </span>
                     <input
@@ -620,40 +633,38 @@ export default function KeuanganPage() {
                       type="text"
                       inputMode="numeric"
                       placeholder="0"
-                      className="w-full min-w-0 rounded-[1.5rem] border border-border bg-card py-4 pl-14 pr-4 text-[clamp(1.75rem,8vw,2.25rem)] font-bold text-foreground shadow-sm outline-none transition-all focus:border-finance focus:ring-2 focus:ring-finance/20 sm:py-5 sm:pl-16 sm:pr-5"
+                      className="w-full min-w-0 rounded-[1.25rem] border border-border bg-background py-4 pl-12 pr-4 text-[clamp(1.75rem,8vw,2.25rem)] font-black tracking-[-0.03em] text-foreground outline-none transition-all focus:border-finance focus:ring-2 focus:ring-finance/20 sm:py-5 sm:pl-13"
                       onChange={(e) => {
                         const val = e.target.value.replace(/\D/g, '');
                         const formatted = val
                           ? new Intl.NumberFormat('id-ID').format(Number(val))
                           : '';
-                        form.setValue('amount', formatted, {
-                          shouldValidate: true,
-                        });
+                        form.setValue('amount', formatted, { shouldValidate: true });
                       }}
                     />
                   </div>
                   {form.formState.errors.amount && (
-                    <FormError className="mt-2 ml-2">
+                    <FormError className="mt-2 ml-1" size="xs">
                       {form.formState.errors.amount.message as string}
                     </FormError>
                   )}
                 </div>
 
-                {/* Date & Source */}
-                <div className="mb-5 grid grid-cols-1 gap-4 min-[380px]:grid-cols-2 sm:mb-6">
-                  <div className="flex-1">
-                    <label className="text-pill-label mb-2 block">Tanggal</label>
+                {/* ── Date & Source ── */}
+                <div className="mb-5 grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-pill-label mb-2.5 block">Tanggal</label>
                     <input
                       {...form.register('date')}
                       type="date"
-                      className={`${INP} shadow-sm [color-scheme:light] dark:[color-scheme:dark]`}
+                      className={`${INP} [color-scheme:light] dark:[color-scheme:dark]`}
                     />
                   </div>
-                  <div className="flex-1">
-                    <label className="text-pill-label mb-2 block">Sumber</label>
+                  <div>
+                    <label className="text-pill-label mb-2.5 block">Sumber</label>
                     <select
                       {...form.register('source')}
-                      className={`${INP} appearance-none shadow-sm`}
+                      className={`${INP} appearance-none`}
                     >
                       {DEFAULT_PAYMENT_SOURCES.map((s) => (
                         <option key={s} value={s}>
@@ -664,58 +675,47 @@ export default function KeuanganPage() {
                   </div>
                 </div>
 
-                {/* Category Grid */}
-                <div className="mb-5 sm:mb-6">
+                {/* ── Category Grid ── */}
+                <div className="mb-5">
                   <label className="text-pill-label mb-3 block">Kategori</label>
-                  <div className="grid grid-cols-2 gap-2 min-[380px]:grid-cols-4 sm:gap-3">
+                  <div className="grid grid-cols-4 gap-2">
                     {(txType === 'expense'
                       ? DEFAULT_EXPENSE_CATEGORIES
                       : DEFAULT_INCOME_CATEGORIES
                     ).map((cat) => {
                       const isSelected = form.watch('category') === cat;
+                      const Icon = CATEGORY_ICON[cat] ?? FALLBACK_CATEGORY_ICON;
                       return (
                         <button
                           key={cat}
                           type="button"
                           onClick={() =>
-                            form.setValue('category', cat, {
-                              shouldValidate: true,
-                            })
+                            form.setValue('category', cat, { shouldValidate: true })
                           }
-                          className={`min-h-12 flex flex-col items-center justify-center gap-1.5 p-2 sm:p-3 rounded-2xl transition-all border ${
+                          className={`flex min-h-[3.75rem] flex-col items-center justify-center gap-1.5 rounded-xl border px-1.5 py-2 transition-all ${
                             isSelected
-                              ? 'bg-finance/10 border-finance shadow-sm'
-                              : 'bg-card border-border hover:bg-secondary hover:border-muted-foreground/30'
+                              ? 'border-finance/60 bg-finance/8 shadow-sm'
+                              : 'border-border/60 bg-card hover:bg-muted/40 hover:border-border'
                           }`}
                         >
-                          {(() => {
-                            const Icon =
-                              CATEGORY_ICON[cat] ?? FALLBACK_CATEGORY_ICON;
-                            return (
-                              <div
-                                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-colors ${
-                                  isSelected
-                                    ? getCategoryColor(txType)
-                                    : 'bg-muted-foreground/12'
-                                }`}
-                              >
-                                <Icon
-                                  size={16}
-                                  className={
-                                    isSelected
-                                      ? 'text-white'
-                                      : 'text-muted-foreground'
-                                  }
-                                  strokeWidth={isSelected ? 2.8 : 2.2}
-                                />
-                              </div>
-                            );
-                          })()}
-                          <span
-                            className={`text-[10px] sm:text-[11px] font-bold text-center leading-tight truncate w-full transition-colors ${
+                          <div
+                            className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${
                               isSelected
-                                ? 'text-foreground'
-                                : 'text-muted-foreground'
+                                ? txType === 'income'
+                                  ? 'bg-income'
+                                  : 'bg-expense'
+                                : 'bg-muted/70'
+                            }`}
+                          >
+                            <Icon
+                              size={14}
+                              strokeWidth={isSelected ? 2.5 : 2}
+                              className={isSelected ? 'text-white' : 'text-muted-foreground'}
+                            />
+                          </div>
+                          <span
+                            className={`text-[9.5px] font-bold text-center leading-tight w-full truncate transition-colors ${
+                              isSelected ? 'text-foreground' : 'text-muted-foreground'
                             }`}
                           >
                             {cat}
@@ -725,31 +725,32 @@ export default function KeuanganPage() {
                     })}
                   </div>
                   {form.formState.errors.category && (
-                    <FormError className="mt-3 ml-2">
+                    <FormError className="mt-2.5 ml-1" size="xs">
                       {form.formState.errors.category.message as string}
                     </FormError>
                   )}
                 </div>
 
-                {/* Note */}
+                {/* ── Note ── */}
                 <div className="mb-2">
-                  <label className="text-pill-label mb-2 block">
-                    Catatan Tambahan
+                  <label className="text-pill-label mb-2.5 block">
+                    Catatan <span className="normal-case tracking-normal font-medium opacity-60">(opsional)</span>
                   </label>
                   <input
                     {...form.register('note')}
                     type="text"
-                    placeholder="Misal: Beli kopi susu..."
-                    className="w-full bg-card border border-border rounded-xl py-4 px-5 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 text-sm font-medium text-foreground transition-all shadow-sm"
+                    placeholder="Misal: Beli kopi susu…"
+                    className="w-full rounded-xl border border-border bg-background py-3.5 px-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-finance focus:ring-2 focus:ring-finance/20"
                   />
                 </div>
               </div>
 
-              <div className="flex-shrink-0 border-t border-border/70 bg-card px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pb-5">
+              {/* ── Submit ── */}
+              <div className="shrink-0 border-t border-border/50 bg-card px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3.5 sm:px-6">
                 <Button
                   type="submit"
                   disabled={form.formState.isSubmitting}
-                  className="min-h-12 w-full rounded-[1.25rem] bg-finance py-3.5 text-base font-bold text-finance-text hover:bg-finance/90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="min-h-[3.25rem] w-full rounded-[1rem] bg-finance py-3.5 text-[15px] font-bold text-finance-text hover:bg-finance/90 disabled:cursor-not-allowed disabled:opacity-55 transition-all"
                 >
                   {form.formState.isSubmitting ? 'Menyimpan…' : 'Simpan Transaksi'}
                 </Button>

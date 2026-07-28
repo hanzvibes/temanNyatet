@@ -18,21 +18,10 @@ import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SortableNoteGrid } from '@/components/SortableNoteGrid';
 import { toast } from 'sonner';
+import { NOTE_COLORS, NOTE_COLOR_PALETTE } from '@/lib/noteColors';
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
-const PALETTE = [
-  'var(--note-card-1)',
-  'var(--note-card-2)',
-  'var(--note-card-3)',
-  'var(--note-card-4)',
-];
-
-const NOTE_COLORS = [
-  { value: 'var(--note-card-1)', label: 'Kuning' },
-  { value: 'var(--note-card-2)', label: 'Hijau' },
-  { value: 'var(--note-card-3)', label: 'Merah Muda' },
-  { value: 'var(--note-card-4)', label: 'Biru' },
-];
+const PALETTE = NOTE_COLOR_PALETTE;
 
 const AVAILABLE_TAGS = NOTE_TAGS;
 

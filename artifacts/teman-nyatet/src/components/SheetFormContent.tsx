@@ -29,6 +29,7 @@ import {
   DEFAULT_PAYMENT_SOURCES,
 } from '@/lib/database.types';
 import { toast } from 'sonner';
+import { NOTE_COLORS } from '@/lib/noteColors';
 
 // ─── Shared input style helpers ───────────────────────────────────────────────
 // [color-scheme:light] + dark:[color-scheme:dark] keeps browser-native controls
@@ -44,6 +45,7 @@ const noteSchema = z.object({
   title:   z.string().optional(),
   content: z.string().min(1, 'Konten tidak boleh kosong'),
   tags:    z.array(z.string()).default([]),
+  color:   z.string().optional(),
 });
 type NoteForm = z.infer<typeof noteSchema>;
 
@@ -53,12 +55,17 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
   const haptic = useHaptic();
   const form = useForm<NoteForm>({
     resolver: zodResolver(noteSchema),
-    defaultValues: { title: '', content: '', tags: [] },
+    defaultValues: { title: '', content: '', tags: [], color: '' },
   });
 
   const onSubmit = async (data: NoteForm) => {
     try {
-      await createNote({ title: data.title, content: data.content, tags: data.tags });
+      await createNote({
+        title: data.title,
+        content: data.content,
+        tags: data.tags,
+        color: data.color || null,
+      });
       form.reset();
       onSuccess();
     } catch {
@@ -67,6 +74,7 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
   };
 
   const tags = form.watch('tags');
+  const selectedColor = form.watch('color');
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-3 h-full">
@@ -96,6 +104,29 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
             ><Icon size={14} strokeWidth={2.4} className="flex-shrink-0" />{tag}</button>
           );
         })}
+      </div>
+      <div className="space-y-2">
+        <p className="text-pill-tag px-0.5">Warna kartu</p>
+        <div className="flex flex-wrap items-center gap-3">
+          {NOTE_COLORS.map(({ value, label }) => {
+            const isSelected = selectedColor === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                aria-label={`Warna ${label}${isSelected ? ', dipilih' : ''}`}
+                aria-pressed={isSelected}
+                onClick={() => form.setValue('color', value)}
+                className={`h-11 w-11 min-h-[44px] min-w-[44px] rounded-full transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+                  isSelected
+                    ? 'scale-110 shadow-md ring-2 ring-foreground/60 ring-offset-2'
+                    : 'ring-1 ring-foreground/15 hover:scale-105 hover:ring-foreground/30'
+                }`}
+                style={{ backgroundColor: value }}
+              />
+            );
+          })}
+        </div>
       </div>
       <Button type="submit" className="w-full mt-auto" onClick={() => haptic(HAPTIC.tap)}>
         Simpan Catatan

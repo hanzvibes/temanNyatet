@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AnimatedListItem } from '@/components/AnimatedListItem';
@@ -8,7 +8,16 @@ import { useCreate } from '@/contexts/CreateContext';
 import { useTransactions } from '@/hooks/useTransactions';
 import { format, isToday, isYesterday } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Wallet, Plus } from 'lucide-react';
+import {
+  Activity,
+  ArrowDownRight,
+  ArrowUpRight,
+  PiggyBank,
+  Plus,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react';
 import { CATEGORY_ICON, FALLBACK_CATEGORY_ICON } from '@/lib/categoryIcons';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { Button } from '@/components/ui/button';
@@ -23,21 +32,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import SearchBar from '@/components/SearchBar';
-
-// ─── Icons ────────────────────────────────────────────────────────────────────
-const ArrowUpIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 19V5" />
-    <path d="M5 12 12 5l7 7" />
-  </svg>
-);
-
-const ArrowDownIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 5v14" />
-    <path d="m19 12-7 7-7-7" />
-  </svg>
-);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const getCategoryColor = (type: TransactionType) =>
@@ -65,7 +59,59 @@ const txSchema = z.object({
 
 type TxFormValues = z.infer<typeof txSchema>;
 
-// ─── Balance Card ─────────────────────────────────────────────────────────────
+// ─── Finance summary ──────────────────────────────────────────────────────────
+function MetricCard({
+  label,
+  value,
+  caption,
+  icon: Icon,
+  tone,
+  trend,
+}: {
+  label: string;
+  value: number;
+  caption: string;
+  icon: typeof TrendingUp;
+  tone: 'income' | 'expense' | 'savings';
+  trend?: 'up' | 'down';
+}) {
+  const toneStyles = {
+    income: {
+      icon: 'bg-income/12 text-income',
+      value: 'text-income',
+    },
+    expense: {
+      icon: 'bg-expense/12 text-expense',
+      value: 'text-foreground',
+    },
+    savings: {
+      icon: 'bg-finance/15 text-finance-text',
+      value: value >= 0 ? 'text-foreground' : 'text-expense',
+    },
+  }[tone];
+
+  return (
+    <div className="min-w-[172px] flex-1 rounded-[1.25rem] border border-card-border bg-card p-4 shadow-elevation-1 sm:min-w-0">
+      <div className="mb-4 flex items-start justify-between gap-2">
+        <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${toneStyles.icon}`}>
+          <Icon size={17} strokeWidth={2.4} />
+        </div>
+        {trend && (
+          <span className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${trend === 'up' ? 'text-income' : 'text-expense'}`}>
+            {trend === 'up' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+            Bulan ini
+          </span>
+        )}
+      </div>
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+      <p className={`mt-1 truncate text-lg font-extrabold tracking-[-0.03em] tabular-nums ${toneStyles.value}`}>
+        {formatRupiah(value)}
+      </p>
+      <p className="mt-1 text-[11px] font-medium text-muted-foreground/75">{caption}</p>
+    </div>
+  );
+}
+
 function BalanceCard({
   balance,
   income,
@@ -75,65 +121,65 @@ function BalanceCard({
   income: number;
   expense: number;
 }) {
+  const net = income - expense;
+  const totalActivity = income + expense;
+  const incomeRatio = totalActivity > 0 ? Math.round((income / totalActivity) * 100) : 50;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
-      className="bg-card rounded-[1.5rem] p-6 shadow-elevation-2 border border-card-border relative overflow-hidden"
+      className="relative overflow-hidden rounded-[1.5rem] border border-finance/20 bg-card p-5 shadow-elevation-2 sm:p-6"
     >
-      {/* Subtle decorative gradient */}
       <div
-        className="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-[0.04] pointer-events-none"
+        className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full opacity-[0.08]"
         style={{
-          background:
-            'radial-gradient(circle, hsl(var(--finance)) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, hsl(var(--finance)) 0%, transparent 68%)',
         }}
       />
-
-      <div className="flex flex-col items-center mb-6 relative">
-        <p className="text-pill-label mb-2">Total saldo</p>
+      <div className="relative">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Total saldo</p>
+            <p className="mt-1 text-xs font-medium text-muted-foreground/75">Saldo seluruh akun</p>
+          </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-finance/15 text-finance-text">
+            <Wallet size={19} strokeWidth={2.3} />
+          </div>
+        </div>
         <motion.h2
           key={balance}
           initial={{ opacity: 0.4, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          className="text-4xl font-extrabold text-foreground tracking-[-0.04em] tabular-nums"
+          className="mt-5 truncate text-[clamp(2rem,5vw,2.75rem)] font-extrabold tracking-[-0.055em] text-foreground tabular-nums"
         >
           {formatRupiah(balance)}
         </motion.h2>
-      </div>
-
-      <div className="flex gap-4">
-        <motion.div
-          whileTap={{ scale: 0.97 }}
-          className="flex-1 bg-income/10 rounded-xl p-4 flex flex-col items-center border border-income/20"
-        >
-          <div className="flex items-center gap-1.5 text-income mb-2">
-            <ArrowUpIcon />
-            <span className="text-[10px] font-bold uppercase tracking-wider">
-              Pemasukan
+        <div className="mt-6 border-t border-border/70 pt-4">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+              <Activity size={15} className="text-finance-text" />
+              Cash flow bulan ini
+            </span>
+            <span className={`text-xs font-extrabold tabular-nums ${net >= 0 ? 'text-income' : 'text-expense'}`}>
+              {net >= 0 ? '+' : '-'}{formatRupiah(Math.abs(net))}
             </span>
           </div>
-          <span className="font-bold text-income tabular-nums">
-            {formatRupiah(income)}
-          </span>
-        </motion.div>
-
-        <motion.div
-          whileTap={{ scale: 0.97 }}
-          className="flex-1 bg-expense/10 rounded-xl p-4 flex flex-col items-center border border-expense/20"
-        >
-          <div className="flex items-center gap-1.5 text-expense mb-2">
-            <ArrowDownIcon />
-            <span className="text-[10px] font-bold uppercase tracking-wider">
-              Pengeluaran
-            </span>
+          <div className="h-2 overflow-hidden rounded-full bg-expense/15">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${incomeRatio}%` }}
+              transition={{ duration: 0.65, delay: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
+              className="h-full rounded-full bg-income"
+            />
           </div>
-          <span className="font-bold text-expense tabular-nums">
-            {formatRupiah(expense)}
-          </span>
-        </motion.div>
+          <div className="mt-2 flex justify-between text-[10px] font-semibold text-muted-foreground">
+            <span>Pemasukan {incomeRatio}%</span>
+            <span>Pengeluaran {100 - incomeRatio}%</span>
+          </div>
+        </div>
       </div>
     </motion.div>
   );
@@ -181,14 +227,18 @@ export default function KeuanganPage() {
     }
   }, [pendingCreate]);
 
-  const filteredTransactions = transactions.filter((tx) => {
-    if (!search) return true;
-    const l = search.toLowerCase();
-    return (
-      tx.category.toLowerCase().includes(l) ||
-      (tx.note && tx.note.toLowerCase().includes(l))
-    );
-  });
+  const filteredTransactions = useMemo(
+    () =>
+      transactions.filter((tx) => {
+        if (!search) return true;
+        const l = search.toLowerCase();
+        return (
+          tx.category.toLowerCase().includes(l) ||
+          (tx.note && tx.note.toLowerCase().includes(l))
+        );
+      }),
+    [search, transactions],
+  );
 
   const handleOpenForm = (type: TransactionType = 'expense') => {
     setTxType(type);
@@ -224,19 +274,24 @@ export default function KeuanganPage() {
     }
   };
 
-  const groupedTx = filteredTransactions.reduce(
-    (acc, tx) => {
-      const d = tx.date;
-      if (!acc[d]) acc[d] = [];
-      acc[d].push(tx);
-      return acc;
-    },
-    {} as Record<string, typeof transactions>,
-  );
+  const { groupedTx, sortedDates } = useMemo(() => {
+    const grouped = filteredTransactions.reduce(
+      (acc, tx) => {
+        const d = tx.date;
+        if (!acc[d]) acc[d] = [];
+        acc[d].push(tx);
+        return acc;
+      },
+      {} as Record<string, typeof transactions>,
+    );
 
-  const sortedDates = Object.keys(groupedTx).sort(
-    (a, b) => new Date(b).getTime() - new Date(a).getTime(),
-  );
+    return {
+      groupedTx: grouped,
+      sortedDates: Object.keys(grouped).sort(
+        (a, b) => new Date(b).getTime() - new Date(a).getTime(),
+      ),
+    };
+  }, [filteredTransactions, transactions]);
 
   const handleSwipeDelete = async (id: string) => {
     setDeletingId(id);
@@ -265,23 +320,52 @@ export default function KeuanganPage() {
         </div>
       </div>
 
-      {/* Desktop: two-column, mobile: stacked */}
-      <div
-        className="px-5 sm:px-6 lg:px-10 max-w-screen-xl mx-auto w-full
-                      space-y-6 lg:space-y-0
-                      lg:grid lg:grid-cols-[360px_1fr] lg:gap-10 lg:items-start lg:pt-7 lg:pb-8"
-      >
-        {/* ── Left column: balance card ── */}
-        <div className="space-y-6 lg:sticky lg:top-6 pt-4 lg:pt-0">
+      <div className="mx-auto w-full max-w-screen-xl space-y-7 px-5 pb-8 pt-5 sm:px-6 lg:px-10 lg:pt-7">
+        {/* ── Dashboard summary ── */}
+        <div className="grid gap-4 lg:grid-cols-[minmax(280px,0.85fr)_minmax(0,1.55fr)]">
           <BalanceCard
             balance={monthlySummary.balance}
             income={monthlySummary.income}
             expense={monthlySummary.expense}
           />
+
+          <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible lg:grid-cols-2">
+            <MetricCard
+              label="Pemasukan"
+              value={monthlySummary.income}
+              caption="Total bulan ini"
+              icon={TrendingUp}
+              tone="income"
+              trend="up"
+            />
+            <MetricCard
+              label="Pengeluaran"
+              value={monthlySummary.expense}
+              caption="Total bulan ini"
+              icon={TrendingDown}
+              tone="expense"
+              trend="down"
+            />
+            <MetricCard
+              label="Tabungan"
+              value={monthlySummary.income - monthlySummary.expense}
+              caption="Sisa pemasukan bulan ini"
+              icon={PiggyBank}
+              tone="savings"
+            />
+            <MetricCard
+              label="Cash flow"
+              value={monthlySummary.income - monthlySummary.expense}
+              caption="Pemasukan dikurangi pengeluaran"
+              icon={Activity}
+              tone="savings"
+            />
+          </div>
         </div>
 
-        {/* ── Right column: search + list ── */}
-        <div className="space-y-6 pt-0 lg:pt-0 pb-8 lg:pb-0">
+        {/* ── Transactions ── */}
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.34fr)] lg:items-start">
+          <div className="order-2 space-y-6 lg:order-1">
           <SearchBar
             value={search}
             onChange={setSearch}
@@ -390,6 +474,36 @@ export default function KeuanganPage() {
               </div>
             )}
           </div>
+          </div>
+          <aside className="order-1 hidden rounded-[1.25rem] border border-card-border bg-card p-5 shadow-elevation-1 lg:order-2 lg:block">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Ringkasan bulan</p>
+                <p className="mt-1 text-sm font-bold text-foreground">{format(new Date(), 'MMMM yyyy', { locale: id })}</p>
+              </div>
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-finance/15 text-finance-text">
+                <Activity size={17} />
+              </div>
+            </div>
+            <div className="mt-5 space-y-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Pemasukan</span>
+                <span className="font-bold text-income tabular-nums">{formatRupiah(monthlySummary.income)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Pengeluaran</span>
+                <span className="font-bold text-expense tabular-nums">{formatRupiah(monthlySummary.expense)}</span>
+              </div>
+              <div className="border-t border-border/70 pt-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-bold text-foreground">Sisa bulan ini</span>
+                  <span className={`font-extrabold tabular-nums ${monthlySummary.income - monthlySummary.expense >= 0 ? 'text-foreground' : 'text-expense'}`}>
+                    {formatRupiah(monthlySummary.income - monthlySummary.expense)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
 
@@ -397,7 +511,7 @@ export default function KeuanganPage() {
       <Drawer.Root open={isFormOpen} onOpenChange={setIsFormOpen}>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" />
-          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-sheet h-[90dvh] landscape:h-[75dvh] sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-full z-50 outline-none border-t border-border/70 shadow-elevated">
+          <Drawer.Content className="bg-card flex flex-col rounded-t-[2rem] fixed bottom-0 left-0 right-0 max-h-sheet h-[90dvh] landscape:h-[90dvh] sm:max-w-md sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-full z-50 outline-none border-t border-border/70 shadow-elevated">
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-6 mt-4" />
 
             <form
@@ -576,9 +690,10 @@ export default function KeuanganPage() {
 
               <Button
                 type="submit"
-                className="w-full bg-finance text-finance-text hover:bg-finance/90 text-base font-bold py-4 rounded-[1.25rem]"
+                disabled={form.formState.isSubmitting}
+                className="w-full bg-finance text-finance-text hover:bg-finance/90 text-base font-bold py-4 rounded-[1.25rem] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Simpan Transaksi
+                {form.formState.isSubmitting ? 'Menyimpan…' : 'Simpan Transaksi'}
               </Button>
             </form>
           </Drawer.Content>

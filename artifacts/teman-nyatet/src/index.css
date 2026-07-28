@@ -110,9 +110,9 @@
   --app-font-sans: 'Poppins', sans-serif;
   --radius: 0.875rem;
 
-  --shadow-1: 0 1px 2px rgba(37, 50, 44, 0.04), 0 2px 8px rgba(37, 50, 44, 0.03);
-  --shadow-2: 0 4px 14px rgba(37, 50, 44, 0.07), 0 1px 3px rgba(37, 50, 44, 0.04);
-  --shadow-3: 0 14px 34px rgba(37, 50, 44, 0.13), 0 4px 10px rgba(37, 50, 44, 0.06);
+  --shadow-1: 0 1px 2px rgba(37, 50, 44, 0.025), 0 1px 5px rgba(37, 50, 44, 0.025);
+  --shadow-2: 0 3px 10px rgba(37, 50, 44, 0.045), 0 1px 2px rgba(37, 50, 44, 0.025);
+  --shadow-3: 0 10px 26px rgba(37, 50, 44, 0.09), 0 3px 8px rgba(37, 50, 44, 0.04);
 
   /* Bottom-nav clearance.
      BottomSheetNav is anchored `bottom: 20px` with
@@ -189,9 +189,9 @@
   --todo-text: 211 55% 78%;
   --linksaver-text: 0 62% 79%;
 
-  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
-  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.20);
-  --shadow-3: 0 8px 28px rgba(0, 0, 0, 0.45), 0 4px 8px rgba(0, 0, 0, 0.25);
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(0, 0, 0, 0.10);
+  --shadow-2: 0 3px 10px rgba(0, 0, 0, 0.24), 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-3: 0 8px 24px rgba(0, 0, 0, 0.34), 0 3px 8px rgba(0, 0, 0, 0.16);
 
   /* See :root — dark variants of the same palette so note cards keep their
      hue identity but stop popping as bright blobs on the slate canvas. */
@@ -350,7 +350,7 @@
   }
 
   .transition-press {
-    transition: transform 0.12s ease, box-shadow 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+    transition: transform 0.14s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
   }
 
   /* Smooth press feedback on every interactive element — more subtle and
@@ -358,8 +358,8 @@
   button:active,
   a:active,
   [role='button']:active {
-    transform: scale(0.98);
-    transition: transform 0.1s ease;
+    transform: scale(0.99);
+    transition: transform 0.12s ease;
   }
 
   @media (prefers-reduced-motion: reduce) {

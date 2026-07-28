@@ -8,3 +8,4 @@
 - [Supabase email redirect configuration](supabase-email-redirect-config.md) — confirmation emails point to `localhost:3000` when the Supabase Site URL/Redirect URL allowlist is wrong, not because of frontend code.
 - [Cold-start workflow port ownership](coldstart-workflow-port-ownership.md) — only the registered TemanNyatet web workflow should bind port 5000; duplicates can surface as cold-start 404s.
 - [Performance route cache policy](performance-route-cache-policy.md) — unmount inactive pages and rely on retained query cache instead of keeping hidden route trees alive.
+- [Light UI treatment](light-ui-treatment.md) — favor restrained elevation and transform/opacity motion for a lighter native-feeling interface.

@@ -78,7 +78,7 @@ export function PageEmpty({ icon: Icon, title, description, accent = 'catatan', 
       className="flex flex-col items-center justify-center text-center min-h-[42vh] px-6 py-10 gap-4"
     >
       <div
-        className={`w-[4.5rem] h-[4.5rem] rounded-[1.35rem] ${t.containerBg} border ${t.containerBorder} flex items-center justify-center flex-shrink-0 shadow-elevation-1 animate-in fade-in zoom-in-95 duration-300`}
+        className={`w-[4.25rem] h-[4.25rem] rounded-[1.25rem] ${t.containerBg} border ${t.containerBorder} flex items-center justify-center flex-shrink-0 shadow-elevation-1 animate-in fade-in duration-200`}
       >
         <Icon size={28} strokeWidth={2} className={t.iconText} />
       </div>
@@ -143,8 +143,8 @@ export function PageLoading({ accent = 'catatan', label = 'Memuat…' }: PageLoa
       className="flex flex-col items-center justify-center min-h-[40vh] gap-3 px-6"
     >
       <div className="relative">
-        <SkeletonShimmer className="absolute inset-0 -m-6 w-[calc(100%+3rem)] h-[calc(100%+3rem)] rounded-3xl opacity-60" />
-        <Loader2 className={`relative w-7 h-7 animate-spin ${t.spinnerText}`} aria-hidden="true" />
+        <SkeletonShimmer className="absolute inset-0 -m-5 w-[calc(100%+2.5rem)] h-[calc(100%+2.5rem)] rounded-3xl opacity-35" />
+        <Loader2 className={`relative w-6 h-6 animate-spin ${t.spinnerText}`} aria-hidden="true" />
       </div>
       <p className="text-xs font-semibold text-muted-foreground tracking-wide">
         {label}

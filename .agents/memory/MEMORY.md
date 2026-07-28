@@ -10,3 +10,4 @@
 - [Performance route cache policy](performance-route-cache-policy.md) — unmount inactive pages and rely on retained query cache instead of keeping hidden route trees alive.
 - [Light UI treatment](light-ui-treatment.md) — favor restrained elevation and transform/opacity motion for a lighter native-feeling interface.
 - [PWA performance benchmarking](pwa-performance-benchmarking.md) — preview verifies code and startup, but installed-PWA smoothness needs a real mobile-device benchmark.
+- [SumoPod AI provider](sumopod-ai-provider.md) — note summarization uses SumoPod's OpenAI-compatible endpoint with a server-only key.

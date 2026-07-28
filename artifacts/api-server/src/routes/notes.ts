@@ -9,7 +9,8 @@ const SHEET = '📝 Notes';
 const TITLE_MAX = 200;
 const CONTENT_MAX = 50_000;
 const SUMMARY_CONTENT_MAX = 50_000;
-const OPENAI_MODEL = 'gpt-4o-mini';
+const AI_BASE_URL = (process.env['OPENAI_BASE_URL'] ?? 'https://ai.sumopod.com').replace(/\/+$/, '');
+const AI_MODEL = process.env['OPENAI_MODEL'] ?? 'gpt-4o-mini';
 const OPENAI_TIMEOUT_MS = 30_000;
 
 router.get('/notes', requireAuth, userRateLimit, async (req, res) => {
@@ -104,14 +105,14 @@ router.post('/notes/:id/summarize', requireAuth, userRateLimit, async (req, res)
 
     let providerResponse: Response;
     try {
-      providerResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      providerResponse = await fetch(`${AI_BASE_URL}/v1/chat/completions`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: OPENAI_MODEL,
+          model: AI_MODEL,
           temperature: 0.2,
           max_tokens: 180,
           messages: [

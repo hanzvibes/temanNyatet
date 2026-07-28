@@ -318,13 +318,21 @@ export default function CatatanPage() {
                   ease: [0.32, 0.72, 0, 1],
                 }}
               >
-                <div
-                  className="rounded-[1.5rem] overflow-hidden shadow-elevated flex flex-col border border-border/30 transition-colors duration-300 max-h-[72dvh] landscape:max-h-[65dvh]"
+                <motion.div
+                  layout
+                  transition={{ layout: { duration: 0.28, ease: [0.32, 0.72, 0, 1] } }}
+                  className="rounded-[1.5rem] overflow-hidden shadow-elevated flex flex-col border border-border/30 max-h-[72dvh] landscape:max-h-[65dvh]"
                   style={{ backgroundColor: selectedNoteColor }}
                 >
+                  <AnimatePresence mode="wait" initial={false}>
                   {isEditing ? (
                     /* ── Edit mode ── */
-                    <form
+                    <motion.form
+                      key="edit-note"
+                      initial={{ opacity: 0, x: 12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -12 }}
+                      transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
                       onSubmit={form.handleSubmit(onSubmitForm)}
                       className="flex flex-col flex-1 overflow-hidden"
                     >
@@ -417,9 +425,17 @@ export default function CatatanPage() {
                           }}
                         />
                       </div>
-                    </form>
+                    </motion.form>
                   ) : (
                     /* ── Read mode ── */
+                    <motion.div
+                      key="read-note"
+                      initial={{ opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 12 }}
+                      transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+                      className="flex flex-col flex-1"
+                    >
                     <>
                       <div className="overflow-y-auto flex-1 p-5 sm:p-7">
                         {selectedNote.title && (
@@ -492,8 +508,10 @@ export default function CatatanPage() {
                         </button>
                       </div>
                     </>
+                    </motion.div>
                   )}
-                </div>
+                  </AnimatePresence>
+                </motion.div>
 
                 {/* Close button */}
                 <div className="flex justify-center mt-4">

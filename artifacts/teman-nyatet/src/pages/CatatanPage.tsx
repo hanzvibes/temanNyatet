@@ -4,7 +4,7 @@ import { useNotes } from '@/hooks/useNotes';
 import { useCreate } from '@/contexts/CreateContext';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Loader2, BookOpen, Plus } from 'lucide-react';
+import { Loader2, BookOpen, Plus, Grid2X2, List } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { Button } from '@/components/ui/button';
 import { NOTE_TAGS } from '@/lib/categoryIcons';
@@ -80,6 +80,7 @@ export default function CatatanPage() {
     useNotes(user?.id);
   const { pendingCreate, clearCreate } = useCreate();
   const [search, setSearch] = useState('');
+  const [noteView, setNoteView] = useState<'grid' | 'list'>('grid');
 
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [selectedNoteColor, setSelectedNoteColor] = useState<string>(PALETTE[0]);
@@ -94,6 +95,16 @@ export default function CatatanPage() {
   });
 
   const formColor = form.watch('color');
+
+  useEffect(() => {
+    const savedView = window.localStorage.getItem('teman-nyatet:catatan-view');
+    if (savedView === 'grid' || savedView === 'list') setNoteView(savedView);
+  }, []);
+
+  const handleViewChange = (view: 'grid' | 'list') => {
+    setNoteView(view);
+    window.localStorage.setItem('teman-nyatet:catatan-view', view);
+  };
 
   const filteredNotes = useMemo(() => {
     if (!search) return notes;
@@ -246,6 +257,35 @@ export default function CatatanPage() {
             onChange={setSearch}
             placeholder="Cari catatan..."
           />
+          <div
+            className="mt-3 flex justify-end"
+            role="group"
+            aria-label="Tampilan catatan"
+          >
+            <div className="inline-flex rounded-xl border border-border/70 bg-muted/40 p-1">
+              {([
+                { value: 'grid', label: 'Grid', Icon: Grid2X2 },
+                { value: 'list', label: 'Daftar', Icon: List },
+              ] as const).map(({ value, label, Icon }) => {
+                const selected = noteView === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-label={`Tampilan ${label}`}
+                    aria-pressed={selected}
+                    onClick={() => handleViewChange(value)}
+                    className={`relative flex min-h-[40px] min-w-[44px] items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+                      selected ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Icon size={16} strokeWidth={2.3} />
+                    <span className="hidden min-[420px]:inline">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -286,6 +326,7 @@ export default function CatatanPage() {
             onClickNote={handleOpenDetail}
             onDeleteNote={handleDeleteFromDrag}
             disabled={!!search}
+            view={noteView}
           />
         )}
       </div>

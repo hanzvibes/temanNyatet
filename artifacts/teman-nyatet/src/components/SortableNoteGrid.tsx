@@ -106,48 +106,42 @@ function DeleteDroppable({
 function NoteCardBody({
   note,
   handle,
-  view,
 }: {
   note: Note;
   handle: React.ReactNode;
-  view: 'grid' | 'list';
 }) {
-  const isList = view === 'list';
-
   return (
-    <div className="flex h-full flex-col">
-      <div className={`flex justify-end ${isList ? '-mt-2 -mr-2 mb-1' : '-mt-2 -mr-2 mb-2'}`}>
-        {handle}
-      </div>
+    <>
+      <div className="flex justify-end mb-1 -mt-1 -mr-1">{handle}</div>
       {note.title && (
-        <h3 className={`font-bold text-foreground mb-2 leading-tight text-lg ${isList ? 'line-clamp-1' : 'line-clamp-2'}`}>
+        <h3 className="font-bold text-foreground mb-2 leading-tight text-lg">
           {note.title}
         </h3>
       )}
-      <p className={`text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed font-medium ${isList ? 'line-clamp-2' : 'line-clamp-6'}`}>
+      <p className="text-sm text-foreground/90 line-clamp-5 whitespace-pre-wrap leading-relaxed font-medium">
         {note.content}
       </p>
       {note.tags && note.tags.length > 0 && (
-        <div className={`flex flex-wrap gap-1.5 ${isList ? 'mt-3' : 'mt-4'}`}>
+        <div className="flex flex-wrap gap-1 mt-4">
           {note.tags.slice(0, 2).map((tag) => (
             <span
               key={tag}
-              className="text-[10px] px-2.5 py-1.5 rounded-full bg-white/60 dark:bg-white/10 text-foreground font-bold uppercase tracking-wider"
+              className="text-[10px] px-2.5 py-1 rounded-full bg-white/60 dark:bg-white/10 text-foreground font-bold uppercase tracking-wider"
             >
               {tag}
             </span>
           ))}
           {note.tags.length > 2 && (
-            <span className="text-[10px] px-2 py-1.5 rounded-full bg-white/60 dark:bg-white/10 text-foreground font-bold">
+            <span className="text-[10px] px-2 py-1 rounded-full bg-white/60 dark:bg-white/10 text-foreground font-bold">
               +{note.tags.length - 2}
             </span>
           )}
         </div>
       )}
-      <div className={`text-xs text-muted-foreground font-bold ${isList ? 'mt-3 pt-0' : 'mt-auto pt-5'}`}>
+      <div className="mt-4 text-xs text-muted-foreground font-bold">
         {format(new Date(note.created_at), 'd MMM yyyy', { locale: idLocale })}
       </div>
-    </div>
+    </>
   );
 }
 
@@ -157,13 +151,11 @@ function SortableNoteCard({
   color,
   onClick,
   disabled,
-  view,
 }: {
   note: Note;
   color: string;
   onClick: () => void;
   disabled?: boolean;
-  view: 'grid' | 'list';
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: note.id, disabled });
@@ -203,11 +195,9 @@ function SortableNoteCard({
       tabIndex={0}
       role="listitem"
       aria-label={note.title ? `Catatan: ${note.title}. Tekan Enter untuk membuka.` : 'Catatan tanpa judul. Tekan Enter untuk membuka.'}
-      className={`h-full rounded-[1.25rem] p-4 sm:p-5 shadow-sm hover:shadow-md cursor-pointer relative select-none transition-[box-shadow,background-color] duration-200 will-change-transform active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-        view === 'list' ? 'min-h-[148px]' : 'min-h-[214px]'
-      }`}
+      className="rounded-[1.5rem] p-5 shadow-sm hover:shadow-md cursor-pointer relative select-none transition-shadow duration-200 will-change-transform active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
-      <NoteCardBody note={note} handle={handle} view={view} />
+      <NoteCardBody note={note} handle={handle} />
     </div>
   );
 }
@@ -215,10 +205,10 @@ function SortableNoteCard({
 const MemoSortableNoteCard = memo(SortableNoteCard);
 
 // ── Drag overlay clone ───────────────────────────────────────────────────────
-function DragOverlayCard({ note, color, view }: { note: Note; color: string; view: 'grid' | 'list' }) {
+function DragOverlayCard({ note, color }: { note: Note; color: string }) {
   return (
     <div
-      className={`${view === 'list' ? 'min-h-[148px]' : 'min-h-[214px]'} rounded-[1.25rem] p-4 sm:p-5 cursor-grabbing ring-1 ring-black/5`}
+      className="rounded-[1.5rem] p-5 cursor-grabbing ring-1 ring-black/5"
       style={{
         backgroundColor: color,
         transform: `rotate(${OVERLAY_ROTATE_DEG}deg) scale(${OVERLAY_SCALE})`,
@@ -226,7 +216,7 @@ function DragOverlayCard({ note, color, view }: { note: Note; color: string; vie
           '0 24px 48px -12px rgba(0,0,0,0.25), 0 8px 16px -6px rgba(0,0,0,0.12)',
       }}
     >
-      <NoteCardBody note={note} handle={null} view={view} />
+      <NoteCardBody note={note} handle={null} />
     </div>
   );
 }
@@ -238,7 +228,6 @@ type SortableNoteGridProps = {
   onClickNote: (note: Note, color: string) => void;
   onDeleteNote?: (noteId: string) => void;
   disabled?: boolean;
-  view?: 'grid' | 'list';
 };
 
 export function SortableNoteGrid({
@@ -247,7 +236,6 @@ export function SortableNoteGrid({
   onClickNote,
   onDeleteNote,
   disabled,
-  view = 'grid',
 }: SortableNoteGridProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isOverDelete, setIsOverDelete] = useState(false);
@@ -373,28 +361,18 @@ export function SortableNoteGrid({
         strategy={rectSortingStrategy}
         disabled={disabled}
       >
-        <motion.div
-          layout
-          transition={{ layout: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+        <div
           role="list"
           aria-label="Daftar catatan. Tekan tombol grip pada kartu untuk mengubah urutan."
-          className={`grid gap-3 sm:gap-4 lg:gap-5 items-stretch ${
-            view === 'list' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-          }`}
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start"
           data-notes-version={itemsKey}
         >
           <AnimatePresence>
             {notes.map((note) => (
               <motion.div
                 key={note.id}
-                layout
                 exit={{ opacity: 0, scale: 0.45, y: 40 }}
-                transition={{
-                  layout: { duration: 0.32, ease: [0.32, 0.72, 0, 1] },
-                  opacity: { duration: 0.2 },
-                  scale: { duration: 0.25, ease: [0.32, 0.72, 0, 1] },
-                  y: { duration: 0.25, ease: [0.32, 0.72, 0, 1] },
-                }}
+                transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
                 className="contents"
               >
                 <MemoSortableNoteCard
@@ -402,12 +380,11 @@ export function SortableNoteGrid({
                   color={note.color || colorForNoteId(note.id)}
                   onClick={() => handleCardClick(note.id)}
                   disabled={disabled}
-                  view={view}
                 />
               </motion.div>
             ))}
           </AnimatePresence>
-        </motion.div>
+        </div>
       </SortableContext>
 
       <DragOverlay>
@@ -420,7 +397,7 @@ export function SortableNoteGrid({
             }
             transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
           >
-            <DragOverlayCard note={activeNote} color={activeNote.color || colorForNoteId(activeNote.id)} view={view} />
+            <DragOverlayCard note={activeNote} color={activeNote.color || colorForNoteId(activeNote.id)} />
           </motion.div>
         ) : null}
       </DragOverlay>

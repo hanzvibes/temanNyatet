@@ -4,7 +4,7 @@ import { useNotes } from '@/hooks/useNotes';
 import { useCreate } from '@/contexts/CreateContext';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Loader2, BookOpen, Plus, Sparkles, X, CreditCard, ArrowUpRight, AlertCircle } from 'lucide-react';
+import { Loader2, BookOpen, Plus, Sparkles, X, CreditCard, ArrowUpRight, Check } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { Button } from '@/components/ui/button';
 import { NOTE_TAGS } from '@/lib/categoryIcons';
@@ -801,45 +801,68 @@ export default function CatatanPage() {
       </Drawer.Root>
 
       <Dialog open={creditsExhaustedOpen} onOpenChange={setCreditsExhaustedOpen}>
-        <DialogContent className="max-w-[calc(100%-2rem)] overflow-hidden rounded-[1.75rem] border-primary/15 p-0 shadow-elevation-3 sm:max-w-md">
-          <div className="h-1.5 bg-primary" />
-          <div className="p-6">
-          <DialogHeader>
-            <div className="relative mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-[1.25rem] bg-primary/10 text-primary">
-              <CreditCard size={27} strokeWidth={2.2} />
-              <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-card text-primary shadow-sm">
-                <AlertCircle size={15} strokeWidth={2.6} />
-              </span>
-            </div>
-            <DialogTitle className="text-center text-xl font-black tracking-tight">Credit AI kamu habis</DialogTitle>
-            <DialogDescription className="mx-auto max-w-xs text-center leading-relaxed">
-              Kamu sudah memakai semua credit ringkasan. Tambahkan credit untuk lanjut merapikan catatanmu.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-5 flex items-center justify-between rounded-2xl bg-secondary/70 px-4 py-3">
-            <span className="text-sm font-semibold text-muted-foreground">Saldo sekarang</span>
-            <span className="text-lg font-black tabular-nums text-foreground">0 credit</span>
-          </div>
-          <DialogFooter className="mt-5 gap-2 sm:flex-col">
-            <button
-              type="button"
-              onClick={() => {
-                setCreditsExhaustedOpen(false);
-                window.dispatchEvent(new CustomEvent('teman-nyatet:open-settings-subscription'));
-              }}
-              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 font-bold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-px active:scale-[0.98]"
-            >
-              Lihat opsi top-up <ArrowUpRight size={16} strokeWidth={2.5} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setCreditsExhaustedOpen(false)}
-              className="min-h-11 w-full rounded-xl px-4 text-sm font-bold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            >
-              Nanti saja
-            </button>
-          </DialogFooter>
-          </div>
+        <DialogContent className="max-w-[calc(100%-2rem)] overflow-hidden rounded-[1.75rem] border-border/70 bg-card p-0 shadow-elevation-3 sm:max-w-md">
+          <AnimatePresence mode="wait">
+            {creditsExhaustedOpen && (
+              <motion.div
+                key="credit-empty-state"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                className="p-6 sm:p-7"
+              >
+                <DialogHeader>
+                  <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-primary/20 bg-primary/8 text-primary">
+                    <CreditCard size={24} strokeWidth={2.1} />
+                  </div>
+                  <p className="mb-2 text-center text-[0.68rem] font-black uppercase tracking-[0.2em] text-primary">
+                    Ringkas AI
+                  </p>
+                  <DialogTitle className="text-center text-xl font-black tracking-tight">
+                    Semua credit sudah dipakai
+                  </DialogTitle>
+                  <DialogDescription className="mx-auto mt-2 max-w-xs text-center leading-relaxed">
+                    Catatanmu tetap aman. Tambahkan credit saat ingin membuat ringkasan berikutnya.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.08, duration: 0.2 }}
+                  className="mt-6 flex items-center gap-3 rounded-2xl border border-border/70 bg-secondary/45 px-4 py-3.5"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary">
+                    <Check size={16} strokeWidth={2.8} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Saldo saat ini</p>
+                    <p className="mt-0.5 text-base font-black tabular-nums text-foreground">0 credit</p>
+                  </div>
+                </motion.div>
+
+                <DialogFooter className="mt-5 gap-2 sm:flex-col">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCreditsExhaustedOpen(false);
+                      window.dispatchEvent(new CustomEvent('teman-nyatet:open-settings-subscription'));
+                    }}
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 font-bold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-px active:scale-[0.98]"
+                  >
+                    Lihat opsi top-up <ArrowUpRight size={16} strokeWidth={2.5} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCreditsExhaustedOpen(false)}
+                    className="min-h-11 w-full rounded-xl px-4 text-sm font-bold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  >
+                    Nanti saja
+                  </button>
+                </DialogFooter>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </DialogContent>
       </Dialog>
     </div>

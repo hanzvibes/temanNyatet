@@ -163,6 +163,7 @@ For AI agents and new contributors, read in this order:
 | [`TASKS.md`](./docs/TASKS.md) | Prioritized actionable tasks |
 | [`UI_UX_GUIDELINES.md`](./docs/UI_UX_GUIDELINES.md) | Frontend design system and conventions |
 | [`TESTING.md`](./docs/TESTING.md) | Manual checklist + automation roadmap |
+| [`PROMOSI-INSTAGRAM.md`](./docs/PROMOSI-INSTAGRAM.md) | Paket caption, carousel, Reels, Story, CTA, dan kalender konten Instagram |
 | [`docs/SUPABASE-SETUP.md`](./docs/SUPABASE-SETUP.md) | Supabase setup instructions |
 | [`docs/GOOGLE-CLOUD-OAUTH.md`](./docs/GOOGLE-CLOUD-OAUTH.md) | Google Cloud Console OAuth setup walkthrough |
 | [`replit.md`](./docs/replit.md) | Replit-specific run instructions and secrets |

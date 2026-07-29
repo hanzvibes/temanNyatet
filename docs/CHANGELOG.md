@@ -1,5 +1,10 @@
 # Changelog
 
+## Instagram Promotion Kit — 2026-07-29
+
+### Added
+- `docs/PROMOSI-INSTAGRAM.md` with TemanNyatet positioning, Instagram bio options, feed captions, carousel structure, Reels scripts, Story templates, CTA bank, visual guidance, and a 7-day content calendar.
+
 ## Current Documentation Sync — 2026-07-29
 
 ### Updated

@@ -193,9 +193,3 @@
 **Cause**: `lib: ["es2022"]` in `tsconfig.base.json` does not include Web API types. Locally, `@types/node` v25 provides the undici-backed fetch `Response` type with `.ok`, `.status`, `.json()`. Vercel's `@vercel/node` TypeScript environment resolves `Response` from a different, incomplete global declaration.  
 **Fix**: `artifacts/api-server/tsconfig.json` adds `"lib": ["es2022", "dom"]` to its `compilerOptions`. The `"dom"` lib puts the authoritative W3C `Response` interface in scope. If adding a new file that uses `fetch()` in the API server, ensure the tsconfig still has `"dom"` in its lib array.  
 **Prevention**: Do not declare `let x: Response` with an explicit `Response` annotation — let TypeScript infer the type from the `await fetch(...)` call instead. This avoids the name-resolution conflict entirely.
-
-### Graphify MCP server not starting
-
-**Symptom**: `graphify: MCP server` workflow fails with `ModuleNotFoundError: No module named 'graphify'`.  
-**Cause**: The `graphify` Python package is not installed in the Replit environment.  
-**Fix**: Install the package: `pip install graphify`. The workflow command in `.replit` expects `python3 -m graphify.serve graphify-out/graph.json --transport http --host 0.0.0.0 --port 8099 --stateless`. The graph data files at `graphify-out/graph.json` are present and valid.

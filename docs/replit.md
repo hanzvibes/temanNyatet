@@ -24,8 +24,6 @@ Two services are configured as Replit workflows and will auto-start:
 
 Each workflow has its port pinned explicitly in the command, so there is no port conflict between the two services. The Vite dev server proxies `/api/*` → `localhost:8080`, meaning both services share one origin in the browser.
 
-A third workflow (`graphify: MCP server`) is configured but currently broken — the `graphify` Python package is not installed in the Replit environment (see TROUBLESHOOTING.md).
-
 ## Required secrets
 
 The API server refuses to start if any of these required secrets are missing:
@@ -128,10 +126,6 @@ OAuth and the data API will fail closed until the `google_refresh_token` column 
 ## Vercel build — TypeScript gotcha
 
 The API server's `tsconfig.json` explicitly adds `"lib": ["es2022", "dom"]` (inheriting `es2022` from the base config). The `"dom"` lib is required for Vercel's `@vercel/node` build environment, which resolves `Response` from the global scope differently than local `@types/node` v25. Without it, `fetch()` response properties (`.ok`, `.status`, `.json()`) trigger `TS2339` errors on Vercel even though they pass locally. See `TROUBLESHOOTING.md` for details.
-
-## Known issues
-
-- **Graphify MCP server** (`graphify: MCP server` workflow) fails at startup with `ModuleNotFoundError: No module named 'graphify'`. The `graphify` Python package needs to be installed in the environment. The graph data files (`graphify-out/graph.json`) are present and valid.
 
 ## User preferences
 

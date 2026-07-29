@@ -146,7 +146,6 @@ API Server (Express 5)
 | `fix_profiles_rls_recursion.sql` is ad-hoc | Not in numbered sequence | `supabase/migrations/` |
 | In-process sheet lock | Won't work horizontally scaled | `artifacts/api-server/src/lib/sheet-store.ts` |
 | Data hooks use module-level Map cache + polling | Custom caching layer parallel to TanStack Query | `artifacts/teman-nyatet/src/hooks/` |
-| Graphify MCP server won't start | `ModuleNotFoundError: No module named 'graphify'` — Python package not installed | `.replit` (workflow definition) |
 | API server tsconfig needs `"dom"` lib | Vercel build fails without it; local `@types/node` v25 masks the issue locally | `artifacts/api-server/tsconfig.json` |
 
 ## Current priorities (July 2026)

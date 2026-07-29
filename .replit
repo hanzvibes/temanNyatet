@@ -17,9 +17,6 @@ externalPort = 5173
 localPort = 8080
 externalPort = 8080
 
-[[ports]]
-localPort = 8099
-externalPort = 8099
 
 [[ports]]
 localPort = 20104
@@ -31,25 +28,3 @@ externalPort = 80
 GOOGLE_REDIRECT_URI = "https://6d40c01c-89b6-4e55-9260-ecc37149fc8f-00-1g480sphjcn6w.pike.replit.dev/api/auth/google/callback"
 
 [workflows]
-runButton = "Project"
-
-[[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "graphify: MCP server"
-
-[[workflows.workflow]]
-name = "graphify: MCP server"
-author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python3 -m graphify.serve graphify-out/graph.json --transport http --host 0.0.0.0 --port 8099 --stateless"
-waitForPort = 8099

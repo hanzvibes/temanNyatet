@@ -23,29 +23,14 @@
 - **Workflow port conflicts** — both workflows can now start simultaneously without `EADDRINUSE` errors.
 
 ### Documentation updated
-- `docs/replit.md` — port isolation, OPENAI_API_KEY, Vercel TS gotcha, known issues (graphify)
+- `docs/replit.md` — port isolation, OPENAI_API_KEY, and Vercel TS gotcha
 - `docs/ENVIRONMENT.md` — OPENAI_API_KEY, updated PORT note, pre-configured env vars section expanded
-- `docs/TROUBLESHOOTING.md` — Vercel TS build error section, Graphify MCP server section
-- `docs/AI_CONTEXT.md` — technical debt table (added graphify + tsconfig items), recent changes section
+- `docs/TROUBLESHOOTING.md` — Vercel TS build error section
+- `docs/AI_CONTEXT.md` — technical debt table and recent changes section
 - `docs/DEPLOYMENT.md` — tsconfig lib fix noted in API server deploy steps
 - `README.md` — run commands now show explicit PORT= values
 
-### Known issues
-- **Graphify MCP server** (`graphify: MCP server` workflow) fails with `ModuleNotFoundError: No module named 'graphify'`. Python package needs to be installed.
-
 ## Tooling Setup — 2026-07-27
-
-### Added
-- **Graphify knowledge graph** for the TemanNyatet codebase:
-  - Generated graph in `graphify-out/` (3359 nodes, 4331 edges, 328 communities)
-  - `AGENTS.md` in project root with graph rules and key community summary
-  - Replit skill file at `.agents/skills/graphify/SKILL.md` so AI agents can use the graph
-  - Replit workflow `graphify: MCP server` on port `8099` serving the graph over HTTP MCP transport
-  - Port `8099` added to `.replit` so the MCP server can be proxied by Replit
-- `graphifyy` (Python package) installed via pip for graph extraction and MCP serving.
-
-### Updated
-- `docs/replit.md` — added the Graphify MCP server workflow to the run instructions.
 
 ## Documentation Update — 2026-07-27
 

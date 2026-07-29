@@ -98,6 +98,7 @@ export default function CatatanPage() {
   const [summaryError, setSummaryError]         = useState<string | null>(null);
   const [creditBalance, setCreditBalance]       = useState<number | null>(null);
   const [creditsExhaustedOpen, setCreditsExhaustedOpen] = useState(false);
+  const [openSubscriptionAfterClose, setOpenSubscriptionAfterClose] = useState(false);
   const creditState =
     creditBalance === null ? 'loading' : creditBalance <= 0 ? 'empty' : creditBalance <= 2 ? 'low' : 'healthy';
 
@@ -139,6 +140,19 @@ export default function CatatanPage() {
       .then(({ balance }) => setCreditBalance(balance))
       .catch(() => undefined);
   }, [user]);
+
+  useEffect(() => {
+    if (creditsExhaustedOpen || !openSubscriptionAfterClose) return;
+
+    // Let Radix finish the dialog's close animation before mounting the
+    // settings drawer. This keeps both portals from briefly stacking.
+    const timer = window.setTimeout(() => {
+      setOpenSubscriptionAfterClose(false);
+      window.dispatchEvent(new CustomEvent('teman-nyatet:open-settings-subscription'));
+    }, 260);
+
+    return () => window.clearTimeout(timer);
+  }, [creditsExhaustedOpen, openSubscriptionAfterClose]);
 
   const handleOpenDetail = (note: Note, color: string) => {
     setSelectedNote(note);
@@ -801,7 +815,7 @@ export default function CatatanPage() {
       </Drawer.Root>
 
       <Dialog open={creditsExhaustedOpen} onOpenChange={setCreditsExhaustedOpen}>
-        <DialogContent className="max-w-[calc(100%-2rem)] overflow-hidden rounded-[1.75rem] border-border/70 bg-card p-0 shadow-elevation-3 sm:max-w-md">
+        <DialogContent className="max-w-[calc(100%-2rem)] overflow-hidden rounded-[1.75rem] border-border/70 bg-card p-0 shadow-elevation-3 duration-300 ease-out data-[state=open]:zoom-in-[0.98] data-[state=open]:slide-in-from-top-[46%] data-[state=closed]:zoom-out-[0.98] sm:max-w-md">
           <AnimatePresence mode="wait">
             {creditsExhaustedOpen && (
               <motion.div
@@ -845,8 +859,8 @@ export default function CatatanPage() {
                   <button
                     type="button"
                     onClick={() => {
+                      setOpenSubscriptionAfterClose(true);
                       setCreditsExhaustedOpen(false);
-                      window.dispatchEvent(new CustomEvent('teman-nyatet:open-settings-subscription'));
                     }}
                     className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 font-bold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-px active:scale-[0.98]"
                   >

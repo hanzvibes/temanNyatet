@@ -282,43 +282,60 @@
    - label: small uppercase tags/labels.
    - tag: tiny in-card chips.
 
-   We intentionally mix weights (bold/semibold/medium) so the hierarchy
-   reads from weight AND size, not just size. */
+   The hierarchy intentionally relies more on size, tracking, color, and
+   spacing than on heavy weights, so the UI stays light and easy to scan. */
 @layer components {
   .text-display {
-    @apply text-3xl font-extrabold leading-[1.08] tracking-[-0.03em] text-foreground;
+    @apply text-3xl font-semibold leading-[1.08] tracking-[-0.03em] text-foreground;
   }
 
   .text-page-title {
-    @apply text-[1.75rem] lg:text-3xl font-bold leading-[1.12] tracking-[-0.025em] text-foreground;
+    @apply text-[1.75rem] lg:text-3xl font-semibold leading-[1.12] tracking-[-0.025em] text-foreground;
   }
 
   .text-modal-title {
-    @apply text-2xl font-bold leading-tight text-foreground;
+    @apply text-2xl font-semibold leading-tight text-foreground;
   }
 
   .text-section-title {
-    @apply text-xl font-semibold leading-snug text-foreground;
+    @apply text-xl font-medium leading-snug text-foreground;
   }
 
   .text-input-title {
-    @apply text-2xl font-semibold leading-[1.2] text-foreground;
+    @apply text-2xl font-medium leading-[1.2] text-foreground;
   }
 
   .text-input-content {
-    @apply text-base font-medium leading-relaxed text-foreground;
+    @apply text-base font-normal leading-relaxed text-foreground;
   }
 
   .text-body {
-    @apply text-sm font-medium leading-[1.65] text-foreground;
+    @apply text-sm font-normal leading-[1.65] text-foreground;
   }
 
   .text-pill-label {
-    @apply text-xs font-bold uppercase tracking-wider text-muted-foreground;
+    @apply text-xs font-medium uppercase tracking-wider text-muted-foreground;
   }
 
   .text-pill-tag {
-    @apply text-[10px] font-bold uppercase tracking-wide text-muted-foreground;
+    @apply text-[10px] font-medium uppercase tracking-wide text-muted-foreground;
+  }
+}
+
+@layer utilities {
+  /*
+   * Keep existing component markup consistent with the lighter type system.
+   * Size, color, tracking, and spacing continue to carry hierarchy while
+   * direct bold utilities no longer make dense screens feel visually heavy.
+   */
+  .font-black,
+  .font-extrabold {
+    font-weight: 600;
+  }
+
+  .font-bold,
+  .font-semibold {
+    font-weight: 500;
   }
 }
 

@@ -6,14 +6,14 @@ import SheetFormContent from '@/components/SheetFormContent';
 import { useHaptic, HAPTIC } from '@/hooks/useHaptic';
 import { useOrientation } from '@/hooks/useOrientation';
 
-// Fixed heights (px)
+// Responsive heights (px)
 // Bottom-nav geometry matches the value in index.css (`--bottom-nav-collapsed-h`).
-// Note: previously was HANDLE=32 + NAV=64 = 96, but the visual breathing room for
-// the elevated pill at bottom-3 needs 12 (gap) + 64 (nav) + 32 (handle) = 108 in
-// some accessories (DraggableSheet); keep both in sync if you change these.
-const HANDLE_H    = 32;
-const NAV_H       = 64;
-const COLLAPSED_H = HANDLE_H + NAV_H; // 96 — only this is visible when collapsed
+// Keep the compact phone layout comfortable while allowing wider phones and
+// tablets a little more breathing room.
+const getNavMetrics = (width: number) => ({
+  handle: width < 380 ? 30 : width >= 640 ? 34 : 32,
+  nav: width < 380 ? 60 : width >= 640 ? 68 : 64,
+});
 
 const NAV_ITEMS = [
   { name: 'Catatan',    path: '/catatan',   icon: NotebookPen },
@@ -28,6 +28,7 @@ export default function BottomSheetNav() {
   const [location, navigate] = useLocation();
   const haptic = useHaptic();
   const { isLandscape } = useOrientation();
+  const [screenW, setScreenW] = useState(() => window.innerWidth);
 
   // Use visualViewport when available so the sheet shrinks correctly when
   // the mobile keyboard opens, instead of staying behind it.
@@ -39,6 +40,7 @@ export default function BottomSheetNav() {
       frame = window.requestAnimationFrame(() => {
         frame = 0;
         setScreenH(window.visualViewport?.height ?? window.innerHeight);
+        setScreenW(window.innerWidth);
       });
     };
     window.visualViewport?.addEventListener('resize', update);
@@ -49,6 +51,9 @@ export default function BottomSheetNav() {
       window.removeEventListener('resize', update);
     };
   }, []);
+
+  const { handle: HANDLE_H, nav: NAV_H } = getNavMetrics(screenW);
+  const COLLAPSED_H = HANDLE_H + NAV_H;
 
   // In landscape the viewport is short, so keep the sheet lower so the page
   // behind it remains usable. In portrait we can expand nearly to the top.
@@ -65,7 +70,7 @@ export default function BottomSheetNav() {
   const h = useMotionValue(SNAP[initialSnap]);
   const [snapState, setSnapState] = useState<SnapState>(initialSnap);
 
-  useEffect(() => { h.set(SNAP[snapState]); }, [screenH]);
+  useEffect(() => { h.set(SNAP[snapState]); }, [screenH, screenW]);
 
   // Broadcast open/closed state on the shared overlay channel.
   useEffect(() => {
@@ -189,12 +194,13 @@ export default function BottomSheetNav() {
       {/* Floating pill */}
       <motion.div
         className="fixed left-1/2 z-50 -translate-x-1/2
-                   w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)]
-                   max-w-sm md:max-w-md will-change-[height,transform,opacity]"
+                   w-[calc(100%-1rem)] min-[380px]:w-[calc(100%-1.5rem)]
+                   sm:w-[calc(100%-2.5rem)] max-w-[28rem]
+                   will-change-[height,transform,opacity]"
         style={{
           bottom: 'max(12px, env(safe-area-inset-bottom))',
           height: h,
-          borderRadius: 28,
+          borderRadius: 30,
           overflow: 'hidden',
         }}
         // Soft elevation animated by hover/state for cohesive depth.
@@ -203,8 +209,8 @@ export default function BottomSheetNav() {
         transition={{ delay: 0.1, type: 'spring', stiffness: 220, damping: 26 }}
       >
         <div
-            className="bg-card/95 border border-border/60 shadow-elevated h-full flex flex-col backdrop-blur-xl"
-          style={{ borderRadius: 28 }}
+            className="bg-card/95 border border-border/70 shadow-[0_14px_36px_-16px_rgba(15,35,25,0.34),0_4px_12px_-6px_rgba(15,35,25,0.16)] h-full flex flex-col backdrop-blur-xl"
+          style={{ borderRadius: 30 }}
         >
           {/* Drag Handle — wider, more prominent, with subtle pulse on idle */}
           <div
@@ -250,8 +256,8 @@ export default function BottomSheetNav() {
 
           {/* Nav Tabs — always pinned at the bottom of the pill */}
           <div
-            className="flex-shrink-0 border-t border-border/60 flex justify-around items-center px-1.5 bg-card/95"
-            style={{ height: NAV_H, borderRadius: '0 0 28px 28px' }}
+            className="flex-shrink-0 border-t border-border/60 flex items-center gap-1 px-2 bg-card/90"
+            style={{ height: NAV_H, borderRadius: '0 0 30px 30px' }}
           >
             {NAV_ITEMS.map((item) => {
               const isActive = location.startsWith(item.path);
@@ -262,7 +268,7 @@ export default function BottomSheetNav() {
                 // only snaps the transform on tap so it always felt a beat late.
                 <motion.div
                   key={item.path}
-                  className="flex-1 h-full"
+                  className="min-w-0 flex-1 h-full"
                   whileTap={{ scale: 0.94 }}
                   transition={{ type: 'spring', stiffness: 380, damping: 28, mass: 0.7 }}
                 >
@@ -271,21 +277,21 @@ export default function BottomSheetNav() {
                     onClick={() => haptic(HAPTIC.tap)}
                     aria-label={item.name}
                     aria-current={isActive ? 'page' : undefined}
-                    className={`group relative flex flex-col items-center justify-center w-full h-full gap-0.5 rounded-2xl transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-muted/60 ${
-                      isActive ? 'bg-primary/10' : ''
+                    className={`group relative flex flex-col items-center justify-center w-full h-[calc(100%-0.5rem)] gap-1 rounded-2xl transition-[background-color,color,box-shadow] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-muted/60 ${
+                      isActive ? 'bg-primary/10 shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.12),0_2px_8px_-4px_hsl(var(--primary)/0.5)]' : ''
                     }`}
                   >
                     {/* Icon halo — colored circle behind the icon, springs in/out when active. */}
-                    <div className="relative flex items-center justify-center w-12 h-8">
+                    <div className="relative flex items-center justify-center w-11 h-7">
                       <motion.span
                         aria-hidden
-                        className="absolute inset-0 rounded-full bg-primary/25"
+                        className="absolute inset-0 rounded-full bg-primary/18"
                         initial={false}
                         animate={{ scale: isActive ? 1 : 0.4, opacity: isActive ? 1 : 0 }}
                         transition={{ type: 'spring', stiffness: 320, damping: 26, mass: 0.6 }}
                       />
                       <Icon
-                        size={22}
+                        size={21}
                         strokeWidth={isActive ? 2.4 : 1.9}
                         className={`relative transition-colors duration-200 ${
                           isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
@@ -293,7 +299,7 @@ export default function BottomSheetNav() {
                       />
                     </div>
                     <span
-                      className={`text-[11px] font-semibold tracking-wide leading-none transition-colors duration-200 ${
+                      className={`text-[10px] sm:text-[11px] font-semibold tracking-[0.01em] leading-none transition-colors duration-200 ${
                         isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
                       }`}
                     >
@@ -302,7 +308,7 @@ export default function BottomSheetNav() {
                     {/* Active indicator dot — small pill under the label, springs in. */}
                     <motion.span
                       aria-hidden
-                      className="absolute -bottom-0.5 h-[3px] rounded-full bg-primary"
+                      className="absolute bottom-0 h-[3px] rounded-full bg-primary"
                       initial={false}
                       animate={{ width: isActive ? 16 : 0, opacity: isActive ? 1 : 0 }}
                       transition={{ type: 'spring', stiffness: 320, damping: 26, mass: 0.6 }}

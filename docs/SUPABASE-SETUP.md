@@ -18,10 +18,20 @@ Open your Supabase project dashboard, go to **SQL Editor**, and run the migratio
 5. `003_template_tracking.sql` — adds `template_version` to `profiles`
 6. `004_add_google_oauth.sql` — adds `google_refresh_token` to `profiles`
 7. `005_phase1_schema.sql` — adds sync tracking columns (`last_sync_at`, `sync_status`, `recovery_metadata`), drops legacy `notes`, `transactions`, `todos`, `links` tables, and refreshes RLS policies
+8. `006_ai_credits.sql` — adds AI credit balances, immutable ledger, signup trigger, and atomic credit RPCs
 
 If you already ran `001_initial_schema.sql` before the profile columns existed, run `002_add_profile_fields.sql` to fix the "Gagal memperbarui nama" error.
 
 If you encounter `infinite recursion detected in policy for relation "profiles"`, also run `fix_profiles_rls_recursion.sql` in the SQL Editor. This script drops all existing `profiles` policies and recreates them cleanly.
+
+After applying `006_ai_credits.sql`, leave the default at 10 credits or configure
+the PostgreSQL setting below if changing it:
+
+```sql
+ALTER DATABASE postgres SET app.initial_ai_credits = '10';
+```
+
+The value must match the API server's optional `INITIAL_AI_CREDITS` setting.
 
 ## 3. Configure Auth
 
@@ -135,6 +145,8 @@ Photos are uploaded through the API server (`POST /api/profile/avatar`) and stor
 | Table | Purpose |
 |-------|---------|
 | `profiles` | User subscription info, name/phone/avatar, Google OAuth tokens, and spreadsheet ID. Auto-created on signup. |
+| `user_credits` | Current per-user AI summarization credit balance. |
+| `credit_ledger` | Immutable audit history for credit consumption and grants. |
 | `notes` | Legacy table — created by `001_initial_schema.sql`, dropped by `005_phase1_schema.sql`. Not used. |
 | `transactions` | Legacy table — created by `001_initial_schema.sql`, dropped by `005_phase1_schema.sql`. Not used. |
 | `todos` | Legacy table — created by `001_initial_schema.sql`, dropped by `005_phase1_schema.sql`. Not used. |

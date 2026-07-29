@@ -50,6 +50,9 @@ New users sign up free → `subscription_status: pending` → must pay to access
 - Notes displayed as colored sticky-note cards (4 rotating pastels)
 - Search by title and content
 - Tags stored as JSON array per note
+- AI summarization in Indonesian through the server-side provider
+- New users receive 10 AI credits; each successful summary consumes one credit
+- Failed or empty AI responses do not consume credits
 
 ### Keuangan (Finance Tracker)
 
@@ -59,6 +62,7 @@ New users sign up free → `subscription_status: pending` → must pay to access
 - Expense categories: Makanan, Transport, Belanja, Tagihan, Kesehatan, Hiburan, Pendidikan, Lainnya
 - Payment sources: BCA, BRI, BNI, Mandiri, GoPay, OVO, Dana, Cash, Lainnya
 - Monthly summary card: total balance, total income, total expense
+- Mobile/portrait layout includes a compact one-row monthly summary
 - Transactions grouped by date; search by category or note
 - Long-press on transaction to delete (800ms)
 - Recharts bar chart for financial visualization (confirmed in codebase)

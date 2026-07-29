@@ -122,6 +122,22 @@ Revokes the Google refresh token and clears `spreadsheet_id` + `google_refresh_t
 
 ---
 
+## Credits
+
+### `GET /api/credits`
+
+Requires a valid Supabase Bearer token. Returns the authenticated user's current
+AI summarization balance.
+
+**Response `200`**
+```json
+{ "data": { "balance": 10 } }
+```
+
+**Error `503`** — credit storage is temporarily unavailable.
+
+---
+
 ## Subscription
 
 ### `GET /api/subscription/status`
@@ -134,11 +150,13 @@ Requires valid Supabase Bearer token (no spreadsheet required).
   "subscription_status": "active",
   "subscription_plan": "monthly",
   "subscription_end": "2026-08-26T00:00:00.000Z",
-  "days_remaining": 31
+  "days_remaining": 31,
+  "credit_balance": 10
 }
 ```
 
 `days_remaining` is `null` if `subscription_end` is null. `subscription_plan` is `null` for `pending`/`archived` users.
+`credit_balance` is the current AI summarization balance.
 
 ---
 
@@ -214,9 +232,8 @@ Updates `position` values for drag-and-drop reordering.
 { "orderedIds": ["uuid1", "uuid2", "uuid3"] }
 ```
 
-**Response `200`**
+**Response `204 No Content`**
 ```json
-{ "success": true }
 ```
 
 ---
@@ -225,9 +242,8 @@ Updates `position` values for drag-and-drop reordering.
 
 Soft-deletes the note (moves to `_Archive` tab).
 
-**Response `200`**
+**Response `204 No Content`**
 ```json
-{ "success": true }
 ```
 
 **Error `404`** — note not found or belongs to another user
@@ -242,7 +258,8 @@ Generates an Indonesian summary for an existing note through the configured Open
 ```json
 {
   "data": {
-    "summary": "Ringkasan catatan..."
+    "summary": "Ringkasan catatan...",
+    "balance": 9
   }
 }
 ```
@@ -250,8 +267,14 @@ Generates an Indonesian summary for an existing note through the configured Open
 **Errors**
 
 - `404` — note not found or belongs to another user
+- `402` with `{ "error": "CREDITS_EXHAUSTED", "balance": 0 }` — no AI credits remain
 - `502` — AI provider returned a non-success response or an invalid response
 - `503` — `OPENAI_API_KEY` is not configured
+- `504` — AI provider request timed out
+
+The endpoint checks the balance before calling the AI provider and consumes one
+credit only after a non-empty summary is returned. Provider failures do not
+consume credits.
 
 ---
 
@@ -494,6 +517,8 @@ Processes `payment.success`, `order.completed`, `invoice.paid` events. Other eve
 On payment success:
 - Resolves plan (`monthly` or `yearly`) from `plan_name`, `plan_id`, or `amount` (Rp249.000+ = yearly)
 - Calls `activateSubscription(customer_email, plan)` → updates `profiles.subscription_status` to `'active'`
+- If the payload includes a supported credit package, grants credits through the
+  atomic credit RPC using the payment reference for idempotency.
 
 Returns `503` if `MAYAR_WEBHOOK_SECRET` is not set (endpoint disabled).
 

@@ -30,6 +30,8 @@ Give Indonesian users a private, mobile-first productivity app where their data 
 - Auth flow: complete (Supabase email/password + email confirmation)
 - Google OAuth + Sheets data backend: complete (per-user spreadsheet, auto-created on first connect)
 - Subscription gate (Mayar webhook): complete
+- AI credit system: complete (10 initial credits, atomic debit/grant RPCs, audit ledger)
+- AI note summarization: complete; failed requests do not consume credits
 - PWA: complete (VitePWA, service worker, install prompt)
 - Deployment: live on Vercel (frontend: `teman-nyatet.vercel.app`, API: `teman-nyatet-api-server.vercel.app`)
 - Dark mode: implemented via Tailwind `.dark` class
@@ -48,6 +50,7 @@ Give Indonesian users a private, mobile-first productivity app where their data 
 | Auth | Supabase Auth (email/password, email confirmation required) |
 | App data | Google Sheets API — per-user spreadsheet in their own Drive |
 | Profile/sub | Supabase Postgres (`profiles` table) |
+| AI credits | Supabase Postgres (`user_credits`, `credit_ledger`, atomic RPCs) |
 | Payments | Mayar (HMAC-SHA256 webhook) |
 | PWA | vite-plugin-pwa (workbox) |
 | Monorepo | pnpm workspaces |
@@ -73,7 +76,7 @@ Give Indonesian users a private, mobile-first productivity app where their data 
 │           ├── app.ts         # Express app setup (middleware, routes)
 │           ├── routes/        # One file per route group
 │           ├── middleware/     # requireAuth.ts (Supabase JWT + rate limit)
-│           └── lib/           # google-oauth.ts, user-sheet.ts, sheet-store.ts
+│           └── lib/           # google-oauth.ts, user-sheet.ts, sheet-store.ts, credit-service.ts, payment-provider.ts
 ├── lib/
 │   ├── api-spec/              # openapi.yaml + Orval config (partially used — see debt)
 │   ├── api-client-react/      # Orval-generated TanStack Query hooks (token wiring only)
@@ -96,6 +99,8 @@ Give Indonesian users a private, mobile-first productivity app where their data 
 | `artifacts/api-server/src/middleware/requireAuth.ts` | JWT verify + Google Sheets client attachment |
 | `artifacts/api-server/src/lib/sheet-store.ts` | Google Sheets CRUD (the "database") |
 | `artifacts/api-server/src/lib/google-oauth.ts` | OAuth2 flow, HMAC state, token management |
+| `artifacts/api-server/src/lib/credit-service.ts` | Atomic AI credit balance and grant/consume helpers |
+| `artifacts/api-server/src/lib/payment-provider.ts` | Generic payment provider boundary and Mayar payload parsing |
 
 ## Architecture summary
 
@@ -107,6 +112,7 @@ Frontend (Vite SPA)
 API Server (Express 5)
   ├── Supabase Admin SDK  →  verify JWT, read/write profiles
   └── Google Sheets API  →  CRUD on user's private spreadsheet
+   └── Supabase RPCs       →  atomic AI credit balance + ledger updates
 ```
 
 - **Data storage**: App data (notes, transactions, todos, links) lives in 4 tabs of each user's own Google Spreadsheet. Supabase only stores the `profiles` row (subscription, tokens, spreadsheet ID).
@@ -131,7 +137,7 @@ API Server (Express 5)
 
 1. **Google Sheets has no transactions** — `sheet-store.ts` uses an in-process `Map` lock per spreadsheet+sheet. This lock doesn't survive horizontal scaling.
 2. **Email confirmation required** — `AuthContext` signs out users whose email is not confirmed. Supabase must have "Confirm email" enabled.
-3. **`005_phase1_schema.sql` drops legacy tables** — `notes`, `transactions`, `todos`, `links` Supabase tables are dropped. Never write app data to Supabase; use the API server.
+3. **`005_phase1_schema.sql` drops legacy tables** — `notes`, `transactions`, `todos`, `links` Supabase tables are dropped. Never write app data to those legacy tables; use the API server. Credit tables added by `006_ai_credits.sql` are intentionally live.
 4. **`GOOGLE_REDIRECT_URI` must be byte-exact** — must match Google Cloud Console and Vercel env var exactly. Any mismatch → `redirect_uri_mismatch` OAuth error.
 5. **Vercel Cron is GET only** — `POST /api/cron/archive-expired` requires an external scheduler (GitHub Actions, cron-job.org), not Vercel Cron.
 6. **pnpm version pinned** at `10.26.1` in root `package.json`. Do not upgrade to pnpm 11 without migrating `onlyBuiltDependencies` → `allowBuilds`.
@@ -161,6 +167,7 @@ API Server (Express 5)
 - **Note summarization**: `OPENAI_API_KEY` secret added to enable `POST /api/notes/:id/summarize` (SumoPod-compatible endpoint, model `gpt-4o-mini`).
 - **Production API routing**: Replit development uses the Vite `/api` proxy to port 8080. Production uses `VITE_API_SERVER_URL`, with a fallback to `https://teman-nyatet-api-server.vercel.app`. Set the variable explicitly in the Vercel frontend project.
 - **Production AI configuration**: `OPENAI_API_KEY` must be set separately in the Vercel API project; Replit Secrets are not copied to Vercel. `OPENAI_BASE_URL` and `OPENAI_MODEL` are optional overrides.
+- **AI credit configuration**: `INITIAL_AI_CREDITS` defaults to 10. Keep it aligned with PostgreSQL `app.initial_ai_credits`.
 
 ## Files AI should read first
 

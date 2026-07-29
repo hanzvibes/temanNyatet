@@ -1,6 +1,6 @@
 # Documentation Audit Report
 
-**Last updated:** 2026-07-28 (production API routing, AI environment, and health-check synchronization)
+**Last updated:** 2026-07-29 (AI credits, current workflows, and full documentation synchronization)
 **Previous audit:** 2026-07-26 (full documentation synchronization wave)  
 **Original audit:** 2026-07-23  
 **Auditor:** Replit Agent  
@@ -16,9 +16,9 @@
 **API server:**
 - `artifacts/api-server/src/index.ts` + `src/app.ts`
 - `artifacts/api-server/src/routes/index.ts` (all routes)
-- `artifacts/api-server/src/routes/{auth-google,notes,transactions,todos,links,spreadsheet,profile,subscription,webhook,cron,health}.ts`
+- `artifacts/api-server/src/routes/{auth-google,credits,notes,transactions,todos,links,spreadsheet,profile,subscription,webhook,cron,health}.ts`
 - `artifacts/api-server/src/middleware/requireAuth.ts`
-- `artifacts/api-server/src/lib/{google-oauth,user-sheet,sheet-store,supabase-admin}.ts`
+- `artifacts/api-server/src/lib/{google-oauth,user-sheet,sheet-store,supabase-admin,credit-service,payment-provider}.ts`
 
 **Frontend:**
 - `artifacts/teman-nyatet/src/App.tsx`
@@ -31,7 +31,7 @@
 - `artifacts/teman-nyatet/vite.config.ts`
 
 **Database:**
-- `supabase/migrations/001_initial_schema.sql` through `005_phase1_schema.sql`
+- `supabase/migrations/001_initial_schema.sql` through `006_ai_credits.sql`
 - `supabase/migrations/fix_profiles_rls_recursion.sql`
 - `lib/db/src/schema/index.ts`
 
@@ -75,14 +75,22 @@
 |---|---|
 | `CHANGELOG.md` | Added this audit wave as a new entry |
 | `DOC_AUDIT_REPORT.md` | This file — updated to reflect current audit |
-| `README.md` | Added "Documentation" section with links to all new docs |
+| `README.md` | Updated current AI credits, routes, environment, and product references |
+| `AI_CONTEXT.md` | Added AI credit architecture and current implementation status |
+| `ARCHITECTURE.md` | Added AI credit flow and clarified the partially used Orval/TanStack pipeline |
+| `API.md` | Added credit endpoint, credit-aware summary responses, webhook top-ups, and correct 204 responses |
+| `DATABASE.md` | Added credit tables and migration `006_ai_credits.sql` |
+| `ENVIRONMENT.md` | Added `INITIAL_AI_CREDITS` and clarified `CRON_SECRET` behavior |
+| `PRD.md` / `ROADMAP.md` | Added confirmed AI summarization and credit features |
+| `SUPABASE-SETUP.md` | Added migration `006_ai_credits.sql` setup instructions |
+| `docs/replit.md` | Updated workflow, migration, and environment guidance |
 
 ## Files not changed
 
 | File | Reason |
 |---|---|
-| `docs/replit.md` | Accurate from previous audit; no new inaccuracies found |
-| `docs/SUPABASE-SETUP.md` | Accurate from previous audit (renamed from `supabase/migrations/README.md`) |
+| `docs/replit.md` | Updated in this wave for current workflows, migration, and environment behavior |
+| `docs/SUPABASE-SETUP.md` | Updated in this wave for migration `006_ai_credits.sql` |
 | `docs/GOOGLE-CLOUD-OAUTH.md` | Still accurate; superseded by `docs/DEPLOYMENT.md` for high-level use, but retained as the detailed Google Cloud Console walkthrough (renamed from `artifacts/api-server/docs/DEPLOY.md`) |
 | `artifacts/api-server/.env.example` | Accurate from previous audit |
 | `artifacts/teman-nyatet/.env.example` | Accurate from previous audit |
@@ -91,12 +99,15 @@
 
 ## Findings
 
-### Current-state synchronization — 2026-07-28
+### Current-state synchronization — 2026-07-29
 
 1. **Production API routing**: the frontend uses the Vite `/api` proxy in Replit development. Production builds use `VITE_API_SERVER_URL`, with a code fallback to `https://teman-nyatet-api-server.vercel.app`. The Vercel frontend project should still set the variable explicitly.
 2. **AI summarization configuration**: `OPENAI_API_KEY` is required in the API deployment to enable `POST /api/notes/:id/summarize`; `OPENAI_BASE_URL` and `OPENAI_MODEL` are optional overrides with SumoPod-compatible defaults.
 3. **Health endpoint path**: because the health router is mounted at `/api`, the production health check is `/api/healthz`. The API root `/` returns service metadata.
 4. **Deployment secret boundary**: Replit Secrets and Vercel environment variables are separate stores. Production AI configuration must be added to the Vercel API project and followed by a redeploy.
+5. **AI credits**: New users receive 10 credits by default. `GET /api/credits` exposes the balance; successful note summaries consume one credit only after a non-empty provider response. Atomic Supabase RPCs update `user_credits` and `credit_ledger`.
+6. **Payment boundary**: Mayar parsing is isolated behind `PaymentProvider`; supported payment references can grant credits idempotently in addition to activating subscriptions.
+7. **Current Replit workflows**: only `artifacts/teman-nyatet: web` (port 5000) and `artifacts/api-server: API Server` (port 8080) are configured.
 
 ### Architecture observations
 
@@ -108,7 +119,7 @@
 
 4. **Google Sheets as a database has real constraints**: The in-process `Map` lock in `sheet-store.ts` prevents concurrent writes within a single process. On Vercel serverless (single-instance per invocation) this works. Horizontal scaling would require a distributed lock.
 
-5. **Five migrations share `002_*` prefix**: Three files use `002_` prefix. The documented order is the authoritative run order — alphabetical sort would apply them incorrectly. This is a risk on automated migration tools.
+5. **Migration filename collision**: Three files use the `002_` prefix. The documented order is the authoritative run order — alphabetical sort would apply them incorrectly. This is a risk on automated migration tools.
 
 ### Technical debt
 

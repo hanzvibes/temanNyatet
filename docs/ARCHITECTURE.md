@@ -133,7 +133,28 @@ The four data modules (`useNotes`, `useTransactions`, `useTodos`, `useLinks`) sh
 - Mutation functions return Promises, optimistically update local state, then revalidate
 - Errors surface via sonner toasts
 
-These hooks do **not** use `useQuery` — they predate TanStack Query adoption in this codebase. `QueryClient` is present for `staleTime`/`gcTime` defaults and invalidation only.
+These hooks primarily use module-level `Map` caches and polling rather than the
+generated TanStack Query data hooks. The Orval/TanStack pipeline remains
+available for token wiring and selected integration points, while the four
+feature hooks retain their established cache behavior.
+
+### AI credits
+
+AI credit balances are authoritative in Supabase:
+
+```text
+new auth.users row
+  → 006_ai_credits.sql trigger grants initial balance (default 10)
+  → GET /api/credits reads the balance through get_credit_balance()
+  → POST /api/notes/:id/summarize checks balance
+  → server calls the AI provider
+  → only a valid non-empty summary calls consume_credit()
+  → user_credits and credit_ledger update atomically
+```
+
+Payment webhook credit grants use the generic `PaymentProvider` boundary and
+the payment reference as an idempotency key. Provider failures never debit AI
+credits.
 
 ### Contexts
 

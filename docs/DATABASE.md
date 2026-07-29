@@ -21,7 +21,7 @@ TemanNyatet uses **two data stores** with distinct responsibilities:
 
 | Store | What lives there |
 |---|---|
-| **Supabase Postgres** | `profiles` table — user metadata, subscription, Google OAuth tokens, spreadsheet ID |
+| **Supabase Postgres** | `profiles` — user metadata, subscription, Google OAuth tokens, spreadsheet ID; `user_credits` and `credit_ledger` — AI credit balance and immutable audit history |
 | **Google Sheets (per user)** | All app data — notes, transactions, todos, links |
 
 App data never touches Supabase. The `notes`, `transactions`, `todos`, and `links` Supabase tables were created by `001_initial_schema.sql` and **dropped by `005_phase1_schema.sql`**. They no longer exist in production.
@@ -59,6 +59,35 @@ Auto-created for every new user by a trigger on `auth.users` INSERT.
 - `subscription_status: 'pending'` → user must pay before accessing features
 - `spreadsheet_id: null` → user must connect Google Drive before accessing features
 
+### `user_credits` table
+
+Stores the current AI summarization balance for each user.
+
+| Column | Type | Description |
+|---|---|---|
+| `user_id` | `uuid` | Primary key and foreign key to `profiles.id` |
+| `balance` | `integer` | Non-negative current balance; new users default to 10 |
+| `created_at` | `timestamptz` | Creation timestamp |
+| `updated_at` | `timestamptz` | Last balance update timestamp |
+
+### `credit_ledger` table
+
+Immutable audit records for credit consumption and grants. Negative amounts
+represent AI usage; positive amounts represent signup credits or top-ups.
+
+| Column | Type | Description |
+|---|---|---|
+| `id` | `uuid` | Primary key |
+| `user_id` | `uuid` | Foreign key to `profiles.id` |
+| `amount` | `integer` | Non-zero credit delta |
+| `balance_after` | `integer` | Balance after the transaction |
+| `reason` | `text` | Operation reason, such as `ai_summary` or `payment` |
+| `reference_id` | `text \| null` | Idempotency reference for grants |
+| `created_at` | `timestamptz` | Ledger entry timestamp |
+
+Both tables have RLS enabled. Users can read their own records; server-side
+RPCs perform atomic updates with the service role.
+
 ### Migration history
 
 Run these in order in the Supabase SQL Editor. See [`docs/SUPABASE-SETUP.md`](./SUPABASE-SETUP.md) for full instructions.
@@ -72,9 +101,14 @@ Run these in order in the Supabase SQL Editor. See [`docs/SUPABASE-SETUP.md`](./
 | `003_template_tracking.sql` | Adds `template_version` to `profiles` |
 | `004_add_google_oauth.sql` | Adds `google_refresh_token` to `profiles` |
 | `005_phase1_schema.sql` | Adds `last_sync_at`, `sync_status`, `recovery_metadata`; **drops** legacy data tables; refreshes RLS |
+| `006_ai_credits.sql` | Adds `user_credits`, `credit_ledger`, signup credit trigger, and atomic balance RPCs |
 | `fix_profiles_rls_recursion.sql` | Ad-hoc fix — drops + recreates `profiles` RLS policies to resolve infinite recursion. Apply if you see `infinite recursion detected in policy for relation "profiles"`. |
 
 > ⚠️ Three files share the `002_*` prefix — the documented order above is authoritative. Run them in the sequence listed, not alphabetically.
+
+The initial AI balance is 10 credits by default. To change the database-side
+signup default, configure `app.initial_ai_credits` in PostgreSQL to the same
+value used by the API server's `INITIAL_AI_CREDITS` environment variable.
 
 ---
 

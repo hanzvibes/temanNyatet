@@ -1,5 +1,13 @@
 # Changelog
 
+## Current Documentation Sync — 2026-07-29
+
+### Updated
+- Documented the live AI credit system: 10-credit signup balance, atomic debit/grant RPCs, immutable ledger, `/api/credits`, summarize balance responses, and credit-related webhook behavior.
+- Added migration `006_ai_credits.sql` to the Supabase setup and database reference.
+- Documented the compact mobile/portrait finance summary and synchronized current Replit workflow behavior.
+- Corrected note reorder/delete responses to `204 No Content` and clarified that `CRON_SECRET` is required for the cron route, not API startup.
+
 ## Production Documentation Sync — 2026-07-28
 
 ### Updated

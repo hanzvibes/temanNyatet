@@ -24,6 +24,9 @@
 - [x] Subscription plans: monthly (Rp100.000) and yearly (Rp249.000)
 - [x] Auth guard: pending → /payment, archived → /archived, no spreadsheet → /connect-sheet
 - [x] Cron endpoint for archiving expired subscriptions
+- [x] AI credit system — 10 signup credits, atomic consumption, immutable ledger
+- [x] AI note summarization — debit only after a valid summary
+- [x] Generic payment-provider boundary for future Mayar credit top-ups
 
 ### Frontend
 - [x] PWA — installable, service worker via workbox, offline-cached assets
@@ -35,6 +38,7 @@
 - [x] Shared `PageStates.tsx` (PageEmpty + PageLoading + FormError) across all four pages
 - [x] Drag-and-drop note reordering (dnd-kit, `SortableNoteGrid`)
 - [x] Finance monthly summary card + Recharts bar chart
+- [x] Compact mobile/portrait finance summary
 - [x] Todo checkbox + pending/completed split view
 - [x] Link Saver with favicon display + copy to clipboard
 - [x] Search across all four modules

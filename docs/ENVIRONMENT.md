@@ -41,7 +41,7 @@ Create `.env.local` in `artifacts/teman-nyatet/` for local development. On Verce
 
 Create `.env.local` in `artifacts/api-server/` for local development. On Vercel, set these in the API server project's Environment Variables.
 
-### Required (server will refuse to start if missing)
+### Required for core API functionality
 
 | Variable | Description |
 |---|---|
@@ -50,7 +50,6 @@ Create `.env.local` in `artifacts/api-server/` for local development. On Vercel,
 | `GOOGLE_CLIENT_ID` | OAuth 2.0 Client ID from Google Cloud Console. Format: `<id>.apps.googleusercontent.com` |
 | `GOOGLE_CLIENT_SECRET` | OAuth 2.0 Client Secret. Format: `GOCSPX-<secret>` |
 | `GOOGLE_OAUTH_STATE_SECRET` | Random hex string for HMAC-signing OAuth state params (CSRF protection). Generate: `openssl rand -hex 32`. Must be the same value across all environments sharing one OAuth credential. |
-| `CRON_SECRET` | Bearer token securing `POST /api/cron/archive-expired`. Generate: `openssl rand -hex 32`. |
 
 ### Optional
 
@@ -64,6 +63,11 @@ Create `.env.local` in `artifacts/api-server/` for local development. On Vercel,
 | `LOG_LEVEL` | `info` | Pino log level: `trace`, `debug`, `info`, `warn`, `error`, `fatal`. |
 | `NODE_ENV` | _(unset)_ | Set to `production` on Vercel to disable dev-only behaviors. |
 | `OPENAI_API_KEY` | _(none)_ | API key for note summarization (`POST /api/notes/:id/summarize`). If unset, the endpoint returns `503`. Default endpoint is SumoPod-compatible at `https://ai.sumopod.com/v1/chat/completions` with model `gpt-4o-mini`. Override with `OPENAI_BASE_URL` and `OPENAI_MODEL`. |
+| `INITIAL_AI_CREDITS` | `10` | Initial AI summarization credits granted to new users. Keep this aligned with the Supabase `app.initial_ai_credits` setting used by migration `006_ai_credits.sql`. |
+
+`CRON_SECRET` is required only when invoking
+`POST /api/cron/archive-expired`; the API process can start without it, but the
+cron route will reject requests until it is configured.
 
 ---
 
@@ -85,6 +89,7 @@ On Replit, secrets are set in the Secrets panel (not `.env.local` files). The fo
 | `MAYAR_WEBHOOK_SECRET` | Mayar webhook secret (optional) |
 | `VITE_MAYAR_PAYMENT_URL` | Mayar payment page URL (optional) |
 | `OPENAI_API_KEY` | AI summarization API key (optional, adds `gpt-4o-mini` note summarization) |
+| `INITIAL_AI_CREDITS` | Initial AI credit balance for new users (optional, defaults to `10`) |
 
 ### Pre-configured Replit environment variables
 

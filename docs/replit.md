@@ -26,7 +26,7 @@ Each workflow has its port pinned explicitly in the command, so there is no port
 
 ## Required secrets
 
-The API server refuses to start if any of these required secrets are missing:
+The API server requires these values for its core auth and data paths:
 
 - `VITE_SUPABASE_URL` — Supabase project URL (frontend)
 - `VITE_SUPABASE_ANON_KEY` — Supabase anon/public key (frontend)
@@ -35,11 +35,12 @@ The API server refuses to start if any of these required secrets are missing:
 - `GOOGLE_CLIENT_ID` — OAuth2 client ID from Google Cloud Console
 - `GOOGLE_CLIENT_SECRET` — OAuth2 client secret from Google Cloud Console
 - `GOOGLE_OAUTH_STATE_SECRET` — random hex string for HMAC-signing OAuth state params (prevents CSRF). **Required** — OAuth will fail closed if unset.
-- `CRON_SECRET` — random string securing `/api/cron/archive-expired`
 
 ### Optional / not strictly required
 
 - `OPENAI_API_KEY` — API key for note summarization (AI feature). If unset, `POST /api/notes/:id/summarize` returns `503`. Defaults to SumoPod-compatible endpoint.
+- `INITIAL_AI_CREDITS` — initial AI summarization balance for new users; defaults to `10`. Keep aligned with Supabase `app.initial_ai_credits`.
+- `CRON_SECRET` — random string securing `/api/cron/archive-expired`; the cron route returns an error when it is missing.
 - `MAYAR_WEBHOOK_SECRET` — Mayar webhook signing secret (`/api/mayar-webhook` fails closed if unset)
 - `VITE_MAYAR_PAYMENT_URL` — Mayar payment page URL (frontend falls back to `#` if unset)
 - `VITE_API_SERVER_URL` — set to `https://teman-nyatet-api-server.vercel.app` for the Vercel frontend project. Leave unset in Replit dev because the Vite proxy handles `/api` → `localhost:8080`; production also has this URL as a fallback.
@@ -60,6 +61,7 @@ Run the SQL files in `supabase/migrations/` in order in your Supabase SQL Editor
 5. `003_template_tracking.sql` (adds `template_version`; optional legacy table drops are commented out)
 6. `004_add_google_oauth.sql` (adds `google_refresh_token`)
 7. `005_phase1_schema.sql` — Phase 1 cleanup: adds sync tracking columns (`last_sync_at`, `sync_status`, `recovery_metadata`), drops legacy `notes`, `transactions`, `todos`, `links` tables, and refreshes RLS policies.
+8. `006_ai_credits.sql` — adds AI credit balances, immutable ledger, signup trigger, and atomic RPCs.
 
 If you encounter `infinite recursion detected in policy for relation "profiles"`, also run `supabase/migrations/fix_profiles_rls_recursion.sql`.
 

@@ -19,6 +19,7 @@ A note-taking SaaS web app + PWA for Indonesian users. Four core modules: Catata
 - Auth: Supabase Auth (email/password with confirmation)
 - App data: per-user Google Spreadsheet via OAuth2 (authored by the API server in the user's own Google Drive)
 - Subscription/profile data: Supabase Postgres (`profiles` table)
+- AI credits: Supabase Postgres (`user_credits` + immutable `credit_ledger`)
 - UI: shadcn/ui components, vaul (bottom sheets), Recharts (finance charts), date-fns, lucide-react
 - Routing: wouter
 - PWA: VitePWA plugin + `manifest.json` in `public/`
@@ -46,7 +47,8 @@ A note-taking SaaS web app + PWA for Indonesian users. Four core modules: Catata
 - `artifacts/api-server/src/routes/{notes,transactions,todos,links}.ts` — data routes
 - `artifacts/api-server/src/routes/spreadsheet.ts` — `GET /spreadsheet/status`, `POST /spreadsheet/validate`, `POST /spreadsheet/repair`
 - `artifacts/api-server/src/routes/profile.ts` — `POST /profile/avatar` (uploads to Supabase Storage `avatars` bucket)
-- `artifacts/api-server/src/routes/subscription.ts` — `GET /subscription/status`
+- `artifacts/api-server/src/routes/subscription.ts` — `GET /subscription/status` with `credit_balance`
+- `artifacts/api-server/src/routes/credits.ts` — `GET /credits`
 - `artifacts/api-server/src/routes/health.ts` — `GET /api/healthz` (router mounted under `/api`)
 
 ## Architecture decisions
@@ -63,6 +65,7 @@ A note-taking SaaS web app + PWA for Indonesian users. Four core modules: Catata
 ## Product
 
 - **Catatan**: Create/edit/delete/reorder notes with tags and colored cards
+- **AI summaries**: Indonesian note summaries; 10 initial credits per user, one credit per successful summary
 - **Keuangan**: Track income/expense transactions with monthly summary + Recharts bar chart
 - **Todo**: Checkbox to-do list with due dates and times
 - **Link Saver**: Save bookmarks with title, URL, note + copy to clipboard + search
@@ -189,13 +192,14 @@ Repo ini punya dua deployable yang beda kebutuhan build-nya, jadi deploy sebagai
   - `GOOGLE_CLIENT_SECRET`
   - `GOOGLE_OAUTH_STATE_SECRET`
   - `MAYAR_WEBHOOK_SECRET`
-  - `CRON_SECRET`
+   - `CRON_SECRET` (required to run the external archive-expiry job)
   - `FRONTEND_URL` (production frontend URL — used for OAuth callback redirects)
   - `ALLOWED_ORIGINS` (production frontend URL — gates CORS)
   - `GOOGLE_REDIRECT_URI` (production callback URI — must match Google Cloud Console byte-for-byte)
   - `OPENAI_API_KEY` (required to enable note summarization)
   - `OPENAI_BASE_URL` (optional; defaults to `https://ai.sumopod.com`)
   - `OPENAI_MODEL` (optional; defaults to `gpt-4o-mini`)
+   - `INITIAL_AI_CREDITS` (optional; defaults to `10`, must match Supabase `app.initial_ai_credits`)
 - Setelah live, update webhook URL di dashboard Mayar ke `https://<domain-api-server>/api/mayar-webhook`
 - Setelah live, verify the API with `https://teman-nyatet-api-server.vercel.app/api/healthz`. The API project root returns service metadata; health is mounted under `/api`.
 - Endpoint `/api/cron/archive-expired` masih pakai pola POST + Bearer token (`CRON_SECRET`), jadi tetap dipanggil dari scheduler eksternal (GitHub Actions cron, cron-job.org, dll) — bukan Vercel Cron Jobs bawaan (yang cuma bisa GET). Kalau mau pindah ke Vercel Cron, endpoint ini perlu ditambah handler GET.

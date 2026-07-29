@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import React, { Suspense, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useOrientation } from '@/hooks/useOrientation';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import PwaUpdatePrompt from '@/components/PwaUpdatePrompt';
@@ -231,12 +232,14 @@ function RouteSlot({
 }: {
   children: React.ReactNode;
 }) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+
   return (
     <motion.div
       className="will-change-[transform,opacity]"
-      initial={{ opacity: 0, y: 16 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
     >
       <Suspense fallback={<PageLoading />}>{children}</Suspense>
     </motion.div>

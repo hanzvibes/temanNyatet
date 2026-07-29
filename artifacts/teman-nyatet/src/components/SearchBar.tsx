@@ -18,7 +18,7 @@ export default function SearchBar({ value, onChange, placeholder = 'Cari...', cl
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="w-full min-h-12 bg-card rounded-2xl pl-12 pr-12 py-3 text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 shadow-elevation-1 border border-border/80 focus:border-primary/50 transition-all placeholder:text-muted-foreground/60"
+        className="w-full min-h-12 bg-card rounded-2xl pl-12 pr-12 py-3 text-sm font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 shadow-elevation-1 border border-border/80 focus:border-primary/50 transition-[border-color,box-shadow,background-color] placeholder:text-muted-foreground/60"
       />
       {value && (
         <button

@@ -86,7 +86,7 @@ export function TodoCard({
       role="button"
       aria-label={`Buka to-do: ${todo.title}`}
       className={[
-        'flex cursor-pointer select-none items-center gap-3 rounded-2xl border bg-card px-4 py-3.5 transition-all',
+        'flex cursor-pointer select-none items-center gap-3 rounded-2xl border bg-card px-4 py-3.5 transition-[border-color,box-shadow,background-color]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-todo focus-visible:ring-offset-2',
         isDragOverlay
           ? 'border-todo/30 shadow-elevation-3 ring-1 ring-todo/15'
@@ -106,7 +106,7 @@ export function TodoCard({
         }
         onClick={onToggle}
         className={[
-          'flex h-10 w-10 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200',
+          'flex h-10 w-10 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border-2 transition-[border-color,background-color,box-shadow] duration-200',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-todo focus-visible:ring-offset-2',
           todo.is_done
             ? 'border-todo bg-todo text-white shadow-sm'
@@ -134,7 +134,7 @@ export function TodoCard({
       <div className="min-w-0 flex-1">
         <p
           className={[
-            'text-sm font-semibold leading-snug transition-all',
+            'text-sm font-semibold leading-snug transition-[color]',
             todo.is_done ? 'text-muted-foreground/60 line-through' : 'text-foreground',
           ].join(' ')}
         >

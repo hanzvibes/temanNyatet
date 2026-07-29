@@ -24,6 +24,8 @@
 
 ### Task 1: Capture a reproducible performance baseline
 
+Status: complete.
+
 **Files:**
 - Create: `docs/superpowers/performance-baseline.md`
 - Inspect: `artifacts/teman-nyatet/vite.config.ts`
@@ -96,6 +98,10 @@ Expected: exit code 0. Keep the baseline document factual; do not claim
 installed-device FPS until a real device is tested.
 
 ### Task 2: Improve production chunking and startup delivery
+
+Status: complete after baseline review; existing route/vendor chunking and
+deferred service-worker registration were retained because they already met
+the plan constraints.
 
 **Files:**
 - Modify: `artifacts/teman-nyatet/vite.config.ts`
@@ -170,6 +176,10 @@ workflow and browser logs for startup errors.
 
 ### Task 3: Stabilize query-backed page rendering
 
+Status: reviewed; no speculative query changes were required. Existing
+active-route-only rendering, retained React Query cache, and disabled focus
+refetch policy already match the performance design.
+
 **Files:**
 - Inspect and modify only where needed:
   - `artifacts/teman-nyatet/src/hooks/useNotes.ts`
@@ -230,6 +240,8 @@ content, mutations still update the list, and no new browser console errors
 appear.
 
 ### Task 4: Reduce render and animation cost on frequent interactions
+
+Status: complete.
 
 **Files:**
 - Modify: `artifacts/teman-nyatet/src/App.tsx`
@@ -294,6 +306,9 @@ motion removes nonessential movement rather than hiding content.
 
 ### Task 5: Harden PWA caching and update behavior
 
+Status: complete after generated service-worker audit; no PWA configuration
+change was needed because private API caching is already excluded.
+
 **Files:**
 - Modify: `artifacts/teman-nyatet/vite.config.ts`
 - Modify: `artifacts/teman-nyatet/src/main.tsx`
@@ -352,6 +367,9 @@ git diff --check
 Restart the frontend workflow after configuration changes and inspect logs.
 
 ### Task 6: Final cross-device verification and documentation
+
+Status: complete for preview/build verification; real-device FPS measurement
+remains outside this environment.
 
 **Files:**
 - Modify: `docs/superpowers/performance-baseline.md`

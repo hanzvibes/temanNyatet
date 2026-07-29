@@ -312,7 +312,7 @@ export default function KeuanganPage() {
   };
 
   return (
-    <div className="flex min-h-dvh h-full flex-col bg-background pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
+    <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-background pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
 
       {/* ── Header ── */}
       <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-border/40">
@@ -331,11 +331,11 @@ export default function KeuanganPage() {
       </div>
 
       {/* ── Body ── */}
-      <div className="mx-auto w-full max-w-screen-xl px-5 pt-6 pb-6 sm:px-6 sm:pt-8 sm:pb-8 lg:px-10 lg:pt-10">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.38fr)] lg:items-start">
+      <div className="mx-auto flex min-h-0 w-full max-w-screen-xl flex-1 overflow-hidden px-5 pt-6 pb-6 sm:px-6 sm:pt-8 sm:pb-8 lg:px-10 lg:pt-10">
+        <div className="grid h-full min-h-0 w-full gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.38fr)] lg:items-start">
 
           {/* ── Left column ── */}
-          <div className="space-y-8 lg:order-1">
+          <div className="flex min-h-0 flex-col gap-8 lg:order-1">
 
             {/* Balance hero */}
             <BalanceHero
@@ -390,7 +390,7 @@ export default function KeuanganPage() {
             />
 
             {/* Transaction list */}
-            <div>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]">
               {loading ? (
                 <PageLoading accent="keuangan" label="Memuat transaksi…" />
               ) : sortedDates.length === 0 ? (

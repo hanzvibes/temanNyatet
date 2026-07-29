@@ -415,7 +415,7 @@ export default function KeuanganPage() {
             />
 
             {/* Transaction list */}
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-[1.5rem] border border-border/45 bg-card/25 px-2 pt-2 pr-1 [scrollbar-gutter:stable] pb-[calc(var(--bottom-nav-collapsed-h)+env(safe-area-inset-bottom)+1.5rem)] lg:rounded-2xl lg:px-3 lg:pt-3 lg:pb-6">
               {loading ? (
                 <PageLoading accent="keuangan" label="Memuat transaksi…" />
               ) : sortedDates.length === 0 ? (
@@ -441,9 +441,9 @@ export default function KeuanganPage() {
                   }
                 />
               ) : (
-                <div className="space-y-7">
+                  <div className="space-y-7">
                   {/* Section meta */}
-                  <div className="flex items-center justify-between">
+                   <div className="sticky top-0 z-[1] -mx-1 flex items-center justify-between rounded-xl bg-background/90 px-2 py-2 backdrop-blur-md">
                     <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
                       Riwayat Transaksi
                     </h2>

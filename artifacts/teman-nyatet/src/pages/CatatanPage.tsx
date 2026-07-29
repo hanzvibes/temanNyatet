@@ -312,11 +312,11 @@ export default function CatatanPage() {
       </div>
 
       {/* ── Body ── */}
-      <div className="mx-auto w-full max-w-screen-xl px-5 pt-6 pb-6 sm:px-6 sm:pt-8 lg:px-10 lg:pt-10">
+      <div className="mx-auto w-full max-w-screen-xl px-5 pt-4 pb-6 sm:px-6 sm:pt-5 lg:px-10 lg:pt-6">
         {loading ? (
           <PageLoading accent="catatan" label="Memuat catatan…" />
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-3">
 
             {/* Search */}
             <SearchBar
@@ -354,7 +354,7 @@ export default function CatatanPage() {
             {filteredNotes.length > 0 && (
               <>
                 {/* Section meta */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between px-0.5">
                   <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
                     {search ? 'Hasil Pencarian' : 'Semua Catatan'}
                   </h2>

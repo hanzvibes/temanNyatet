@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import { activateSubscription } from '../lib/supabase-admin.js';
+import { grantCreditToEmail } from '../lib/credit-service.js';
+import { MayarPaymentProvider } from '../lib/payment-provider.js';
 
 const router = Router();
+const paymentProvider = new MayarPaymentProvider();
 
 // Verify Mayar webhook HMAC-SHA256 signature against the EXACT raw body bytes
 function verifyMayarSignature(rawBody: Buffer, signature: string, secret: string): boolean {
@@ -89,6 +92,23 @@ router.post(
     if (!isPaymentSuccess) {
       // Acknowledge non-payment events without processing
       res.status(200).json({ success: true, message: `Event ${event} acknowledged` });
+      return;
+    }
+
+    const creditPurchase = paymentProvider.parseSuccessfulCreditPurchase(body);
+    if (creditPurchase) {
+      try {
+        const balance = await grantCreditToEmail(
+          creditPurchase.userEmail,
+          creditPurchase.credits,
+          'mayar_topup',
+          creditPurchase.referenceId,
+        );
+        res.status(200).json({ success: true, balance, message: 'Credits added' });
+      } catch (err) {
+        req.log.error({ err, referenceId: creditPurchase.referenceId }, 'Failed to grant purchased credits');
+        res.status(500).json({ success: false, message: 'Internal server error' });
+      }
       return;
     }
 

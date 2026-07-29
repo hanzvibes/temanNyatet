@@ -10,6 +10,7 @@ import todosRouter from './todos.js';
 import linksRouter from './links.js';
 import profileRouter from './profile.js';
 import spreadsheetRouter from './spreadsheet.js';
+import creditsRouter from './credits.js';
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(todosRouter);
 router.use(linksRouter);
 router.use(profileRouter);
 router.use(spreadsheetRouter);
+router.use(creditsRouter);
 
 export default router;

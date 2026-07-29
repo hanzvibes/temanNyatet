@@ -20,6 +20,7 @@ interface SubscriptionStatus {
   subscription_plan: 'monthly' | 'yearly' | null;
   subscription_end: string | null;
   days_remaining: number | null;
+  credit_balance: number;
 }
 
 interface SettingsSheetProps {
@@ -60,8 +61,11 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
     setSubLoading(true);
     setSubError(null);
     try {
-      const data = await apiGet<SubscriptionStatus>('/subscription/status');
-      setSubStatus(data);
+      const [data, credits] = await Promise.all([
+        apiGet<SubscriptionStatus>('/subscription/status'),
+        apiGet<{ balance: number }>('/credits'),
+      ]);
+      setSubStatus({ ...data, credit_balance: credits.balance });
     } catch (err) {
       // Check for offline / network failure first
       if (!navigator.onLine || (err instanceof TypeError && String(err).includes('fetch'))) {
@@ -75,6 +79,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
             subscription_plan: (profile?.subscription_plan as SubscriptionStatus['subscription_plan']) ?? null,
             subscription_end: (profile?.subscription_end as string | null) ?? null,
             days_remaining: null,
+             credit_balance: 0,
           });
           // Show a soft warning — data may be stale
           setSubError('stale');
@@ -91,6 +96,15 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
     if (activeSection === 'subscription') loadSubscription();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSection]);
+
+  useEffect(() => {
+    const openSubscription = () => {
+      setOpen(true);
+      setActiveSection('subscription');
+    };
+    window.addEventListener('teman-nyatet:open-settings-subscription', openSubscription);
+    return () => window.removeEventListener('teman-nyatet:open-settings-subscription', openSubscription);
+  }, []);
 
   // Broadcast open/closed state on the shared overlay channel so the PWA
   // install prompt (and any future peripheral chrome) can step aside while
@@ -589,6 +603,21 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                               </div>
                             );
                           })()}
+
+                          <div className="flex items-center justify-between rounded-[clamp(1rem,3vw,1.5rem)] border border-primary/20 bg-primary/[0.07] px-[clamp(1rem,4vw,1.5rem)] py-[clamp(0.875rem,3vw,1.125rem)]">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">
+                                <Sparkles size={18} className="text-primary" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-extrabold text-foreground">Credit Ringkas AI</p>
+                                <p className="text-xs font-medium text-muted-foreground">1 credit untuk 1 ringkasan</p>
+                              </div>
+                            </div>
+                            <span className="text-xl font-black text-primary">
+                              {subStatus?.credit_balance ?? 0}
+                            </span>
+                          </div>
 
                           {/* Detail rows — only meaningful for active subs */}
                           {subStatus?.subscription_status === 'active' && (

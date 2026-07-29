@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { supabaseAdmin } from '../lib/supabase-admin.js';
+import { getCreditBalance } from '../lib/credit-service.js';
 
 const router = Router();
 
@@ -48,11 +49,20 @@ router.get('/subscription/status', async (req, res) => {
       daysRemaining = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
     }
 
+    let creditBalance = 0;
+    try {
+      creditBalance = await getCreditBalance(user.id);
+    } catch (creditError) {
+      // Keep subscription status available while an operator is applying the
+      // credit migration. The dedicated /credits endpoint remains explicit.
+      req.log.warn({ creditError, userId: user.id }, 'Credit balance unavailable');
+    }
     res.status(200).json({
       subscription_status: profile.subscription_status,
       subscription_plan: profile.subscription_plan ?? null,
       subscription_end: profile.subscription_end ?? null,
       days_remaining: daysRemaining,
+      credit_balance: creditBalance,
     });
   } catch (err) {
     req.log.error({ err }, 'Unexpected error in /subscription/status');

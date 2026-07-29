@@ -4,7 +4,7 @@ import { useNotes } from '@/hooks/useNotes';
 import { useCreate } from '@/contexts/CreateContext';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Loader2, BookOpen, Plus, Sparkles, X } from 'lucide-react';
+import { Loader2, BookOpen, Plus, Sparkles, X, CreditCard } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { Button } from '@/components/ui/button';
 import { NOTE_TAGS } from '@/lib/categoryIcons';
@@ -19,7 +19,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { SortableNoteGrid } from '@/components/SortableNoteGrid';
 import { toast } from 'sonner';
 import { NOTE_COLORS, NOTE_COLOR_PALETTE } from '@/lib/noteColors';
-import { apiPost } from '@/lib/apiClient';
+import { apiGet, apiPost } from '@/lib/apiClient';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
 const PALETTE = NOTE_COLOR_PALETTE;
@@ -88,6 +96,8 @@ export default function CatatanPage() {
   const [summary, setSummary]                   = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing]       = useState(false);
   const [summaryError, setSummaryError]         = useState<string | null>(null);
+  const [creditBalance, setCreditBalance]       = useState<number | null>(null);
+  const [creditsExhaustedOpen, setCreditsExhaustedOpen] = useState(false);
 
   const form = useForm<NoteFormValues>({
     resolver: zodResolver(noteSchema),
@@ -121,6 +131,13 @@ export default function CatatanPage() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isDetailOpen]);
 
+  useEffect(() => {
+    if (!user) return;
+    apiGet<{ balance: number }>('/credits')
+      .then(({ balance }) => setCreditBalance(balance))
+      .catch(() => undefined);
+  }, [user]);
+
   const handleOpenDetail = (note: Note, color: string) => {
     setSelectedNote(note);
     setSelectedNoteColor(color);
@@ -135,15 +152,21 @@ export default function CatatanPage() {
     setIsSummarizing(true);
     setSummaryError(null);
     try {
-      const response = await apiPost<{ summary: string }>(
+      const response = await apiPost<{ summary: string; balance: number }>(
         `/notes/${encodeURIComponent(selectedNote.id)}/summarize`,
         {},
       );
       setSummary(response.summary);
+      setCreditBalance(response.balance);
       if (typeof navigator !== 'undefined' && navigator.vibrate) {
         navigator.vibrate(12);
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message === 'CREDITS_EXHAUSTED') {
+        setCreditBalance(0);
+        setCreditsExhaustedOpen(true);
+        return;
+      }
       setSummaryError('Ringkasan belum berhasil dibuat. Coba lagi.');
     } finally {
       setIsSummarizing(false);
@@ -606,6 +629,11 @@ export default function CatatanPage() {
                               <Sparkles size={15} />
                             )}
                             {isSummarizing ? 'Merangkum…' : 'Ringkas AI'}
+                            {creditBalance !== null && (
+                              <span className="ml-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-black">
+                                {creditBalance}
+                              </span>
+                            )}
                           </button>
                           {/* Edit */}
                           <button
@@ -746,6 +774,32 @@ export default function CatatanPage() {
           </Drawer.Content>
         </Drawer.Portal>
       </Drawer.Root>
+
+      <Dialog open={creditsExhaustedOpen} onOpenChange={setCreditsExhaustedOpen}>
+        <DialogContent className="max-w-[calc(100%-2rem)] rounded-3xl border-primary/15 p-6 sm:max-w-md">
+          <DialogHeader>
+            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <CreditCard size={26} />
+            </div>
+            <DialogTitle className="text-center text-xl font-black">Credit AI kamu habis</DialogTitle>
+            <DialogDescription className="text-center leading-relaxed">
+              Tambahkan credit untuk terus meringkas catatan dengan cepat.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-2 sm:flex-col">
+            <button
+              type="button"
+              onClick={() => {
+                setCreditsExhaustedOpen(false);
+                window.dispatchEvent(new CustomEvent('teman-nyatet:open-settings-subscription'));
+              }}
+              className="min-h-11 w-full rounded-xl bg-primary px-4 font-bold text-primary-foreground transition-transform active:scale-[0.98]"
+            >
+              Lihat opsi top-up
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

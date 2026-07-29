@@ -3,6 +3,7 @@ import { requireAuth, userRateLimit } from '../middleware/requireAuth.js';
 import { createRow, deleteRow, listByUser, reorderRows, updateRow } from '../lib/sheet-store.js';
 import { SheetsAccessError } from '../lib/google-sheets.js';
 import { optionalString, optionalTags, requireString, ValidationError } from '../lib/validate.js';
+import { consumeCredit, CreditsExhaustedError, getCreditBalance } from '../lib/credit-service.js';
 
 const router = Router();
 const SHEET = '📝 Notes';
@@ -92,6 +93,12 @@ router.post('/notes/:id/summarize', requireAuth, userRateLimit, async (req, res)
       return;
     }
 
+    const currentBalance = await getCreditBalance(req.userId!);
+    if (currentBalance <= 0) {
+      res.status(402).json({ error: 'CREDITS_EXHAUSTED', balance: 0 });
+      return;
+    }
+
     const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!, req.sheetsClient!);
     const note = rows.find((row) => row.id === req.params.id);
     if (!note) {
@@ -153,7 +160,17 @@ router.post('/notes/:id/summarize', requireAuth, userRateLimit, async (req, res)
       return;
     }
 
-    res.status(200).json({ data: { summary: summary.trim() } });
+    let balance: number;
+    try {
+      balance = await consumeCredit(req.userId!, 'ai_summary');
+    } catch (err) {
+      if (err instanceof CreditsExhaustedError) {
+        res.status(402).json({ error: 'CREDITS_EXHAUSTED', balance: 0 });
+        return;
+      }
+      throw err;
+    }
+    res.status(200).json({ data: { summary: summary.trim(), balance } });
   } catch (err) {
     if (err instanceof ValidationError) {
       res.status(400).json({ error: err.message });
@@ -171,6 +188,7 @@ router.post('/notes/:id/summarize', requireAuth, userRateLimit, async (req, res)
     res.status(500).json({ error: 'Failed to generate AI summary' });
   }
 });
+
 
 router.post('/notes/reorder', requireAuth, userRateLimit, async (req, res) => {
   try {

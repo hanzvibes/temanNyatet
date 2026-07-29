@@ -287,16 +287,9 @@ export default function KeuanganPage() {
   );
 
   const handleOpenForm = (type: TransactionType = 'expense') => {
-    setTxType(type);
-    form.reset({
-      type,
-      amount: '',
-      category: '',
-      source: 'Cash',
-      note: '',
-      date: format(new Date(), 'yyyy-MM-dd'),
-    });
-    setIsFormOpen(true);
+    window.dispatchEvent(new CustomEvent('teman-nyatet:open-bottom-sheet', {
+      detail: { transactionType: type },
+    }));
   };
 
   const onSubmitForm = async (data: TxFormValues) => {

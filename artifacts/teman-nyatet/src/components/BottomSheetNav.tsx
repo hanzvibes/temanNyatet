@@ -5,6 +5,7 @@ import { NotebookPen, Wallet, CheckSquare, Link2 } from 'lucide-react';
 import SheetFormContent from '@/components/SheetFormContent';
 import { useHaptic, HAPTIC } from '@/hooks/useHaptic';
 import { useOrientation } from '@/hooks/useOrientation';
+import type { TransactionType } from '@/lib/database.types';
 
 // Responsive heights (px)
 // Bottom-nav geometry matches the value in index.css (`--bottom-nav-collapsed-h`).
@@ -33,6 +34,7 @@ export default function BottomSheetNav() {
   // Use visualViewport when available so the sheet shrinks correctly when
   // the mobile keyboard opens, instead of staying behind it.
   const [screenH, setScreenH] = useState(() => window.visualViewport?.height ?? window.innerHeight);
+  const [requestedTransactionType, setRequestedTransactionType] = useState<TransactionType | undefined>();
   useEffect(() => {
     let frame = 0;
     const update = () => {
@@ -109,7 +111,11 @@ export default function BottomSheetNav() {
   // Allow page-level action buttons to open the shared sheet without coupling
   // those pages to the sheet's internal motion state.
   useEffect(() => {
-    const handleOpenRequest = () => snapTo('half');
+    const handleOpenRequest = (event: Event) => {
+      const transactionType = (event as CustomEvent<{ transactionType?: TransactionType }>).detail?.transactionType;
+      setRequestedTransactionType(transactionType);
+      snapTo('half');
+    };
     window.addEventListener('teman-nyatet:open-bottom-sheet', handleOpenRequest);
     return () => window.removeEventListener('teman-nyatet:open-bottom-sheet', handleOpenRequest);
   }, [SNAP.half]);
@@ -244,6 +250,7 @@ export default function BottomSheetNav() {
                 >
                   <SheetFormContent
                     path={location}
+                    initialTransactionType={requestedTransactionType}
                     onSuccess={() => {
                       haptic(HAPTIC.success);
                       snapTo('collapsed');

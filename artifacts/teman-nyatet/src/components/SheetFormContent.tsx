@@ -149,16 +149,22 @@ const txSchema = z.object({
 });
 type TxForm = z.infer<typeof txSchema>;
 
-function KeuanganSheetForm({ onSuccess }: { onSuccess: () => void }) {
+function KeuanganSheetForm({
+  onSuccess,
+  initialTransactionType = 'expense',
+}: {
+  onSuccess: () => void;
+  initialTransactionType?: TransactionType;
+}) {
   const { user } = useAuthContext();
   const { createTransaction } = useTransactions(user?.id);
   const haptic = useHaptic();
-  const [txType, setTxType] = useState<TransactionType>('expense');
+  const [txType, setTxType] = useState<TransactionType>(initialTransactionType);
 
   const form = useForm<TxForm>({
     resolver: zodResolver(txSchema),
     defaultValues: {
-      type: 'expense',
+      type: initialTransactionType,
       amount: '',
       category: '',
       source: 'Cash',
@@ -420,10 +426,11 @@ const SECTION_META: Record<string, { label: string; color: string }> = {
 
 interface Props {
   path: string;
+  initialTransactionType?: TransactionType;
   onSuccess: () => void;
 }
 
-export default function SheetFormContent({ path, onSuccess }: Props) {
+export default function SheetFormContent({ path, initialTransactionType, onSuccess }: Props) {
   const section = Object.keys(SECTION_META).find(k => path.startsWith(k)) ?? '/catatan';
   const meta = SECTION_META[section];
 
@@ -434,7 +441,12 @@ export default function SheetFormContent({ path, onSuccess }: Props) {
       </p>
       <div className="flex-1 flex flex-col min-h-0">
         {section === '/catatan'   && <NoteSheetForm     onSuccess={onSuccess} />}
-        {section === '/keuangan'  && <KeuanganSheetForm onSuccess={onSuccess} />}
+        {section === '/keuangan'  && (
+          <KeuanganSheetForm
+            initialTransactionType={initialTransactionType}
+            onSuccess={onSuccess}
+          />
+        )}
         {section === '/todo'      && <TodoSheetForm     onSuccess={onSuccess} />}
         {section === '/linksaver' && <LinkSheetForm     onSuccess={onSuccess} />}
       </div>

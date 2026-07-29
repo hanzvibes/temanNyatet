@@ -344,58 +344,41 @@ export default function KeuanganPage() {
               expense={monthlySummary.expense}
             />
 
-            {/* Mobile summary — the desktop version lives in the sidebar below. */}
+            {/* Mobile summary — compact version; the desktop version lives in the sidebar below. */}
             <section
               aria-labelledby="mobile-month-summary-title"
-              className="rounded-2xl border border-border/50 bg-card p-5 lg:hidden"
+              className="rounded-2xl border border-border/50 bg-card px-4 py-3.5 lg:hidden"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p
-                    id="mobile-month-summary-title"
-                    className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70"
-                  >
-                    Ringkasan bulan
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-foreground">
-                    {format(new Date(), 'MMMM yyyy', { locale: id })}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-finance/12 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-finance-text">
-                  Bulan ini
-                </div>
-              </div>
+              <p
+                id="mobile-month-summary-title"
+                className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70"
+              >
+                Ringkasan {format(new Date(), 'MMMM yyyy', { locale: id })}
+              </p>
 
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-income/8 px-3.5 py-3">
-                  <div className="flex items-center gap-2">
-                    <ArrowDownLeft size={13} strokeWidth={2.5} className="text-income" />
-                    <span className="text-xs font-semibold text-muted-foreground">Pemasukan</span>
-                  </div>
-                  <p className="mt-2 text-base font-black tabular-nums text-income">
+              <div className="mt-2.5 grid grid-cols-3 divide-x divide-border/60">
+                <div className="min-w-0 pr-2.5">
+                  <p className="text-[10px] font-semibold text-muted-foreground/75">Masuk</p>
+                  <p className="mt-0.5 truncate text-[13px] font-black tabular-nums text-income">
                     {formatRupiahCompact(monthlySummary.income)}
                   </p>
                 </div>
-                <div className="rounded-xl bg-expense/8 px-3.5 py-3">
-                  <div className="flex items-center gap-2">
-                    <ArrowUpRight size={13} strokeWidth={2.5} className="text-expense" />
-                    <span className="text-xs font-semibold text-muted-foreground">Pengeluaran</span>
-                  </div>
-                  <p className="mt-2 text-base font-black tabular-nums text-expense">
+                <div className="min-w-0 px-2.5">
+                  <p className="text-[10px] font-semibold text-muted-foreground/75">Keluar</p>
+                  <p className="mt-0.5 truncate text-[13px] font-black tabular-nums text-expense">
                     {formatRupiahCompact(monthlySummary.expense)}
                   </p>
                 </div>
-              </div>
-
-              <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-3">
-                <span className="text-sm font-semibold text-foreground">Sisa bulan ini</span>
-                <span
-                  className={`text-base font-black tabular-nums ${
-                    monthlySummary.balance >= 0 ? 'text-foreground' : 'text-expense'
-                  }`}
-                >
-                  {formatRupiahCompact(monthlySummary.balance)}
-                </span>
+                <div className="min-w-0 pl-2.5 text-right">
+                  <p className="text-[10px] font-semibold text-muted-foreground/75">Sisa</p>
+                  <p
+                    className={`mt-0.5 truncate text-[13px] font-black tabular-nums ${
+                      monthlySummary.balance >= 0 ? 'text-foreground' : 'text-expense'
+                    }`}
+                  >
+                    {formatRupiahCompact(monthlySummary.balance)}
+                  </p>
+                </div>
               </div>
             </section>
 

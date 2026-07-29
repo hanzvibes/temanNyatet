@@ -140,6 +140,9 @@ export default function CatatanPage() {
         {},
       );
       setSummary(response.summary);
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(12);
+      }
     } catch {
       setSummaryError('Ringkasan belum berhasil dibuat. Coba lagi.');
     } finally {
@@ -482,23 +485,96 @@ export default function CatatanPage() {
                           </p>
 
                           {/* AI summary */}
-                          {(summary || summaryError) && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 8 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="mb-5 rounded-2xl border border-border/40 bg-card/50 p-4"
-                            >
-                              <div className="mb-2 flex items-center gap-2 text-sm font-bold text-foreground">
-                                <Sparkles size={14} className="text-primary" />
-                                Ringkasan AI
-                              </div>
-                              {summary ? (
-                                <p className="text-sm leading-relaxed text-foreground/85">{summary}</p>
-                              ) : (
-                                <p className="text-sm leading-relaxed text-destructive">{summaryError}</p>
-                              )}
-                            </motion.div>
-                          )}
+                          <AnimatePresence initial={false}>
+                            {(isSummarizing || summary || summaryError) && (
+                              <motion.div
+                                key="ai-summary-container"
+                                layout
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{
+                                  height: { type: 'spring', stiffness: 340, damping: 32, mass: 0.9 },
+                                  opacity: { duration: 0.18 },
+                                }}
+                                className="overflow-hidden"
+                              >
+                                <div className="mb-5 mt-0.5 rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/[0.07] via-card/50 to-card/50 p-4">
+                                  <div className="mb-2.5 flex items-center gap-2 text-sm font-bold text-foreground">
+                                    <motion.div
+                                      animate={
+                                        isSummarizing
+                                          ? { rotate: 360, scale: [1, 1.12, 1] }
+                                          : { rotate: 0, scale: 1 }
+                                      }
+                                      transition={
+                                        isSummarizing
+                                          ? {
+                                              rotate: { duration: 1.6, repeat: Infinity, ease: 'linear' },
+                                              scale: { duration: 1.2, repeat: Infinity, ease: 'easeInOut' },
+                                            }
+                                          : { type: 'spring', stiffness: 500, damping: 15 }
+                                      }
+                                      className="text-primary"
+                                    >
+                                      <Sparkles size={14} />
+                                    </motion.div>
+                                    <span>Ringkasan AI</span>
+                                  </div>
+
+                                  <AnimatePresence mode="wait" initial={false}>
+                                    {isSummarizing ? (
+                                      <motion.div
+                                        key="loading"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="space-y-2 py-0.5"
+                                        aria-live="polite"
+                                        aria-label="Sedang membuat ringkasan"
+                                      >
+                                        {[100, 88, 64].map((w, i) => (
+                                          <motion.div
+                                            key={i}
+                                            className="h-3 rounded-full bg-foreground/10"
+                                            style={{ width: `${w}%` }}
+                                            animate={{ opacity: [0.35, 0.8, 0.35] }}
+                                            transition={{
+                                              duration: 1.1,
+                                              repeat: Infinity,
+                                              delay: i * 0.15,
+                                              ease: 'easeInOut',
+                                            }}
+                                          />
+                                        ))}
+                                      </motion.div>
+                                    ) : summary ? (
+                                      <motion.p
+                                        key="result"
+                                        initial={{ opacity: 0, y: 4 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.3, delay: 0.04, ease: [0.32, 0.72, 0, 1] }}
+                                        className="text-sm leading-relaxed text-foreground/85"
+                                      >
+                                        {summary}
+                                      </motion.p>
+                                    ) : (
+                                      <motion.p
+                                        key="error"
+                                        initial={{ opacity: 0, y: 4 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.3, delay: 0.04 }}
+                                        className="text-sm leading-relaxed text-destructive"
+                                      >
+                                        {summaryError}
+                                      </motion.p>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
 
                           {/* Tags */}
                           {selectedNote.tags && selectedNote.tags.length > 0 && (

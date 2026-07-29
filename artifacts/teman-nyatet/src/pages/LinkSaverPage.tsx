@@ -308,7 +308,7 @@ export default function LinkSaverPage() {
 
             <form
               onSubmit={form.handleSubmit(onSubmitForm)}
-              className="flex flex-col overflow-y-auto px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:px-6"
+              className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:px-6"
             >
               <h3 className="text-modal-title mb-6 mt-3">Simpan Link Baru</h3>
 

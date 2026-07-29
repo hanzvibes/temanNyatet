@@ -366,7 +366,7 @@ export default function CatatanPage() {
                         exit={{ opacity: 0, x: -10 }}
                         transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
                         onSubmit={form.handleSubmit(onSubmitForm)}
-                        className="flex flex-1 flex-col overflow-hidden"
+                        className="flex min-h-0 flex-1 flex-col overflow-hidden"
                       >
                         {/* Edit header */}
                         <div className="flex shrink-0 items-center justify-between px-5 pb-3 pt-5 sm:px-6">
@@ -388,7 +388,7 @@ export default function CatatanPage() {
                           </button>
                         </div>
 
-                        <div className="flex-1 space-y-4 overflow-y-auto px-5 pb-6 sm:px-6">
+                        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 pb-6 sm:px-6">
                           <input
                             {...form.register('title')}
                             placeholder="Judul (opsional)"
@@ -462,9 +462,9 @@ export default function CatatanPage() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 10 }}
                         transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
-                        className="flex flex-1 flex-col"
+                        className="flex min-h-0 flex-1 flex-col"
                       >
-                        <div className="flex-1 overflow-y-auto p-5 sm:p-6">
+                        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 sm:p-6">
                           {selectedNote.title && (
                             <h2 className="text-modal-title !text-foreground mb-2.5">
                               {selectedNote.title}

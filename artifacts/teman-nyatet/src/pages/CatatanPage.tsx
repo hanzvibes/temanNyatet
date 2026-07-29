@@ -816,15 +816,19 @@ export default function CatatanPage() {
 
       <Dialog open={creditsExhaustedOpen} onOpenChange={setCreditsExhaustedOpen}>
         <DialogContent className="max-w-[calc(100%-2rem)] overflow-hidden rounded-[1.75rem] border-border/70 bg-card p-0 shadow-elevation-3 duration-300 ease-out data-[state=open]:zoom-in-[0.98] data-[state=open]:slide-in-from-top-[46%] data-[state=closed]:zoom-out-[0.98] sm:max-w-md">
-          <AnimatePresence mode="wait">
-            {creditsExhaustedOpen && (
-              <motion.div
-                key="credit-empty-state"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-                className="p-6 sm:p-7"
-              >
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={
+              creditsExhaustedOpen
+                ? { opacity: 1, y: 0 }
+                : { opacity: 0, y: 5 }
+            }
+            transition={{
+              duration: creditsExhaustedOpen ? 0.28 : 0.2,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            className="p-6 sm:p-7"
+          >
                 <DialogHeader>
                   <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-primary/20 bg-primary/8 text-primary">
                     <CreditCard size={24} strokeWidth={2.1} />
@@ -842,8 +846,14 @@ export default function CatatanPage() {
 
                 <motion.div
                   initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.08, duration: 0.2 }}
+                  animate={{
+                    opacity: creditsExhaustedOpen ? 1 : 0,
+                    scale: creditsExhaustedOpen ? 1 : 0.985,
+                  }}
+                  transition={{
+                    delay: creditsExhaustedOpen ? 0.08 : 0,
+                    duration: creditsExhaustedOpen ? 0.2 : 0.16,
+                  }}
                   className="mt-6 flex items-center gap-3 rounded-2xl border border-border/70 bg-secondary/45 px-4 py-3.5"
                 >
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary">
@@ -874,9 +884,7 @@ export default function CatatanPage() {
                     Nanti saja
                   </button>
                 </DialogFooter>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          </motion.div>
         </DialogContent>
       </Dialog>
     </div>

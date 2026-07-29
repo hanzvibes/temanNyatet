@@ -13,3 +13,4 @@
 - [SumoPod AI provider](sumopod-ai-provider.md) — note summarization uses SumoPod's OpenAI-compatible endpoint with a server-only key.
 - [Swipeable transaction row visuals](swipeable-transaction-row-visuals.md) — keep the delete layer hidden at rest and the foreground row full-width.
 - [AI credit architecture](ai-credit-architecture.md) — atomic Supabase RPC balance changes and immutable ledger are the boundary for future AI usage and top-ups.
+- [Overlay transition coordination](overlay-transition-coordination.md) — close one portal fully before opening another to avoid stacked backdrops and focus traps.

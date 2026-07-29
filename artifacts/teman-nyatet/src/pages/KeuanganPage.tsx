@@ -6,7 +6,18 @@ import { SwipeableTransactionRow } from '@/components/SwipeableTransactionRow';
 import SettingsSheet from '@/components/SettingsSheet';
 import { useCreate } from '@/contexts/CreateContext';
 import { useTransactions } from '@/hooks/useTransactions';
-import { format, isToday, isYesterday } from 'date-fns';
+import {
+  endOfMonth,
+  endOfWeek,
+  endOfDay,
+  format,
+  isToday,
+  isWithinInterval,
+  isYesterday,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+} from 'date-fns';
 import { id } from 'date-fns/locale';
 import {
   ArrowDownLeft,
@@ -66,6 +77,8 @@ const txSchema = z.object({
 });
 
 type TxFormValues = z.infer<typeof txSchema>;
+type PeriodFilter = 'today' | 'week' | 'month';
+type TypeFilter = 'all' | TransactionType;
 
 // ─── Balance Hero ─────────────────────────────────────────────────────────────
 function BalanceHero({
@@ -193,6 +206,8 @@ export default function KeuanganPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [txType, setTxType] = useState<TransactionType>('expense');
   const [search, setSearch] = useState('');
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('month');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [sheetViewportHeight, setSheetViewportHeight] = useState(() =>
     typeof window !== 'undefined'
@@ -238,17 +253,63 @@ export default function KeuanganPage() {
     };
   }, []);
 
-  const filteredTransactions = useMemo(
+  const periodRange = useMemo(() => {
+    const now = new Date();
+    if (periodFilter === 'today') return { start: startOfDay(now), end: endOfDay(now) };
+    if (periodFilter === 'week') {
+      return {
+        start: startOfWeek(now, { weekStartsOn: 1 }),
+        end: endOfWeek(now, { weekStartsOn: 1 }),
+      };
+    }
+    return { start: startOfMonth(now), end: endOfMonth(now) };
+  }, [periodFilter]);
+
+  const periodTransactions = useMemo(
     () =>
       transactions.filter((tx) => {
+        const txDate = new Date(`${tx.date}T12:00:00`);
+        return isWithinInterval(txDate, periodRange);
+      }),
+    [periodRange, transactions],
+  );
+
+  const filteredTransactions = useMemo(
+    () =>
+      periodTransactions.filter((tx) => {
+        if (typeFilter !== 'all' && tx.type !== typeFilter) return false;
         if (!search) return true;
         const l = search.toLowerCase();
         return (
           tx.category.toLowerCase().includes(l) ||
-          (tx.note && tx.note.toLowerCase().includes(l))
+          (tx.note && tx.note.toLowerCase().includes(l)) ||
+          tx.source.toLowerCase().includes(l)
         );
       }),
-    [search, transactions],
+    [periodTransactions, search, typeFilter],
+  );
+
+  const topExpense = useMemo(() => {
+    const totals = periodTransactions
+      .filter((tx) => tx.type === 'expense')
+      .reduce<Record<string, number>>((acc, tx) => {
+        acc[tx.category] = (acc[tx.category] || 0) + tx.amount;
+        return acc;
+      }, {});
+    return Object.entries(totals).sort((a, b) => b[1] - a[1])[0] ?? null;
+  }, [periodTransactions]);
+
+  const filteredSummary = useMemo(
+    () =>
+      filteredTransactions.reduce(
+        (summary, tx) => {
+          if (tx.type === 'income') summary.income += tx.amount;
+          else summary.expense += tx.amount;
+          return summary;
+        },
+        { income: 0, expense: 0 },
+      ),
+    [filteredTransactions],
   );
 
   const handleOpenForm = (type: TransactionType = 'expense') => {
@@ -314,14 +375,6 @@ export default function KeuanganPage() {
 
   const openBottomSheet = () => {
     window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'));
-  };
-
-  const openCreateAction = () => {
-    if (window.matchMedia('(min-width: 1024px)').matches) {
-      handleOpenForm('expense');
-      return;
-    }
-    openBottomSheet();
   };
 
   return (
@@ -407,6 +460,93 @@ export default function KeuanganPage() {
               </div>
             </section>
 
+            {/* Quick actions */}
+            <div className="grid grid-cols-2 gap-2.5 sm:max-w-md">
+              <Button
+                type="button"
+                onClick={() => handleOpenForm('expense')}
+                className="min-h-11 rounded-xl bg-finance text-finance-text hover:bg-finance/90"
+              >
+                <ArrowUpRight size={16} strokeWidth={2.5} />
+                Pengeluaran
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenForm('income')}
+                className="min-h-11 rounded-xl border-income/30 text-income hover:bg-income/10"
+              >
+                <ArrowDownLeft size={16} strokeWidth={2.5} />
+                Pemasukan
+              </Button>
+            </div>
+
+            {/* Actionable insight */}
+            <section className="flex items-center justify-between gap-4 rounded-2xl border border-border/50 bg-card px-4 py-3.5">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
+                  Pengeluaran terbesar
+                </p>
+                {topExpense ? (
+                  <p className="mt-1 truncate text-sm font-bold text-foreground">
+                    {topExpense[0]} <span className="font-medium text-muted-foreground">· {formatRupiahCompact(topExpense[1])}</span>
+                  </p>
+                ) : (
+                  <p className="mt-1 text-sm font-medium text-muted-foreground">
+                    Catat transaksi untuk melihat polanya.
+                  </p>
+                )}
+              </div>
+              {topExpense && <TrendingDown size={18} className="shrink-0 text-expense" />}
+            </section>
+
+            {/* Period and type filters */}
+            <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+              {([
+                ['today', 'Hari ini'],
+                ['week', 'Minggu ini'],
+                ['month', 'Bulan ini'],
+              ] as const).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setPeriodFilter(value)}
+                  className={`min-h-9 shrink-0 rounded-full px-3.5 text-xs font-bold transition-colors ${
+                    periodFilter === value
+                      ? 'bg-foreground text-background'
+                      : 'bg-secondary text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex gap-1 rounded-xl bg-muted/50 p-1">
+                {([
+                  ['all', 'Semua'],
+                  ['income', 'Masuk'],
+                  ['expense', 'Keluar'],
+                ] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setTypeFilter(value)}
+                    className={`min-h-8 rounded-lg px-3 text-xs font-bold transition-colors ${
+                      typeFilter === value
+                        ? 'bg-card text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <span className="shrink-0 text-[11px] font-semibold tabular-nums text-muted-foreground/65">
+                {formatRupiahCompact(filteredSummary.income - filteredSummary.expense)}
+              </span>
+            </div>
+
             {/* Search */}
             <SearchBar
               value={search}
@@ -430,13 +570,23 @@ export default function KeuanganPage() {
                   }
                   cta={
                     !search ? (
-                      <Button
-                        onClick={openCreateAction}
-                        className="bg-finance text-finance-text hover:bg-finance/90 rounded-full px-6 py-3"
-                      >
-                        <Plus size={16} strokeWidth={2.5} />
-                        Catat Transaksi
-                      </Button>
+                      <div className="flex flex-wrap justify-center gap-2">
+                        <Button
+                          onClick={() => handleOpenForm('expense')}
+                          className="rounded-full bg-finance px-5 py-3 text-finance-text hover:bg-finance/90"
+                        >
+                          <ArrowUpRight size={16} strokeWidth={2.5} />
+                          Pengeluaran
+                        </Button>
+                        <Button
+                          onClick={() => handleOpenForm('income')}
+                          variant="outline"
+                          className="rounded-full border-income/30 px-5 py-3 text-income hover:bg-income/10"
+                        >
+                          <ArrowDownLeft size={16} strokeWidth={2.5} />
+                          Pemasukan
+                        </Button>
+                      </div>
                     ) : undefined
                   }
                 />

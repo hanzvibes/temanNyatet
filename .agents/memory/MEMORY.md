@@ -14,3 +14,4 @@
 - [Swipeable transaction row visuals](swipeable-transaction-row-visuals.md) — keep the delete layer hidden at rest and the foreground row full-width.
 - [AI credit architecture](ai-credit-architecture.md) — atomic Supabase RPC balance changes and immutable ledger are the boundary for future AI usage and top-ups.
 - [Overlay transition coordination](overlay-transition-coordination.md) — close one portal fully before opening another to avoid stacked backdrops and focus traps.
+- [Workspace typecheck order](workspace-typecheck-order.md) — build shared TypeScript libraries before package-level checks when generated declaration outputs are absent.

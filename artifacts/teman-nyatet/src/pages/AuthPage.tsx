@@ -167,19 +167,19 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center p-5 sm:p-6 bg-background landscape:justify-start landscape:overflow-y-auto">
-      <div className="w-full max-w-sm flex flex-col items-center landscape:py-4">
+    <main className="min-h-dvh w-full overflow-x-hidden bg-background px-[max(1rem,env(safe-area-inset-left))] py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8 sm:py-10 lg:px-12 landscape:justify-start landscape:overflow-y-auto landscape:py-5">
+      <div className="mx-auto flex min-h-[calc(100dvh-3rem)] w-full max-w-md flex-col items-center justify-center sm:min-h-[calc(100dvh-5rem)] landscape:min-h-0 landscape:py-3">
 
         {/* Logo Section */}
-        <div className="flex flex-col items-center mb-9 landscape:mb-4">
-          <div className="w-20 h-20 bg-primary rounded-[1.5rem] flex items-center justify-center mb-5 shadow-elevated relative rotate-[-3deg] landscape:w-16 landscape:h-16 landscape:mb-3">
+        <div className="mb-8 flex w-full flex-col items-center sm:mb-10 landscape:mb-4">
+          <div className="relative mb-4 flex h-[4.5rem] w-[4.5rem] rotate-[-3deg] items-center justify-center rounded-[1.35rem] bg-primary shadow-elevated sm:mb-5 sm:h-20 sm:w-20 sm:rounded-[1.5rem] landscape:mb-3 landscape:h-16 landscape:w-16">
              {/* Yellow Notebook Icon Placeholder */}
-             <div className="absolute w-12 h-14 bg-finance rounded-md shadow-sm border border-finance-text/50 flex items-center justify-center transform -rotate-6">
-                <BookOpen size={24} className="text-white" />
+             <div className="absolute flex h-12 w-10 -rotate-6 items-center justify-center rounded-md border border-finance-text/50 bg-finance shadow-sm sm:h-14 sm:w-12">
+                <BookOpen size={22} className="text-white sm:h-6 sm:w-6" />
              </div>
           </div>
-           <h1 className="text-display">TemanNyatet</h1>
-          <p className="text-muted-foreground text-base mt-2 font-medium">Catat sat-set, urusan beres.</p>
+           <h1 className="text-display text-[clamp(1.75rem,7vw,2.25rem)] leading-tight">TemanNyatet</h1>
+           <p className="mt-2 text-center text-sm font-medium text-muted-foreground sm:text-base">Catat sat-set, urusan beres.</p>
         </div>
 
         {confirmedFromEmail && !pendingEmail && (
@@ -225,7 +225,7 @@ export default function AuthPage() {
         ) : (
           <>
             {/* Form Section */}
-            <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-4 sm:space-y-5">
               <div>
                 <label htmlFor="auth-email" className="text-pill-label mb-2 block ml-1">Email</label>
                 <input
@@ -234,7 +234,7 @@ export default function AuthPage() {
                   type="email"
                   autoComplete="email"
                   placeholder="nama@email.com"
-                  className="w-full min-h-12 px-5 py-3.5 rounded-xl bg-card border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base shadow-elevation-1"
+                  className="min-h-12 w-full rounded-xl border border-border bg-card px-4 py-3.5 text-base shadow-elevation-1 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 sm:px-5"
                 />
                 {form.formState.errors.email && (
                   <FormError className="mt-1 ml-2">{form.formState.errors.email.message}</FormError>
@@ -249,7 +249,7 @@ export default function AuthPage() {
                   type={showPassword ? "text" : "password"}
                   autoComplete={isLogin ? 'current-password' : 'new-password'}
                   placeholder="Masukkan password"
-                  className="w-full min-h-12 px-5 py-3.5 rounded-xl bg-card border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all pr-12 text-base shadow-elevation-1"
+                  className="min-h-12 w-full rounded-xl border border-border bg-card px-4 py-3.5 pr-12 text-base shadow-elevation-1 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 sm:px-5"
                 />
                 <button
                   type="button"
@@ -273,7 +273,7 @@ export default function AuthPage() {
                     type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
                     placeholder="Ulangi password"
-                    className="w-full min-h-12 px-5 py-3.5 rounded-xl bg-card border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base shadow-elevation-1"
+                    className="min-h-12 w-full rounded-xl border border-border bg-card px-4 py-3.5 text-base shadow-elevation-1 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 sm:px-5"
                   />
                   {form.formState.errors.confirmPassword && (
                     <FormError className="mt-1 ml-2">{form.formState.errors.confirmPassword.message}</FormError>
@@ -297,14 +297,14 @@ export default function AuthPage() {
                 type="submit"
                 disabled={isLoading}
                 size="lg"
-                className="w-full text-base py-5 rounded-xl mt-4"
+                className="mt-4 min-h-12 w-full rounded-xl py-3.5 text-base sm:mt-5"
               >
                 {isLoading ? <Loader2 className="animate-spin w-6 h-6" /> : (isLogin ? 'Masuk' : 'Daftar')}
               </Button>
             </form>
 
-            <div className="mt-8 text-center">
-              <p className="text-muted-foreground font-medium">
+            <div className="mt-7 px-2 text-center sm:mt-8">
+              <p className="text-sm font-medium text-muted-foreground sm:text-base">
                 {isLogin ? 'Belum punya akun? ' : 'Sudah punya akun? '}
                 <button
                   onClick={() => {
@@ -320,6 +320,6 @@ export default function AuthPage() {
           </>
         )}
       </div>
-    </div>
+    </main>
   );
 }

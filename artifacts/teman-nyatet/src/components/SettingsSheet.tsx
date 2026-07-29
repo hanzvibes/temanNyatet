@@ -280,10 +280,10 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
           <Drawer.Content
             className="bg-card flex flex-col rounded-t-[clamp(1.25rem,4vw,2rem)] fixed bottom-0 left-0 right-0 z-50 outline-none mx-auto w-full sm:max-w-[540px] md:max-w-[600px] lg:max-w-[640px] xl:max-w-[720px] max-h-[min(88vh,48rem)]"
           >
-            <div className="mx-auto w-[clamp(2.5rem,8vw,3rem)] h-[clamp(0.25rem,0.8vw,0.375rem)] flex-shrink-0 rounded-full bg-muted-foreground/20 mt-[clamp(0.75rem,2vw,1rem)] mb-[clamp(0.25rem,1vw,0.5rem)]" />
+            <div className="mx-auto mt-[clamp(0.5rem,1.5vw,0.75rem)] mb-0 h-[clamp(0.25rem,0.8vw,0.375rem)] w-[clamp(2.5rem,8vw,3rem)] flex-shrink-0 rounded-full bg-muted-foreground/20" />
 
             {/* Header row */}
-            <div className="flex items-center px-[clamp(1rem,4vw,1.75rem)] py-[clamp(0.5rem,2vw,0.75rem)] min-h-[clamp(2.75rem,8vw,3.5rem)]">
+            <div className="flex min-h-[clamp(2.5rem,7vw,3rem)] items-center px-[clamp(1rem,4vw,1.75rem)] py-[clamp(0.375rem,1.5vw,0.625rem)]">
               {activeSection ? (
                 <button onClick={handleBack} className="flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] text-[clamp(0.8125rem,2.5vw,1rem)] font-bold text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card rounded-lg px-2 py-1">
                   <ArrowLeft size={16} strokeWidth={2.5} />
@@ -294,7 +294,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto px-[clamp(1rem,4vw,1.75rem)] pb-[clamp(1.5rem,5vw,2.5rem)]">
+            <div className="flex-1 overflow-y-auto px-[clamp(1rem,4vw,1.75rem)] pb-[clamp(1rem,3vw,1.5rem)]">
 
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
@@ -307,10 +307,10 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                   {activeSection === null ? (
                     <>
                       {/* ── Profile header ── */}
-                      <div className="flex flex-col items-center pt-[clamp(0.25rem,1vw,0.5rem)] pb-[clamp(1rem,4vw,1.5rem)]">
+                      <div className="flex flex-col items-center pt-0 pb-[clamp(0.625rem,2vw,1rem)]">
                         {/* Big avatar */}
-                        <div className="relative mb-[clamp(0.75rem,3vw,1.25rem)]">
-                          <div className="rounded-full bg-primary flex items-center justify-center text-primary-foreground font-extrabold shadow-md overflow-hidden w-[clamp(4rem,14vw,5.5rem)] h-[clamp(4rem,14vw,5.5rem)] text-[clamp(1.25rem,5vw,2rem)]">
+                        <div className="relative mb-[clamp(0.5rem,2vw,0.75rem)]">
+                          <div className="flex h-[clamp(4rem,12vw,5rem)] w-[clamp(4rem,12vw,5rem)] items-center justify-center overflow-hidden rounded-full bg-primary text-[clamp(1.25rem,4.5vw,1.75rem)] font-extrabold text-primary-foreground shadow-md">
                             {profile?.avatar_url ? (
                               <img src={profile.avatar_url} alt="Foto profil" className="w-full h-full object-cover" />
                             ) : (
@@ -333,7 +333,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                         </div>
 
                         {/* Subscription badge */}
-                        <span className={`font-extrabold uppercase tracking-widest rounded-full mb-[clamp(0.5rem,2vw,1rem)] text-[clamp(0.625rem,2vw,0.75rem)] px-[clamp(0.75rem,2.5vw,1rem)] py-[clamp(0.25rem,1vw,0.375rem)] ${
+                        <span className={`mb-[clamp(0.375rem,1.5vw,0.625rem)] rounded-full px-[clamp(0.625rem,2vw,0.875rem)] py-[clamp(0.1875rem,0.75vw,0.3125rem)] text-[clamp(0.625rem,2vw,0.75rem)] font-extrabold uppercase tracking-widest ${
                           isPro
                             ? 'bg-primary/15 text-primary border border-primary/30'
                             : 'bg-muted text-muted-foreground border border-border'
@@ -342,28 +342,28 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                         </span>
 
                         {/* Name */}
-                        <p className="text-[clamp(1rem,3.5vw,1.5rem)] font-extrabold text-foreground leading-tight text-center">
+                        <p className="text-center text-[clamp(1rem,3.5vw,1.5rem)] font-extrabold leading-tight text-foreground">
                           {profile?.name || <span className="text-muted-foreground font-bold italic text-[clamp(0.875rem,3vw,1.125rem)]">Nama belum diatur</span>}
                         </p>
 
                         {/* Email */}
-                        <p className="text-[clamp(0.75rem,2.5vw,1rem)] font-medium text-muted-foreground mt-[clamp(0.125rem,0.5vw,0.25rem)] text-center">
+                        <p className="mt-0.5 text-center text-[clamp(0.75rem,2.5vw,1rem)] font-medium text-muted-foreground">
                           {user?.email}
                         </p>
 
                         {/* Phone */}
                         {profile?.phone && (
-                          <p className="text-[clamp(0.75rem,2.5vw,1rem)] font-medium text-muted-foreground mt-[clamp(0.125rem,0.5vw,0.25rem)] text-center">
+                          <p className="mt-0.5 text-center text-[clamp(0.75rem,2.5vw,1rem)] font-medium text-muted-foreground">
                             {profile.phone}
                           </p>
                         )}
                       </div>
 
                       {/* Divider */}
-                      <div className="h-px bg-border mb-[clamp(0.5rem,2vw,1rem)]" />
+                      <div className="mb-[clamp(0.375rem,1.5vw,0.625rem)] h-px bg-border" />
 
                       {/* Menu items */}
-                      <div className="space-y-[clamp(0.25rem,1vw,0.5rem)]">
+                      <div className="space-y-0.5">
                         {[
                           { key: 'name' as const,     icon: User,  label: 'Ganti Nama' },
                           { key: 'password' as const, icon: Lock,  label: 'Ganti Password' },
@@ -374,9 +374,9 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                           <button
                             key={key}
                             onClick={() => handleOpenSection(key)}
-                            className="w-full flex items-center gap-[clamp(0.75rem,3vw,1rem)] px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] hover:bg-secondary active:bg-secondary/80 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+                            className="flex min-h-14 w-full items-center gap-[clamp(0.625rem,2.5vw,0.875rem)] rounded-[clamp(0.625rem,2.5vw,1rem)] px-[clamp(0.625rem,2.5vw,1rem)] py-2 hover:bg-secondary active:bg-secondary/80 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
                           >
-                            <div className="rounded-xl bg-secondary border border-border flex items-center justify-center flex-shrink-0 w-[clamp(2rem,7vw,2.5rem)] h-[clamp(2rem,7vw,2.5rem)]">
+                            <div className="flex h-[clamp(2.25rem,7vw,2.5rem)] w-[clamp(2.25rem,7vw,2.5rem)] flex-shrink-0 items-center justify-center rounded-xl border border-border bg-secondary">
                               <Icon size={18} className="text-muted-foreground w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
                             </div>
                             <span className="flex-1 font-bold text-foreground text-[clamp(0.875rem,3vw,1.125rem)]">{label}</span>
@@ -385,9 +385,9 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                         ))}
                         <button
                           onClick={() => { setOpen(false); setLocation('/connect-sheet'); }}
-                          className="w-full flex items-center gap-[clamp(0.75rem,3vw,1rem)] px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] hover:bg-secondary active:bg-secondary/80 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+                           className="flex min-h-14 w-full items-center gap-[clamp(0.625rem,2.5vw,0.875rem)] rounded-[clamp(0.625rem,2.5vw,1rem)] px-[clamp(0.625rem,2.5vw,1rem)] py-2 hover:bg-secondary active:bg-secondary/80 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
                         >
-                          <div className="rounded-xl bg-secondary border border-border flex items-center justify-center flex-shrink-0 w-[clamp(2rem,7vw,2.5rem)] h-[clamp(2rem,7vw,2.5rem)]">
+                          <div className="flex h-[clamp(2.25rem,7vw,2.5rem)] w-[clamp(2.25rem,7vw,2.5rem)] flex-shrink-0 items-center justify-center rounded-xl border border-border bg-secondary">
                             <Sheet size={18} className="text-muted-foreground w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
                           </div>
                           <span className="flex-1 font-bold text-foreground text-[clamp(0.875rem,3vw,1.125rem)]">Spreadsheet Saya</span>
@@ -399,7 +399,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                           theme preference saved by main.tsx boot. Lives below the
                           menu and above the destructive divider so accidental
                           taps force-clear plugins can't reach it. */}
-                      <div className="space-y-[clamp(0.5rem,2vw,0.75rem)] pt-[clamp(0.75rem,3vw,1rem)]">
+                      <div className="space-y-2 pt-3">
                         <h3 className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest px-[clamp(0.75rem,3vw,1.25rem)]">
                           Tampilan
                         </h3>
@@ -409,14 +409,14 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                       </div>
 
                       {/* Divider */}
-                      <div className="h-px bg-border my-[clamp(0.5rem,2vw,1rem)]" />
+                      <div className="my-2 h-px bg-border" />
 
                       {/* Logout */}
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-[clamp(0.75rem,3vw,1rem)] px-[clamp(0.75rem,3vw,1.25rem)] py-[clamp(0.75rem,3vw,1.25rem)] rounded-[clamp(0.75rem,3vw,1.25rem)] hover:bg-destructive/10 active:bg-destructive/15 transition-colors text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+                        className="flex min-h-14 w-full items-center gap-[clamp(0.625rem,2.5vw,0.875rem)] rounded-[clamp(0.625rem,2.5vw,1rem)] px-[clamp(0.625rem,2.5vw,1rem)] py-2 hover:bg-destructive/10 active:bg-destructive/15 transition-colors text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2 focus-visible:ring-offset-card"
                       >
-                        <div className="rounded-xl bg-destructive/10 border border-destructive/20 flex items-center justify-center flex-shrink-0 w-[clamp(2rem,7vw,2.5rem)] h-[clamp(2rem,7vw,2.5rem)]">
+                          <div className="flex h-[clamp(2.25rem,7vw,2.5rem)] w-[clamp(2.25rem,7vw,2.5rem)] flex-shrink-0 items-center justify-center rounded-xl border border-destructive/20 bg-destructive/10">
                           <LogOut size={18} className="text-destructive w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
                         </div>
                         <span className="flex-1 font-bold text-destructive text-[clamp(0.875rem,3vw,1.125rem)]">Keluar</span>

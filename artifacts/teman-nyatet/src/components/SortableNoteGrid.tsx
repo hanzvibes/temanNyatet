@@ -26,10 +26,11 @@ import { GripVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import type { Note } from '@/lib/database.types';
+import { getNoteColor, NOTE_COLOR_PALETTE } from '@/lib/noteColors';
 import { DeleteTarget } from './DeleteTarget';
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
-const PALETTE = ['var(--note-card-1)', 'var(--note-card-2)', 'var(--note-card-3)', 'var(--note-card-4)'];
+const PALETTE = NOTE_COLOR_PALETTE;
 
 function colorForNoteId(noteId: string): string {
   let hash = 0;
@@ -114,11 +115,11 @@ function NoteCardBody({
     <>
       <div className="flex justify-end mb-1 -mt-1 -mr-1">{handle}</div>
       {note.title && (
-        <h3 className="font-bold text-foreground mb-2 leading-tight text-lg">
+        <h3 className="font-bold mb-2 leading-tight text-lg">
           {note.title}
         </h3>
       )}
-      <p className="text-sm text-foreground/90 line-clamp-5 whitespace-pre-wrap leading-relaxed font-medium">
+      <p className="text-sm text-current/90 line-clamp-5 whitespace-pre-wrap leading-relaxed font-medium">
         {note.content}
       </p>
       {note.tags && note.tags.length > 0 && (
@@ -126,19 +127,19 @@ function NoteCardBody({
           {note.tags.slice(0, 2).map((tag) => (
             <span
               key={tag}
-              className="text-[10px] px-2.5 py-1 rounded-full bg-white/60 dark:bg-white/10 text-foreground font-bold uppercase tracking-wider"
+              className="text-[10px] px-2.5 py-1 rounded-full bg-white/55 dark:bg-black/15 text-current font-bold uppercase tracking-wider"
             >
               {tag}
             </span>
           ))}
           {note.tags.length > 2 && (
-            <span className="text-[10px] px-2 py-1 rounded-full bg-white/60 dark:bg-white/10 text-foreground font-bold">
+            <span className="text-[10px] px-2 py-1 rounded-full bg-white/55 dark:bg-black/15 text-current font-bold">
               +{note.tags.length - 2}
             </span>
           )}
         </div>
       )}
-      <div className="mt-4 text-xs text-muted-foreground font-bold">
+      <div className="mt-4 text-xs text-current/65 font-bold">
         {format(new Date(note.created_at), 'd MMM yyyy', { locale: idLocale })}
       </div>
     </>
@@ -164,6 +165,8 @@ function SortableNoteCard({
     transform: CSS.Translate.toString(transform),
     transition,
     backgroundColor: color,
+    color: getNoteColor(color).foreground,
+    borderColor: getNoteColor(color).border,
     opacity: isDragging ? 0.4 : 1,
     zIndex: isDragging ? 50 : undefined,
   };
@@ -195,7 +198,7 @@ function SortableNoteCard({
       tabIndex={0}
       role="listitem"
       aria-label={note.title ? `Catatan: ${note.title}. Tekan Enter untuk membuka.` : 'Catatan tanpa judul. Tekan Enter untuk membuka.'}
-      className="rounded-[1.5rem] p-5 shadow-sm hover:shadow-md cursor-pointer relative select-none transition-shadow duration-200 will-change-transform active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      className="rounded-[1.5rem] border p-5 shadow-sm hover:shadow-md cursor-pointer relative select-none transition-shadow duration-200 will-change-transform active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
       <NoteCardBody note={note} handle={handle} />
     </div>
@@ -208,9 +211,11 @@ const MemoSortableNoteCard = memo(SortableNoteCard);
 function DragOverlayCard({ note, color }: { note: Note; color: string }) {
   return (
     <div
-      className="rounded-[1.5rem] p-5 cursor-grabbing ring-1 ring-black/5"
+      className="rounded-[1.5rem] border p-5 cursor-grabbing"
       style={{
         backgroundColor: color,
+        color: getNoteColor(color).foreground,
+        borderColor: getNoteColor(color).border,
         transform: `rotate(${OVERLAY_ROTATE_DEG}deg) scale(${OVERLAY_SCALE})`,
         boxShadow:
           '0 24px 48px -12px rgba(0,0,0,0.25), 0 8px 16px -6px rgba(0,0,0,0.12)',

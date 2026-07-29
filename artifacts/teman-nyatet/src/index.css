@@ -138,10 +138,18 @@
      the same hue that keep section identity without producing bright blobs on
      the slate canvas — they sit one step brighter than the surrounding card
      so cards still pop, but no longer look like flashlights. */
-  --note-card-1: #FFF8D6;
-  --note-card-2: #E8F2DF;
-  --note-card-3: #FFE4E1;
-  --note-card-4: #E1F0FF;
+  --note-card-1: hsl(152 32% 89%);
+  --note-card-1-foreground: hsl(152 30% 19%);
+  --note-card-1-border: hsl(152 26% 76%);
+  --note-card-2: hsl(43 82% 89%);
+  --note-card-2-foreground: hsl(38 42% 22%);
+  --note-card-2-border: hsl(43 58% 74%);
+  --note-card-3: hsl(211 48% 91%);
+  --note-card-3-foreground: hsl(211 38% 22%);
+  --note-card-3-border: hsl(211 38% 78%);
+  --note-card-4: hsl(0 52% 91%);
+  --note-card-4-foreground: hsl(0 34% 24%);
+  --note-card-4-border: hsl(0 38% 79%);
 }
 
 /* ── Dark mode ─────────────────────────────────────────────────────────
@@ -209,10 +217,18 @@
 
   /* See :root — dark variants of the same palette so note cards keep their
      hue identity but stop popping as bright blobs on the slate canvas. */
-  --note-card-1: #3D3118;
-  --note-card-2: #1F2D1A;
-  --note-card-3: #38201E;
-  --note-card-4: #1A2638;
+  --note-card-1: hsl(152 24% 24%);
+  --note-card-1-foreground: hsl(152 22% 91%);
+  --note-card-1-border: hsl(152 20% 35%);
+  --note-card-2: hsl(43 30% 25%);
+  --note-card-2-foreground: hsl(43 46% 92%);
+  --note-card-2-border: hsl(43 26% 38%);
+  --note-card-3: hsl(211 28% 25%);
+  --note-card-3-foreground: hsl(211 38% 92%);
+  --note-card-3-border: hsl(211 24% 38%);
+  --note-card-4: hsl(0 25% 25%);
+  --note-card-4-foreground: hsl(0 35% 92%);
+  --note-card-4-border: hsl(0 24% 38%);
 }
 
 @layer base {

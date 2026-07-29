@@ -29,7 +29,7 @@ import {
   DEFAULT_PAYMENT_SOURCES,
 } from '@/lib/database.types';
 import { toast } from 'sonner';
-import { NOTE_COLORS } from '@/lib/noteColors';
+import { getNoteColor, NOTE_COLORS } from '@/lib/noteColors';
 
 // ─── Shared input style helpers ───────────────────────────────────────────────
 // [color-scheme:light] + dark:[color-scheme:dark] keeps browser-native controls
@@ -117,12 +117,15 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
                 aria-label={`Warna ${label}${isSelected ? ', dipilih' : ''}`}
                 aria-pressed={isSelected}
                 onClick={() => form.setValue('color', value)}
-                className={`h-11 w-11 min-h-[44px] min-w-[44px] rounded-full transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+                className={`h-11 w-11 min-h-[44px] min-w-[44px] rounded-full border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                   isSelected
-                    ? 'scale-110 shadow-md ring-2 ring-foreground/60 ring-offset-2'
-                    : 'ring-1 ring-foreground/15 hover:scale-105 hover:ring-foreground/30'
+                    ? 'scale-105 shadow-md ring-2 ring-foreground/60 ring-offset-2'
+                    : 'hover:scale-[1.03]'
                 }`}
-                style={{ backgroundColor: value }}
+                style={{
+                  backgroundColor: value,
+                  borderColor: `color-mix(in srgb, ${getNoteColor(value).border} 80%, transparent)`,
+                }}
               />
             );
           })}

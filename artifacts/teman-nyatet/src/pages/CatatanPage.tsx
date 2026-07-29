@@ -18,7 +18,7 @@ import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SortableNoteGrid } from '@/components/SortableNoteGrid';
 import { toast } from 'sonner';
-import { NOTE_COLORS, NOTE_COLOR_PALETTE } from '@/lib/noteColors';
+import { getNoteColor, NOTE_COLORS, NOTE_COLOR_PALETTE } from '@/lib/noteColors';
 import { apiGet, apiPost } from '@/lib/apiClient';
 import {
   Dialog,
@@ -65,12 +65,15 @@ function NoteColorPicker({
               aria-pressed={isSelected}
               onClick={() => onChange(colorVal)}
               className={[
-                'h-10 w-10 min-h-[44px] min-w-[44px] rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+                'h-10 w-10 min-h-[44px] min-w-[44px] rounded-full border-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                 isSelected
-                  ? 'ring-2 ring-foreground/55 ring-offset-2 scale-[1.18]'
-                  : 'ring-1 ring-foreground/15 hover:scale-[1.08] hover:ring-foreground/30',
+                  ? 'ring-2 ring-foreground/55 ring-offset-2 scale-[1.12]'
+                  : 'hover:scale-[1.06]',
               ].join(' ')}
-              style={{ backgroundColor: colorVal }}
+              style={{
+                backgroundColor: colorVal,
+                borderColor: `color-mix(in srgb, ${getNoteColor(colorVal).border} 80%, transparent)`,
+              }}
             />
           );
         })}
@@ -400,7 +403,11 @@ export default function CatatanPage() {
                   layout
                   transition={{ layout: { duration: 0.25, ease: [0.32, 0.72, 0, 1] } }}
                   className="flex max-h-[72dvh] landscape:max-h-[65dvh] flex-col overflow-hidden rounded-[1.75rem] border border-border/35 shadow-elevation-3"
-                  style={{ backgroundColor: selectedNoteColor }}
+                  style={{
+                    backgroundColor: selectedNoteColor,
+                    color: getNoteColor(selectedNoteColor).foreground,
+                    borderColor: getNoteColor(selectedNoteColor).border,
+                  }}
                 >
                   <AnimatePresence mode="wait" initial={false}>
                     {isEditing ? (
@@ -439,13 +446,13 @@ export default function CatatanPage() {
                             {...form.register('title')}
                             placeholder="Judul (opsional)"
                             aria-label="Judul catatan"
-                            className="w-full border-b border-foreground/15 bg-transparent pb-2 text-2xl font-bold text-foreground outline-none placeholder:text-muted-foreground/55 transition-colors focus:border-foreground/40"
+                            className="w-full border-b border-current/20 bg-transparent pb-2 text-2xl font-bold outline-none placeholder:opacity-60 transition-colors focus:border-current/45"
                           />
                           <textarea
                             {...form.register('content')}
                             placeholder="Apa yang ingin kamu catat?"
                             aria-label="Isi catatan"
-                            className="w-full min-h-[120px] resize-none bg-transparent text-base font-medium leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/55"
+                            className="w-full min-h-[120px] resize-none bg-transparent text-base font-medium leading-relaxed outline-none placeholder:opacity-60"
                             autoFocus
                           />
                           {form.formState.errors.content && (

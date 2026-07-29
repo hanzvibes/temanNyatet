@@ -423,7 +423,9 @@ export default function KeuanganPage() {
                   cta={
                     !search ? (
                       <Button
-                        onClick={() => handleOpenForm('expense')}
+                        onClick={() =>
+                          window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'))
+                        }
                         className="bg-finance text-finance-text hover:bg-finance/90 rounded-full px-6 py-3"
                       >
                         <Plus size={16} strokeWidth={2.5} />

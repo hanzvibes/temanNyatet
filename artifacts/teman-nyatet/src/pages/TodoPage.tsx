@@ -512,7 +512,9 @@ export default function TodoPage() {
                 cta={
                   !search && filter === 'all' ? (
                     <Button
-                      onClick={() => setIsFormOpen(true)}
+                      onClick={() =>
+                        window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'))
+                      }
                       className="rounded-full bg-todo px-6 py-3 text-white hover:bg-todo/90"
                     >
                       <Plus size={16} strokeWidth={2.5} />

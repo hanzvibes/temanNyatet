@@ -177,7 +177,9 @@ export default function LinkSaverPage() {
                 cta={
                   !search ? (
                     <Button
-                      onClick={handleOpenForm}
+                      onClick={() =>
+                        window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'))
+                      }
                       className="rounded-full bg-linksaver px-6 py-3 text-white hover:bg-linksaver/90"
                     >
                       <Plus size={16} strokeWidth={2.5} />

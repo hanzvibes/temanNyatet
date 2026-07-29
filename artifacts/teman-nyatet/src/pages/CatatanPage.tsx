@@ -151,7 +151,9 @@ export default function CatatanPage() {
     // settings drawer. This keeps both portals from briefly stacking.
     const timer = window.setTimeout(() => {
       setOpenSubscriptionAfterClose(false);
-      window.dispatchEvent(new CustomEvent('teman-nyatet:open-settings-subscription'));
+      window.dispatchEvent(
+        new CustomEvent('teman-nyatet:open-settings-subscription', { cancelable: true }),
+      );
     }, 260);
 
     return () => window.clearTimeout(timer);

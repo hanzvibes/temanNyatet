@@ -98,7 +98,12 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
   }, [activeSection]);
 
   useEffect(() => {
-    const openSubscription = () => {
+    const openSubscription = (event: Event) => {
+      // Multiple SettingsSheet instances can be mounted at once (sidebar +
+      // page header on desktop). Claim the shared request so only the first
+      // instance opens and duplicate subscription drawers cannot stack.
+      if (event.defaultPrevented) return;
+      event.preventDefault();
       setOpen(true);
       setActiveSection('subscription');
     };

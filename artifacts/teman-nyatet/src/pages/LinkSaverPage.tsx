@@ -120,6 +120,14 @@ export default function LinkSaverPage() {
     setIsFormOpen(true);
   }, [form]);
 
+  const openCreateAction = useCallback(() => {
+    if (window.matchMedia('(min-width: 1024px)').matches) {
+      handleOpenForm();
+      return;
+    }
+    window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'));
+  }, [handleOpenForm]);
+
   return (
     <div className="flex min-h-dvh h-full flex-col bg-background pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
 
@@ -177,9 +185,7 @@ export default function LinkSaverPage() {
                 cta={
                   !search ? (
                     <Button
-                      onClick={() =>
-                        window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'))
-                      }
+                      onClick={openCreateAction}
                       className="rounded-full bg-linksaver px-6 py-3 text-white hover:bg-linksaver/90"
                     >
                       <Plus size={16} strokeWidth={2.5} />

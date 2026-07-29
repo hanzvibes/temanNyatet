@@ -316,6 +316,14 @@ export default function KeuanganPage() {
     window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'));
   };
 
+  const openCreateAction = () => {
+    if (window.matchMedia('(min-width: 1024px)').matches) {
+      handleOpenForm('expense');
+      return;
+    }
+    openBottomSheet();
+  };
+
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-background pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
 
@@ -423,9 +431,7 @@ export default function KeuanganPage() {
                   cta={
                     !search ? (
                       <Button
-                        onClick={() =>
-                          window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'))
-                        }
+                        onClick={openCreateAction}
                         className="bg-finance text-finance-text hover:bg-finance/90 rounded-full px-6 py-3"
                       >
                         <Plus size={16} strokeWidth={2.5} />

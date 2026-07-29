@@ -373,6 +373,14 @@ export default function TodoPage() {
     [editForm],
   );
 
+  const openCreateAction = () => {
+    if (window.matchMedia('(min-width: 1024px)').matches) {
+      setIsFormOpen(true);
+      return;
+    }
+    window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'));
+  };
+
   const onSubmitEdit = useCallback(
     async (data: TodoFormValues) => {
       if (!selectedTodo) return;
@@ -512,9 +520,7 @@ export default function TodoPage() {
                 cta={
                   !search && filter === 'all' ? (
                     <Button
-                      onClick={() =>
-                        window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'))
-                      }
+                      onClick={openCreateAction}
                       className="rounded-full bg-todo px-6 py-3 text-white hover:bg-todo/90"
                     >
                       <Plus size={16} strokeWidth={2.5} />

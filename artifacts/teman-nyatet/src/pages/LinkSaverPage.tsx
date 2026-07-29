@@ -133,7 +133,7 @@ export default function LinkSaverPage() {
 
       {/* ── Header ── */}
       <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-border/40">
-        <div className="mx-auto max-w-screen-xl px-5 py-4 sm:px-6 sm:py-5 lg:px-10 lg:py-6">
+        <div className="mx-auto max-w-screen-xl px-5 py-3 sm:px-6 sm:py-4 lg:px-10 lg:py-5">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
@@ -158,11 +158,11 @@ export default function LinkSaverPage() {
       </div>
 
       {/* ── Body ── */}
-      <div className="mx-auto w-full max-w-screen-xl px-5 pt-6 pb-6 sm:px-6 sm:pt-8 lg:px-10 lg:pt-10">
+      <div className="mx-auto w-full max-w-screen-xl px-5 pt-4 pb-6 sm:px-6 sm:pt-5 lg:px-10 lg:pt-6">
         {loading ? (
           <PageLoading accent="link" label="Memuat link…" />
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-3">
 
             {/* Search */}
             <SearchBar

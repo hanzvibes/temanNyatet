@@ -349,7 +349,7 @@ export default function KeuanganPage() {
 
       {/* ── Header ── */}
       <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-border/40">
-        <div className="mx-auto max-w-screen-xl px-5 py-4 sm:px-6 sm:py-5 lg:px-10 lg:py-6">
+        <div className="mx-auto max-w-screen-xl px-5 py-3 sm:px-6 sm:py-4 lg:px-10 lg:py-5">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
@@ -376,11 +376,11 @@ export default function KeuanganPage() {
       </div>
 
       {/* ── Body ── */}
-      <div className="mx-auto flex min-h-0 w-full max-w-screen-xl flex-1 overflow-hidden px-5 pt-6 pb-6 sm:px-6 sm:pt-8 sm:pb-8 lg:px-10 lg:pt-10">
+      <div className="mx-auto flex min-h-0 w-full max-w-screen-xl flex-1 overflow-hidden px-5 pt-4 pb-6 sm:px-6 sm:pt-5 sm:pb-8 lg:px-10 lg:pt-6">
         <div className="flex h-full min-h-0 w-full justify-center">
 
           {/* ── Left column ── */}
-          <div className="flex min-h-0 w-full max-w-3xl flex-col gap-6">
+          <div className="flex min-h-0 w-full max-w-3xl flex-col gap-4">
 
             {/* Balance hero */}
             <BalanceHero

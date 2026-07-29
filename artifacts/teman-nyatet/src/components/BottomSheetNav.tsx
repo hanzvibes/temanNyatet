@@ -59,8 +59,11 @@ export default function BottomSheetNav() {
   };
 
   // Animate HEIGHT — pill grows upward since it's bottom-anchored.
-  const h = useMotionValue(SNAP.collapsed);
-  const [snapState, setSnapState] = useState<SnapState>('collapsed');
+  // Catatan opens at the half snap by default so the primary "Tambah"
+  // actions are immediately discoverable on the app's main page.
+  const initialSnap: SnapState = location === '/catatan' ? 'half' : 'collapsed';
+  const h = useMotionValue(SNAP[initialSnap]);
+  const [snapState, setSnapState] = useState<SnapState>(initialSnap);
 
   useEffect(() => { h.set(SNAP[snapState]); }, [screenH]);
 
@@ -77,7 +80,7 @@ export default function BottomSheetNav() {
   useEffect(() => {
     if (location !== prevLocation.current) {
       prevLocation.current = location;
-      snapTo('collapsed');
+      snapTo(location === '/catatan' ? 'half' : 'collapsed');
     }
   }, [location]);
 

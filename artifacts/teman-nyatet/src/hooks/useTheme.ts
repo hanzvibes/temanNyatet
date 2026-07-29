@@ -16,14 +16,14 @@ export type ThemeMode = 'light' | 'dark' | 'system';
 const STORAGE_KEY = 'teman-nyatet:theme';
 
 function readStoredMode(): ThemeMode {
-  if (typeof window === 'undefined') return 'system';
+  if (typeof window === 'undefined') return 'light';
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw === 'light' || raw === 'dark' || raw === 'system') return raw;
   } catch {
     // localStorage can throw in private-mode iframes; not fatal.
   }
-  return 'system';
+  return 'light';
 }
 
 /** Synchronously computes the effective theme from the stored mode + OS pref. */

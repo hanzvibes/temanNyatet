@@ -15,7 +15,7 @@ import './index.css';
 // toggling a class is cheap, and the `.dark` CSS tokens are already loaded
 // by the time `index.css` finishes parsing.
 (function bootTheme() {
-  let mode: ThemeMode = 'system';
+  let mode: ThemeMode = 'light';
   try {
     const raw = window.localStorage.getItem('teman-nyatet:theme');
     if (raw === 'light' || raw === 'dark' || raw === 'system') mode = raw;

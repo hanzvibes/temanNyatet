@@ -11,6 +11,7 @@ import {
   Plus,
   ChevronDown,
   ChevronUp,
+  PanelTopOpen,
 } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { Button } from '@/components/ui/button';
@@ -452,7 +453,17 @@ export default function TodoPage() {
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">To-Do List</h1>
             </div>
-            <SettingsSheet avatarBg="bg-todo/15" avatarTextColor="text-todo-text" />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-full border border-todo/30 text-todo-text transition-colors hover:bg-todo/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-todo focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                onClick={() => window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'))}
+                aria-label="Buka menu tambah to-do"
+              >
+                <PanelTopOpen size={18} strokeWidth={2.3} />
+              </button>
+              <SettingsSheet avatarBg="bg-todo/15" avatarTextColor="text-todo-text" />
+            </div>
           </div>
         </div>
       </div>

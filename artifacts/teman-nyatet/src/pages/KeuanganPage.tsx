@@ -16,6 +16,7 @@ import {
   TrendingUp,
   TrendingDown,
   CalendarDays,
+  PanelTopOpen,
 } from 'lucide-react';
 import { CATEGORY_ICON, FALLBACK_CATEGORY_ICON } from '@/lib/categoryIcons';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
@@ -311,6 +312,10 @@ export default function KeuanganPage() {
     }
   };
 
+  const openBottomSheet = () => {
+    window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'));
+  };
+
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-background pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
 
@@ -322,10 +327,22 @@ export default function KeuanganPage() {
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">Keuangan</h1>
             </div>
-            <SettingsSheet
-              avatarBg="bg-finance/15"
-              avatarTextColor="text-finance-text"
-            />
+             <div className="flex items-center gap-2">
+               <Button
+                 type="button"
+                 variant="outline"
+                 size="icon"
+                 className="lg:hidden border-finance/30 text-finance-text hover:bg-finance/10"
+                 onClick={openBottomSheet}
+                 aria-label="Buka menu tambah keuangan"
+               >
+                 <PanelTopOpen size={18} strokeWidth={2.3} />
+               </Button>
+               <SettingsSheet
+                 avatarBg="bg-finance/15"
+                 avatarTextColor="text-finance-text"
+               />
+             </div>
           </div>
         </div>
       </div>

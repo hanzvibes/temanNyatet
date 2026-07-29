@@ -101,6 +101,14 @@ export default function BottomSheetNav() {
     setSnapState(state);
   };
 
+  // Allow page-level action buttons to open the shared sheet without coupling
+  // those pages to the sheet's internal motion state.
+  useEffect(() => {
+    const handleOpenRequest = () => snapTo('half');
+    window.addEventListener('teman-nyatet:open-bottom-sheet', handleOpenRequest);
+    return () => window.removeEventListener('teman-nyatet:open-bottom-sheet', handleOpenRequest);
+  }, [SNAP.half]);
+
   // Drag — pointer capture on the handle bar only.
   const dragStartClientY = useRef(0);
   const dragStartH       = useRef(0);

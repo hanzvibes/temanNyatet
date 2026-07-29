@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Plus,
   Check,
+  PanelTopOpen,
 } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { Button } from '@/components/ui/button';
@@ -130,10 +131,20 @@ export default function LinkSaverPage() {
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">Link Saver</h1>
             </div>
-            <SettingsSheet
-              avatarBg="bg-linksaver/15"
-              avatarTextColor="text-linksaver-text"
-            />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-full border border-linksaver/30 text-linksaver-text transition-colors hover:bg-linksaver/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-linksaver focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                onClick={() => window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'))}
+                aria-label="Buka menu tambah link"
+              >
+                <PanelTopOpen size={18} strokeWidth={2.3} />
+              </button>
+              <SettingsSheet
+                avatarBg="bg-linksaver/15"
+                avatarTextColor="text-linksaver-text"
+              />
+            </div>
           </div>
         </div>
       </div>

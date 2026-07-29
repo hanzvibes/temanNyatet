@@ -98,6 +98,14 @@
   --input: 150 10% 79%; /* more visible input border */
   --ring: 152 36% 33%;
 
+  /* Button border accents — each is a complete hsl() value so the @theme
+     var() wrapper picks them up without an extra hsl() layer. */
+  --primary-border: hsl(152 44% 24%);     /* dark sage rim on primary button */
+  --secondary-border: hsl(150 10% 82%);   /* soft rim on secondary button */
+  --muted-border: hsl(150 8% 80%);
+  --accent-border: hsl(150 12% 78%);
+  --destructive-border: hsl(0 68% 48%);   /* deeper red rim on destructive */
+
   --finance: 43 83% 58%;
   --finance-text: 38 76% 29%;
   --todo: 211 42% 67%;
@@ -184,6 +192,12 @@
 
   --input: 150 10% 25%;
   --ring: 152 40% 60%;
+
+  --primary-border: hsl(152 42% 52%);
+  --secondary-border: hsl(150 10% 24%);
+  --muted-border: hsl(150 8% 24%);
+  --accent-border: hsl(150 14% 27%);
+  --destructive-border: hsl(0 58% 47%);
 
   --finance-text: 43 90% 72%;
   --todo-text: 211 55% 78%;

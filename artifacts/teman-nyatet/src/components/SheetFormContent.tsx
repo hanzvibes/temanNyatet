@@ -269,7 +269,7 @@ function KeuanganSheetForm({ onSuccess }: { onSuccess: () => void }) {
         placeholder="Catatan tambahan (opsional)"
         className={inpFocus('finance')} />
 
-      <Button type="submit" className="w-full bg-finance text-finance-text hover:bg-finance/90 mt-auto" onClick={() => haptic(HAPTIC.tap)}>
+      <Button type="submit" className="w-full bg-finance text-finance-text border-transparent hover:bg-finance/90 mt-auto" onClick={() => haptic(HAPTIC.tap)}>
         Simpan Transaksi 💾
       </Button>
     </form>
@@ -337,7 +337,7 @@ function TodoSheetForm({ onSuccess }: { onSuccess: () => void }) {
             className={inpFocus('todo')} />
         </div>
       </div>
-      <Button type="submit" className="w-full bg-todo text-white hover:bg-todo/90 mt-auto" onClick={() => haptic(HAPTIC.tap)}>
+      <Button type="submit" className="w-full bg-todo text-white border-transparent hover:bg-todo/90 mt-auto" onClick={() => haptic(HAPTIC.tap)}>
         Simpan To-Do ✓
       </Button>
     </form>
@@ -400,7 +400,7 @@ function LinkSheetForm({ onSuccess }: { onSuccess: () => void }) {
         placeholder="Catatan (opsional)"
         className="min-h-[60px] resize-none bg-card border border-border rounded-xl p-3 outline-none text-base font-medium placeholder:text-muted-foreground/50 focus:border-linksaver focus:ring-2 focus:ring-linksaver/20 transition-all"
       />
-      <Button type="submit" className="w-full bg-linksaver text-white hover:bg-linksaver/90 mt-auto" onClick={() => haptic(HAPTIC.tap)}>
+      <Button type="submit" className="w-full bg-linksaver text-white border-transparent hover:bg-linksaver/90 mt-auto" onClick={() => haptic(HAPTIC.tap)}>
         Simpan Link 🔗
       </Button>
     </form>

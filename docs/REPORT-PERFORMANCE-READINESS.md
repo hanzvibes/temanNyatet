@@ -334,3 +334,81 @@ Laporan ini membedakan antara:
 
 - **Kesiapan kode dan build**, yang saat ini cukup baik.
 - **Kesiapan kapasitas operasional**, yang masih memerlukan bukti load test.
+
+---
+
+## 9. Hasil Load Test Lokal
+
+Load test awal dijalankan terhadap API server lokal dengan 100 request
+bersamaan. Pengujian ini menggunakan endpoint publik dan endpoint protected
+tanpa token. Tidak ada kredensial atau token user yang dibuat, disimpan, atau
+ditampilkan.
+
+### 9.1 Metode
+
+- Jumlah request per skenario: 100.
+- Concurrency: 100.
+- Timeout per request: 15 detik.
+- Endpoint yang diuji:
+  - `GET /api/healthz`
+  - `GET /`
+  - `GET /api/notes` tanpa Authorization header.
+- API workflow di-restart sebelum setiap rangkaian pengujian agar global rate
+  limiter tidak mencemari hasil dari rangkaian sebelumnya.
+
+### 9.2 Hasil burst 100 request
+
+| Endpoint | Status response | p50 | p95 | p99 | Maksimum |
+|---|---:|---:|---:|---:|---:|
+| `/api/healthz` | 100 x 200 | 103,84 ms | 151,08 ms | 155,08 ms | 155,81 ms |
+| `/` | 100 x 200 | 60,98 ms | 101,11 ms | 103,83 ms | 104,45 ms |
+| `/api/notes` tanpa token | 100 x 401 | 99,85 ms | 147,13 ms | 150,64 ms | 151,66 ms |
+
+Throughput burst yang tercatat:
+
+- `/api/healthz`: sekitar 536,8 request/detik.
+- `/`: sekitar 868,5 request/detik.
+- `/api/notes` tanpa token: sekitar 100 request bersamaan selesai dengan
+  seluruh response 401.
+
+### 9.3 Rate limiter
+
+Pengujian tambahan sebanyak 1.000 request menunjukkan global rate limiter
+berfungsi. Setelah batas 300 request per 15 menit tercapai, request berikutnya
+mendapat response `429`.
+
+Contoh hasil:
+
+- Health endpoint: 291 response 200 dan 709 response 429.
+- Root endpoint: seluruh request berikutnya mendapat 429 karena kuota limiter
+  global sudah terpakai.
+
+### 9.4 Batasan hasil pengujian
+
+Hasil ini **belum merupakan capacity certification untuk 100 user aktif**.
+Pengujian belum memakai token Supabase valid dan belum memanggil Google Sheets.
+Karena itu, hasil ini hanya memvalidasi:
+
+- API server dapat menerima burst request secara lokal.
+- Health endpoint tetap merespons.
+- Root API tetap merespons.
+- Auth guard menolak request tanpa token.
+- Global rate limiter aktif.
+
+Pengujian yang masih diperlukan untuk menyatakan kapasitas production:
+
+1. 100 session/token valid.
+2. Pembukaan empat halaman data.
+3. Read dari Google Sheets.
+4. Create, update, delete, dan reorder.
+5. Pengukuran Google API 429/5xx, retry, timeout, p95, dan p99.
+6. Pengujian terhadap deployment production, bukan hanya localhost.
+
+### 9.5 Keputusan setelah load test awal
+
+Load test lokal tidak menemukan kegagalan pada API dasar, tetapi juga tidak
+menghilangkan risiko utama pada Google Sheets sebagai backend data. Status
+rekomendasi tetap:
+
+> **Ready for staging / controlled soft launch, not yet capacity-certified for
+> 100 concurrent active users.**

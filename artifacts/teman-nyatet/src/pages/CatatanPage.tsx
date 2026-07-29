@@ -4,7 +4,7 @@ import { useNotes } from '@/hooks/useNotes';
 import { useCreate } from '@/contexts/CreateContext';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { Loader2, BookOpen, Plus, Sparkles, X, CreditCard } from 'lucide-react';
+import { Loader2, BookOpen, Plus, Sparkles, X, CreditCard, ArrowUpRight, AlertCircle } from 'lucide-react';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { Button } from '@/components/ui/button';
 import { NOTE_TAGS } from '@/lib/categoryIcons';
@@ -98,6 +98,8 @@ export default function CatatanPage() {
   const [summaryError, setSummaryError]         = useState<string | null>(null);
   const [creditBalance, setCreditBalance]       = useState<number | null>(null);
   const [creditsExhaustedOpen, setCreditsExhaustedOpen] = useState(false);
+  const creditState =
+    creditBalance === null ? 'loading' : creditBalance <= 0 ? 'empty' : creditBalance <= 2 ? 'low' : 'healthy';
 
   const form = useForm<NoteFormValues>({
     resolver: zodResolver(noteSchema),
@@ -149,6 +151,10 @@ export default function CatatanPage() {
 
   const handleSummarize = async () => {
     if (!selectedNote || !selectedNote.content.trim()) return;
+    if (creditBalance === 0) {
+      setCreditsExhaustedOpen(true);
+      return;
+    }
     setIsSummarizing(true);
     setSummaryError(null);
     try {
@@ -620,7 +626,14 @@ export default function CatatanPage() {
                           <button
                             onClick={handleSummarize}
                             disabled={isSummarizing || !selectedNote.content.trim()}
-                            className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary/8 px-3 text-sm font-bold text-primary shadow-sm transition-all hover:bg-primary/14 active:scale-[0.98] disabled:opacity-55"
+                            className={[
+                              'group flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-bold shadow-sm transition-all duration-200 hover:-translate-y-0.5 active:translate-y-px active:scale-[0.98] disabled:translate-y-0 disabled:opacity-55',
+                              creditState === 'empty'
+                                ? 'bg-muted text-muted-foreground'
+                                : creditState === 'low'
+                                  ? 'bg-orange-500/10 text-orange-700 hover:bg-orange-500/15 dark:text-orange-300'
+                                  : 'bg-primary/8 text-primary hover:bg-primary/14',
+                            ].join(' ')}
                             aria-label="Ringkas catatan dengan AI"
                           >
                             {isSummarizing ? (
@@ -629,8 +642,20 @@ export default function CatatanPage() {
                               <Sparkles size={15} />
                             )}
                             {isSummarizing ? 'Merangkum…' : 'Ringkas AI'}
-                            {creditBalance !== null && (
-                              <span className="ml-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-black">
+                            {creditState === 'loading' ? (
+                              <span
+                                aria-label="Memuat saldo credit"
+                                className="ml-1 h-4 w-5 animate-pulse rounded-md bg-current/15"
+                              />
+                            ) : (
+                              <span className={[
+                                'ml-0.5 inline-flex min-w-5 items-center justify-center rounded-md px-1.5 py-0.5 text-[10px] font-black tabular-nums',
+                                creditState === 'empty'
+                                  ? 'bg-muted-foreground/15'
+                                  : creditState === 'low'
+                                    ? 'bg-orange-500/15'
+                                    : 'bg-primary/15',
+                              ].join(' ')}>
                                 {creditBalance}
                               </span>
                             )}
@@ -776,28 +801,45 @@ export default function CatatanPage() {
       </Drawer.Root>
 
       <Dialog open={creditsExhaustedOpen} onOpenChange={setCreditsExhaustedOpen}>
-        <DialogContent className="max-w-[calc(100%-2rem)] rounded-3xl border-primary/15 p-6 sm:max-w-md">
+        <DialogContent className="max-w-[calc(100%-2rem)] overflow-hidden rounded-[1.75rem] border-primary/15 p-0 shadow-elevation-3 sm:max-w-md">
+          <div className="h-1.5 bg-primary" />
+          <div className="p-6">
           <DialogHeader>
-            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <CreditCard size={26} />
+            <div className="relative mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-[1.25rem] bg-primary/10 text-primary">
+              <CreditCard size={27} strokeWidth={2.2} />
+              <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-card text-primary shadow-sm">
+                <AlertCircle size={15} strokeWidth={2.6} />
+              </span>
             </div>
-            <DialogTitle className="text-center text-xl font-black">Credit AI kamu habis</DialogTitle>
-            <DialogDescription className="text-center leading-relaxed">
-              Tambahkan credit untuk terus meringkas catatan dengan cepat.
+            <DialogTitle className="text-center text-xl font-black tracking-tight">Credit AI kamu habis</DialogTitle>
+            <DialogDescription className="mx-auto max-w-xs text-center leading-relaxed">
+              Kamu sudah memakai semua credit ringkasan. Tambahkan credit untuk lanjut merapikan catatanmu.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="mt-2 sm:flex-col">
+          <div className="mt-5 flex items-center justify-between rounded-2xl bg-secondary/70 px-4 py-3">
+            <span className="text-sm font-semibold text-muted-foreground">Saldo sekarang</span>
+            <span className="text-lg font-black tabular-nums text-foreground">0 credit</span>
+          </div>
+          <DialogFooter className="mt-5 gap-2 sm:flex-col">
             <button
               type="button"
               onClick={() => {
                 setCreditsExhaustedOpen(false);
                 window.dispatchEvent(new CustomEvent('teman-nyatet:open-settings-subscription'));
               }}
-              className="min-h-11 w-full rounded-xl bg-primary px-4 font-bold text-primary-foreground transition-transform active:scale-[0.98]"
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 font-bold text-primary-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:translate-y-px active:scale-[0.98]"
             >
-              Lihat opsi top-up
+              Lihat opsi top-up <ArrowUpRight size={16} strokeWidth={2.5} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setCreditsExhaustedOpen(false)}
+              className="min-h-11 w-full rounded-xl px-4 text-sm font-bold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              Nanti saja
             </button>
           </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

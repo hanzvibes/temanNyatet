@@ -604,20 +604,53 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
                             );
                           })()}
 
-                          <div className="flex items-center justify-between rounded-[clamp(1rem,3vw,1.5rem)] border border-primary/20 bg-primary/[0.07] px-[clamp(1rem,4vw,1.5rem)] py-[clamp(0.875rem,3vw,1.125rem)]">
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">
-                                <Sparkles size={18} className="text-primary" />
+                          {(() => {
+                            const credits = subStatus?.credit_balance ?? 0;
+                            const isEmpty = credits === 0;
+                            const isLow = credits > 0 && credits <= 2;
+                            const tone = isEmpty
+                              ? 'border-border bg-secondary'
+                              : isLow
+                                ? 'border-orange-500/25 bg-orange-500/[0.07]'
+                                : 'border-primary/20 bg-primary/[0.07]';
+                            const toneText = isEmpty
+                              ? 'text-muted-foreground'
+                              : isLow
+                                ? 'text-orange-700 dark:text-orange-300'
+                                : 'text-primary';
+                            return (
+                              <div className={`rounded-[clamp(1rem,3vw,1.5rem)] border px-[clamp(1rem,4vw,1.5rem)] py-[clamp(1rem,4vw,1.35rem)] ${tone}`}>
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="flex items-center gap-3">
+                                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isEmpty ? 'bg-muted' : isLow ? 'bg-orange-500/15' : 'bg-primary/15'} ${toneText}`}>
+                                      <Sparkles size={18} strokeWidth={2.3} />
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-extrabold text-foreground">Credit Ringkas AI</p>
+                                      <p className="mt-0.5 text-xs font-medium text-muted-foreground">
+                                        {isEmpty ? 'Siapkan credit untuk ringkasan berikutnya' : '1 credit untuk 1 ringkasan'}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className={`text-2xl font-black leading-none tabular-nums ${toneText}`}>{credits}</p>
+                                    <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">tersisa</p>
+                                  </div>
+                                </div>
+                                <div className="mt-4 flex gap-1" aria-label={`${credits} credit tersisa`}>
+                                  {Array.from({ length: Math.min(Math.max(credits, 1), 10) }).map((_, index) => (
+                                    <span
+                                      key={index}
+                                      className={`h-1.5 flex-1 rounded-full ${index < credits ? (isLow ? 'bg-orange-400' : 'bg-primary') : 'bg-muted-foreground/15'}`}
+                                    />
+                                  ))}
+                                </div>
+                                <p className={`mt-3 text-xs font-semibold ${toneText}`}>
+                                  {isEmpty ? 'Credit habis' : isLow ? 'Tinggal sedikit — pertimbangkan top-up' : 'Masih cukup untuk beberapa ringkasan'}
+                                </p>
                               </div>
-                              <div>
-                                <p className="text-sm font-extrabold text-foreground">Credit Ringkas AI</p>
-                                <p className="text-xs font-medium text-muted-foreground">1 credit untuk 1 ringkasan</p>
-                              </div>
-                            </div>
-                            <span className="text-xl font-black text-primary">
-                              {subStatus?.credit_balance ?? 0}
-                            </span>
-                          </div>
+                            );
+                          })()}
 
                           {/* Detail rows — only meaningful for active subs */}
                           {subStatus?.subscription_status === 'active' && (

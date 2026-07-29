@@ -325,7 +325,7 @@ export default function KeuanganPage() {
   };
 
   return (
-    <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-background pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
+    <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-background">
 
       {/* ── Header ── */}
       <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-border/40">
@@ -415,7 +415,7 @@ export default function KeuanganPage() {
             />
 
             {/* Transaction list */}
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-gutter:stable]">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain -mx-1 px-1.5 pb-[calc(7rem+env(safe-area-inset-bottom))] [scrollbar-gutter:stable]">
               {loading ? (
                 <PageLoading accent="keuangan" label="Memuat transaksi…" />
               ) : sortedDates.length === 0 ? (
@@ -441,7 +441,7 @@ export default function KeuanganPage() {
                   }
                 />
               ) : (
-                <div className="space-y-7">
+                <div className="space-y-7 pb-2">
                   {/* Section meta */}
                   <div className="flex items-center justify-between">
                     <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">

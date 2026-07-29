@@ -78,7 +78,6 @@ const txSchema = z.object({
 
 type TxFormValues = z.infer<typeof txSchema>;
 type PeriodFilter = 'today' | 'week' | 'month';
-type TypeFilter = 'all' | TransactionType;
 
 // ─── Balance Hero ─────────────────────────────────────────────────────────────
 function BalanceHero({
@@ -207,7 +206,6 @@ export default function KeuanganPage() {
   const [txType, setTxType] = useState<TransactionType>('expense');
   const [search, setSearch] = useState('');
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('month');
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [sheetViewportHeight, setSheetViewportHeight] = useState(() =>
     typeof window !== 'undefined'
@@ -277,7 +275,6 @@ export default function KeuanganPage() {
   const filteredTransactions = useMemo(
     () =>
       periodTransactions.filter((tx) => {
-        if (typeFilter !== 'all' && tx.type !== typeFilter) return false;
         if (!search) return true;
         const l = search.toLowerCase();
         return (
@@ -286,30 +283,7 @@ export default function KeuanganPage() {
           tx.source.toLowerCase().includes(l)
         );
       }),
-    [periodTransactions, search, typeFilter],
-  );
-
-  const topExpense = useMemo(() => {
-    const totals = periodTransactions
-      .filter((tx) => tx.type === 'expense')
-      .reduce<Record<string, number>>((acc, tx) => {
-        acc[tx.category] = (acc[tx.category] || 0) + tx.amount;
-        return acc;
-      }, {});
-    return Object.entries(totals).sort((a, b) => b[1] - a[1])[0] ?? null;
-  }, [periodTransactions]);
-
-  const filteredSummary = useMemo(
-    () =>
-      filteredTransactions.reduce(
-        (summary, tx) => {
-          if (tx.type === 'income') summary.income += tx.amount;
-          else summary.expense += tx.amount;
-          return summary;
-        },
-        { income: 0, expense: 0 },
-      ),
-    [filteredTransactions],
+    [periodTransactions, search],
   );
 
   const handleOpenForm = (type: TransactionType = 'expense') => {
@@ -410,10 +384,10 @@ export default function KeuanganPage() {
 
       {/* ── Body ── */}
       <div className="mx-auto flex min-h-0 w-full max-w-screen-xl flex-1 overflow-hidden px-5 pt-6 pb-6 sm:px-6 sm:pt-8 sm:pb-8 lg:px-10 lg:pt-10">
-        <div className="grid h-full min-h-0 w-full gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.38fr)] lg:items-start">
+        <div className="flex h-full min-h-0 w-full justify-center">
 
           {/* ── Left column ── */}
-          <div className="flex min-h-0 flex-col gap-8 lg:order-1">
+          <div className="flex min-h-0 w-full max-w-3xl flex-col gap-6">
 
             {/* Balance hero */}
             <BalanceHero
@@ -421,44 +395,6 @@ export default function KeuanganPage() {
               income={monthlySummary.income}
               expense={monthlySummary.expense}
             />
-
-            {/* Mobile summary — compact version; the desktop version lives in the sidebar below. */}
-            <section
-              aria-labelledby="mobile-month-summary-title"
-              className="rounded-2xl border border-border/50 bg-card px-4 py-3.5 lg:hidden"
-            >
-              <p
-                id="mobile-month-summary-title"
-                className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70"
-              >
-                Ringkasan {format(new Date(), 'MMMM yyyy', { locale: id })}
-              </p>
-
-              <div className="mt-2.5 grid grid-cols-3 divide-x divide-border/60">
-                <div className="min-w-0 pr-2.5">
-                  <p className="text-[10px] font-semibold text-muted-foreground/75">Masuk</p>
-                  <p className="mt-0.5 truncate text-[13px] font-black tabular-nums text-income">
-                    {formatRupiahCompact(monthlySummary.income)}
-                  </p>
-                </div>
-                <div className="min-w-0 px-2.5">
-                  <p className="text-[10px] font-semibold text-muted-foreground/75">Keluar</p>
-                  <p className="mt-0.5 truncate text-[13px] font-black tabular-nums text-expense">
-                    {formatRupiahCompact(monthlySummary.expense)}
-                  </p>
-                </div>
-                <div className="min-w-0 pl-2.5 text-right">
-                  <p className="text-[10px] font-semibold text-muted-foreground/75">Sisa</p>
-                  <p
-                    className={`mt-0.5 truncate text-[13px] font-black tabular-nums ${
-                      monthlySummary.balance >= 0 ? 'text-foreground' : 'text-expense'
-                    }`}
-                  >
-                    {formatRupiahCompact(monthlySummary.balance)}
-                  </p>
-                </div>
-              </div>
-            </section>
 
             {/* Quick actions */}
             <div className="grid grid-cols-2 gap-2.5 sm:max-w-md">
@@ -481,26 +417,7 @@ export default function KeuanganPage() {
               </Button>
             </div>
 
-            {/* Actionable insight */}
-            <section className="flex items-center justify-between gap-4 rounded-2xl border border-border/50 bg-card px-4 py-3.5">
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
-                  Pengeluaran terbesar
-                </p>
-                {topExpense ? (
-                  <p className="mt-1 truncate text-sm font-bold text-foreground">
-                    {topExpense[0]} <span className="font-medium text-muted-foreground">· {formatRupiahCompact(topExpense[1])}</span>
-                  </p>
-                ) : (
-                  <p className="mt-1 text-sm font-medium text-muted-foreground">
-                    Catat transaksi untuk melihat polanya.
-                  </p>
-                )}
-              </div>
-              {topExpense && <TrendingDown size={18} className="shrink-0 text-expense" />}
-            </section>
-
-            {/* Period and type filters */}
+            {/* Period filter */}
             <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none]">
               {([
                 ['today', 'Hari ini'],
@@ -520,31 +437,6 @@ export default function KeuanganPage() {
                   {label}
                 </button>
               ))}
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex gap-1 rounded-xl bg-muted/50 p-1">
-                {([
-                  ['all', 'Semua'],
-                  ['income', 'Masuk'],
-                  ['expense', 'Keluar'],
-                ] as const).map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setTypeFilter(value)}
-                    className={`min-h-8 rounded-lg px-3 text-xs font-bold transition-colors ${
-                      typeFilter === value
-                        ? 'bg-card text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <span className="shrink-0 text-[11px] font-semibold tabular-nums text-muted-foreground/65">
-                {formatRupiahCompact(filteredSummary.income - filteredSummary.expense)}
-              </span>
             </div>
 
             {/* Search */}
@@ -728,67 +620,6 @@ export default function KeuanganPage() {
             </div>
           </div>
 
-          {/* ── Desktop sidebar ── */}
-          <aside className="order-first hidden rounded-2xl border border-border/50 bg-card p-5 lg:order-2 lg:block">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
-              Ringkasan bulan
-            </p>
-            <p className="mt-1 text-sm font-semibold text-foreground">
-              {format(new Date(), 'MMMM yyyy', { locale: id })}
-            </p>
-
-            <div className="mt-5 space-y-3.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-income/12">
-                    <ArrowDownLeft size={13} strokeWidth={2.5} className="text-income" />
-                  </div>
-                  <span className="text-sm text-muted-foreground">Pemasukan</span>
-                </div>
-                <span className="text-sm font-bold text-income tabular-nums">
-                  {formatRupiahCompact(monthlySummary.income)}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-expense/10">
-                    <ArrowUpRight size={13} strokeWidth={2.5} className="text-expense" />
-                  </div>
-                  <span className="text-sm text-muted-foreground">Pengeluaran</span>
-                </div>
-                <span className="text-sm font-bold text-expense tabular-nums">
-                  {formatRupiahCompact(monthlySummary.expense)}
-                </span>
-              </div>
-
-              <div className="pt-3 border-t border-border/50">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-foreground">Sisa bulan ini</span>
-                  <span
-                    className={`text-sm font-extrabold tabular-nums ${
-                      monthlySummary.income - monthlySummary.expense >= 0
-                        ? 'text-foreground'
-                        : 'text-expense'
-                    }`}
-                  >
-                    {formatRupiahCompact(
-                      monthlySummary.income - monthlySummary.expense,
-                    )}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Add button */}
-            <button
-              onClick={() => handleOpenForm('expense')}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-finance/10 py-3 text-sm font-bold text-finance-text transition-colors hover:bg-finance/18 active:bg-finance/22 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-finance/40"
-            >
-              <Plus size={15} strokeWidth={2.5} />
-              Catat Transaksi
-            </button>
-          </aside>
         </div>
       </div>
 

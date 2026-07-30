@@ -23,6 +23,13 @@ import {
 import { FormError } from '@/components/PageStates';
 import { Button } from '@/components/ui/button';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   TransactionType,
   DEFAULT_INCOME_CATEGORIES,
   DEFAULT_EXPENSE_CATEGORIES,
@@ -242,12 +249,44 @@ function KeuanganSheetForm({
 
       {/* Date + Source */}
       <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-2">
-        <input {...form.register('date')} type="date"
-          className={`min-w-0 ${inpFocus('finance')}`} />
-        <select {...form.register('source')}
-          className={`min-w-0 ${inpFocus('finance')} appearance-none`}>
-          {DEFAULT_PAYMENT_SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
+        <label className="min-w-0 space-y-1.5">
+          <span className="text-pill-tag block px-0.5">Tanggal</span>
+          <input
+            {...form.register('date')}
+            type="date"
+            className={`min-w-0 ${inpFocus('finance')}`}
+          />
+        </label>
+        <label className="min-w-0 space-y-1.5">
+          <span className="text-pill-tag block px-0.5">Sumber dana</span>
+          <Select
+            value={form.watch('source')}
+            onValueChange={(value) =>
+              form.setValue('source', value, { shouldDirty: true })
+            }
+          >
+            <SelectTrigger
+              aria-label="Sumber dana"
+              className="min-h-[42px] h-auto w-full min-w-0 rounded-xl border-border bg-card px-3.5 py-2.5 text-base font-bold text-foreground shadow-none transition-[border-color,box-shadow] focus:border-finance focus:ring-2 focus:ring-finance/20 [&>span]:min-w-0 [&>span]:truncate"
+            >
+              <SelectValue placeholder="Pilih sumber" />
+            </SelectTrigger>
+            <SelectContent
+              position="popper"
+              className="z-[70] max-h-56 rounded-xl border-border/80 bg-card p-1 shadow-elevation-2"
+            >
+              {DEFAULT_PAYMENT_SOURCES.map((source) => (
+                <SelectItem
+                  key={source}
+                  value={source}
+                  className="min-h-11 rounded-lg px-3 py-2.5 text-sm font-medium focus:bg-finance/12 focus:text-foreground"
+                >
+                  {source}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </label>
       </div>
 
       {/* Category chips (horizontal scroll) */}

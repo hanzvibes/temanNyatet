@@ -297,10 +297,10 @@ export default function CatatanPage() {
 
       {/* ── Header ── */}
       <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-border/40">
-        <div className="mx-auto max-w-screen-xl px-5 py-2 sm:px-6 sm:py-3 lg:px-10 lg:py-4">
+        <div className="mx-auto max-w-screen-xl px-5 py-3 sm:px-6 sm:py-4 lg:px-10 lg:py-5">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-pill-label mb-0.5 lg:hidden">TEMAN NYATET</div>
+              <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">Catatan</h1>
             </div>
             <SettingsSheet
@@ -312,11 +312,11 @@ export default function CatatanPage() {
       </div>
 
       {/* ── Body ── */}
-      <div className="mx-auto w-full max-w-screen-xl px-5 pt-3 pb-6 sm:px-6 sm:pt-4 lg:px-10 lg:pt-5">
+      <div className="mx-auto w-full max-w-screen-xl px-5 pt-4 pb-6 sm:px-6 sm:pt-5 lg:px-10 lg:pt-6">
         {loading ? (
           <PageLoading accent="catatan" label="Memuat catatan…" />
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
 
             {/* Search */}
             <SearchBar
@@ -354,7 +354,7 @@ export default function CatatanPage() {
             {filteredNotes.length > 0 && (
               <>
                 {/* Section meta */}
-                <div className="flex items-center justify-between px-0.5 -mb-0.5">
+                <div className="flex items-center justify-between px-0.5">
                   <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
                     {search ? 'Hasil Pencarian' : 'Semua Catatan'}
                   </h2>

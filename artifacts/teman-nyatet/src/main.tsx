@@ -40,7 +40,12 @@ setAuthTokenGetter(async () => {
 // worker registration can fail or take time; it should never block React from
 // mounting the UI. A blank/white screen on launch is often caused by a SW or
 // an auth call running before the root component renders.
-const root = createRoot(document.getElementById('root')!);
+const rootElement = document.getElementById('root')!;
+// The inline shell in index.html is useful while the module graph is cold.
+// Mark it as consumed before React mounts so its timeout cannot show a retry
+// prompt over a healthy app.
+rootElement.dataset.bootShell = 'false';
+const root = createRoot(rootElement);
 root.render(<App />);
 
 function registerServiceWorker() {

@@ -214,9 +214,10 @@ function Router() {
   const activeEntry = ROUTE_ENTRIES.find(e => e.path === activeKey);
 
   // AuthGuard redirects unknown URLs according to the user's current access
-  // state. Render nothing during that navigation instead of showing the
-  // generic template 404 screen.
-  if (!activeKey) return null;
+  // state. Keep a visible loading state during that navigation. Returning
+  // null here made a cold start at "/" look like a blank page until the
+  // redirect effect ran.
+  if (!activeKey) return <PageLoading />;
 
   return (
     <RouteSlot key={activeKey}>

@@ -20,6 +20,7 @@ import { SortableNoteGrid } from '@/components/SortableNoteGrid';
 import { toast } from 'sonner';
 import { getNoteColor, NOTE_COLORS, NOTE_COLOR_PALETTE } from '@/lib/noteColors';
 import { apiGet, apiPost } from '@/lib/apiClient';
+import { formatNoteDate } from '@/lib/noteData';
 import {
   Dialog,
   DialogContent,
@@ -118,7 +119,7 @@ export default function CatatanPage() {
     return notes.filter(
       (n) =>
         (n.title?.toLowerCase().includes(lower)) ||
-        (n.content.toLowerCase().includes(lower)),
+        n.content.toLowerCase().includes(lower),
     );
   }, [notes, search]);
 
@@ -526,10 +527,10 @@ export default function CatatanPage() {
                             </h2>
                           )}
                           <p className="mb-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/75">
-                            {format(
-                              new Date(selectedNote.created_at),
+                            {formatNoteDate(
+                              selectedNote.created_at,
                               'EEEE, d MMMM yyyy · HH:mm',
-                              { locale: id },
+                              id,
                             )}
                           </p>
                           <p className="mb-5 text-base font-medium leading-relaxed text-foreground/90 whitespace-pre-wrap">

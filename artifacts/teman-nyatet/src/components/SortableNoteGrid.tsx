@@ -23,11 +23,11 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GripVertical } from 'lucide-react';
-import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import type { Note } from '@/lib/database.types';
 import { getNoteColor, NOTE_COLOR_PALETTE } from '@/lib/noteColors';
 import { DeleteTarget } from './DeleteTarget';
+import { formatNoteDate } from '@/lib/noteData';
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 const PALETTE = NOTE_COLOR_PALETTE;
@@ -140,7 +140,7 @@ function NoteCardBody({
         </div>
       )}
       <div className="mt-4 text-xs text-current/65 font-bold">
-        {format(new Date(note.created_at), 'd MMM yyyy', { locale: idLocale })}
+        {formatNoteDate(note.created_at, 'd MMM yyyy', idLocale)}
       </div>
     </>
   );

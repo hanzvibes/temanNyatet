@@ -3,6 +3,7 @@ import { apiGet, apiPost, apiPut, apiDelete, SpreadsheetApiError } from '@/lib/a
 import type { Note, NoteInsert, NoteUpdate } from '@/lib/database.types';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { normalizeNotes, noteTimestamp } from '@/lib/noteData';
 
 // Data now lives in a Google Sheet (via the api-server), which has no
 // realtime push. We poll so edits made directly in the sheet still show up
@@ -61,12 +62,13 @@ export function useNotes(userId?: string) {
     if (firstLoad.current) setLoading(true);
     try {
       const data = await apiGet<Note[]>('/notes');
+      const safeNotes = normalizeNotes(data);
       // Server already sorts by position desc, then created_at desc.
-      setNotes((data || []).slice().sort((a, b) => {
+      setNotes(safeNotes.sort((a, b) => {
         const posA = a.position ?? 0;
         const posB = b.position ?? 0;
         if (posA !== posB) return posB - posA;
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        return noteTimestamp(b.created_at) - noteTimestamp(a.created_at);
       }));
       setError(null);
     } catch (err) {

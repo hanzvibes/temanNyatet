@@ -53,6 +53,52 @@ const queryClient = new QueryClient({
   },
 });
 
+class AppErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown, info: React.ErrorInfo) {
+    console.error('[AppErrorBoundary] Render failed:', error, info.componentStack);
+  }
+
+  private handleReload = () => {
+    window.location.reload();
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <main className="flex min-h-dvh items-center justify-center bg-background px-6 text-center">
+          <div className="max-w-sm space-y-4">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
+              <span className="text-2xl" aria-hidden="true">!</span>
+            </div>
+            <h1 className="text-section-title">TemanNyatet perlu dimuat ulang</h1>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Terjadi masalah saat menampilkan halaman ini. Data kamu tetap aman.
+            </p>
+            <button
+              type="button"
+              onClick={this.handleReload}
+              className="min-h-11 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground"
+            >
+              Muat ulang
+            </button>
+          </div>
+        </main>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 // ── Route table ───────────────────────────────────────────────────────────
 // Single list of all app pages. Adding a new page is one entry here; the
 // rest of the routing machinery (CachedSwitch, AuthGuard redirects,
@@ -247,7 +293,7 @@ function RouteSlot({
   );
 }
 
-function App() {
+function AppContent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -271,4 +317,10 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <AppErrorBoundary>
+      <AppContent />
+    </AppErrorBoundary>
+  );
+}

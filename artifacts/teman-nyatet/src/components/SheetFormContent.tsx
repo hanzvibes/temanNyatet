@@ -241,11 +241,11 @@ function KeuanganSheetForm({
       </div>
 
       {/* Date + Source */}
-      <div className="flex gap-2">
+      <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-2">
         <input {...form.register('date')} type="date"
-          className={`flex-1 ${inpFocus('finance')}`} />
+          className={`min-w-0 ${inpFocus('finance')}`} />
         <select {...form.register('source')}
-          className={`flex-1 ${inpFocus('finance')} appearance-none`}>
+          className={`min-w-0 ${inpFocus('finance')} appearance-none`}>
           {DEFAULT_PAYMENT_SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>

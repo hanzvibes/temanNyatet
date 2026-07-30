@@ -112,7 +112,7 @@ function BalanceHero({
         initial={{ opacity: 0.5, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-        className="text-[clamp(2.4rem,9vw,3.25rem)] font-black tracking-[-0.055em] text-foreground tabular-nums leading-none"
+        className="max-w-full break-words text-[clamp(1.85rem,10vw,3.25rem)] font-black tracking-[-0.055em] text-foreground tabular-nums leading-[1.05]"
       >
         {formatRupiah(balance)}
       </motion.p>
@@ -138,8 +138,8 @@ function BalanceHero({
       <div className="mt-5 h-px bg-border/60" />
 
       {/* Income / Expense stats */}
-      <div className="mt-4 grid grid-cols-2 gap-4">
-        <div className="flex items-start gap-3">
+      <div className="mt-4 grid grid-cols-1 min-[380px]:grid-cols-2 gap-4">
+        <div className="flex min-w-0 items-start gap-3">
           <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-income/12">
             <ArrowDownLeft size={15} strokeWidth={2.5} className="text-income" />
           </div>
@@ -153,7 +153,7 @@ function BalanceHero({
           </div>
         </div>
 
-        <div className="flex items-start gap-3">
+        <div className="flex min-w-0 items-start gap-3">
           <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-expense/10">
             <ArrowUpRight size={15} strokeWidth={2.5} className="text-expense" />
           </div>
@@ -349,13 +349,13 @@ export default function KeuanganPage() {
 
       {/* ── Header ── */}
       <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-border/40">
-        <div className="mx-auto max-w-screen-xl px-5 py-3 sm:px-6 sm:py-4 lg:px-10 lg:py-5">
-          <div className="flex items-center justify-between">
-            <div>
+        <div className="mx-auto max-w-screen-xl px-3.5 py-3 sm:px-6 sm:py-4 lg:px-10 lg:py-5">
+          <div className="flex min-w-0 items-center justify-between gap-3">
+            <div className="min-w-0">
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">Keuangan</h1>
             </div>
-             <div className="flex items-center gap-2">
+             <div className="flex shrink-0 items-center gap-2">
                <Button
                  type="button"
                  variant="outline"
@@ -376,7 +376,7 @@ export default function KeuanganPage() {
       </div>
 
       {/* ── Body ── */}
-      <div className="mx-auto flex min-h-0 w-full max-w-screen-xl flex-1 overflow-hidden px-5 pt-4 pb-6 sm:px-6 sm:pt-5 sm:pb-8 lg:px-10 lg:pt-6">
+      <div className="mx-auto flex min-h-0 w-full max-w-screen-xl flex-1 overflow-hidden px-3.5 pt-4 pb-6 sm:px-6 sm:pt-5 sm:pb-8 lg:px-10 lg:pt-6">
         <div className="flex h-full min-h-0 w-full justify-center">
 
           {/* ── Left column ── */}
@@ -390,7 +390,7 @@ export default function KeuanganPage() {
             />
 
             {/* Quick actions */}
-            <div className="grid grid-cols-2 gap-2.5 sm:max-w-md">
+            <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-2.5 sm:max-w-md">
               <Button
                 type="button"
                 onClick={() => handleOpenForm('expense')}
@@ -411,7 +411,7 @@ export default function KeuanganPage() {
             </div>
 
             {/* Period filter */}
-            <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+            <div className="flex min-w-0 gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none]">
               {([
                 ['today', 'Hari ini'],
                 ['week', 'Minggu ini'],
@@ -440,7 +440,7 @@ export default function KeuanganPage() {
             />
 
             {/* Transaction list */}
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain -mx-1 px-1.5 pb-[calc(7rem+env(safe-area-inset-bottom))] [scrollbar-gutter:stable]">
+            <div className="min-h-0 flex-1 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain -mx-1 px-1.5 pb-[calc(7rem+env(safe-area-inset-bottom))] [scrollbar-gutter:stable]">
               {loading ? (
                 <PageLoading accent="keuangan" label="Memuat transaksi…" />
               ) : sortedDates.length === 0 ? (
@@ -478,7 +478,7 @@ export default function KeuanganPage() {
               ) : (
                 <div className="space-y-7 pb-2">
                   {/* Section meta */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                     <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
                       Riwayat Transaksi
                     </h2>
@@ -498,7 +498,7 @@ export default function KeuanganPage() {
                     return (
                       <div key={dateStr}>
                         {/* Date row */}
-                        <div className="mb-2.5 flex items-center justify-between px-0.5">
+                        <div className="mb-2.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
                           <div className="flex items-center gap-2">
                             <CalendarDays
                               size={11}
@@ -536,7 +536,7 @@ export default function KeuanganPage() {
                                       tabIndex={0}
                                       role="group"
                                       aria-label={`Transaksi ${tx.category} ${formatRupiah(tx.amount)}`}
-                                      className="grid min-h-[4.25rem] grid-cols-[2.75rem_minmax(0,1fr)_minmax(5rem,auto)] items-center gap-x-3.5 px-4 py-3 transition-colors hover:bg-muted/20 active:bg-muted/40 select-none focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-finance"
+                                      className="grid min-h-[4.25rem] grid-cols-[2.75rem_minmax(0,1fr)_minmax(4.5rem,32%)] items-center gap-x-2.5 px-3 py-3 transition-colors hover:bg-muted/20 active:bg-muted/40 select-none focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-finance sm:grid-cols-[2.75rem_minmax(0,1fr)_minmax(5rem,auto)] sm:gap-x-3.5 sm:px-4"
                                     >
                                       {/* Icon */}
                                       <div
@@ -578,9 +578,9 @@ export default function KeuanganPage() {
                                       </div>
 
                                       {/* Amount */}
-                                      <div className="min-w-0 shrink-0 text-right">
+                                      <div className="min-w-0 max-w-full shrink-0 overflow-hidden text-right">
                                         <p
-                                          className={`text-[13.5px] font-bold tabular-nums leading-5 ${
+                                          className={`break-words text-[clamp(11px,3.2vw,13.5px)] font-bold tabular-nums leading-5 ${
                                             tx.type === 'income'
                                               ? 'text-income'
                                               : 'text-foreground'
@@ -625,7 +625,7 @@ export default function KeuanganPage() {
               height: `${Math.min(Math.max(sheetViewportHeight * 0.92, 360), 720)}px`,
               maxHeight: 'calc(100dvh - env(safe-area-inset-top))',
             }}
-            className="fixed bottom-0 left-0 right-0 z-50 flex min-h-0 flex-col overflow-hidden rounded-t-[1.75rem] border-t border-border/60 bg-card shadow-elevation-3 outline-none sm:left-1/2 sm:right-auto sm:w-full sm:max-w-md sm:-translate-x-1/2"
+            className="fixed bottom-0 left-0 right-0 z-50 flex min-h-0 max-h-[calc(100dvh-env(safe-area-inset-top))] flex-col overflow-hidden rounded-t-[1.75rem] border-t border-border/60 bg-card shadow-elevation-3 outline-none sm:left-1/2 sm:right-auto sm:w-full sm:max-w-md sm:-translate-x-1/2"
           >
             {/* Drag handle */}
             <div className="mx-auto mt-3.5 mb-1 h-1 w-10 flex-shrink-0 rounded-full bg-muted-foreground/20" />
@@ -688,7 +688,7 @@ export default function KeuanganPage() {
                 </div>
 
                 {/* ── Date & Source ── */}
-                <div className="mb-5 grid grid-cols-2 gap-3">
+                <div className="mb-5 grid grid-cols-1 min-[380px]:grid-cols-2 gap-3">
                   <div>
                     <label className="text-pill-label mb-2.5 block">Tanggal</label>
                     <input
@@ -715,7 +715,7 @@ export default function KeuanganPage() {
                 {/* ── Category Grid ── */}
                 <div className="mb-5">
                   <label className="text-pill-label mb-3 block">Kategori</label>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-3 min-[380px]:grid-cols-4 gap-2 sm:grid-cols-5">
                     {(txType === 'expense'
                       ? DEFAULT_EXPENSE_CATEGORIES
                       : DEFAULT_INCOME_CATEGORIES

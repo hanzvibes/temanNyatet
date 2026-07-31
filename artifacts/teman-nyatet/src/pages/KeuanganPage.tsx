@@ -550,37 +550,6 @@ export default function KeuanganPage() {
               }
             />
 
-            {/* Quick actions */}
-            <div className="grid grid-cols-2 gap-2.5">
-              <Button
-                type="button"
-                onClick={() => handleOpenForm('expense')}
-                className="min-h-12 justify-start gap-2.5 rounded-2xl bg-finance px-4 text-left text-finance-text shadow-sm transition-transform hover:bg-finance/90 active:scale-[0.99]"
-              >
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-black/10">
-                  <ArrowUpRight size={16} strokeWidth={2.5} />
-                </span>
-                <span>
-                  <span className="block text-[10px] font-bold uppercase tracking-[0.12em] opacity-75">Catat</span>
-                  <span className="block text-sm font-black">Pengeluaran</span>
-                </span>
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleOpenForm('income')}
-                className="min-h-12 justify-start gap-2.5 rounded-2xl border-income/25 bg-card px-4 text-left text-foreground shadow-elevation-1 transition-transform hover:bg-income/8 active:scale-[0.99]"
-              >
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-income/10 text-income">
-                  <ArrowDownLeft size={16} strokeWidth={2.5} />
-                </span>
-                <span>
-                  <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/75">Catat</span>
-                  <span className="block text-sm font-black text-foreground">Pemasukan</span>
-                </span>
-              </Button>
-            </div>
-
             {/* Period filter */}
             <div className="rounded-2xl bg-muted/55 p-1 [scrollbar-width:none]">
               <div className="flex min-w-0 gap-1 overflow-x-auto">

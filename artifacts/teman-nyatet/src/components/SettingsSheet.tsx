@@ -155,7 +155,20 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
       setActiveSection('subscription');
     };
     window.addEventListener('teman-nyatet:open-settings-subscription', openSubscription);
-    return () => window.removeEventListener('teman-nyatet:open-settings-subscription', openSubscription);
+    const openTopUp = (event: Event) => {
+      if (!isViewportActive || event.defaultPrevented) return;
+      event.preventDefault();
+      setOpen(false);
+      window.setTimeout(() => {
+        setOpen(true);
+        setActiveSection('topup');
+      }, 180);
+    };
+    window.addEventListener('teman-nyatet:open-settings-topup', openTopUp);
+    return () => {
+      window.removeEventListener('teman-nyatet:open-settings-subscription', openSubscription);
+      window.removeEventListener('teman-nyatet:open-settings-topup', openTopUp);
+    };
   }, [isViewportActive]);
 
   // Broadcast open/closed state on the shared overlay channel so the PWA
@@ -812,42 +825,75 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
 
                             if (st === 'active') {
                               return (
-                                <Button
-                                  onClick={() => void handleSubscriptionCheckout(subStatus?.subscription_plan ?? 'yearly')}
-                                  disabled={checkoutLoading}
-                                  className="w-full gap-2"
-                                  size="lg"
-                                >
+                                <div className="space-y-2">
+                                  <Button
+                                    onClick={() => { setOpen(false); setLocation('/subscription'); }}
+                                    className="w-full gap-2"
+                                    size="lg"
+                                  >
                                     <Crown size={16} strokeWidth={2.5} />
-                                    {checkoutLoading ? 'Menyiapkan pembayaran…' : 'Kelola Langganan'}
-                                </Button>
+                                    Kelola Selengkapnya
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => void handleSubscriptionCheckout(subStatus?.subscription_plan ?? 'yearly')}
+                                    disabled={checkoutLoading}
+                                    className="w-full gap-2"
+                                    size="lg"
+                                  >
+                                    <Calendar size={16} strokeWidth={2.5} />
+                                    {checkoutLoading ? 'Menyiapkan pembayaran…' : 'Perpanjang Langganan'}
+                                  </Button>
+                                </div>
                               );
                             }
 
                             if (st === 'archived') {
                               return (
-                                <Button
-                                  onClick={() => void handleSubscriptionCheckout('yearly')}
-                                  disabled={checkoutLoading}
-                                  className="w-full gap-2"
-                                  size="lg"
-                                >
+                                <div className="space-y-2">
+                                  <Button
+                                    onClick={() => { setOpen(false); setLocation('/subscription'); }}
+                                    variant="outline"
+                                    className="w-full gap-2"
+                                    size="lg"
+                                  >
+                                    <Crown size={16} strokeWidth={2.5} />
+                                    Kelola Selengkapnya
+                                  </Button>
+                                  <Button
+                                    onClick={() => void handleSubscriptionCheckout('yearly')}
+                                    disabled={checkoutLoading}
+                                    className="w-full gap-2"
+                                    size="lg"
+                                  >
                                     <Sparkles size={16} strokeWidth={2.5} />
                                     {checkoutLoading ? 'Menyiapkan pembayaran…' : 'Perpanjang Langganan'}
-                                </Button>
+                                  </Button>
+                                </div>
                               );
                             }
 
                             // Pending / free: navigate to payment onboarding page (correct for pending)
                             return (
-                              <Button
-                                onClick={() => { setOpen(false); setLocation('/payment'); }}
-                                className="w-full gap-2"
-                                size="lg"
-                              >
-                                <Sparkles size={16} strokeWidth={2.5} />
-                                Upgrade ke PRO
-                              </Button>
+                              <div className="space-y-2">
+                                <Button
+                                  onClick={() => { setOpen(false); setLocation('/payment'); }}
+                                  className="w-full gap-2"
+                                  size="lg"
+                                >
+                                  <Sparkles size={16} strokeWidth={2.5} />
+                                  Upgrade ke PRO
+                                </Button>
+                                <Button
+                                  onClick={() => { setOpen(false); setLocation('/subscription'); }}
+                                  variant="outline"
+                                  className="w-full gap-2"
+                                  size="lg"
+                                >
+                                  <Crown size={16} strokeWidth={2.5} />
+                                  Lihat Informasi Langganan
+                                </Button>
+                              </div>
                             );
                           })()}
 

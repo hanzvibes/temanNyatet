@@ -19,6 +19,7 @@ const AuthPage = React.lazy(() => import('@/pages/AuthPage'));
 const AuthConfirmPage = React.lazy(() => import('@/pages/AuthConfirmPage'));
 const LegalPage = React.lazy(() => import('@/pages/LegalPage'));
 const PaymentPage = React.lazy(() => import('@/pages/PaymentPage'));
+const SubscriptionPage = React.lazy(() => import('@/pages/SubscriptionPage'));
 const ArchivedPage = React.lazy(() => import('@/pages/ArchivedPage'));
 const ConnectSheetPage = React.lazy(() => import('@/pages/ConnectSheetPage'));
 const CatatanPage = React.lazy(() => import('@/pages/CatatanPage'));
@@ -118,6 +119,7 @@ const ROUTE_ENTRIES: Array<{ path: string; component: React.ComponentType }> = [
   { path: '/privacy-policy', component: PrivacyPolicyPage },
   { path: '/terms-of-service', component: TermsOfServicePage },
   { path: '/payment',       component: PaymentPage      },
+  { path: '/subscription',  component: SubscriptionPage },
   { path: '/archived',      component: ArchivedPage     },
   { path: '/connect-sheet', component: ConnectSheetPage },
   { path: '/catatan',       component: CatatanPage      },
@@ -164,9 +166,17 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
         // Every user (new or existing) must connect their own private Google
         // Spreadsheet before using any of the app's features.
         if (location !== '/connect-sheet') setLocation('/connect-sheet');
-      } else if (profile.subscription_status === 'pending' && location !== '/payment') {
+      } else if (
+        profile.subscription_status === 'pending'
+        && location !== '/payment'
+        && location !== '/subscription'
+      ) {
         setLocation('/payment');
-      } else if (profile.subscription_status === 'archived' && location !== '/archived') {
+      } else if (
+        profile.subscription_status === 'archived'
+        && location !== '/archived'
+        && location !== '/subscription'
+      ) {
         setLocation('/archived');
       } else if (profile.subscription_status === 'active') {
         // Auth-only pages that active users must be redirected away from.
@@ -205,14 +215,16 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
 function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuthContext();
+  const [location] = useLocation();
   const showNav = user && profile?.subscription_status === 'active';
   const { isLandscape } = useOrientation();
+  const isSubscriptionPage = location === '/subscription';
 
   // Unauthenticated / onboarding pages (login, payment, connect-sheet, archived):
   // narrow centered card — keeps the mobile-app feel on all screen sizes.
   // In landscape, allow the card to scroll if the viewport is short instead of
   // centering with huge margins that can push content off-screen.
-  if (!showNav) {
+  if (!showNav && !isSubscriptionPage) {
     return (
       <div className={`
         max-w-md mx-auto bg-background min-h-dvh sm:shadow-2xl relative overflow-x-hidden

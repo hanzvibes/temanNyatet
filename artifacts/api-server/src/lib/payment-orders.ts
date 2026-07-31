@@ -20,6 +20,7 @@ export type PaymentOrder = {
   paymentLinkUrl: string | null;
   expiresAt: string | null;
   completedAt: string | null;
+  createdAt: string;
 };
 
 export type CreatePaymentOrderInput = {
@@ -59,6 +60,7 @@ function fromRow(row: Record<string, unknown>): PaymentOrder {
     paymentLinkUrl: row.payment_link_url ? String(row.payment_link_url) : null,
     expiresAt: row.expires_at ? String(row.expires_at) : null,
     completedAt: row.completed_at ? String(row.completed_at) : null,
+    createdAt: String(row.created_at),
   };
 }
 
@@ -115,6 +117,17 @@ export async function getPaymentOrder(orderId: string): Promise<PaymentOrder | n
 
   if (error) throw new Error(error.message);
   return data ? fromRow(data as Record<string, unknown>) : null;
+}
+
+export async function listPaymentOrdersForUser(userId: string): Promise<PaymentOrder[]> {
+  const { data, error } = await supabaseAdmin
+    .from('payment_orders')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row) => fromRow(row as Record<string, unknown>));
 }
 
 export async function markPaymentOrderCompleted(

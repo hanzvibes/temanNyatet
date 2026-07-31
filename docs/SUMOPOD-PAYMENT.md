@@ -131,3 +131,16 @@ https://teman-nyatet.vercel.app/payment?status=cancelled
 ```
 
 These are browser redirects only. Webhook delivery must use the API URL above.
+
+## Subscription center API
+
+The authenticated subscription center reads its data from:
+
+```text
+GET /api/subscription/overview
+```
+
+The endpoint returns the caller's profile status, subscription payment history,
+provider payment metadata when available, and AI credit balance/usage. It
+derives the user from the Supabase Bearer token and does not expose service-role
+access to the frontend.

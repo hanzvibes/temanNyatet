@@ -24,3 +24,4 @@
 - [Vercel webhook deployment state](vercel-webhook-deployment-state.md) — a healthy API deployment can still be stale; verify the exact webhook POST route after redeploying.
 - [SumoPod webhook authentication](sumopod-webhook-auth.md) — Save & Test may use X-Webhook-Token; configure it separately from the optional HMAC secret.
 - [Subscription activation boundary](subscription-activation-boundary.md) — only validated server-side payment webhooks may change a profile to active.
+- [Subscription center data boundary](subscription-center-data-boundary.md) — subscription history and credit usage are composed server-side; the browser receives only the authenticated user's overview.

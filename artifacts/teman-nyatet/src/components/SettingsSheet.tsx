@@ -10,11 +10,12 @@ import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { openPaymentCheckout, type PaymentPlan } from '@/lib/payment';
+import TopUpSection from '@/components/TopUpSection';
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-type ActiveSection = null | 'name' | 'password' | 'phone' | 'feedback' | 'subscription';
+type ActiveSection = null | 'name' | 'password' | 'phone' | 'feedback' | 'subscription' | 'topup';
 
 interface SubscriptionStatus {
   subscription_status: 'pending' | 'active' | 'archived';
@@ -380,7 +381,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
             <div className="mx-auto mt-[clamp(0.5rem,1.5vw,0.75rem)] mb-0 h-[clamp(0.25rem,0.8vw,0.375rem)] w-[clamp(2.5rem,8vw,3rem)] flex-shrink-0 rounded-full bg-muted-foreground/20" />
 
             {/* Header row */}
-            <div className="flex min-h-[clamp(2.5rem,7vw,3rem)] items-center px-[clamp(1rem,4vw,1.75rem)] py-[clamp(0.375rem,1.5vw,0.625rem)]">
+            <div className="flex min-h-[clamp(2.5rem,7vw,3rem)] items-center justify-between px-[clamp(1rem,4vw,1.75rem)] py-[clamp(0.375rem,1.5vw,0.625rem)]">
               {activeSection ? (
                 <button onClick={handleBack} className="flex items-center gap-[clamp(0.25rem,1vw,0.5rem)] text-[clamp(0.8125rem,2.5vw,1rem)] font-bold text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card rounded-lg px-2 py-1">
                   <ArrowLeft size={16} strokeWidth={2.5} />
@@ -388,6 +389,11 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                 </button>
               ) : (
                 <h2 className="text-[clamp(1rem,3.5vw,1.5rem)] font-extrabold text-foreground">Pengaturan</h2>
+              )}
+              {activeSection === 'topup' && (
+                <span className="text-[clamp(0.8125rem,2.5vw,1rem)] font-extrabold text-foreground">
+                  Top Up AI Credit
+                </span>
               )}
             </div>
 
@@ -753,6 +759,15 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                                 <p className={`mt-3 text-xs font-semibold ${toneText}`}>
                                   {isEmpty ? 'Credit habis' : isLow ? 'Tinggal sedikit — pertimbangkan top-up' : 'Masih cukup untuk beberapa ringkasan'}
                                 </p>
+                                {/* Top Up shortcut */}
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveSection('topup')}
+                                  className="mt-3 w-full rounded-xl border border-border bg-card py-2.5 text-xs font-bold text-foreground hover:bg-secondary/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                                >
+                                  <Sparkles size={12} className="inline mr-1.5 align-[-1px] text-primary" strokeWidth={2.5} />
+                                  Top Up AI Credit
+                                </button>
                               </div>
                             );
                           })()}
@@ -849,6 +864,12 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                           )}
                         </>
                       )}
+                    </div>
+                  ) : activeSection === 'topup' ? (
+                    <div className="pt-[clamp(0.25rem,1vw,0.5rem)]">
+                      <TopUpSection
+                        creditBalance={subStatus?.credit_balance ?? 0}
+                      />
                     </div>
                   ) : (
                     <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">

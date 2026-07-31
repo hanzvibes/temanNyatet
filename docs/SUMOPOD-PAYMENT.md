@@ -61,6 +61,10 @@ server-only `credit_payment_orders` reconciliation table. Purchased credits are
 granted through the existing atomic `grant_credit` RPC with
 `sumopod_topup` + the local order ID as the unique ledger reference.
 
+Also run `supabase/migrations/009_protect_subscription_fields.sql`. It prevents
+client-side profile updates from marking an unpaid account as `active`; only the
+server-side payment webhook can change subscription state.
+
 ## Sandbox flow
 
 1. Deploy the API project with Root Directory `artifacts/api-server` from the

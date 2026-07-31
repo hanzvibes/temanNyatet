@@ -1,37 +1,14 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useAuthContext } from '@/contexts/AuthContext';
 import { NotebookPen, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { openPaymentCheckout, type PaymentPlan } from '@/lib/payment';
 
 export default function PaymentPage() {
-  const { user, refreshProfile } = useAuthContext();
-  const [skipping, setSkipping] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState<PaymentPlan | null>(null);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-  };
-
-  const handleSkip = async () => {
-    if (!user) return;
-    setSkipping(true);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ subscription_status: 'active' })
-        .eq('id', user.id);
-      if (error) throw error;
-      await refreshProfile();
-    } catch (err) {
-      console.error('[PaymentPage] handleSkip failed:', err);
-      // Silently continue — refreshProfile will re-read the actual status.
-      // If the update failed, the user stays on this page (correct behavior).
-      await refreshProfile();
-    } finally {
-      setSkipping(false);
-    }
   };
 
   const handleCheckout = async (plan: PaymentPlan) => {
@@ -95,14 +72,6 @@ export default function PaymentPage() {
           Setelah pembayaran, akun aktif otomatis.
         </p>
       </div>
-
-      <button
-        onClick={handleSkip}
-        disabled={skipping}
-        className="mt-6 min-h-11 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-      >
-        {skipping ? 'Memproses...' : 'Lewati untuk sekarang →'}
-      </button>
 
       <button
         onClick={handleLogout}

@@ -541,8 +541,9 @@ activate a subscription. Failed, expired, and test events never activate an
 account.
 
 When `SUMOPOD_WEBHOOK_SECRET` is configured, the backend verifies an HMAC
-signature from `X-Sumopod-Signature` or `X-Signature`. The SumoPod dashboard's
-separate `X-Webhook-Token` mechanism is not currently implemented.
+signature from `X-Sumopod-Signature` or `X-Signature`. When
+`SUMOPOD_WEBHOOK_TOKEN` is configured, it also accepts a matching
+`X-Webhook-Token`. Either valid credential is sufficient.
 
 For `payment.completed`, the server validates the local order ID, provider
 payment ID, amount, and pending status before marking the order completed and

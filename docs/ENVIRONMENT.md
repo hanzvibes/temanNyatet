@@ -56,7 +56,8 @@ Create `.env.local` in `artifacts/api-server/` for local development. On Vercel,
 |---|---|---|
 | `SUMOPOD_PAYMENT_API_KEY` | _(none)_ | Server-only SumoPod Sandbox API key used to create payment links. Never use a `VITE_` prefix. |
 | `SUMOPOD_PAYMENT_BASE_URL` | `https://api-pay-sandbox.sumopod.com` | SumoPod payment API base URL. Keep the Sandbox URL for Sandbox testing. |
-| `SUMOPOD_WEBHOOK_SECRET` | _(none)_ | Optional server-only HMAC signing secret. Use the SumoPod Webhook Signing Secret, not the Webhook Token. |
+| `SUMOPOD_WEBHOOK_SECRET` | _(none)_ | Optional server-only HMAC signing secret. Use the SumoPod Webhook Signing Secret. |
+| `SUMOPOD_WEBHOOK_TOKEN` | _(none)_ | Optional server-only token for SumoPod's `X-Webhook-Token` header. Keep separate from the signing secret. |
 | `MAYAR_WEBHOOK_SECRET` | _(none)_ | Legacy Mayar compatibility secret only. Not used by the current frontend checkout. |
 | `GOOGLE_REDIRECT_URI` | `https://<REPLIT_DEV_DOMAIN>/api/auth/google/callback` or `http://localhost:5000/api/auth/google/callback` | OAuth callback URL. **Must be set explicitly on Vercel production** — Vercel has no `REPLIT_DEV_DOMAIN`. Must match byte-for-byte the URI registered in Google Cloud Console. |
 | `FRONTEND_URL` | `https://<REPLIT_DEV_DOMAIN>` or `http://localhost:5000` | URL the API server redirects to after successful OAuth callback. Set to production frontend URL on Vercel. |
@@ -91,6 +92,7 @@ On Replit, secrets are set in the Secrets panel (not `.env.local` files). The fo
 | `SUMOPOD_PAYMENT_API_KEY` | SumoPod Sandbox API key (server-only) |
 | `SUMOPOD_PAYMENT_BASE_URL` | SumoPod Sandbox API URL |
 | `SUMOPOD_WEBHOOK_SECRET` | SumoPod HMAC signing secret (optional) |
+| `SUMOPOD_WEBHOOK_TOKEN` | SumoPod Webhook Token (optional, server-only) |
 | `MAYAR_WEBHOOK_SECRET` | Legacy Mayar compatibility secret (optional) |
 | `OPENAI_API_KEY` | AI summarization API key (optional, adds `gpt-4o-mini` note summarization) |
 | `INITIAL_AI_CREDITS` | Initial AI credit balance for new users (optional, defaults to `10`) |
@@ -131,6 +133,7 @@ SUMOPOD_PAYMENT_API_KEY=<regenerated-sumopod-sandbox-api-key>
 SUMOPOD_PAYMENT_BASE_URL=https://api-pay-sandbox.sumopod.com
 # Optional HMAC signing secret; use SumoPod Webhook Signing Secret.
 SUMOPOD_WEBHOOK_SECRET=<regenerated-sumopod-signing-secret>
+SUMOPOD_WEBHOOK_TOKEN=<regenerated-sumopod-webhook-token>
 CRON_SECRET=<openssl rand -hex 32>
 OPENAI_API_KEY=<server-only-sumopod-compatible-key>
 # Optional overrides:
@@ -149,8 +152,8 @@ https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook
 ```
 
 The provider's Webhook Token is not the same as the Webhook Signing Secret.
-The current backend does not validate `X-Webhook-Token`; do not put that token
-into `SUMOPOD_WEBHOOK_SECRET`.
+Set it as `SUMOPOD_WEBHOOK_TOKEN`, not `SUMOPOD_WEBHOOK_SECRET`. The backend
+accepts either a valid HMAC signature or a valid `X-Webhook-Token`.
 
 ---
 

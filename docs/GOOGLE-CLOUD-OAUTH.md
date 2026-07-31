@@ -117,6 +117,7 @@ SUMOPOD_PAYMENT_API_KEY=<regenerated-sumopod-sandbox-api-key>
 SUMOPOD_PAYMENT_BASE_URL=https://api-pay-sandbox.sumopod.com
 # Optional HMAC secret from SumoPod Webhook Signing Secret
 SUMOPOD_WEBHOOK_SECRET=<regenerated-sumopod-signing-secret>
+SUMOPOD_WEBHOOK_TOKEN=<regenerated-sumopod-webhook-token>
 CRON_SECRET=$(openssl rand -hex 32)
 OPENAI_API_KEY=<server-only-sumopod-compatible-key>
 

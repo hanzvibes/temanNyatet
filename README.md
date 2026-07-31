@@ -86,7 +86,7 @@ _Populate as you build._
 - SumoPod Sandbox webhook URL for the current production API:
   `https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook`
 - The repository contains the SumoPod webhook route, but the currently observed Vercel production deployment still returns `404 Cannot POST /api/sumopod-webhook`. Redeploy the API project from `main` with Root Directory `artifacts/api-server` before using SumoPod `Save & Test` or real Sandbox checkout.
-- SumoPod's Webhook Signing Secret must never be committed or pasted into chat. The current backend verifies `X-Sumopod-Signature`/`X-Signature` when `SUMOPOD_WEBHOOK_SECRET` is configured. The dashboard's `X-Webhook-Token` mechanism is not yet wired into the backend.
+- SumoPod's Webhook Signing Secret and Webhook Token must never be committed or pasted into chat. The backend accepts either a valid `X-Sumopod-Signature`/`X-Signature` using `SUMOPOD_WEBHOOK_SECRET` or a valid `X-Webhook-Token` using `SUMOPOD_WEBHOOK_TOKEN`.
 - Run all `supabase/migrations/*.sql` files in order in the Supabase SQL Editor before launch (see [`docs/SUPABASE-SETUP.md`](./docs/SUPABASE-SETUP.md))
 - `profiles` has RLS enabled; the `fix_profiles_rls_recursion.sql` script must also be applied if you hit an "infinite recursion detected in policy" error
 - The auto-create profile trigger runs on `auth.users` INSERT; `AuthContext` also has a client-side fallback upsert
@@ -125,6 +125,7 @@ SUMOPOD_PAYMENT_API_KEY=your-regenerated-sandbox-api-key
 SUMOPOD_PAYMENT_BASE_URL=https://api-pay-sandbox.sumopod.com
 # Optional HMAC signing secret; server-only
 SUMOPOD_WEBHOOK_SECRET=your-regenerated-sumopod-signing-secret
+SUMOPOD_WEBHOOK_TOKEN=your-regenerated-sumopod-webhook-token
 CRON_SECRET=your-random-cron-secret
 
 # Optional: override the OAuth redirect URI (defaults to REPLIT_DEV_DOMAIN or localhost:5000)

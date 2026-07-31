@@ -44,6 +44,7 @@ The API server requires these values for its core auth and data paths:
 - `SUMOPOD_PAYMENT_API_KEY` — server-only SumoPod Sandbox payment API key
 - `SUMOPOD_PAYMENT_BASE_URL` — SumoPod payment base URL (defaults to Sandbox)
 - `SUMOPOD_WEBHOOK_SECRET` — optional webhook signing secret when configured by SumoPod
+- `SUMOPOD_WEBHOOK_TOKEN` — optional server-only token for SumoPod's `X-Webhook-Token` header
 - `VITE_API_SERVER_URL` — set to `https://teman-nyatet-api-server.vercel.app` for the Vercel frontend project. Leave unset in Replit dev because the Vite proxy handles `/api` → `localhost:8080`; production also has this URL as a fallback.
 - `GOOGLE_REDIRECT_URI` — OAuth callback URL registered in Google Cloud Console. **Pre-configured**: this is set as a `[userenv.shared]` variable in `.replit` (not a Secret) pointing to the current workspace's dev domain. You only need to register this URI in Google Cloud Console. On Vercel production, set it explicitly as `https://teman-nyatet-api-server.vercel.app/api/auth/google/callback`.
 - `FRONTEND_URL` — used by the API server when redirecting the browser after OAuth callback (defaults to `https://<REPLIT_DEV_DOMAIN>` or `http://localhost:5000` if unset)

@@ -115,9 +115,9 @@ Cancel:  https://teman-nyatet.vercel.app/payment?status=cancelled
 
 Rotate any API key, Webhook Signing Secret, or Webhook Token that has appeared
 in a screenshot or chat. Store the new provider values only in the Vercel API
-project. The backend currently verifies HMAC headers
-`X-Sumopod-Signature`/`X-Signature` when `SUMOPOD_WEBHOOK_SECRET` is configured;
-it does not currently verify SumoPod's separate `X-Webhook-Token` header.
+project. The backend verifies HMAC headers `X-Sumopod-Signature`/`X-Signature`
+using `SUMOPOD_WEBHOOK_SECRET`, or the separate `X-Webhook-Token` using
+`SUMOPOD_WEBHOOK_TOKEN`. Either valid credential is sufficient.
 
 ### 5. Run Supabase migrations
 

@@ -6,8 +6,8 @@ import {
 } from '../lib/payment-orders.js';
 import {
   parseSumopodWebhook,
-  verifySumopodWebhookSignature,
 } from '../lib/sumopod-payment.js';
+import { authorizeSumopodWebhook } from '../lib/sumopod-webhook-auth.js';
 import { activateSubscription } from '../lib/supabase-admin.js';
 
 const router = Router();
@@ -17,15 +17,16 @@ router.post('/sumopod-webhook', async (req, res) => {
     ? req.body
     : Buffer.from(JSON.stringify(req.body ?? {}));
   const configuredSecret = process.env['SUMOPOD_WEBHOOK_SECRET']?.trim();
-  const signature =
-    String(req.headers['x-sumopod-signature'] ?? req.headers['x-signature'] ?? '');
+  const configuredToken = process.env['SUMOPOD_WEBHOOK_TOKEN']?.trim();
 
-  if (configuredSecret) {
-    if (!signature || !verifySumopodWebhookSignature(rawBody, signature, configuredSecret)) {
-      req.log.warn('Invalid SumoPod webhook signature');
-      res.status(401).json({ error: 'Invalid signature' });
-      return;
-    }
+  if (!authorizeSumopodWebhook(rawBody, {
+    headers: req.headers,
+    secret: configuredSecret,
+    token: configuredToken,
+  })) {
+    req.log.warn('Invalid SumoPod webhook credentials');
+    res.status(401).json({ error: 'Invalid webhook credentials' });
+    return;
   }
 
   let payload: unknown;

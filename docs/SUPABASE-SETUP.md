@@ -92,6 +92,7 @@ SUMOPOD_PAYMENT_API_KEY=your-regenerated-sandbox-api-key
 SUMOPOD_PAYMENT_BASE_URL=https://api-pay-sandbox.sumopod.com
 # Optional HMAC secret from SumoPod Webhook Signing Secret
 SUMOPOD_WEBHOOK_SECRET=your-regenerated-sumopod-signing-secret
+SUMOPOD_WEBHOOK_TOKEN=your-regenerated-sumopod-webhook-token
 CRON_SECRET=your-random-cron-secret
 
 # Optional: override the OAuth redirect URI (defaults to REPLIT_DEV_DOMAIN or localhost:5000)

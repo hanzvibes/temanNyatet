@@ -34,6 +34,7 @@ SUMOPOD_PAYMENT_API_KEY=<regenerated Sandbox key>
 SUMOPOD_PAYMENT_BASE_URL=https://api-pay-sandbox.sumopod.com
 FRONTEND_URL=https://teman-nyatet.vercel.app
 SUMOPOD_WEBHOOK_SECRET=<regenerated Webhook Signing Secret>
+SUMOPOD_WEBHOOK_TOKEN=<regenerated Webhook Token>
 ```
 
 The API key, Webhook Signing Secret, and Webhook Token shown in screenshots
@@ -41,11 +42,11 @@ must be considered compromised. Rotate them in SumoPod and update the new
 values in the Vercel API project. Never put any of them in frontend
 `VITE_*` variables or commit them.
 
-The current backend validates the HMAC signature headers
-`X-Sumopod-Signature` or `X-Signature` when `SUMOPOD_WEBHOOK_SECRET` is set.
-The SumoPod dashboard documentation also mentions `X-Webhook-Token`; token
-validation is not currently implemented by the backend, so do not put the
-Webhook Token into `SUMOPOD_WEBHOOK_SECRET`.
+The current backend validates either the HMAC signature headers
+`X-Sumopod-Signature`/`X-Signature` using `SUMOPOD_WEBHOOK_SECRET`, or the
+`X-Webhook-Token` header using `SUMOPOD_WEBHOOK_TOKEN`. Keep these credentials
+separate. A valid HMAC or a valid token is sufficient; invalid or missing
+credentials are rejected when either credential is configured.
 
 ## Database
 

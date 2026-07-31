@@ -36,3 +36,10 @@ id = "Pj6sq2zTdQek3ZaUBDz26"
 uri = "file://screenshots/auth-confirm-error.jpg"
 type = "image"
 title = "Email confirmation error page (invalid token)"
+
+[[outputs]]
+id = "wDzFLOgEmK18DffapeR6j"
+uri = "file://supabase/migrations/010_transaction_summary_cache.sql"
+type = "unspecified"
+title = "Migration cache ringkasan transaksi AI"
+description = "File SQL lengkap untuk Supabase SQL Editor: tabel cache, RLS, trigger, RPC debit credit atomik, grant, dan refresh schema PostgREST."

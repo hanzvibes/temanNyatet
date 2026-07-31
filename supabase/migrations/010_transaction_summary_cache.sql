@@ -1,5 +1,6 @@
 -- TemanNyatet — cached AI transaction summaries
 -- Stores the latest generated result for each authenticated user and period.
+-- Run this entire file in the Supabase SQL Editor.
 
 CREATE TABLE IF NOT EXISTS public.transaction_summary_cache (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -41,6 +42,11 @@ CREATE TRIGGER transaction_summary_cache_updated_at
 
 -- AI output, cache upsert, credit debit, and immutable ledger entry must share
 -- one transaction. The request reference makes browser retries idempotent.
+DROP FUNCTION IF EXISTS public.consume_and_cache_transaction_summary(
+  UUID, TEXT, TEXT, DATE, DATE, DATE, DATE, TEXT,
+  JSONB, JSONB, JSONB, JSONB
+);
+
 CREATE OR REPLACE FUNCTION public.consume_and_cache_transaction_summary(
   target_user_id UUID,
   credit_reference TEXT,
@@ -145,3 +151,7 @@ $$;
 GRANT EXECUTE ON FUNCTION public.consume_and_cache_transaction_summary(
   UUID, TEXT, TEXT, DATE, DATE, DATE, DATE, TEXT, JSONB, JSONB, JSONB, JSONB
 ) TO service_role;
+
+-- Refresh PostgREST's function catalog so the RPC is available immediately
+-- through /rest/v1/rpc/consume_and_cache_transaction_summary.
+NOTIFY pgrst, 'reload schema';

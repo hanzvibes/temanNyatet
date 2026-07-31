@@ -46,6 +46,7 @@ function formatChange(value: number | null): string {
 type Props = {
   period: TransactionSummaryPeriod;
   summary: TransactionSummary | null;
+  variant?: 'default' | 'hero';
   loading: boolean;
   generating: boolean;
   loadError: string | null;
@@ -60,6 +61,7 @@ type Props = {
 export default function TransactionSummaryCard({
   period,
   summary,
+  variant = 'default',
   loading,
   generating,
   loadError,
@@ -73,6 +75,7 @@ export default function TransactionSummaryCard({
   const [collapsed, setCollapsed] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const hasSummary = Boolean(summary);
+  const isHero = variant === 'hero';
 
   const requestGenerate = async () => {
     setConfirmOpen(false);
@@ -83,18 +86,31 @@ export default function TransactionSummaryCard({
     <>
       <section
         aria-labelledby="transaction-summary-title"
-        className="mb-5 overflow-hidden rounded-2xl border border-primary/15 bg-primary/[0.035] shadow-sm"
+        className={`relative overflow-hidden ${
+          isHero
+            ? 'mt-6 rounded-[1.35rem] border border-primary/25 bg-primary/[0.08] shadow-[0_8px_24px_rgba(36,85,63,0.08)]'
+            : 'mb-5 rounded-2xl border border-primary/15 bg-primary/[0.035] shadow-sm'
+        }`}
       >
-        <div className="flex items-start justify-between gap-3 px-4 py-4 sm:px-5">
+        {isHero && (
+          <div className="pointer-events-none absolute -right-10 -top-12 h-32 w-32 rounded-full bg-primary/15 blur-2xl" />
+        )}
+        <div className={`relative flex items-start justify-between gap-3 px-4 ${
+          isHero ? 'py-3.5 sm:px-5' : 'py-4 sm:px-5'
+        }`}>
           <div className="flex min-w-0 items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <div className={`flex shrink-0 items-center justify-center text-primary ${
+              isHero ? 'h-10 w-10 rounded-[1rem] bg-primary/15' : 'h-9 w-9 rounded-xl bg-primary/10'
+            }`}>
               <Sparkles size={17} strokeWidth={2.2} />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-primary/75">
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-primary/80">
                 Ringkasan AI
               </p>
-              <h2 id="transaction-summary-title" className="mt-1 text-sm font-black text-foreground">
+              <h2 id="transaction-summary-title" className={`mt-1 font-black text-foreground ${
+                isHero ? 'text-base' : 'text-sm'
+              }`}>
                 {periodLabel[period.periodType]}
               </h2>
             </div>
@@ -113,14 +129,16 @@ export default function TransactionSummaryCard({
         </div>
 
         {loading && (
-          <div className="flex items-center gap-2 border-t border-primary/10 px-4 py-4 text-sm text-muted-foreground sm:px-5">
+          <div className={`relative flex items-center gap-2 border-t border-primary/15 px-4 text-sm text-muted-foreground sm:px-5 ${
+            isHero ? 'py-4' : 'py-4'
+          }`}>
             <Loader2 size={16} className="animate-spin text-primary" />
             Memeriksa ringkasan terakhir…
           </div>
         )}
 
         {!loading && !collapsed && (
-          <div className="border-t border-primary/10 px-4 pb-4 sm:px-5 sm:pb-5">
+          <div className="relative border-t border-primary/15 px-4 pb-4 sm:px-5 sm:pb-5">
             {loadError ? (
               <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <p className="flex items-start gap-2 text-sm font-medium text-destructive">
@@ -148,7 +166,9 @@ export default function TransactionSummaryCard({
             ) : summary ? (
               <div className="space-y-4 pt-4">
                 <div>
-                  <p className="text-base font-black leading-snug text-foreground">{summary.headline}</p>
+                  <p className={`${isHero ? 'text-lg sm:text-xl' : 'text-base'} font-black leading-snug text-foreground`}>
+                    {summary.headline}
+                  </p>
                   <p className="mt-1 text-[11px] font-medium text-muted-foreground">
                     Dibandingkan {summary.comparison_start} – {summary.comparison_end}
                   </p>

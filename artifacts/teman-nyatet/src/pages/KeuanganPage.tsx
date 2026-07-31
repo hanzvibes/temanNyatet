@@ -90,10 +90,12 @@ function BalanceHero({
   balance,
   income,
   expense,
+  aiSummary,
 }: {
   balance: number;
   income: number;
   expense: number;
+  aiSummary?: React.ReactNode;
 }) {
   const net = income - expense;
   const totalActivity = income + expense;
@@ -182,6 +184,8 @@ function BalanceHero({
             <span>{100 - incomeRatio}% pengeluaran</span>
           </div>
         </div>
+
+        {aiSummary}
       </div>
     </motion.section>
   );
@@ -521,6 +525,29 @@ export default function KeuanganPage() {
               balance={monthlySummary.balance}
               income={monthlySummary.income}
               expense={monthlySummary.expense}
+              aiSummary={
+                summaryPeriod ? (
+                  <TransactionSummaryCard
+                    variant="hero"
+                    period={summaryPeriod}
+                    summary={summary}
+                    loading={summaryLoading}
+                    generating={summaryGenerating}
+                    loadError={summaryLoadError}
+                    generateError={summaryGenerateError}
+                    empty={summaryEmpty}
+                    balance={summaryBalance}
+                    onGenerate={handleGenerateSummary}
+                    onRetryLoad={loadSummary}
+                    onOpenTopUp={() => window.dispatchEvent(new CustomEvent('teman-nyatet:open-settings-topup'))}
+                  />
+                ) : (
+                  <div className="mt-6 flex items-start gap-3 rounded-[1.35rem] border border-primary/15 bg-primary/[0.05] px-4 py-3.5 text-xs font-semibold leading-relaxed text-muted-foreground">
+                    <span className="mt-0.5 shrink-0 text-primary">✦</span>
+                    <span>Ringkasan AI tersedia untuk Minggu Ini, Bulan Ini, dan Custom Range.</span>
+                  </div>
+                )
+              }
             />
 
             {/* Quick actions */}
@@ -616,25 +643,6 @@ export default function KeuanganPage() {
 
             {/* Transaction list */}
             <div className="min-h-0 flex-1 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain -mx-1 px-1.5 pb-[calc(7rem+env(safe-area-inset-bottom))] [scrollbar-gutter:stable]">
-              {summaryPeriod ? (
-                <TransactionSummaryCard
-                  period={summaryPeriod}
-                  summary={summary}
-                  loading={summaryLoading}
-                  generating={summaryGenerating}
-                  loadError={summaryLoadError}
-                  generateError={summaryGenerateError}
-                  empty={summaryEmpty}
-                  balance={summaryBalance}
-                  onGenerate={handleGenerateSummary}
-                  onRetryLoad={loadSummary}
-                  onOpenTopUp={() => window.dispatchEvent(new CustomEvent('teman-nyatet:open-settings-topup'))}
-                />
-              ) : (
-                <div className="mb-5 rounded-2xl border border-border/60 bg-card px-4 py-3 text-xs font-semibold leading-relaxed text-muted-foreground shadow-elevation-1">
-                  Ringkasan AI tersedia untuk Minggu Ini, Bulan Ini, dan Custom Range. Hari Ini hanya berlaku untuk daftar transaksi.
-                </div>
-              )}
               {loading ? (
                 <PageLoading accent="keuangan" label="Memuat transaksi…" />
               ) : sortedDates.length === 0 ? (

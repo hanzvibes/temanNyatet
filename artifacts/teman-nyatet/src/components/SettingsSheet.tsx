@@ -39,6 +39,10 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
   const [subLoading, setSubLoading] = useState(false);
   const [subError, setSubError] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const drawerContentRef = useRef<HTMLDivElement>(null);
+  const settingsScrollRef = useRef<HTMLDivElement>(null);
+  const initialMenuHeightRef = useRef<number | null>(null);
+  const [menuMinHeight, setMenuMinHeight] = useState<number | null>(null);
 
   // Form state
   const [nameInput, setNameInput] = useState('');
@@ -121,6 +125,38 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
       new CustomEvent('teman-nyatet:any-overlay', { detail: { open } }),
     );
   }, [open]);
+
+  // Vaul sizes the drawer from its current content. Detail forms are shorter
+  // than the settings menu, so returning with the back button can leave the
+  // drawer at the detail height. Capture the first menu height and restore it
+  // whenever the menu is shown again.
+  useEffect(() => {
+    if (!open || activeSection !== null || initialMenuHeightRef.current !== null) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      const drawer = drawerContentRef.current;
+      if (!drawer) return;
+
+      const viewportCap = Math.min(window.innerHeight * 0.88, 48 * 16);
+      const measuredHeight = Math.ceil(drawer.getBoundingClientRect().height);
+      const stableHeight = Math.min(measuredHeight, viewportCap);
+
+      if (stableHeight > 0) {
+        initialMenuHeightRef.current = stableHeight;
+        setMenuMinHeight(stableHeight);
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [open, activeSection]);
+
+  // A return to the menu should also start at the top, not at a previous
+  // scroll position from the settings list.
+  useEffect(() => {
+    if (activeSection === null) {
+      settingsScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, [activeSection]);
 
   const handleOpen = () => {
     setActiveSection(null);
@@ -278,6 +314,8 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" />
           <Drawer.Content
+            ref={drawerContentRef}
+            style={activeSection === null && menuMinHeight !== null ? { minHeight: menuMinHeight } : undefined}
             className="bg-card flex flex-col rounded-t-[clamp(1.25rem,4vw,2rem)] fixed bottom-0 left-0 right-0 z-50 outline-none mx-auto w-full sm:max-w-[540px] md:max-w-[600px] lg:max-w-[640px] xl:max-w-[720px] max-h-[min(88vh,48rem)]"
           >
             <div className="mx-auto mt-[clamp(0.5rem,1.5vw,0.75rem)] mb-0 h-[clamp(0.25rem,0.8vw,0.375rem)] w-[clamp(2.5rem,8vw,3rem)] flex-shrink-0 rounded-full bg-muted-foreground/20" />
@@ -294,7 +332,10 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto px-[clamp(1rem,4vw,1.75rem)] pb-[clamp(1rem,3vw,1.5rem)]">
+            <div
+              ref={settingsScrollRef}
+              className="flex-1 overflow-y-auto px-[clamp(1rem,4vw,1.75rem)] pb-[clamp(1rem,3vw,1.5rem)]"
+            >
 
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div

@@ -5,7 +5,18 @@ import { NotebookPen, Wallet, CheckSquare, Link2 } from 'lucide-react';
 import SheetFormContent from '@/components/SheetFormContent';
 import { useHaptic, HAPTIC } from '@/hooks/useHaptic';
 import { useOrientation } from '@/hooks/useOrientation';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import type { TransactionType } from '@/lib/database.types';
+import {
+  createBottomNavScrollState,
+  getBottomNavMaxOffset,
+  updateBottomNavScroll,
+} from '@/lib/bottom-nav-scroll';
+import {
+  getActiveOverlaySources,
+  OVERLAY_EVENT,
+  publishOverlayState,
+} from '@/lib/overlay-state';
 
 // Responsive heights (px)
 // Bottom-nav geometry matches the value in index.css (`--bottom-nav-collapsed-h`).
@@ -29,6 +40,7 @@ export default function BottomSheetNav() {
   const [location, navigate] = useLocation();
   const haptic = useHaptic();
   const { isLandscape } = useOrientation();
+  const prefersReducedMotion = usePrefersReducedMotion();
   const [screenW, setScreenW] = useState(() => window.innerWidth);
 
   // Use visualViewport when available so the sheet shrinks correctly when
@@ -70,17 +82,60 @@ export default function BottomSheetNav() {
   // actions are immediately discoverable on the app's main page.
   const initialSnap: SnapState = location === '/catatan' ? 'half' : 'collapsed';
   const h = useMotionValue(SNAP[initialSnap]);
+  const navScrollOffset = useMotionValue(0);
+  const scrollState = useRef(createBottomNavScrollState());
+  const scrollTarget = useRef<EventTarget | null>(null);
+  const navElementRef = useRef<HTMLDivElement>(null);
+  const [bottomGap, setBottomGap] = useState(12);
+  const [isAnyOverlayOpen, setIsAnyOverlayOpen] = useState(
+    () => getActiveOverlaySources().length > 0,
+  );
   const [snapState, setSnapState] = useState<SnapState>(initialSnap);
 
   useEffect(() => { h.set(SNAP[snapState]); }, [screenH, screenW]);
 
+  useEffect(() => {
+    const updateBottomGap = () => {
+      const computedBottom = navElementRef.current
+        ? Number.parseFloat(getComputedStyle(navElementRef.current).bottom)
+        : 12;
+      setBottomGap(Number.isFinite(computedBottom) ? computedBottom : 12);
+    };
+
+    updateBottomGap();
+    window.addEventListener('resize', updateBottomGap);
+    window.visualViewport?.addEventListener('resize', updateBottomGap);
+    return () => {
+      window.removeEventListener('resize', updateBottomGap);
+      window.visualViewport?.removeEventListener('resize', updateBottomGap);
+    };
+  }, [screenH, screenW]);
+
   // Broadcast open/closed state on the shared overlay channel.
   useEffect(() => {
-    const evt = new CustomEvent('teman-nyatet:any-overlay', {
-      detail: { open: snapState !== 'collapsed' },
-    });
-    window.dispatchEvent(evt);
+    publishOverlayState('bottom-sheet-nav', snapState !== 'collapsed');
   }, [snapState]);
+
+  useEffect(() => {
+    return () => publishOverlayState('bottom-sheet-nav', false);
+  }, []);
+
+  useEffect(() => {
+    const handleOverlayChange = (event: Event) => {
+      const detail = (event as CustomEvent<{
+        activeSources?: string[];
+        open?: boolean;
+      }>).detail;
+      setIsAnyOverlayOpen(
+        Array.isArray(detail?.activeSources)
+          ? detail.activeSources.length > 0
+          : getActiveOverlaySources().length > 0 || detail?.open === true,
+      );
+    };
+
+    window.addEventListener(OVERLAY_EVENT, handleOverlayChange);
+    return () => window.removeEventListener(OVERLAY_EVENT, handleOverlayChange);
+  }, []);
 
   // When navigating to a new tab, collapse the sheet so the page content is visible.
   const prevLocation = useRef(location);
@@ -107,6 +162,86 @@ export default function BottomSheetNav() {
     });
     setSnapState(state);
   };
+
+  // Keep the nav linked to the active scroll surface without causing React
+  // renders on every frame. The capture listener sees scroll events from
+  // nested overflow containers because native scroll events do not bubble.
+  useEffect(() => {
+    let frame = 0;
+    let pendingEvent: Event | null = null;
+
+    const readScrollTop = (event: Event): number => {
+      const target = event.target;
+      if (target instanceof Element) return target.scrollTop;
+      return window.scrollY || document.documentElement.scrollTop || 0;
+    };
+
+    const flush = () => {
+      frame = 0;
+      if (
+        !pendingEvent ||
+        snapState !== 'collapsed' ||
+        isAnyOverlayOpen ||
+        prefersReducedMotion
+      ) {
+        pendingEvent = null;
+        return;
+      }
+
+      const event = pendingEvent;
+      pendingEvent = null;
+      if (event.target !== scrollTarget.current) {
+        scrollTarget.current = event.target;
+        scrollState.current = createBottomNavScrollState();
+      }
+
+      const next = updateBottomNavScroll(
+        scrollState.current,
+        readScrollTop(event),
+        getBottomNavMaxOffset(COLLAPSED_H, bottomGap),
+      );
+      scrollState.current = next;
+      navScrollOffset.set(next.offset);
+    };
+
+    const handleScroll = (event: Event) => {
+      pendingEvent = event;
+      if (!frame) frame = window.requestAnimationFrame(flush);
+    };
+
+    document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
+    return () => {
+      document.removeEventListener('scroll', handleScroll, true);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [
+    COLLAPSED_H,
+    bottomGap,
+    isAnyOverlayOpen,
+    navScrollOffset,
+    prefersReducedMotion,
+    snapState,
+  ]);
+
+  // An expanded sheet owns the bottom edge. Reset the scroll-linked offset
+  // while it is open. Other overlays and reduced-motion users also keep the
+  // bar visible instead of applying scroll-linked transforms.
+  useEffect(() => {
+    if (
+      snapState !== 'collapsed' ||
+      isAnyOverlayOpen ||
+      prefersReducedMotion
+    ) {
+      scrollState.current = createBottomNavScrollState();
+      scrollTarget.current = null;
+      navScrollOffset.set(0);
+    }
+  }, [
+    isAnyOverlayOpen,
+    navScrollOffset,
+    prefersReducedMotion,
+    snapState,
+  ]);
 
   // Allow page-level action buttons to open the shared sheet without coupling
   // those pages to the sheet's internal motion state.
@@ -199,20 +334,27 @@ export default function BottomSheetNav() {
 
       {/* Floating pill */}
       <motion.div
-        className="fixed left-1/2 z-50 -translate-x-1/2
+        ref={navElementRef}
+        className="fixed left-1/2 z-50
                    w-[calc(100%-1rem)] min-[380px]:w-[calc(100%-1.5rem)]
                    sm:w-[calc(100%-2.5rem)] max-w-[28rem]
                    will-change-[height,transform,opacity]"
         style={{
           bottom: 'max(12px, env(safe-area-inset-bottom))',
           height: h,
+          x: '-50%',
+          y: navScrollOffset,
           borderRadius: 30,
           overflow: 'hidden',
         }}
         // Soft elevation animated by hover/state for cohesive depth.
-        initial={{ y: 24, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.1, type: 'spring', stiffness: 220, damping: 26 }}
+        initial={{ opacity: prefersReducedMotion ? 1 : 0 }}
+        animate={{ opacity: 1 }}
+        transition={
+          prefersReducedMotion
+            ? { duration: 0 }
+            : { delay: 0.1, type: 'spring', stiffness: 220, damping: 26 }
+        }
       >
         <div
             className="bg-card/95 border border-border/70 shadow-[0_14px_36px_-16px_rgba(15,35,25,0.34),0_4px_12px_-6px_rgba(15,35,25,0.16)] h-full flex flex-col backdrop-blur-xl"

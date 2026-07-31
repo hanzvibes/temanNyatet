@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { openPaymentCheckout, type PaymentPlan } from '@/lib/payment';
 import TopUpSection from '@/components/TopUpSection';
 import AiSummaryDetails from '@/components/AiSummaryDetails';
+import { publishOverlayState } from '@/lib/overlay-state';
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -64,6 +65,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
   const isViewportActive = useViewportActive(viewport);
   const [open, setOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<ActiveSection>(null);
+  const overlaySource = `settings-sheet:${viewport ?? 'default'}:${React.useId()}`;
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [subStatus, setSubStatus] = useState<SubscriptionStatus | null>(null);
@@ -172,17 +174,18 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
     };
   }, [isViewportActive]);
 
-  // Broadcast open/closed state on the shared overlay channel so the PWA
+  // Broadcast source-specific state on the shared overlay channel so the PWA
   // install prompt (and any future peripheral chrome) can step aside while
   // this drawer is on screen. `vaul` controls `open` via internal gestures
   // and our `onOpenChange` handler — the effect fires on every transition,
   // not just the explicit `handleOpen`/`handleLogout` paths.
   useEffect(() => {
-    if (!isViewportActive) return;
-    window.dispatchEvent(
-      new CustomEvent('teman-nyatet:any-overlay', { detail: { open } }),
-    );
-  }, [isViewportActive, open]);
+    publishOverlayState(overlaySource, isViewportActive && open);
+  }, [isViewportActive, open, overlaySource]);
+
+  useEffect(() => {
+    return () => publishOverlayState(overlaySource, false);
+  }, [overlaySource]);
 
   // If the viewport crosses the desktop breakpoint while this drawer is
   // open, this instance becomes inactive and returns null below. Close its
@@ -193,9 +196,6 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
 
     setOpen(false);
     setActiveSection(null);
-    window.dispatchEvent(
-      new CustomEvent('teman-nyatet:any-overlay', { detail: { open: false } }),
-    );
   }, [activeSection, isViewportActive, open]);
 
   // Vaul sizes the drawer from its current content. Detail forms are shorter

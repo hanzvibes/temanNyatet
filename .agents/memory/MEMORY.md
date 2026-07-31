@@ -14,6 +14,7 @@
 - [Swipeable transaction row visuals](swipeable-transaction-row-visuals.md) — keep the delete layer hidden at rest and the foreground row full-width.
 - [AI credit architecture](ai-credit-architecture.md) — atomic Supabase RPC balance changes and immutable ledger are the boundary for future AI usage and top-ups.
 - [Overlay transition coordination](overlay-transition-coordination.md) — close one portal fully before opening another to avoid stacked backdrops and focus traps.
+- [Bottom nav scroll behavior](bottom-nav-scroll-behavior.md) — nested scroll sources need capture-phase observation; keep hide/show in one MotionValue transform and reset for overlays/reduced motion.
 - [Workspace typecheck order](workspace-typecheck-order.md) — build shared TypeScript libraries before package-level checks when generated declaration outputs are absent.
 - [Google Sheets row normalization](google-sheets-row-normalization.md) — treat spreadsheet rows as untrusted input before rendering; malformed dates/cells can crash otherwise-safe React views.
 - [Responsive overlay lifecycle](responsive-overlay-lifecycle.md) — viewport-specific drawers must close and broadcast overlay state when a breakpoint switch deactivates their instance.

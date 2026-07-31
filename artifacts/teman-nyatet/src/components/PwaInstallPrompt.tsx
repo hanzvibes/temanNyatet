@@ -10,6 +10,7 @@
 //      transitions; we react to a single shared channel.
 import { useEffect, useState } from 'react';
 import { Download, X } from 'lucide-react';
+import { getActiveOverlaySources, OVERLAY_EVENT } from '@/lib/overlay-state';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -19,7 +20,9 @@ interface BeforeInstallPromptEvent extends Event {
 export default function PwaInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [dismissed, setDismissed] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(
+    () => getActiveOverlaySources().length > 0,
+  );
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -32,11 +35,18 @@ export default function PwaInstallPrompt() {
 
   useEffect(() => {
     const handler = (e: Event) => {
-      const open = (e as CustomEvent<{ open: boolean }>).detail?.open === true;
-      setSheetOpen(open);
+      const detail = (e as CustomEvent<{
+        activeSources?: string[];
+        open?: boolean;
+      }>).detail;
+      setSheetOpen(
+        Array.isArray(detail?.activeSources)
+          ? detail.activeSources.length > 0
+          : getActiveOverlaySources().length > 0 || detail?.open === true,
+      );
     };
-    window.addEventListener('teman-nyatet:any-overlay', handler);
-    return () => window.removeEventListener('teman-nyatet:any-overlay', handler);
+    window.addEventListener(OVERLAY_EVENT, handler);
+    return () => window.removeEventListener(OVERLAY_EVENT, handler);
   }, []);
 
   if (!deferredPrompt || dismissed || sheetOpen) return null;

@@ -156,6 +156,20 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
     );
   }, [isViewportActive, open]);
 
+  // If the viewport crosses the desktop breakpoint while this drawer is
+  // open, this instance becomes inactive and returns null below. Close its
+  // state explicitly so it cannot leave a stale overlay/focus lock behind or
+  // reopen unexpectedly when the viewport crosses back.
+  useEffect(() => {
+    if (isViewportActive || (!open && activeSection === null)) return;
+
+    setOpen(false);
+    setActiveSection(null);
+    window.dispatchEvent(
+      new CustomEvent('teman-nyatet:any-overlay', { detail: { open: false } }),
+    );
+  }, [activeSection, isViewportActive, open]);
+
   // Vaul sizes the drawer from its current content. Detail forms are shorter
   // than the settings menu, so returning with the back button can leave the
   // drawer at the detail height. Capture the first menu height and restore it

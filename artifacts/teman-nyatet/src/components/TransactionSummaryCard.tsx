@@ -11,6 +11,13 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -58,6 +65,95 @@ type Props = {
   onOpenTopUp: () => void;
 };
 
+function SummaryDetails({
+  summary,
+  balance,
+  generating,
+  onRegenerate,
+}: {
+  summary: TransactionSummary;
+  balance: number | null;
+  generating: boolean;
+  onRegenerate: () => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-base font-black leading-snug text-foreground">{summary.headline}</p>
+        <p className="mt-1 text-[11px] font-medium text-muted-foreground">
+          Dibandingkan {summary.comparison_start} – {summary.comparison_end}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-xl bg-income/8 px-3 py-3">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-income/75">Pemasukan</p>
+          <p className="mt-1 text-sm font-black tabular-nums text-income">{formatRupiah(summary.totals.income)}</p>
+        </div>
+        <div className="rounded-xl bg-expense/8 px-3 py-3">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-expense/75">Pengeluaran</p>
+          <p className="mt-1 text-sm font-black tabular-nums text-expense">{formatRupiah(summary.totals.expense)}</p>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.13em] text-muted-foreground/70">
+            Top kategori pengeluaran
+          </p>
+          <div className="space-y-2">
+            {summary.top_expense_categories.length > 0 ? summary.top_expense_categories.map((category) => (
+              <div key={category.category} className="flex items-center justify-between gap-3 text-xs">
+                <span className="min-w-0 truncate font-semibold text-foreground">{category.category}</span>
+                <span className="shrink-0 font-bold tabular-nums text-muted-foreground">
+                  {formatRupiah(category.amount)} · {category.percentage.toFixed(1)}%
+                </span>
+              </div>
+            )) : <span className="text-xs text-muted-foreground">Belum ada pengeluaran.</span>}
+          </div>
+        </div>
+        <div>
+          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.13em] text-muted-foreground/70">
+            Perbandingan
+          </p>
+          <div className="space-y-2 text-xs">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">Pemasukan</span>
+              <span className="font-bold tabular-nums">{formatChange(summary.comparison.income_change_percent)}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">Pengeluaran</span>
+              <span className="font-bold tabular-nums">{formatChange(summary.comparison.expense_change_percent)}</span>
+            </div>
+            <span className="inline-flex items-center gap-1 font-bold text-primary">
+              {summary.comparison.direction === 'down' ? <TrendingDown size={14} /> : <TrendingUp size={14} />}
+              {summary.comparison.direction === 'unavailable'
+                ? 'Belum ada pembanding'
+                : `Arah aktivitas: ${summary.comparison.direction === 'up' ? 'naik' : summary.comparison.direction === 'down' ? 'turun' : 'sama'}`}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-xl bg-secondary/55 px-3.5 py-3">
+        <ul className="space-y-1.5 text-xs leading-relaxed text-foreground/80">
+          {summary.insights.map((insight) => <li key={insight}>• {insight}</li>)}
+        </ul>
+      </div>
+
+      <div className="flex flex-col gap-2 border-t border-border/50 pt-3 sm:flex-row sm:items-center sm:justify-between">
+        <span className="text-[11px] font-semibold text-muted-foreground">
+          {balance !== null ? `${balance} credit tersisa` : '1 credit digunakan saat generate'}
+        </span>
+        <Button type="button" size="sm" variant="outline" onClick={onRegenerate} disabled={generating}>
+          {generating ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+          Generate ulang
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function TransactionSummaryCard({
   period,
   summary,
@@ -74,6 +170,7 @@ export default function TransactionSummaryCard({
 }: Props) {
   const [collapsed, setCollapsed] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const hasSummary = Boolean(summary);
   const isHero = variant === 'hero';
 
@@ -84,33 +181,84 @@ export default function TransactionSummaryCard({
 
   return (
     <>
+      {isHero ? (
+        <section
+          aria-labelledby="transaction-summary-title"
+          className="relative mt-5 overflow-hidden rounded-2xl border border-primary/20 bg-primary/[0.055] px-3.5 py-3 sm:px-4"
+        >
+          <div className="pointer-events-none absolute -right-8 -top-10 h-24 w-24 rounded-full bg-primary/12 blur-2xl" />
+          <div className="relative flex min-h-10 items-center gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
+              <Sparkles size={15} strokeWidth={2.2} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-primary/80">AI insight</p>
+                <span className="h-1 w-1 rounded-full bg-primary/40" />
+                <span className="truncate text-[10px] font-bold text-muted-foreground">{periodLabel[period.periodType]}</span>
+              </div>
+              {loading ? (
+                <p className="mt-0.5 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                  <Loader2 size={12} className="animate-spin text-primary" />
+                  Memeriksa ringkasan…
+                </p>
+              ) : loadError || generateError ? (
+                <p className="mt-0.5 truncate text-xs font-semibold text-destructive">
+                  Gagal memuat ringkasan
+                </p>
+              ) : empty ? (
+                <p className="mt-0.5 truncate text-xs font-semibold text-muted-foreground">
+                  Belum ada transaksi untuk dianalisis
+                </p>
+              ) : summary ? (
+                <p className="mt-0.5 line-clamp-2 text-xs font-bold leading-snug text-foreground">
+                  {summary.headline}
+                </p>
+              ) : (
+                <p className="mt-0.5 truncate text-xs font-semibold text-muted-foreground">
+                  Temukan pola dari aktivitasmu
+                </p>
+              )}
+            </div>
+            {loadError ? (
+              <Button type="button" size="sm" variant="ghost" onClick={onRetryLoad} disabled={loading} className="h-8 shrink-0 px-2 text-[11px]">
+                Coba lagi
+              </Button>
+            ) : generateError ? (
+              <Button type="button" size="sm" variant="ghost" onClick={onGenerate} disabled={generating} className="h-8 shrink-0 px-2 text-[11px]">
+                Coba lagi
+              </Button>
+            ) : summary ? (
+              <Button type="button" size="sm" variant="ghost" onClick={() => setDetailsOpen(true)} className="h-8 shrink-0 px-2 text-[11px] font-black text-primary hover:bg-primary/10">
+                Detail
+              </Button>
+            ) : !empty ? (
+              <Button type="button" size="sm" variant="ghost" onClick={onGenerate} disabled={generating} className="h-8 shrink-0 px-2 text-[11px] font-black text-primary hover:bg-primary/10">
+                Buat
+              </Button>
+            ) : null}
+          </div>
+          {generateError === 'CREDITS_EXHAUSTED' && (
+            <button type="button" onClick={onOpenTopUp} className="relative mt-1 pl-[2.625rem] text-[10px] font-bold text-primary underline underline-offset-4">
+              Top Up AI Credit
+            </button>
+          )}
+        </section>
+      ) : (
       <section
         aria-labelledby="transaction-summary-title"
-        className={`relative overflow-hidden ${
-          isHero
-            ? 'mt-6 rounded-[1.35rem] border border-primary/25 bg-primary/[0.08] shadow-[0_8px_24px_rgba(36,85,63,0.08)]'
-            : 'mb-5 rounded-2xl border border-primary/15 bg-primary/[0.035] shadow-sm'
-        }`}
+        className="relative mb-5 overflow-hidden rounded-2xl border border-primary/15 bg-primary/[0.035] shadow-sm"
       >
-        {isHero && (
-          <div className="pointer-events-none absolute -right-10 -top-12 h-32 w-32 rounded-full bg-primary/15 blur-2xl" />
-        )}
-        <div className={`relative flex items-start justify-between gap-3 px-4 ${
-          isHero ? 'py-3.5 sm:px-5' : 'py-4 sm:px-5'
-        }`}>
+        <div className="relative flex items-start justify-between gap-3 px-4 py-4 sm:px-5">
           <div className="flex min-w-0 items-start gap-3">
-            <div className={`flex shrink-0 items-center justify-center text-primary ${
-              isHero ? 'h-10 w-10 rounded-[1rem] bg-primary/15' : 'h-9 w-9 rounded-xl bg-primary/10'
-            }`}>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Sparkles size={17} strokeWidth={2.2} />
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-[0.16em] text-primary/80">
                 Ringkasan AI
               </p>
-              <h2 id="transaction-summary-title" className={`mt-1 font-black text-foreground ${
-                isHero ? 'text-base' : 'text-sm'
-              }`}>
+              <h2 id="transaction-summary-title" className="mt-1 text-sm font-black text-foreground">
                 {periodLabel[period.periodType]}
               </h2>
             </div>
@@ -129,9 +277,7 @@ export default function TransactionSummaryCard({
         </div>
 
         {loading && (
-          <div className={`relative flex items-center gap-2 border-t border-primary/15 px-4 text-sm text-muted-foreground sm:px-5 ${
-            isHero ? 'py-4' : 'py-4'
-          }`}>
+          <div className="relative flex items-center gap-2 border-t border-primary/15 px-4 py-4 text-sm text-muted-foreground sm:px-5">
             <Loader2 size={16} className="animate-spin text-primary" />
             Memeriksa ringkasan terakhir…
           </div>
@@ -163,81 +309,15 @@ export default function TransactionSummaryCard({
               <p className="py-4 text-sm leading-relaxed text-muted-foreground">
                 Belum ada transaksi pada periode ini. Tambahkan transaksi terlebih dahulu agar AI bisa menemukan pola yang nyata.
               </p>
-            ) : summary ? (
-              <div className="space-y-4 pt-4">
-                <div>
-                  <p className={`${isHero ? 'text-lg sm:text-xl' : 'text-base'} font-black leading-snug text-foreground`}>
-                    {summary.headline}
-                  </p>
-                  <p className="mt-1 text-[11px] font-medium text-muted-foreground">
-                    Dibandingkan {summary.comparison_start} – {summary.comparison_end}
-                  </p>
+              ) : summary ? (
+                <div className="pt-4">
+                  <SummaryDetails
+                    summary={summary}
+                    balance={balance}
+                    generating={generating}
+                    onRegenerate={() => setConfirmOpen(true)}
+                  />
                 </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-xl bg-income/8 px-3 py-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-income/75">Pemasukan</p>
-                    <p className="mt-1 text-sm font-black tabular-nums text-income">{formatRupiah(summary.totals.income)}</p>
-                  </div>
-                  <div className="rounded-xl bg-expense/8 px-3 py-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-expense/75">Pengeluaran</p>
-                    <p className="mt-1 text-sm font-black tabular-nums text-expense">{formatRupiah(summary.totals.expense)}</p>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <p className="mb-2 text-[10px] font-black uppercase tracking-[0.13em] text-muted-foreground/70">
-                      Top kategori pengeluaran
-                    </p>
-                    <div className="space-y-2">
-                      {summary.top_expense_categories.length > 0 ? summary.top_expense_categories.map((category) => (
-                        <div key={category.category} className="flex items-center justify-between gap-3 text-xs">
-                          <span className="min-w-0 truncate font-semibold text-foreground">{category.category}</span>
-                          <span className="shrink-0 font-bold tabular-nums text-muted-foreground">
-                            {formatRupiah(category.amount)} · {category.percentage.toFixed(1)}%
-                          </span>
-                        </div>
-                      )) : <span className="text-xs text-muted-foreground">Belum ada pengeluaran.</span>}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="mb-2 text-[10px] font-black uppercase tracking-[0.13em] text-muted-foreground/70">
-                      Perbandingan
-                    </p>
-                    <div className="space-y-2 text-xs">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-muted-foreground">Pemasukan</span>
-                        <span className="font-bold tabular-nums">{formatChange(summary.comparison.income_change_percent)}</span>
-                      </div>
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-muted-foreground">Pengeluaran</span>
-                        <span className="font-bold tabular-nums">{formatChange(summary.comparison.expense_change_percent)}</span>
-                      </div>
-                      <span className="inline-flex items-center gap-1 font-bold text-primary">
-                        {summary.comparison.direction === 'down' ? <TrendingDown size={14} /> : <TrendingUp size={14} />}
-                        {summary.comparison.direction === 'unavailable' ? 'Belum ada pembanding' : `Arah aktivitas: ${summary.comparison.direction === 'up' ? 'naik' : summary.comparison.direction === 'down' ? 'turun' : 'sama'}`}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-secondary/55 px-3.5 py-3">
-                  <ul className="space-y-1.5 text-xs leading-relaxed text-foreground/80">
-                    {summary.insights.map((insight) => <li key={insight}>• {insight}</li>)}
-                  </ul>
-                </div>
-
-                <div className="flex flex-col gap-2 border-t border-border/50 pt-3 sm:flex-row sm:items-center sm:justify-between">
-                  <span className="text-[11px] font-semibold text-muted-foreground">
-                    {balance !== null ? `${balance} credit tersisa` : '1 credit digunakan saat generate'}
-                  </span>
-                  <Button type="button" size="sm" variant="outline" onClick={() => setConfirmOpen(true)} disabled={generating}>
-                    {generating ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-                    Generate ulang
-                  </Button>
-                </div>
-              </div>
             ) : (
               <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
@@ -257,6 +337,7 @@ export default function TransactionSummaryCard({
           </div>
         )}
       </section>
+      )}
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl">
@@ -272,6 +353,33 @@ export default function TransactionSummaryCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {isHero && summary && (
+        <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+          <DialogContent className="max-w-[calc(100%-2rem)] rounded-[1.5rem] border-border/70 bg-card p-5 shadow-elevation-3 sm:max-w-lg sm:p-6">
+            <DialogHeader className="pr-6 text-left">
+              <DialogTitle className="flex items-center gap-2 text-lg font-black">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Sparkles size={15} />
+                </span>
+                Ringkasan AI · {periodLabel[period.periodType]}
+              </DialogTitle>
+              <DialogDescription>
+                Insight dari aktivitas keuangan pada periode ini.
+              </DialogDescription>
+            </DialogHeader>
+            <SummaryDetails
+              summary={summary}
+              balance={balance}
+              generating={generating}
+              onRegenerate={() => {
+                setDetailsOpen(false);
+                setConfirmOpen(true);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }

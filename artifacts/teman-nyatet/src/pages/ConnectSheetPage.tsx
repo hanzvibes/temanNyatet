@@ -17,6 +17,7 @@ import {
   WifiOff,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // Translate raw API error codes / fetch error strings into user-friendly
 // Indonesian messages shown in the connect-button toast.
@@ -277,17 +278,15 @@ export default function ConnectSheetPage() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mb-5 flex gap-3 bg-orange-500/10 border border-orange-500/25 rounded-2xl p-4 shadow-elevation-1"
+                  className="mb-5"
                 >
-                  <WifiOff size={18} className="flex-shrink-0 text-orange-600 dark:text-orange-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-semibold text-orange-700 dark:text-orange-300">
-                      Server API tidak dapat diakses
-                    </p>
-                    <p className="text-xs text-orange-700/80 dark:text-orange-300/80 mt-0.5 leading-relaxed">
-                      {apiServerError}
-                    </p>
-                  </div>
+                  <Alert variant="warning">
+                    <WifiOff aria-hidden="true" />
+                    <div className="min-w-0">
+                      <AlertTitle>Server API tidak dapat diakses</AlertTitle>
+                      <AlertDescription>{apiServerError}</AlertDescription>
+                    </div>
+                  </Alert>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -299,13 +298,15 @@ export default function ConnectSheetPage() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mb-5 flex gap-3 bg-destructive/10 border border-destructive/20 rounded-2xl p-4 shadow-elevation-1"
+                  className="mb-5"
                 >
-                  <AlertTriangle size={18} className="flex-shrink-0 text-destructive mt-0.5" />
-                  <div>
-                    <p className="text-sm font-semibold text-destructive">{recoveryInfo.title}</p>
-                    <p className="text-xs text-destructive/80 mt-0.5 leading-relaxed">{recoveryInfo.body}</p>
-                  </div>
+                  <Alert variant="destructive">
+                    <AlertTriangle aria-hidden="true" />
+                    <div className="min-w-0">
+                      <AlertTitle>{recoveryInfo.title}</AlertTitle>
+                      <AlertDescription>{recoveryInfo.body}</AlertDescription>
+                    </div>
+                  </Alert>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -357,13 +358,15 @@ export default function ConnectSheetPage() {
             ) : status?.connected && showDisconnect ? (
               // ── Disconnect confirm ───────────────────────────────────────────
               <div className="space-y-3">
-                <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-4 text-center">
-                  <AlertCircle size={20} className="mx-auto text-destructive mb-2" />
-                  <p className="text-sm font-semibold text-destructive">Putuskan Google Drive?</p>
-                  <p className="text-xs text-destructive/80 mt-1 leading-relaxed">
-                    Data di spreadsheet-mu tidak akan terhapus, tapi kamu perlu hubungkan ulang untuk mengakses app.
-                  </p>
-                </div>
+                <Alert variant="destructive" className="items-center text-center">
+                  <AlertCircle aria-hidden="true" className="mt-0.5" />
+                  <div className="min-w-0">
+                    <AlertTitle>Putuskan Google Drive?</AlertTitle>
+                    <AlertDescription>
+                      Data di spreadsheet-mu tidak akan terhapus, tapi kamu perlu hubungkan ulang untuk mengakses app.
+                    </AlertDescription>
+                  </div>
+                </Alert>
                 <button
                   onClick={handleDisconnect}
                   disabled={disconnecting}

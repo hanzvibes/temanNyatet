@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AnimatedListItem } from '@/components/AnimatedListItem';
@@ -43,6 +43,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import SearchBar from '@/components/SearchBar';
+import TransactionSummaryCard from '@/components/TransactionSummaryCard';
+import {
+  generateTransactionSummary,
+  getCachedTransactionSummary,
+  type TransactionSummary,
+  type TransactionSummaryPeriod,
+} from '@/lib/transaction-summary';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatRupiah = (amount: number) =>
@@ -77,7 +84,7 @@ const txSchema = z.object({
 });
 
 type TxFormValues = z.infer<typeof txSchema>;
-type PeriodFilter = 'today' | 'week' | 'month';
+type PeriodFilter = 'today' | 'week' | 'month' | 'custom';
 
 // ─── Balance Hero ─────────────────────────────────────────────────────────────
 function BalanceHero({
@@ -206,6 +213,18 @@ export default function KeuanganPage() {
   const [txType, setTxType] = useState<TransactionType>('expense');
   const [search, setSearch] = useState('');
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('month');
+  const [customStartDate, setCustomStartDate] = useState(() => format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [customEndDate, setCustomEndDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
+  const [customDraftStartDate, setCustomDraftStartDate] = useState(() => format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [customDraftEndDate, setCustomDraftEndDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
+  const [summary, setSummary] = useState<TransactionSummary | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryGenerating, setSummaryGenerating] = useState(false);
+  const [summaryLoadError, setSummaryLoadError] = useState<string | null>(null);
+  const [summaryGenerateError, setSummaryGenerateError] = useState<string | null>(null);
+  const [summaryEmpty, setSummaryEmpty] = useState(false);
+  const [summaryBalance, setSummaryBalance] = useState<number | null>(null);
+  const summaryRequestId = useRef<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [sheetViewportHeight, setSheetViewportHeight] = useState(() =>
     typeof window !== 'undefined'
@@ -260,8 +279,131 @@ export default function KeuanganPage() {
         end: endOfWeek(now, { weekStartsOn: 1 }),
       };
     }
+    if (periodFilter === 'custom') {
+      return {
+        start: new Date(`${customStartDate}T12:00:00`),
+        end: new Date(`${customEndDate}T12:00:00`),
+      };
+    }
     return { start: startOfMonth(now), end: endOfMonth(now) };
-  }, [periodFilter]);
+  }, [customEndDate, customStartDate, periodFilter]);
+
+  const summaryPeriod = useMemo<TransactionSummaryPeriod | null>(() => {
+    if (periodFilter === 'today') return null;
+    if (periodFilter === 'week') {
+      return {
+        periodType: 'week',
+        startDate: format(periodRange.start, 'yyyy-MM-dd'),
+        endDate: format(periodRange.end, 'yyyy-MM-dd'),
+      };
+    }
+    if (periodFilter === 'month') {
+      return {
+        periodType: 'month',
+        startDate: format(periodRange.start, 'yyyy-MM-dd'),
+        endDate: format(periodRange.end, 'yyyy-MM-dd'),
+      };
+    }
+    return {
+      periodType: 'custom',
+      startDate: format(periodRange.start, 'yyyy-MM-dd'),
+      endDate: format(periodRange.end, 'yyyy-MM-dd'),
+    };
+  }, [periodFilter, periodRange]);
+
+  const loadSummary = async () => {
+    if (!summaryPeriod) return;
+    setSummaryLoading(true);
+    setSummaryLoadError(null);
+    setSummaryEmpty(false);
+    try {
+      const response = await getCachedTransactionSummary(summaryPeriod, user?.id);
+      setSummary(response.summary);
+      setSummaryEmpty(false);
+    } catch (err) {
+      setSummary(null);
+      setSummaryLoadError(err instanceof Error ? err.message : 'Gagal memuat ringkasan AI');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!summaryPeriod) {
+      setSummary(null);
+      setSummaryLoading(false);
+      setSummaryLoadError(null);
+      setSummaryGenerateError(null);
+      setSummaryEmpty(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+    setSummaryLoading(true);
+    setSummaryLoadError(null);
+    setSummaryGenerateError(null);
+    setSummaryEmpty(false);
+    getCachedTransactionSummary(summaryPeriod, user?.id)
+      .then((response) => {
+        if (cancelled) return;
+        setSummary(response.summary);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setSummary(null);
+        setSummaryLoadError(err instanceof Error ? err.message : 'Gagal memuat ringkasan AI');
+      })
+      .finally(() => {
+        if (!cancelled) setSummaryLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [summaryPeriod]);
+
+  useEffect(() => {
+    summaryRequestId.current = null;
+  }, [summaryPeriod]);
+
+  const handleGenerateSummary = async () => {
+    if (!summaryPeriod) return;
+    setSummaryGenerating(true);
+    setSummaryGenerateError(null);
+    setSummaryEmpty(false);
+    try {
+      const requestId = summaryRequestId.current ?? (
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+      );
+      summaryRequestId.current = requestId;
+      const response = await generateTransactionSummary(summaryPeriod, requestId, user?.id);
+      setSummary(response.summary);
+      setSummaryBalance(response.balance);
+      setSummaryEmpty(Boolean(response.empty));
+      summaryRequestId.current = null;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Gagal membuat ringkasan AI';
+      setSummaryGenerateError(message);
+      if (message === 'CREDITS_EXHAUSTED') {
+        window.dispatchEvent(new CustomEvent('teman-nyatet:open-settings-topup'));
+      }
+    } finally {
+      setSummaryGenerating(false);
+    }
+  };
+
+  const applyCustomRange = () => {
+    if (!customDraftStartDate || !customDraftEndDate || customDraftEndDate < customDraftStartDate) {
+      setSummaryLoadError('Tanggal akhir harus sama atau setelah tanggal mulai');
+      return;
+    }
+    setCustomStartDate(customDraftStartDate);
+    setCustomEndDate(customDraftEndDate);
+    setSummaryLoadError(null);
+    setPeriodFilter('custom');
+  };
 
   const periodTransactions = useMemo(
     () =>
@@ -417,6 +559,7 @@ export default function KeuanganPage() {
                 ['today', 'Hari ini'],
                 ['week', 'Minggu ini'],
                 ['month', 'Bulan ini'],
+                ['custom', 'Custom range'],
               ] as const).map(([value, label]) => (
                 <button
                   key={value}
@@ -433,6 +576,32 @@ export default function KeuanganPage() {
               ))}
             </div>
 
+            {periodFilter === 'custom' && (
+              <div className="grid gap-2 rounded-2xl border border-border/60 bg-card p-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                <label className="text-xs font-bold text-muted-foreground">
+                  Mulai
+                  <input
+                    type="date"
+                    value={customDraftStartDate}
+                    onChange={(event) => setCustomDraftStartDate(event.target.value)}
+                    className="mt-1.5 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none focus:border-finance focus:ring-2 focus:ring-finance/20"
+                  />
+                </label>
+                <label className="text-xs font-bold text-muted-foreground">
+                  Sampai
+                  <input
+                    type="date"
+                    value={customDraftEndDate}
+                    onChange={(event) => setCustomDraftEndDate(event.target.value)}
+                    className="mt-1.5 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none focus:border-finance focus:ring-2 focus:ring-finance/20"
+                  />
+                </label>
+                <Button type="button" size="sm" onClick={applyCustomRange} className="h-10">
+                  Terapkan
+                </Button>
+              </div>
+            )}
+
             {/* Search */}
             <SearchBar
               value={search}
@@ -442,6 +611,25 @@ export default function KeuanganPage() {
 
             {/* Transaction list */}
             <div className="min-h-0 flex-1 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain -mx-1 px-1.5 pb-[calc(7rem+env(safe-area-inset-bottom))] [scrollbar-gutter:stable]">
+              {summaryPeriod ? (
+                <TransactionSummaryCard
+                  period={summaryPeriod}
+                  summary={summary}
+                  loading={summaryLoading}
+                  generating={summaryGenerating}
+                  loadError={summaryLoadError}
+                  generateError={summaryGenerateError}
+                  empty={summaryEmpty}
+                  balance={summaryBalance}
+                  onGenerate={handleGenerateSummary}
+                  onRetryLoad={loadSummary}
+                  onOpenTopUp={() => window.dispatchEvent(new CustomEvent('teman-nyatet:open-settings-topup'))}
+                />
+              ) : (
+                <div className="mb-5 rounded-2xl border border-border/60 bg-card px-4 py-3 text-xs font-semibold text-muted-foreground">
+                  Ringkasan AI tersedia untuk Minggu ini, Bulan ini, dan Custom range.
+                </div>
+              )}
               {loading ? (
                 <PageLoading accent="keuangan" label="Memuat transaksi…" />
               ) : sortedDates.length === 0 ? (

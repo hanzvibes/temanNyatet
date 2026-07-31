@@ -1,3 +1,19 @@
+## AI Transaction Summary
+
+The financial transaction summary feature uses a separate server-side AI route:
+
+- `GET /api/transactions/summary` reads the latest cached result.
+- `POST /api/transactions/summary/generate` aggregates the user's Google Sheet
+  transactions server-side before calling SumoPod.
+- The provider receives only aggregate totals, comparison values, and top expense
+  categories; transaction notes and raw rows are never included.
+- Successful generation uses ledger reason `ai_transaction_summary`.
+- The generate request must include an `Idempotency-Key` (the frontend sends a
+  matching `request_id`). Supabase atomically writes the cache and debits one
+  credit, so a retry cannot debit twice or debit without a persisted summary.
+- Apply `supabase/migrations/010_transaction_summary_cache.sql` before enabling
+  the feature in an environment.
+
 # SumoPod Sandbox Payment Runbook
 
 TemanNyatet membuat payment link di server melalui SumoPod Sandbox. Browser

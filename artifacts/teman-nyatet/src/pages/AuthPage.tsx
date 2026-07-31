@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { getEmailRedirectUrl } from '@/lib/siteUrl';
 import { toast } from 'sonner';
 import { Loader2, Eye, EyeOff, BookOpen, Mail, ArrowLeft } from 'lucide-react';
+import { Link } from 'wouter';
 import { FormError } from '@/components/PageStates';
 import { Button } from '@/components/ui/button';
 
@@ -319,6 +320,18 @@ export default function AuthPage() {
             </div>
           </>
         )}
+
+        <p className="mt-8 max-w-sm px-3 text-center text-xs leading-relaxed text-muted-foreground">
+          Dengan melanjutkan, kamu menyetujui{' '}
+          <Link href="/terms-of-service" className="font-medium text-primary underline-offset-4 hover:underline">
+            Terms of Service
+          </Link>{' '}
+          dan{' '}
+          <Link href="/privacy-policy" className="font-medium text-primary underline-offset-4 hover:underline">
+            Privacy Policy
+          </Link>
+          .
+        </p>
       </div>
     </main>
   );

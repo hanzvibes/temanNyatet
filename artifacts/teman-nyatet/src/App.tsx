@@ -17,6 +17,7 @@ import OfflineIndicator from '@/components/OfflineIndicator';
 // long white screen during PWA launch.
 const AuthPage = React.lazy(() => import('@/pages/AuthPage'));
 const AuthConfirmPage = React.lazy(() => import('@/pages/AuthConfirmPage'));
+const LegalPage = React.lazy(() => import('@/pages/LegalPage'));
 const PaymentPage = React.lazy(() => import('@/pages/PaymentPage'));
 const ArchivedPage = React.lazy(() => import('@/pages/ArchivedPage'));
 const ConnectSheetPage = React.lazy(() => import('@/pages/ConnectSheetPage'));
@@ -103,9 +104,19 @@ class AppErrorBoundary extends React.Component<
 // Single list of all app pages. Adding a new page is one entry here; the
 // rest of the routing machinery (CachedSwitch, AuthGuard redirects,
 // BottomSheetNav tabs) follows automatically.
+function PrivacyPolicyPage() {
+  return <LegalPage policy="privacy" />;
+}
+
+function TermsOfServicePage() {
+  return <LegalPage policy="terms" />;
+}
+
 const ROUTE_ENTRIES: Array<{ path: string; component: React.ComponentType }> = [
   { path: '/login',         component: AuthPage         },
   { path: '/auth/confirm',  component: AuthConfirmPage  },
+  { path: '/privacy-policy', component: PrivacyPolicyPage },
+  { path: '/terms-of-service', component: TermsOfServicePage },
   { path: '/payment',       component: PaymentPage      },
   { path: '/archived',      component: ArchivedPage     },
   { path: '/connect-sheet', component: ConnectSheetPage },
@@ -133,10 +144,15 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('teman-nyatet:spreadsheet-error', handler);
   }, [location, setLocation]);
 
-  const PUBLIC_ROUTES = new Set(['/login', '/auth/confirm']);
+  const PUBLIC_ROUTES = new Set(['/login', '/auth/confirm', '/privacy-policy', '/terms-of-service']);
+  const PUBLIC_LEGAL_ROUTES = new Set(['/privacy-policy', '/terms-of-service']);
 
+  // Legal pages do not require a session. Render them while Supabase is still
+  // checking auth so Google's crawler and users never wait on an unrelated
+  // auth/network request before seeing the policy.
   useEffect(() => {
     if (loading) return;
+    if (PUBLIC_LEGAL_ROUTES.has(location)) return;
 
     if (!user) {
       if (!PUBLIC_ROUTES.has(location)) setLocation('/login');
@@ -170,6 +186,10 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       }
     }
   }, [user, profile, loading, location, setLocation]);
+
+  if (PUBLIC_LEGAL_ROUTES.has(location)) {
+    return <>{children}</>;
+  }
 
   if (loading) {
     return (

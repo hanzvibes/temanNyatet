@@ -17,3 +17,4 @@
 - [Workspace typecheck order](workspace-typecheck-order.md) — build shared TypeScript libraries before package-level checks when generated declaration outputs are absent.
 - [Google Sheets row normalization](google-sheets-row-normalization.md) — treat spreadsheet rows as untrusted input before rendering; malformed dates/cells can crash otherwise-safe React views.
 - [Responsive overlay lifecycle](responsive-overlay-lifecycle.md) — viewport-specific drawers must close and broadcast overlay state when a breakpoint switch deactivates their instance.
+- [Public legal route auth](public-legal-route-auth.md) — privacy and terms pages must render independently from auth loading and onboarding redirects.

@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import AiSummaryDetails from '@/components/AiSummaryDetails';
+import { AI_SUMMARY_COPY } from '@/lib/ai-summary-copy';
 
 // ── Package catalogue ─────────────────────────────────────────────────────────
 
@@ -203,7 +205,7 @@ function PackageCard({ pkg, buying, onBuy }: PackageCardProps) {
 const FAQ_ITEMS = [
   {
     q: 'Apa itu AI Credit?',
-    a: 'Credit digunakan untuk fitur Ringkas AI — 1 credit untuk 1 ringkasan catatan. Semakin banyak credit, semakin banyak ringkasan yang bisa kamu buat.',
+    a: `${AI_SUMMARY_COPY.sharedDescription} ${AI_SUMMARY_COPY.creditDescription} Semakin banyak credit, semakin banyak ringkasan yang bisa kamu buat.`,
   },
   {
     q: 'Credit berlaku berapa lama?',
@@ -387,6 +389,8 @@ export default function TopUpSection({ creditBalance, onRequestTopUp }: TopUpSec
 
   return (
     <div className="space-y-5 pt-1">
+
+      <AiSummaryDetails variant="full" />
 
       {/* ── Balance hero ── */}
       <div className={`rounded-2xl border ${balanceTone.ring} ${balanceTone.bg} px-5 py-4`}>

@@ -24,6 +24,7 @@ import {
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { openPaymentCheckout, type PaymentPlan } from '@/lib/payment';
+import AiSummaryDetails from '@/components/AiSummaryDetails';
 import {
   formatIDR,
   formatSubscriptionDate,
@@ -430,6 +431,7 @@ export default function SubscriptionPage() {
                   window.dispatchEvent(new CustomEvent('teman-nyatet:open-settings-topup'));
                 }} /></div>
               </div>
+              <AiSummaryDetails variant="full" />
               <SubscriptionHistory history={overview.history} onDetails={setSelectedTransaction} />
               <FaqSection />
               <div className="flex items-center justify-center gap-2 pt-1 text-xs font-semibold text-muted-foreground"><ShieldCheck size={15} className="text-primary" /> Pembayaran diproses secara aman</div>

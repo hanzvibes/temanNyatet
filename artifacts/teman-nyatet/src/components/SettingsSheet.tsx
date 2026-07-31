@@ -11,6 +11,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { openPaymentCheckout, type PaymentPlan } from '@/lib/payment';
 import TopUpSection from '@/components/TopUpSection';
+import AiSummaryDetails from '@/components/AiSummaryDetails';
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -752,7 +753,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                                     <div>
                                       <p className="text-sm font-extrabold text-foreground">Credit Ringkas AI</p>
                                       <p className="mt-0.5 text-xs font-medium text-muted-foreground">
-                                        {isEmpty ? 'Siapkan credit untuk ringkasan berikutnya' : '1 credit untuk 1 ringkasan'}
+                                        {isEmpty ? 'Siapkan credit untuk ringkasan berikutnya' : '1 credit untuk 1 ringkasan catatan atau transaksi'}
                                       </p>
                                     </div>
                                   </div>
@@ -781,6 +782,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                                   <Sparkles size={12} className="inline mr-1.5 align-[-1px] text-primary" strokeWidth={2.5} />
                                   Top Up AI Credit
                                 </button>
+                                <AiSummaryDetails variant="compact" className="mt-3" />
                               </div>
                             );
                           })()}

@@ -50,6 +50,7 @@ import {
   type TransactionSummary,
   type TransactionSummaryPeriod,
 } from '@/lib/transaction-summary';
+import AiSummaryDetails from '@/components/AiSummaryDetails';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatRupiah = (amount: number) =>
@@ -608,6 +609,7 @@ export default function KeuanganPage() {
               onChange={setSearch}
               placeholder="Cari transaksi..."
             />
+            <AiSummaryDetails variant="compact" />
 
             {/* Transaction list */}
             <div className="min-h-0 flex-1 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain -mx-1 px-1.5 pb-[calc(7rem+env(safe-area-inset-bottom))] [scrollbar-gutter:stable]">
@@ -627,7 +629,7 @@ export default function KeuanganPage() {
                 />
               ) : (
                 <div className="mb-5 rounded-2xl border border-border/60 bg-card px-4 py-3 text-xs font-semibold text-muted-foreground">
-                  Ringkasan AI tersedia untuk Minggu ini, Bulan ini, dan Custom range.
+                  Ringkasan AI tersedia untuk Minggu Ini, Bulan Ini, dan Custom Range. Hari Ini hanya berlaku untuk daftar transaksi.
                 </div>
               )}
               {loading ? (

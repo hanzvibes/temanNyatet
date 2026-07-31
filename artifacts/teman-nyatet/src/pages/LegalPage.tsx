@@ -1,5 +1,6 @@
 import { ArrowLeft, BookOpen, Mail, Scale, ShieldCheck } from 'lucide-react';
 import { Link } from 'wouter';
+import { AI_SUMMARY_COPY } from '@/lib/ai-summary-copy';
 
 type PolicyKind = 'privacy' | 'terms';
 
@@ -42,6 +43,7 @@ const policies: Record<PolicyKind, Policy> = {
         title: '2. Cara data digunakan',
         paragraphs: [
           'Kami menggunakan data untuk membuat dan mengamankan akun, menyediakan fitur TemanNyatet, menyinkronkan data sesuai permintaanmu, membantu ketika terjadi masalah, mencegah penyalahgunaan, dan menjaga keandalan layanan.',
+          AI_SUMMARY_COPY.privacyParagraph,
           'Kami tidak menjual data pribadi atau isi catatan kamu. Kami juga tidak menggunakan data Google untuk iklan yang ditargetkan berdasarkan isi data tersebut.',
         ],
       },
@@ -164,6 +166,7 @@ const policies: Record<PolicyKind, Policy> = {
         title: '6. Pembayaran dan langganan',
         paragraphs: [
           'Jika TemanNyatet menyediakan fitur berbayar atau langganan, harga, periode, metode pembayaran, dan ketentuan pembatalan akan ditampilkan sebelum pembayaran dilakukan. Kamu mengizinkan penyedia pembayaran yang digunakan untuk memproses transaksi sesuai ketentuannya.',
+          AI_SUMMARY_COPY.termsParagraph,
           'Akses fitur berbayar dapat berubah jika pembayaran gagal, langganan dibatalkan, masa berlangganan berakhir, atau terjadi pelanggaran ketentuan. Kami dapat mengubah harga atau paket dengan pemberitahuan yang wajar sebelum perubahan berlaku.',
         ],
       },

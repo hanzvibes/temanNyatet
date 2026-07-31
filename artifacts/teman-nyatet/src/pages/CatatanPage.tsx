@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { getNoteColor, NOTE_COLORS, NOTE_COLOR_PALETTE } from '@/lib/noteColors';
 import { apiGet, apiPost } from '@/lib/apiClient';
 import { formatNoteDate } from '@/lib/noteData';
+import AiSummaryDetails from '@/components/AiSummaryDetails';
 import {
   Dialog,
   DialogContent,
@@ -326,6 +327,7 @@ export default function CatatanPage() {
               onChange={setSearch}
               placeholder="Cari catatan…"
             />
+            <AiSummaryDetails variant="compact" />
 
             {/* Empty state */}
             {filteredNotes.length === 0 && (

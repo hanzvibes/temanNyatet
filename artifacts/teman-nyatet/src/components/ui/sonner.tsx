@@ -14,12 +14,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       theme="system"
-      position="bottom-right"
+      position="top-center"
       expand
       visibleToasts={3}
-      offset={{ bottom: 24, right: 24 }}
+      offset={{ top: 24 }}
       mobileOffset={{
-        bottom: 'calc(1.25rem + var(--bottom-nav-collapsed-h) + 0.75rem)',
+        top: 'calc(env(safe-area-inset-top, 0px) + 1rem)',
         left: '1rem',
         right: '1rem',
       }}

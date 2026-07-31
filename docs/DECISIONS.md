@@ -99,15 +99,21 @@
 
 ---
 
-## ADR-006: Mayar for payments (not Stripe)
+## ADR-006: SumoPod for payments (not Mayar or Stripe)
 
-**Decision**: Use Mayar as the payment gateway.
+**Decision**: Use SumoPod Payment Gateway for the current checkout flow,
+starting with Sandbox. The frontend requests a payment link from the API;
+provider credentials remain server-side.
 
 **Why**: Mayar is an Indonesian payment gateway that supports local payment methods (GoPay, OVO, Dana, bank transfer). Stripe does not support Indonesian local payment methods out of the box.
 
 **Tradeoffs accepted**:
-- Mayar webhook format is less standardized than Stripe — plan resolution uses heuristics (plan name + amount threshold)
-- `MAYAR_WEBHOOK_SECRET` is optional — if unset, the webhook endpoint returns `503` (fail closed, not silently)
+- Sandbox must be replaced with production provider configuration before a
+  public launch.
+- Webhook reconciliation depends on the provider delivering a compatible
+  `payment.completed` payload.
+- The old Mayar route remains only for compatibility and must not be treated as
+  the active payment integration.
 
 ---
 

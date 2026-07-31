@@ -196,7 +196,7 @@ src/app.ts     — Express app: middleware stack, route mounting
 2. CORS              (origins from ALLOWED_ORIGINS env or allow-all)
 3. express-rate-limit (300 req / 15 min per IP, global)
 4. pino-http         (structured request logging)
-5. express.raw()     (for /api/mayar-webhook only — raw body for HMAC)
+5. express.raw()     (for /api/sumopod-webhook and legacy /api/mayar-webhook — raw body for webhook verification)
 6. express.json()    (256kb limit)
 7. express.urlencoded()
 ```
@@ -262,7 +262,7 @@ Two Vercel projects from the same GitHub repo:
 | `teman-nyatet` | `artifacts/teman-nyatet` | Vite SPA, output `dist/public`, SPA rewrite |
 | `teman-nyatet-api-server` | `artifacts/api-server` | `@vercel/node` serverless function |
 
-Production URLs (as of July 2026):
+Production URLs (current):
 - Frontend: `https://teman-nyatet.vercel.app`
 - API: `https://teman-nyatet-api-server.vercel.app`
 
@@ -271,6 +271,12 @@ Replit is used for development only. Workflows:
 - `artifacts/api-server: API Server` → `pnpm --filter @workspace/api-server run dev` (port 8080)
 
 Vite dev server proxies `/api/*` → `localhost:8080` so frontend and API share an origin in dev. Production uses `VITE_API_SERVER_URL`; if it is missing, `src/lib/apiClient.ts` falls back to `https://teman-nyatet-api-server.vercel.app`.
+
+The production SumoPod webhook target is
+`https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook`. The current
+source registers this route, but the last observed production deployment
+returned `404 Cannot POST /api/sumopod-webhook`; a fresh API deployment from
+`main` is required before declaring webhook delivery operational.
 
 ---
 
@@ -299,7 +305,7 @@ See `DECISIONS.md` for the full rationale. Summary:
 |---|---|---|
 | App data storage | Google Sheets (per user) | User owns their data; no server storage cost |
 | Auth | Supabase | Managed auth, RLS, email confirmation built-in |
-| Payment | Mayar | Indonesian-market payment gateway |
+| Payment | SumoPod Sandbox | Server-created payment links with local order reconciliation and idempotent webhook activation |
 | Routing | CachedSwitch | Instant tab switches, no refetch on navigation |
 | Deploy | Vercel (two projects) | Free tier, serverless Node, SPA rewrite |
 | API client | Custom `apiClient.ts` | Predates TanStack Query adoption; handles 401 retry |

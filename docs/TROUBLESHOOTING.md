@@ -96,16 +96,38 @@
 
 ## Subscription / Payment
 
+### SumoPod test returns `404 Cannot POST /api/sumopod-webhook`
+
+**Symptom**: SumoPod **Save & Test** returns HTTP `404` with
+`Cannot POST /api/sumopod-webhook`.
+**Cause**: The webhook URL is correct, but the active Vercel API deployment is
+older than the repository source that registers the SumoPod route.
+**Fix**:
+1. Confirm the SumoPod URL is exactly
+   `https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook`.
+2. Confirm the API Vercel project's Root Directory is `artifacts/api-server`.
+3. Deploy the latest `main` branch as a Production deployment.
+4. Check `GET https://teman-nyatet-api-server.vercel.app/api/healthz` returns
+   `{"status":"ok"}`.
+5. Run SumoPod **Save & Test** again. Do not point SumoPod at the Replit
+   development URL for production.
+
 ### User paid but `subscription_status` is still `pending`
 
-**Symptom**: User completed Mayar payment but the app still shows the payment wall.  
-**Cause**: Mayar webhook wasn't received, or `MAYAR_WEBHOOK_SECRET` mismatch.  
+**Symptom**: User completed a SumoPod Sandbox payment but the app still shows
+the payment wall.
+**Cause**: SumoPod did not deliver `payment.completed`, the API deployment is
+stale, or webhook signature validation rejected the request.
 **Fix**:
-1. Verify the webhook URL in Mayar dashboard is `https://teman-nyatet-api-server.vercel.app/api/mayar-webhook`.
-2. Check API server logs for webhook requests.
-3. If `MAYAR_WEBHOOK_SECRET` is not set, the endpoint returns `503` — check env vars.
-4. If signature verification fails, the webhook is rejected — rotate `MAYAR_WEBHOOK_SECRET` and update both Mayar dashboard and Vercel env vars.
-5. Manually activate: update `profiles.subscription_status = 'active'` and set `subscription_plan` + `subscription_end` via Supabase SQL Editor.
+1. Check the SumoPod webhook URL is
+   `https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook`.
+2. Check Vercel API logs for `POST /api/sumopod-webhook`.
+3. Check the matching `payment_orders` row by `order_id`, provider payment ID,
+   amount, and status.
+4. If `SUMOPOD_WEBHOOK_SECRET` is set, verify it contains the regenerated
+   Webhook Signing Secret, not the Webhook Token.
+5. Do not manually activate a profile or send a fabricated `payment.completed`
+   event. Resolve the provider delivery/configuration issue first.
 
 ---
 

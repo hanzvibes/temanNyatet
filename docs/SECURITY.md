@@ -47,7 +47,7 @@
 | Rate limiting (global) | 300 requests / 15 minutes per IP (`express-rate-limit`) |
 | Rate limiting (per user) | 120 requests / minute per authenticated user (`express-rate-limit`, in-memory) |
 | Request body size | 256 KB limit (`express.json` + `express.urlencoded`) |
-| Webhook signature | Mayar webhook: HMAC-SHA256 with constant-time comparison (`crypto.timingSafeEqual`) |
+| Webhook signature | SumoPod webhook: optional HMAC-SHA256 with constant-time comparison (`crypto.timingSafeEqual`); legacy Mayar route remains compatibility-only |
 | Cron auth | `CRON_SECRET` Bearer token — simple but separate from user JWTs |
 | Formula injection | Cell values starting with `=`, `+`, `-`, `@`, tab, carriage return are prefixed with `'` (CSV formula injection mitigation) |
 | Input validation | Custom `validate.ts` with `requireString` / `optionalString` / `optionalTags` — max lengths enforced |
@@ -83,7 +83,7 @@
 | In-process sheet lock | Doesn't work with horizontal scaling | Vercel serverless is single-instance per invocation; acceptable risk |
 | No audit log | No record of which operations touched which spreadsheet row | Low priority for current scale |
 | `fix_profiles_rls_recursion.sql` is ad-hoc | Not in numbered migration sequence; could be missed on fresh deploy | Documented in [`docs/SUPABASE-SETUP.md`](./SUPABASE-SETUP.md); should be promoted to numbered migration |
-| Mayar plan resolution uses heuristics | Incorrect plan assignment if Mayar changes payload structure | Low risk; plan assignment reviewed in webhook handler |
+| SumoPod provider payload changes | Payment completion may not reconcile if payload shape changes | Validate provider payloads against `payment_orders`; keep Sandbox verification before production |
 
 ---
 
@@ -93,6 +93,8 @@
 - Replit: use Secrets panel (never `.env` files in the workspace)
 - Vercel: use Environment Variables in project settings
 - Local dev: `.env.local` files (in `.gitignore`)
+- Treat any provider credential shown in a screenshot or chat as compromised;
+  rotate the SumoPod API key, Webhook Signing Secret, and Webhook Token.
 - Rotate `GOOGLE_OAUTH_STATE_SECRET` if a breach is suspected — see `DEPLOYMENT.md` → Secret rotation
 
 ---

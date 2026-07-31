@@ -94,12 +94,30 @@ https://teman-nyatet-api-server.vercel.app/api/auth/google/callback
 
 This must match the `GOOGLE_REDIRECT_URI` Vercel env var byte-for-byte (lowercase, no trailing slash, full path).
 
-### 4. Configure Mayar webhook
+### 4. Configure SumoPod Sandbox webhook
 
-In Mayar dashboard, set webhook URL to:
+In SumoPod Sandbox **Settings → Webhook**, set the webhook URL to:
 ```
-https://teman-nyatet-api-server.vercel.app/api/mayar-webhook
+https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook
 ```
+
+This URL is the API route, not the frontend URL. The current repository
+contains the route, but the last observed production deployment returned
+`404 Cannot POST /api/sumopod-webhook`; redeploy the API project from the
+latest `main` branch with Root Directory `artifacts/api-server` before using
+SumoPod **Save & Test**.
+
+Configure the payment redirects in SumoPod:
+```
+Success: https://teman-nyatet.vercel.app/payment?status=success
+Cancel:  https://teman-nyatet.vercel.app/payment?status=cancelled
+```
+
+Rotate any API key, Webhook Signing Secret, or Webhook Token that has appeared
+in a screenshot or chat. Store the new provider values only in the Vercel API
+project. The backend currently verifies HMAC headers
+`X-Sumopod-Signature`/`X-Signature` when `SUMOPOD_WEBHOOK_SECRET` is configured;
+it does not currently verify SumoPod's separate `X-Webhook-Token` header.
 
 ### 5. Run Supabase migrations
 
@@ -201,5 +219,8 @@ After deploying:
 - [ ] After Google OAuth → spreadsheet created in user's Drive
 - [ ] Create a note → row appears in the user's spreadsheet
 - [ ] Summarize a note → API returns a summary (requires `OPENAI_API_KEY` in the Vercel API project)
-- [ ] Mayar payment flow → webhook received → `subscription_status` changes to `active`
+- [ ] SumoPod Sandbox `Save & Test` succeeds after the current API deployment is live
+- [ ] SumoPod `payment.test` does not activate a profile
+- [ ] A real SumoPod Sandbox payment sends `payment.completed` and activates the matching plan once
+- [ ] Replaying the same SumoPod webhook does not extend the subscription twice
 - [ ] Cron endpoint: `curl -X POST -H "Authorization: Bearer $CRON_SECRET" .../api/cron/archive-expired` → `{"archived": N}`

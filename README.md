@@ -58,7 +58,7 @@ A note-taking SaaS web app + PWA for Indonesian users. Four core modules: Catata
 - **Supabase for auth and profile only**: User authentication and the `profiles` table live in Supabase. RLS policies enforce row-level access to `profiles`.
 - **Google Sheets for app data**: Notes, transactions, todos, and links are stored in a private Google Spreadsheet created automatically in the user's own Drive via OAuth. The API server translates REST requests into Google Sheets API calls.
 - **API server required for data**: The frontend calls `https://.../api/...` (proxied to the API server in local dev). Each request carries a Supabase access token; the API server verifies it with Supabase and resolves the user's spreadsheet connection.
-- **React+Vite instead of Next.js**: The Replit workspace scaffolds React+Vite. Server-side requirements (webhooks, cron, OAuth callback) are implemented as Express routes.
+- **React+Vite instead of Next.js**: The Replit workspace scaffolds React+Vite. Server-side requirements (SumoPod webhook, legacy Mayar compatibility webhook, cron, OAuth callback) are implemented as Express routes.
 - **Vaul for bottom sheets**: Feature input forms use the `vaul` library for mobile-feel drawer animations.
 - **PWA via VitePWA**: `vite-plugin-pwa` generates the service worker and precaches assets. `manifest.json` is maintained manually in `public/`.
 - **CachedSwitch for instant navigation** (`src/App.tsx`): every visited page stays mounted in the DOM, toggled via the `hidden` attribute, so React Query's hooks + cache survive back-tab visits. Combined with the `QueryClient` defaults (`staleTime: 30 s`, `gcTime: 30 min`, `refetchOnWindowFocus: 'always'`), returning to a previous page paints from cache instantly and silently revalidates in the background.
@@ -83,7 +83,10 @@ _Populate as you build._
 - Supabase env vars use `VITE_` prefix for frontend: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 - API server uses `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (no `VITE_` prefix, server-only)
 - Google OAuth env vars are required for the API server: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_OAUTH_STATE_SECRET`
-- SumoPod Sandbox webhook URL: `https://<your-api-domain>/api/sumopod-webhook`
+- SumoPod Sandbox webhook URL for the current production API:
+  `https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook`
+- The repository contains the SumoPod webhook route, but the currently observed Vercel production deployment still returns `404 Cannot POST /api/sumopod-webhook`. Redeploy the API project from `main` with Root Directory `artifacts/api-server` before using SumoPod `Save & Test` or real Sandbox checkout.
+- SumoPod's Webhook Signing Secret must never be committed or pasted into chat. The current backend verifies `X-Sumopod-Signature`/`X-Signature` when `SUMOPOD_WEBHOOK_SECRET` is configured. The dashboard's `X-Webhook-Token` mechanism is not yet wired into the backend.
 - Run all `supabase/migrations/*.sql` files in order in the Supabase SQL Editor before launch (see [`docs/SUPABASE-SETUP.md`](./docs/SUPABASE-SETUP.md))
 - `profiles` has RLS enabled; the `fix_profiles_rls_recursion.sql` script must also be applied if you hit an "infinite recursion detected in policy" error
 - The auto-create profile trigger runs on `auth.users` INSERT; `AuthContext` also has a client-side fallback upsert
@@ -120,8 +123,8 @@ GOOGLE_OAUTH_STATE_SECRET=random-hex-string
 
 SUMOPOD_PAYMENT_API_KEY=your-regenerated-sandbox-api-key
 SUMOPOD_PAYMENT_BASE_URL=https://api-pay-sandbox.sumopod.com
-# Optional, only when enabled and supported by the SumoPod webhook configuration
-SUMOPOD_WEBHOOK_SECRET=your-sumopod-webhook-secret
+# Optional HMAC signing secret; server-only
+SUMOPOD_WEBHOOK_SECRET=your-regenerated-sumopod-signing-secret
 CRON_SECRET=your-random-cron-secret
 
 # Optional: override the OAuth redirect URI (defaults to REPLIT_DEV_DOMAIN or localhost:5000)
@@ -210,7 +213,7 @@ Repo ini punya dua deployable yang beda kebutuhan build-nya, jadi deploy sebagai
 - Setelah live, verify the API with `https://teman-nyatet-api-server.vercel.app/api/healthz`. The API project root returns service metadata; health is mounted under `/api`.
 - Endpoint `/api/cron/archive-expired` masih pakai pola POST + Bearer token (`CRON_SECRET`), jadi tetap dipanggil dari scheduler eksternal (GitHub Actions cron, cron-job.org, dll) — bukan Vercel Cron Jobs bawaan (yang cuma bisa GET). Kalau mau pindah ke Vercel Cron, endpoint ini perlu ditambah handler GET.
 
-### Production domains (July 2026)
+### Production domains (current)
 
 Saat ini live di Vercel sebagai dua project dengan domain tetap (tidak berubah sampai deploy ulang):
 
@@ -222,6 +225,15 @@ Saat ini live di Vercel sebagai dua project dengan domain tetap (tidak berubah s
 Supabase Redirect URLs (Auth → Settings) harus menyertakan keduanya plus `https://*.vercel.app/login` dan `https://*.vercel.app/**` untuk preview branches.
 
 The frontend API client uses `/api` through the Vite proxy in Replit development. In a production build it uses `VITE_API_SERVER_URL`, or falls back to `https://teman-nyatet-api-server.vercel.app` when that variable is absent. The API server must allow the frontend origin through `ALLOWED_ORIGINS`.
+
+### Current production deployment status
+
+- Frontend production is reachable at `https://teman-nyatet.vercel.app`.
+- API production is reachable at `https://teman-nyatet-api-server.vercel.app`; `GET /api/healthz` returns `{"status":"ok"}`.
+- The SumoPod URL configured in the dashboard is the correct API route:
+  `https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook`.
+- The active API deployment currently responds `404 Cannot POST /api/sumopod-webhook`, so the API project must be redeployed from the latest `main` source before webhook testing can pass.
+- Replit workflows are development/testing only. They are not production webhook targets.
 
 Google Cloud Console Authorized redirect URI untuk OAuth credential **wajib** persis byte-for-byte sama dengan `GOOGLE_REDIRECT_URI` di Vercel. Lihat [`docs/GOOGLE-CLOUD-OAUTH.md`](./docs/GOOGLE-CLOUD-OAUTH.md) untuk checklist lengkap (setup, verifikasi, rotasi secret).
 

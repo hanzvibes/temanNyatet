@@ -18,7 +18,7 @@
 
 ## Project summary
 
-TemanNyatet is a SaaS note-taking PWA for Indonesian users. It has four core modules: **Catatan** (notes), **Keuangan** (finance tracker), **To-Do List**, and **Link Saver**. Mobile-first with bottom sheet navigation. Paid via Mayar (Indonesian payment gateway), Rp100.000/month or Rp249.000/year.
+TemanNyatet is a SaaS note-taking PWA for Indonesian users. It has four core modules: **Catatan** (notes), **Keuangan** (finance tracker), **To-Do List**, and **Link Saver**. Mobile-first with bottom sheet navigation. Paid through SumoPod Sandbox during current testing, Rp100.000/month or Rp249.000/year.
 
 ## Business goal
 
@@ -29,7 +29,7 @@ Give Indonesian users a private, mobile-first productivity app where their data 
 - All four feature modules: fully implemented and live
 - Auth flow: complete (Supabase email/password + email confirmation)
 - Google OAuth + Sheets data backend: complete (per-user spreadsheet, auto-created on first connect)
-- Subscription gate (Mayar webhook): complete
+- Subscription gate (SumoPod checkout/webhook): implemented in source; production webhook deployment still requires redeploy verification
 - AI credit system: complete (10 initial credits, atomic debit/grant RPCs, audit ledger)
 - AI note summarization: complete; failed requests do not consume credits
 - PWA: complete (VitePWA, service worker, install prompt)
@@ -51,7 +51,7 @@ Give Indonesian users a private, mobile-first productivity app where their data 
 | App data | Google Sheets API — per-user spreadsheet in their own Drive |
 | Profile/sub | Supabase Postgres (`profiles` table) |
 | AI credits | Supabase Postgres (`user_credits`, `credit_ledger`, atomic RPCs) |
-| Payments | Mayar (HMAC-SHA256 webhook) |
+| Payments | SumoPod Sandbox (server-side checkout, local payment orders, idempotent webhook reconciliation) |
 | PWA | vite-plugin-pwa (workbox) |
 | Monorepo | pnpm workspaces |
 | Deployment | Vercel (two separate projects from one repo) |
@@ -76,7 +76,7 @@ Give Indonesian users a private, mobile-first productivity app where their data 
 │           ├── app.ts         # Express app setup (middleware, routes)
 │           ├── routes/        # One file per route group
 │           ├── middleware/     # requireAuth.ts (Supabase JWT + rate limit)
-│           └── lib/           # google-oauth.ts, user-sheet.ts, sheet-store.ts, credit-service.ts, payment-provider.ts
+│           └── lib/           # google-oauth.ts, user-sheet.ts, sheet-store.ts, credit-service.ts, sumopod-payment.ts, payment-orders.ts
 ├── lib/
 │   ├── api-spec/              # openapi.yaml + Orval config (partially used — see debt)
 │   ├── api-client-react/      # Orval-generated TanStack Query hooks (token wiring only)
@@ -100,7 +100,7 @@ Give Indonesian users a private, mobile-first productivity app where their data 
 | `artifacts/api-server/src/lib/sheet-store.ts` | Google Sheets CRUD (the "database") |
 | `artifacts/api-server/src/lib/google-oauth.ts` | OAuth2 flow, HMAC state, token management |
 | `artifacts/api-server/src/lib/credit-service.ts` | Atomic AI credit balance and grant/consume helpers |
-| `artifacts/api-server/src/lib/payment-provider.ts` | Generic payment provider boundary and Mayar payload parsing |
+| `artifacts/api-server/src/lib/sumopod-payment.ts` | SumoPod payment creation, payload parsing, and optional HMAC verification |
 
 ## Architecture summary
 
@@ -140,6 +140,7 @@ API Server (Express 5)
 3. **`005_phase1_schema.sql` drops legacy tables** — `notes`, `transactions`, `todos`, `links` Supabase tables are dropped. Never write app data to those legacy tables; use the API server. Credit tables added by `006_ai_credits.sql` are intentionally live.
 4. **`GOOGLE_REDIRECT_URI` must be byte-exact** — must match Google Cloud Console and Vercel env var exactly. Any mismatch → `redirect_uri_mismatch` OAuth error.
 5. **Vercel Cron is GET only** — `POST /api/cron/archive-expired` requires an external scheduler (GitHub Actions, cron-job.org), not Vercel Cron.
+6. **Production webhook route must be verified after deploy** — the current source registers `/api/sumopod-webhook`, but a stale Vercel API deployment can return `404 Cannot POST /api/sumopod-webhook` until redeployed from `main` with Root Directory `artifacts/api-server`.
 6. **pnpm version pinned** at `10.26.1` in root `package.json`. Do not upgrade to pnpm 11 without migrating `onlyBuiltDependencies` → `allowBuilds`.
 
 ## Known technical debt
@@ -168,6 +169,7 @@ API Server (Express 5)
 - **Production API routing**: Replit development uses the Vite `/api` proxy to port 8080. Production uses `VITE_API_SERVER_URL`, with a fallback to `https://teman-nyatet-api-server.vercel.app`. Set the variable explicitly in the Vercel frontend project.
 - **Production AI configuration**: `OPENAI_API_KEY` must be set separately in the Vercel API project; Replit Secrets are not copied to Vercel. `OPENAI_BASE_URL` and `OPENAI_MODEL` are optional overrides.
 - **AI credit configuration**: `INITIAL_AI_CREDITS` defaults to 10. Keep it aligned with PostgreSQL `app.initial_ai_credits`.
+- **Payment migration**: SumoPod Sandbox replaced Mayar as the active frontend checkout. Mayar remains only as a legacy compatibility route.
 
 ## Files AI should read first
 

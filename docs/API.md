@@ -504,23 +504,59 @@ Requires `requireUser`. Uploads a profile photo to Supabase Storage (`avatars` b
 
 ---
 
-## Webhook
+## Payments and webhooks
 
-### `POST /api/mayar-webhook`
+### `POST /api/payment/create`
 
-**Public** (no Supabase auth). Secured via HMAC-SHA256 signature verification.
+Requires `requireUser`. Creates a server-side local payment order, calls
+SumoPod Sandbox, stores the provider payment ID/link, and returns the payment
+link to the browser.
 
-Header required: `x-mayar-signature` (hex-encoded HMAC-SHA256 of raw body using `MAYAR_WEBHOOK_SECRET`).
+**Body**
 
-Processes `payment.success`, `order.completed`, `invoice.paid` events. Other events are acknowledged with `200` but not processed.
+```json
+{ "plan": "monthly" }
+```
 
-On payment success:
-- Resolves plan (`monthly` or `yearly`) from `plan_name`, `plan_id`, or `amount` (Rp249.000+ = yearly)
-- Calls `activateSubscription(customer_email, plan)` → updates `profiles.subscription_status` to `'active'`
-- If the payload includes a supported credit package, grants credits through the
-  atomic credit RPC using the payment reference for idempotency.
+Supported plans:
 
-Returns `503` if `MAYAR_WEBHOOK_SECRET` is not set (endpoint disabled).
+| Plan | Amount |
+|---|---:|
+| `monthly` | `100000` IDR |
+| `yearly` | `249000` IDR |
+
+Provider credentials never appear in the response or frontend bundle.
+
+### `POST /api/sumopod-webhook`
+
+**Public** (no Supabase auth). Production URL:
+
+```text
+https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook
+```
+
+The route accepts `payment.completed`, `payment.failed`,
+`payment.expired`, and `payment.test` events. Only `payment.completed` can
+activate a subscription. Failed, expired, and test events never activate an
+account.
+
+When `SUMOPOD_WEBHOOK_SECRET` is configured, the backend verifies an HMAC
+signature from `X-Sumopod-Signature` or `X-Signature`. The SumoPod dashboard's
+separate `X-Webhook-Token` mechanism is not currently implemented.
+
+For `payment.completed`, the server validates the local order ID, provider
+payment ID, amount, and pending status before marking the order completed and
+activating the matching plan. The local order claim and profile activation are
+idempotent, so webhook retries do not extend a subscription twice.
+
+The currently observed production API deployment must be redeployed from the
+latest `main` source before this route can be tested if it returns
+`404 Cannot POST /api/sumopod-webhook`.
+
+### `POST /api/mayar-webhook` (legacy compatibility)
+
+This public route is retained only for existing Mayar callers. It is not used
+by the current frontend checkout. Do not configure SumoPod to call this route.
 
 ---
 
@@ -554,5 +590,5 @@ Archives users whose `subscription_end` has passed by setting their `subscriptio
 | `503` | `"SPREADSHEET_NOT_FOUND"` | User's spreadsheet was deleted from their Drive |
 | `503` | `"GOOGLE_TOKEN_INVALID"` | OAuth token revoked; user must reconnect |
 | `503` | `"SPREADSHEET_ACCESS_DENIED"` | Insufficient permissions on spreadsheet |
-| `503` | `"Webhook not configured"` | `MAYAR_WEBHOOK_SECRET` not set |
+| `503` | `"Payment Sandbox belum dikonfigurasi di server."` | `SUMOPOD_PAYMENT_API_KEY` is missing |
 | `500` | `"Internal server error"` | Unexpected server error |

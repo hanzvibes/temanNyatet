@@ -72,7 +72,6 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 # VITE_API_SERVER_URL=https://teman-nyatet-api-server.vercel.app
 # Production also has this URL as a code fallback if the variable is absent.
 
-VITE_MAYAR_PAYMENT_URL=https://mayar.id/your-payment-page
 ```
 
 The API server's AI summarization feature is configured separately on the API
@@ -89,7 +88,10 @@ GOOGLE_CLIENT_ID=your-google-oauth-client-id
 GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
 GOOGLE_OAUTH_STATE_SECRET=random-hex-string
 
-MAYAR_WEBHOOK_SECRET=your-webhook-secret
+SUMOPOD_PAYMENT_API_KEY=your-regenerated-sandbox-api-key
+SUMOPOD_PAYMENT_BASE_URL=https://api-pay-sandbox.sumopod.com
+# Optional HMAC secret from SumoPod Webhook Signing Secret
+SUMOPOD_WEBHOOK_SECRET=your-regenerated-sumopod-signing-secret
 CRON_SECRET=your-random-cron-secret
 
 # Optional: override the OAuth redirect URI (defaults to REPLIT_DEV_DOMAIN or localhost:5000)
@@ -116,11 +118,24 @@ CRON_SECRET=your-random-cron-secret
 7. Copy the Client ID and Client Secret into the API server env vars (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
 8. Generate `GOOGLE_OAUTH_STATE_SECRET` with `openssl rand -hex 32`
 
-## 6. Mayar Setup
-1. Create a Mayar account at https://mayar.id
-2. Create a payment page with monthly (Rp100.000) and yearly (Rp249.000) plans
-3. Set webhook URL to: `https://<your-api-domain>/api/mayar-webhook`
-4. Copy the webhook secret and set it as `MAYAR_WEBHOOK_SECRET`
+## 6. SumoPod Sandbox Setup
+1. Create or open the SumoPod Sandbox project.
+2. Configure the API Server Vercel project with
+   `SUMOPOD_PAYMENT_API_KEY` and
+   `SUMOPOD_PAYMENT_BASE_URL=https://api-pay-sandbox.sumopod.com`.
+3. In SumoPod Settings → Webhook, set:
+   `https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook`
+4. Configure Redirect URLs:
+   - Success: `https://teman-nyatet.vercel.app/payment?status=success`
+   - Cancel: `https://teman-nyatet.vercel.app/payment?status=cancelled`
+5. Rotate any API key, Webhook Signing Secret, or Webhook Token that appeared
+   in a screenshot or chat. Store new values only in Vercel.
+6. Use the Webhook Signing Secret for `SUMOPOD_WEBHOOK_SECRET` if HMAC
+   signing is enabled. The Webhook Token is a separate credential and is not
+   currently validated by the backend.
+7. Before clicking **Save & Test**, redeploy the API Vercel project from
+   `main` with Root Directory `artifacts/api-server`; the last observed
+   deployment returned `404 Cannot POST /api/sumopod-webhook`.
 
 ## 7. Vercel Cron (Optional)
 Add to `vercel.json` at the API server root directory:

@@ -191,11 +191,15 @@ Handled entirely in the frontend `AuthGuard`. The `subscription_status` field in
 
 | Status | Access |
 |---|---|
-| `pending` | Redirected to `/payment` page (Mayar payment link) |
+| `pending` | Redirected to `/payment` page (SumoPod Sandbox payment link) |
 | `active` | Full access to all four feature modules |
 | `archived` | Redirected to `/archived` page |
 
-Subscription activation is triggered by the Mayar webhook (`POST /api/mayar-webhook`) which calls `activateSubscription()` to update the profiles row.
+Subscription activation is triggered only by a validated SumoPod
+`payment.completed` event at `POST /api/sumopod-webhook`. The server matches
+the local payment order, provider payment ID, amount, and plan before calling
+`activateSubscription()`. The legacy Mayar webhook is compatibility-only and
+is not used by the current frontend checkout.
 
 ---
 

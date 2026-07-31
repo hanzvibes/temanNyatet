@@ -21,3 +21,4 @@
 - [Supabase auth callback lock](supabase-auth-callback-lock.md) — never await nested Supabase operations inside onAuthStateChange; defer them after the callback returns.
 - [Stale development service worker](stale-dev-service-worker.md) — Replit previews can retain an old PWA worker that serves stale HTML and blocks the module graph.
 - [SumoPod payment idempotency](sumopod-payment-idempotency.md) — webhook retries must be safe at both the local order claim and profile activation boundaries.
+- [Vercel webhook deployment state](vercel-webhook-deployment-state.md) — a healthy API deployment can still be stale; verify the exact webhook POST route after redeploying.

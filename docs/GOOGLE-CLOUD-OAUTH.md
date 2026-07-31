@@ -113,7 +113,10 @@ GOOGLE_CLIENT_ID=<oauth-client-id>.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=GOCSPX-<secret>
 GOOGLE_OAUTH_STATE_SECRET=$(openssl rand -hex 32)
 
-MAYAR_WEBHOOK_SECRET=<from-mayar-dashboard>
+SUMOPOD_PAYMENT_API_KEY=<regenerated-sumopod-sandbox-api-key>
+SUMOPOD_PAYMENT_BASE_URL=https://api-pay-sandbox.sumopod.com
+# Optional HMAC secret from SumoPod Webhook Signing Secret
+SUMOPOD_WEBHOOK_SECRET=<regenerated-sumopod-signing-secret>
 CRON_SECRET=$(openssl rand -hex 32)
 OPENAI_API_KEY=<server-only-sumopod-compatible-key>
 

@@ -20,13 +20,14 @@
 - [x] Supabase Auth — email/password with confirmation
 - [x] Per-user Google Spreadsheet as data backend (Google OAuth2, `drive.file` scope)
 - [x] Auto-create spreadsheet on first Google Drive connect
-- [x] Subscription gate — Mayar payment webhook → `subscription_status: active`
+- [x] Subscription gate — SumoPod payment link + webhook → `subscription_status: active`
 - [x] Subscription plans: monthly (Rp100.000) and yearly (Rp249.000)
+- [x] Server-side payment orders with amount/provider-ID validation and webhook idempotency
 - [x] Auth guard: pending → /payment, archived → /archived, no spreadsheet → /connect-sheet
 - [x] Cron endpoint for archiving expired subscriptions
 - [x] AI credit system — 10 signup credits, atomic consumption, immutable ledger
 - [x] AI note summarization — debit only after a valid summary
-- [x] Generic payment-provider boundary for future Mayar credit top-ups
+- [x] SumoPod Sandbox checkout route and payment-order reconciliation
 
 ### Frontend
 - [x] PWA — installable, service worker via workbox, offline-cached assets
@@ -54,21 +55,24 @@
 - [x] Soft delete to `_Archive` tab
 - [x] Spreadsheet repair route (re-creates missing tabs + headers)
 - [x] Formula injection guard on cell writes
-- [x] Mayar webhook with HMAC-SHA256 signature verification
+- [x] SumoPod webhook parsing with optional HMAC-SHA256 signature verification
+- [x] Legacy Mayar webhook compatibility route retained for existing callers
 - [x] Profile avatar upload to Supabase Storage
 
 ### Deployment
 - [x] Production on Vercel (two-project setup)
 - [x] Vercel deployment documentation ([`docs/GOOGLE-CLOUD-OAUTH.md`](./GOOGLE-CLOUD-OAUTH.md))
+- [ ] Redeploy the production API from `main` so `/api/sumopod-webhook` is live
 
 ### Documentation
-- [x] Full documentation synchronization (July 2026) — ARCHITECTURE, API, AUTH, DATABASE, ENVIRONMENT, DEPLOYMENT, PRD, DECISIONS, SECURITY, TROUBLESHOOTING, ROADMAP, TASKS, UI_UX_GUIDELINES, TESTING
+- [x] Documentation synchronized with the current Vercel/SumoPod Sandbox architecture
 
 ---
 
 ## In Progress
 
 - [ ] UX improvements — empty state CTA buttons (Issue #1 — partially complete as of July 2026)
+- [ ] Production SumoPod webhook verification after API redeploy
 
 ---
 

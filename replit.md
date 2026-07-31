@@ -1,7 +1,7 @@
 # TemanNyatet — Replit Dev Environment
 
 A note-taking SaaS PWA for Indonesian users (Notes, Finance, To-Do, Link Saver).
-Production is deployed on Vercel; this Replit environment is for development and staging.
+Production is deployed on Vercel; this Replit environment is for development and testing only.
 
 Full run instructions, secrets list, and architecture notes are in [`docs/replit.md`](docs/replit.md).
 

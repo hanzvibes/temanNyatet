@@ -30,7 +30,7 @@ Indonesian smartphone users who want a simple, fast, "sat-set" (no-frills, gets 
 
 ## Business model
 
-Subscription via **Mayar** (Indonesian payment gateway):
+Subscription via **SumoPod Payment Gateway Sandbox**:
 
 | Plan | Price | Duration |
 |---|---|---|
@@ -38,6 +38,9 @@ Subscription via **Mayar** (Indonesian payment gateway):
 | Yearly | Rp 249.000 | 365 days |
 
 New users sign up free → `subscription_status: pending` → must pay to access features → `active`. Expired subscriptions → `archived`.
+
+The old Mayar webhook is retained only as a backend compatibility route for
+existing callers; it is not used by the current frontend checkout.
 
 ---
 

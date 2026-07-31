@@ -1,4 +1,12 @@
-# Documentation Audit Report
+# Documentation Audit Report — Historical
+
+> **Historical record:** This report describes an earlier documentation audit
+> and is not the current operational source of truth. For current deployment,
+> environment, payment, and webhook instructions, use `README.md`,
+> `docs/DEPLOYMENT.md`, `docs/ENVIRONMENT.md`, and
+> `docs/SUMOPOD-PAYMENT.md`. The current production model is Vercel for both
+> frontend and API, with SumoPod Sandbox as the active checkout and Mayar
+> retained only for legacy compatibility.
 
 **Last updated:** 2026-07-29 (AI credits, current workflows, and full documentation synchronization)
 **Previous audit:** 2026-07-26 (full documentation synchronization wave)  

@@ -92,10 +92,18 @@ This is tracked as a documentation debt item. The priorities below are ordered b
 - [ ] Long-press (>800ms) → deletes link
 - [ ] Search filters by title and URL
 
-### Subscription gate
+### Subscription gate / SumoPod Sandbox
 
 - [ ] New user → `/payment` page
-- [ ] Trigger Mayar webhook (`payment.success`) → `subscription_status` → `active`
+- [ ] Confirm SumoPod production API deployment is current: `GET /api/healthz` returns `200` and `POST /api/sumopod-webhook` no longer returns `404 Cannot POST`
+- [ ] SumoPod dashboard webhook URL is `https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook`
+- [ ] Click SumoPod **Save & Test** and inspect the API deployment log
+- [ ] Trigger SumoPod `payment.test` → order remains `pending` and profile is not activated by the test event
+- [ ] Create monthly Sandbox checkout → local `payment_orders` row is created as `pending`
+- [ ] Create yearly Sandbox checkout → amount is Rp249.000 and plan is `yearly`
+- [ ] Complete a real Sandbox payment → `payment.completed` changes the matching order to `completed` and activates the matching plan
+- [ ] Resend the same `payment.completed` webhook → subscription does not get extended twice
+- [ ] Trigger failed/expired Sandbox events → order becomes terminal and profile is not activated
 - [ ] Active user → access to all four feature pages
 - [ ] Archived user → `/archived` page
 - [ ] Active user visiting `/login` or `/payment` → redirected to `/catatan`
@@ -156,12 +164,14 @@ Test `middleware/requireAuth.ts`:
 - Rejects expired JWT
 - Returns 428 for user with no spreadsheet
 
-Test `routes/webhook.ts`:
-- Accepts valid HMAC signature
-- Rejects invalid signature with 400
-- Returns 503 when `MAYAR_WEBHOOK_SECRET` is unset
-- Correctly identifies `yearly` plan from amount
-- Correctly identifies `monthly` plan from plan name
+Test `sumopod-payment.ts` and payment-order reconciliation:
+- Parses valid `payment.completed`, `payment.failed`, `payment.expired`, and `payment.test` events
+- Rejects invalid or incomplete provider payloads
+- Accepts a valid HMAC signature and rejects an invalid one
+- Creates a payment request with the server-only API key and expected amount
+- Claims a pending local order only when provider payment ID and amount match
+- Replayed completion does not activate or extend a subscription twice
+- Failed, expired, and test events never activate a profile
 
 ### 2. Frontend hook tests
 

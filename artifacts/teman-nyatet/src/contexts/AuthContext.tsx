@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { User } from '@supabase/supabase-js';
+import type { Session, User } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/database.types';
 
 type AuthContextType = {
@@ -110,25 +110,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initialize();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Supabase holds an internal auth lock while this callback runs. Never
+    // await another Supabase call directly inside it: doing so can deadlock
+    // sign-in on slower browsers and leave the app on "Memuat…" forever.
+    const processAuthStateChange = async (session: Session) => {
       if (!isMounted) return;
 
-      if (session?.user) {
-        if (!session.user.email_confirmed_at) {
-          console.warn('[AuthContext] Auth state changed to unverified email, signing out');
-          await supabase.auth.signOut();
-          if (!isMounted) return;
-          setUser(null);
-          setProfile(null);
-        } else {
-          setUser(session.user);
-          await fetchProfile(session.user.id, session.user.email);
-        }
+      if (session.user.email_confirmed_at) {
+        setUser(session.user);
+        setProfile(null);
+        await fetchProfile(session.user.id, session.user.email);
       } else {
+        console.warn('[AuthContext] Auth state changed to unverified email, signing out');
+        await supabase.auth.signOut();
+        if (!isMounted) return;
         setUser(null);
         setProfile(null);
       }
       if (isMounted) setLoading(false);
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isMounted) return;
+
+      // INITIAL_SESSION is handled by initialize() above. Token refreshes do
+      // not require a profile refetch, so only process state transitions that
+      // can change the authenticated user.
+      if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') return;
+
+      if (!session?.user) {
+        setUser(null);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      // Defer all Supabase work until the auth callback has returned and
+      // released Supabase's internal lock.
+      window.setTimeout(() => {
+        void processAuthStateChange(session).catch((err) => {
+          console.warn('[AuthContext] Auth state processing error:', err);
+          if (isMounted) {
+            setUser(null);
+            setProfile(null);
+            setLoading(false);
+          }
+        });
+      }, 0);
     });
 
     return () => {

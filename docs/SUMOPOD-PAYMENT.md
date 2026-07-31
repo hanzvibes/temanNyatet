@@ -55,6 +55,12 @@ Editor after the earlier migrations and before enabling checkout. The migration
 creates the server-only `payment_orders` reconciliation table and adds the
 per-order activation marker used for webhook idempotency.
 
+For AI credit top-ups, also run
+`supabase/migrations/008_credit_payment_orders.sql`. It creates the
+server-only `credit_payment_orders` reconciliation table. Purchased credits are
+granted through the existing atomic `grant_credit` RPC with
+`sumopod_topup` + the local order ID as the unique ledger reference.
+
 ## Sandbox flow
 
 1. Deploy the API project with Root Directory `artifacts/api-server` from the
@@ -71,6 +77,33 @@ per-order activation marker used for webhook idempotency.
 9. Complete the Sandbox payment and confirm the `payment.completed` event
    activates the matching plan.
 10. Resend the same webhook and confirm the order remains a single activation.
+
+### AI credit top-up flow
+
+1. Run migration `008_credit_payment_orders.sql` in Supabase.
+2. Deploy the API from the latest source so
+   `POST /api/credits/topup/create` and the credit branch of
+   `/api/sumopod-webhook` are live.
+3. Open Settings → AI Credit and choose a package.
+4. The browser sends only the package ID; the API owns the package amount and
+   creates a `TN-CREDIT-...` payment order.
+5. Complete the payment in SumoPod Sandbox.
+6. Confirm the `payment.completed` webhook returns `200` and the user's
+   `credit_ledger` has one `sumopod_topup` row for that order.
+7. Resend the same webhook and confirm the balance and ledger do not increase a
+   second time.
+
+The four server-owned packages are:
+
+| Package | Credits | Price |
+|---|---:|---:|
+| Starter | 100 | Rp10.000 |
+| Popular | 300 | Rp25.000 |
+| Value | 700 | Rp50.000 |
+| Power | 1.500 | Rp100.000 |
+
+The same flow works in Production when the API deployment uses the Production
+SumoPod base URL and credentials. Never put those values in `VITE_*` variables.
 
 Supported plans:
 

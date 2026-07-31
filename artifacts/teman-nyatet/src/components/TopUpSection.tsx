@@ -2,13 +2,14 @@
  * TopUpSection — AI Credit top-up UI rendered inside SettingsSheet's
  * subscription panel. Fetches credit history from Supabase directly (RLS
  * policies allow users to read their own ledger), shows packages, history,
- * FAQ, and a security badge. Payment integration is wired through the
- * `onRequestTopUp` callback — pass a real handler once a payment gateway
- * route is ready.
+ * FAQ, and a security badge. Payment links are created by the API server so
+ * the browser never receives provider credentials or chooses the amount.
  */
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import { apiGet } from '@/lib/apiClient';
+import { openCreditPaymentCheckout, type CreditPackageId } from '@/lib/credit-payment';
 import {
   Sparkles,
   Zap,
@@ -26,7 +27,7 @@ import { toast } from 'sonner';
 // ── Package catalogue ─────────────────────────────────────────────────────────
 
 export interface CreditPackage {
-  id: string;
+  id: CreditPackageId;
   name: string;
   credits: number;
   price: number; // IDR
@@ -304,14 +305,12 @@ function HistoryRow({ entry }: { entry: LedgerEntry }) {
 export interface TopUpSectionProps {
   /** Current credit balance from the subscription status API. */
   creditBalance: number;
-  /**
-   * Called when the user picks a package. Provide a real implementation
-   * once a payment gateway route is wired. For now shows a "Segera hadir" toast.
-   */
+  /** Optional override for host flows that provide their own checkout. */
   onRequestTopUp?: (pkg: CreditPackage) => Promise<void>;
 }
 
 export default function TopUpSection({ creditBalance, onRequestTopUp }: TopUpSectionProps) {
+  const [currentBalance, setCurrentBalance] = useState(creditBalance);
   const [history, setHistory] = useState<LedgerEntry[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [historyError, setHistoryError] = useState(false);
@@ -336,32 +335,49 @@ export default function TopUpSection({ creditBalance, onRequestTopUp }: TopUpSec
     }
   };
 
+  const refreshCreditBalance = async () => {
+    try {
+      const result = await apiGet<{ balance: number }>('/credits');
+      setCurrentBalance(result.balance);
+    } catch {
+      // Keep the last known balance when the API is temporarily unavailable.
+    }
+  };
+
   useEffect(() => {
     void loadHistory();
+    void refreshCreditBalance();
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        void loadHistory();
+        void refreshCreditBalance();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, []);
 
   const handleBuy = async (pkg: CreditPackage) => {
-    if (onRequestTopUp) {
-      setBuying(true);
-      try {
+    setBuying(true);
+    try {
+      if (onRequestTopUp) {
         await onRequestTopUp(pkg);
-      } finally {
-        setBuying(false);
+      } else {
+        await openCreditPaymentCheckout(pkg.id);
       }
-      return;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Gagal menyiapkan pembayaran credit.');
+    } finally {
+      setBuying(false);
     }
-    // Default placeholder: payment gateway not yet wired
-    toast.info('Segera hadir!', {
-      description: `Paket ${pkg.name} (${pkg.credits} credit) akan tersedia dalam waktu dekat.`,
-      duration: 4000,
-    });
   };
 
   // Credit bar display — cap at 20 for visual, but show the real number
-  const barMax = Math.max(creditBalance, 20);
-  const barFill = Math.min(creditBalance, 20);
-  const isEmpty = creditBalance === 0;
-  const isLow = creditBalance > 0 && creditBalance <= 3;
+  const barMax = Math.max(currentBalance, 20);
+  const barFill = Math.min(currentBalance, 20);
+  const isEmpty = currentBalance === 0;
+  const isLow = currentBalance > 0 && currentBalance <= 3;
 
   const balanceTone = isEmpty
     ? { ring: 'border-border', bg: 'bg-secondary', num: 'text-foreground', bar: 'bg-primary/30', track: 'bg-muted' }
@@ -388,7 +404,7 @@ export default function TopUpSection({ creditBalance, onRequestTopUp }: TopUpSec
           </div>
           <div className="text-right flex-shrink-0">
             <p className={`text-4xl font-black leading-none tabular-nums ${balanceTone.num}`}>
-              {creditBalance}
+              {currentBalance}
             </p>
             <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">tersisa</p>
           </div>

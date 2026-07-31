@@ -101,6 +101,36 @@
       </div>
     </div>
     <script>
+      // A production PWA service worker can remain installed when this app is
+      // opened again in the Replit preview. It may serve an old index.html
+      // whose module graph no longer exists, leaving the boot shell stuck
+      // forever. Remove only stale app workers on local/Replit hosts, never on
+      // the real production site.
+      (function clearStaleDevWorker() {
+        var host = window.location.hostname;
+        var isDevHost =
+          host === 'localhost' ||
+          host === '127.0.0.1' ||
+          host.endsWith('.replit.dev') ||
+          host.endsWith('.repl.co');
+        if (!isDevHost || !('serviceWorker' in navigator)) return;
+
+        var reloadKey = 'teman-nyatet:dev-worker-cleared';
+        var hadController = Boolean(navigator.serviceWorker.controller);
+        navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          if (!registrations.length) return;
+          return Promise.all(registrations.map(function (registration) {
+            return registration.unregister();
+          })).then(function () {
+            if (!hadController || window.sessionStorage.getItem(reloadKey)) return;
+            window.sessionStorage.setItem(reloadKey, 'true');
+            window.location.reload();
+          });
+        }).catch(function () {
+          // A service-worker cleanup failure must not block the app itself.
+        });
+      })();
+
       // Keep a visible recovery state if the module graph fails during a
       // dev-server/PWA cold start before React gets a chance to mount.
       (function bootRecovery() {

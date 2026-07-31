@@ -19,3 +19,4 @@
 - [Responsive overlay lifecycle](responsive-overlay-lifecycle.md) — viewport-specific drawers must close and broadcast overlay state when a breakpoint switch deactivates their instance.
 - [Public legal route auth](public-legal-route-auth.md) — privacy and terms pages must render independently from auth loading and onboarding redirects.
 - [Supabase auth callback lock](supabase-auth-callback-lock.md) — never await nested Supabase operations inside onAuthStateChange; defer them after the callback returns.
+- [Stale development service worker](stale-dev-service-worker.md) — Replit previews can retain an old PWA worker that serves stale HTML and blocks the module graph.

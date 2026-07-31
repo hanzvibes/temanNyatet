@@ -151,6 +151,7 @@ export default function LinkSaverPage() {
               <SettingsSheet
                 avatarBg="bg-linksaver/15"
                 avatarTextColor="text-linksaver-text"
+                viewport="mobile"
               />
             </div>
           </div>

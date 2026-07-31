@@ -470,7 +470,11 @@ export default function TodoPage() {
               >
                 <PanelTopOpen size={18} strokeWidth={2.3} />
               </button>
-              <SettingsSheet avatarBg="bg-todo/15" avatarTextColor="text-todo-text" />
+              <SettingsSheet
+                avatarBg="bg-todo/15"
+                avatarTextColor="text-todo-text"
+                viewport="mobile"
+              />
             </div>
           </div>
         </div>

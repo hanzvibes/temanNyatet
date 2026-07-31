@@ -26,11 +26,39 @@ interface SubscriptionStatus {
 interface SettingsSheetProps {
   avatarBg: string;
   avatarTextColor: string;
+  viewport?: 'mobile' | 'desktop';
 }
 
-export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsSheetProps) {
+const DESKTOP_BREAKPOINT = 1024;
+
+function useViewportActive(viewport: SettingsSheetProps['viewport']) {
+  const [isActive, setIsActive] = useState(() => {
+    if (!viewport || typeof window === 'undefined') return true;
+    return viewport === 'desktop'
+      ? window.innerWidth >= DESKTOP_BREAKPOINT
+      : window.innerWidth < DESKTOP_BREAKPOINT;
+  });
+
+  useEffect(() => {
+    if (!viewport) return;
+
+    const mediaQuery = window.matchMedia(`(min-width: ${DESKTOP_BREAKPOINT}px)`);
+    const update = () => {
+      setIsActive(viewport === 'desktop' ? mediaQuery.matches : !mediaQuery.matches);
+    };
+
+    update();
+    mediaQuery.addEventListener('change', update);
+    return () => mediaQuery.removeEventListener('change', update);
+  }, [viewport]);
+
+  return isActive;
+}
+
+export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: SettingsSheetProps) {
   const { user, profile, refreshProfile } = useAuthContext();
   const [, setLocation] = useLocation();
+  const isViewportActive = useViewportActive(viewport);
   const [open, setOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<ActiveSection>(null);
   const [saving, setSaving] = useState(false);
@@ -103,6 +131,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
 
   useEffect(() => {
     const openSubscription = (event: Event) => {
+      if (!isViewportActive) return;
       // Multiple SettingsSheet instances can be mounted at once (sidebar +
       // page header on desktop). Claim the shared request so only the first
       // instance opens and duplicate subscription drawers cannot stack.
@@ -113,7 +142,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
     };
     window.addEventListener('teman-nyatet:open-settings-subscription', openSubscription);
     return () => window.removeEventListener('teman-nyatet:open-settings-subscription', openSubscription);
-  }, []);
+  }, [isViewportActive]);
 
   // Broadcast open/closed state on the shared overlay channel so the PWA
   // install prompt (and any future peripheral chrome) can step aside while
@@ -121,10 +150,11 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
   // and our `onOpenChange` handler — the effect fires on every transition,
   // not just the explicit `handleOpen`/`handleLogout` paths.
   useEffect(() => {
+    if (!isViewportActive) return;
     window.dispatchEvent(
       new CustomEvent('teman-nyatet:any-overlay', { detail: { open } }),
     );
-  }, [open]);
+  }, [isViewportActive, open]);
 
   // Vaul sizes the drawer from its current content. Detail forms are shorter
   // than the settings menu, so returning with the back button can leave the
@@ -288,6 +318,8 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
 
   const INP = 'w-full bg-secondary border border-border rounded-xl outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 font-bold text-foreground transition-all py-3 px-4 text-sm';
 
+  if (!isViewportActive) return null;
+
   return (
     <>
       {/* Avatar trigger */}
@@ -312,11 +344,11 @@ export default function SettingsSheet({ avatarBg, avatarTextColor }: SettingsShe
 
       <Drawer.Root open={open} onOpenChange={setOpen}>
         <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" />
+          <Drawer.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm will-change-[opacity]" />
           <Drawer.Content
             ref={drawerContentRef}
             style={activeSection === null && menuMinHeight !== null ? { minHeight: menuMinHeight } : undefined}
-            className="bg-card flex flex-col rounded-t-[clamp(1.25rem,4vw,2rem)] fixed bottom-0 left-0 right-0 z-50 outline-none mx-auto w-full sm:max-w-[540px] md:max-w-[600px] lg:max-w-[640px] xl:max-w-[720px] max-h-[min(88vh,48rem)]"
+            className="bg-card flex flex-col rounded-t-[clamp(1.25rem,4vw,2rem)] fixed bottom-0 left-0 right-0 z-50 outline-none mx-auto w-full sm:max-w-[540px] md:max-w-[600px] lg:max-w-[640px] xl:max-w-[720px] max-h-[min(88vh,48rem)] will-change-transform"
           >
             <div className="mx-auto mt-[clamp(0.5rem,1.5vw,0.75rem)] mb-0 h-[clamp(0.25rem,0.8vw,0.375rem)] w-[clamp(2.5rem,8vw,3rem)] flex-shrink-0 rounded-full bg-muted-foreground/20" />
 

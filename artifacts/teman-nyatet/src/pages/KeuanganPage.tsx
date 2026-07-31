@@ -369,6 +369,7 @@ export default function KeuanganPage() {
                <SettingsSheet
                  avatarBg="bg-finance/15"
                  avatarTextColor="text-finance-text"
+                  viewport="mobile"
                />
              </div>
           </div>

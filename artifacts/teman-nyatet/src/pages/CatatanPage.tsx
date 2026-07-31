@@ -307,6 +307,7 @@ export default function CatatanPage() {
             <SettingsSheet
               avatarBg="bg-primary/10"
               avatarTextColor="text-primary"
+              viewport="mobile"
             />
           </div>
         </div>

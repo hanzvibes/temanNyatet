@@ -92,7 +92,11 @@ export default function SidebarNav() {
       {/* Settings — avatar at the bottom */}
       <div className="px-3 pb-6 border-t border-border/60 pt-5">
         <div className="flex items-center gap-3">
-          <SettingsSheet avatarBg={settingsAvatarBg} avatarTextColor={settingsAvatarColor} />
+          <SettingsSheet
+            avatarBg={settingsAvatarBg}
+            avatarTextColor={settingsAvatarColor}
+            viewport="desktop"
+          />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground truncate">
               {profile?.name ?? 'Pengaturan'}

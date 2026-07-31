@@ -1,12 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Lock, LogOut } from 'lucide-react';
+import { toast } from 'sonner';
+import { openPaymentCheckout } from '@/lib/payment';
 
 export default function ArchivedPage() {
-  const paymentUrl = import.meta.env.VITE_MAYAR_PAYMENT_URL || '#';
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+  };
+
+  const handleCheckout = async () => {
+    setCheckoutLoading(true);
+    try {
+      await openPaymentCheckout('yearly');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Gagal menyiapkan pembayaran. Coba lagi.');
+    } finally {
+      setCheckoutLoading(false);
+    }
   };
 
   return (
@@ -21,12 +34,14 @@ export default function ArchivedPage() {
           Subscription kamu sudah berakhir. Perpanjang untuk melanjutkan mencatat dengan TemanNyatet.
         </p>
 
-        <a 
-          href={paymentUrl}
-           className="w-full min-h-12 bg-primary text-primary-foreground font-semibold py-3 px-4 rounded-xl shadow-elevation-1 hover:opacity-90 transition-opacity block"
+        <button
+          type="button"
+          onClick={() => void handleCheckout()}
+          disabled={checkoutLoading}
+          className="w-full min-h-12 bg-primary text-primary-foreground font-semibold py-3 px-4 rounded-xl shadow-elevation-1 hover:opacity-90 transition-opacity disabled:opacity-50"
         >
-          Perpanjang Subscription
-        </a>
+          {checkoutLoading ? 'Menyiapkan pembayaran…' : 'Perpanjang Subscription'}
+        </button>
       </div>
 
       <button 

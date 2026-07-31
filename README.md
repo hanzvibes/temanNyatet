@@ -28,7 +28,7 @@ A note-taking SaaS web app + PWA for Indonesian users. Four core modules: Catata
 ## Where things live
 
 - `artifacts/teman-nyatet/` — React+Vite frontend SPA
-- `artifacts/api-server/` — Express API (Mayar webhook, subscription status, cron, Google OAuth, data routes for notes/transactions/todos/links)
+- `artifacts/api-server/` — Express API (SumoPod Sandbox checkout/webhook, legacy Mayar webhook compatibility, subscription status, cron, Google OAuth, data routes)
 - `lib/api-spec/` — OpenAPI spec + Orval config + generated API client packages
 - `lib/db/` — Drizzle scaffolding (currently unused; migrations are run manually via Supabase SQL Editor)
 - `supabase/migrations/` — DB schema for `profiles` and RLS policies
@@ -41,7 +41,9 @@ A note-taking SaaS web app + PWA for Indonesian users. Four core modules: Catata
 - `artifacts/api-server/src/lib/user-sheet.ts` — resolves `spreadsheet_id` + `google_refresh_token` into a per-user Sheets client
 - `artifacts/api-server/src/lib/sheet-store.ts` — generic CRUD against Google Sheets tabs
 - `artifacts/api-server/src/middleware/requireAuth.ts` — Supabase token verification, per-user rate limiting, `req.sheetsClient` attachment
-- `artifacts/api-server/src/routes/webhook.ts` — Mayar payment webhook handler
+- `artifacts/api-server/src/routes/payment.ts` — authenticated SumoPod payment-link creation
+- `artifacts/api-server/src/routes/sumopod-webhook.ts` — SumoPod payment webhook reconciliation
+- `artifacts/api-server/src/routes/webhook.ts` — legacy Mayar payment webhook compatibility
 - `artifacts/api-server/src/routes/cron.ts` — `/api/cron/archive-expired` (POST + `CRON_SECRET` Bearer)
 - `artifacts/api-server/src/routes/auth-google.ts` — `/auth/google/initiate`, `/callback`, `/status`, `/disconnect`
 - `artifacts/api-server/src/routes/{notes,transactions,todos,links}.ts` — data routes
@@ -69,7 +71,7 @@ A note-taking SaaS web app + PWA for Indonesian users. Four core modules: Catata
 - **Keuangan**: Track income/expense transactions with monthly summary + Recharts bar chart
 - **Todo**: Checkbox to-do list with due dates and times
 - **Link Saver**: Save bookmarks with title, URL, note + copy to clipboard + search
-- **Subscription**: Rp249.000/tahun or Rp100.000/bulan via Mayar payment
+- **Subscription**: Rp249.000/tahun or Rp100.000/bulan via SumoPod Sandbox payment links
 - **Auth guard**: pending → `/payment`, archived → `/archived`, active → app; no Google connection → `/connect-sheet`
 
 ## User preferences
@@ -81,7 +83,7 @@ _Populate as you build._
 - Supabase env vars use `VITE_` prefix for frontend: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 - API server uses `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (no `VITE_` prefix, server-only)
 - Google OAuth env vars are required for the API server: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_OAUTH_STATE_SECRET`
-- Mayar webhook URL must be set in Mayar dashboard: `https://<your-api-domain>/api/mayar-webhook`
+- SumoPod Sandbox webhook URL: `https://<your-api-domain>/api/sumopod-webhook`
 - Run all `supabase/migrations/*.sql` files in order in the Supabase SQL Editor before launch (see [`docs/SUPABASE-SETUP.md`](./docs/SUPABASE-SETUP.md))
 - `profiles` has RLS enabled; the `fix_profiles_rls_recursion.sql` script must also be applied if you hit an "infinite recursion detected in policy" error
 - The auto-create profile trigger runs on `auth.users` INSERT; `AuthContext` also has a client-side fallback upsert
@@ -104,7 +106,6 @@ VITE_SITE_URL=https://temannyatet.id
 # In production, the app defaults to the API Vercel project below if this is unset.
 VITE_API_SERVER_URL=https://teman-nyatet-api-server.vercel.app
 
-VITE_MAYAR_PAYMENT_URL=https://mayar.id/your-payment-page
 ```
 
 ### API Server (`.env.local` in `artifacts/api-server/`)
@@ -117,7 +118,10 @@ GOOGLE_CLIENT_ID=your-google-oauth-client-id
 GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
 GOOGLE_OAUTH_STATE_SECRET=random-hex-string
 
-MAYAR_WEBHOOK_SECRET=your-webhook-secret
+SUMOPOD_PAYMENT_API_KEY=your-regenerated-sandbox-api-key
+SUMOPOD_PAYMENT_BASE_URL=https://api-pay-sandbox.sumopod.com
+# Optional, only when enabled and supported by the SumoPod webhook configuration
+SUMOPOD_WEBHOOK_SECRET=your-sumopod-webhook-secret
 CRON_SECRET=your-random-cron-secret
 
 # Optional: override the OAuth redirect URI (defaults to REPLIT_DEV_DOMAIN or localhost:5000)
@@ -179,7 +183,6 @@ Repo ini punya dua deployable yang beda kebutuhan build-nya, jadi deploy sebagai
 - Env vars yang wajib diisi di Project Settings → Environment Variables:
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
-  - `VITE_MAYAR_PAYMENT_URL`
   - `VITE_API_SERVER_URL=https://teman-nyatet-api-server.vercel.app` (disarankan; production fallback juga tersedia)
 
 ### 2. API server — `artifacts/api-server`
@@ -192,7 +195,9 @@ Repo ini punya dua deployable yang beda kebutuhan build-nya, jadi deploy sebagai
   - `GOOGLE_CLIENT_ID`
   - `GOOGLE_CLIENT_SECRET`
   - `GOOGLE_OAUTH_STATE_SECRET`
-  - `MAYAR_WEBHOOK_SECRET`
+   - `SUMOPOD_PAYMENT_API_KEY`
+   - `SUMOPOD_PAYMENT_BASE_URL`
+   - `SUMOPOD_WEBHOOK_SECRET` (only if configured by SumoPod)
    - `CRON_SECRET` (required to run the external archive-expiry job)
   - `FRONTEND_URL` (production frontend URL — used for OAuth callback redirects)
   - `ALLOWED_ORIGINS` (production frontend URL — gates CORS)
@@ -201,7 +206,7 @@ Repo ini punya dua deployable yang beda kebutuhan build-nya, jadi deploy sebagai
   - `OPENAI_BASE_URL` (optional; defaults to `https://ai.sumopod.com`)
   - `OPENAI_MODEL` (optional; defaults to `gpt-4o-mini`)
    - `INITIAL_AI_CREDITS` (optional; defaults to `10`, must match Supabase `app.initial_ai_credits`)
-- Setelah live, update webhook URL di dashboard Mayar ke `https://<domain-api-server>/api/mayar-webhook`
+- Setelah Sandbox siap, set webhook URL SumoPod ke `https://<domain-api-server>/api/sumopod-webhook`
 - Setelah live, verify the API with `https://teman-nyatet-api-server.vercel.app/api/healthz`. The API project root returns service metadata; health is mounted under `/api`.
 - Endpoint `/api/cron/archive-expired` masih pakai pola POST + Bearer token (`CRON_SECRET`), jadi tetap dipanggil dari scheduler eksternal (GitHub Actions cron, cron-job.org, dll) — bukan Vercel Cron Jobs bawaan (yang cuma bisa GET). Kalau mau pindah ke Vercel Cron, endpoint ini perlu ditambah handler GET.
 

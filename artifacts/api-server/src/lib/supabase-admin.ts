@@ -29,9 +29,23 @@ export const supabaseAdmin = createClient(supabaseUrl || 'http://localhost', ser
 export async function activateSubscription(
   email: string,
   plan: 'monthly' | 'yearly',
+  paymentOrderId?: string,
 ): Promise<{ success: boolean; error?: string }> {
   if (!supabaseUrl || !serviceRoleKey) {
     return { success: false, error: 'Supabase credentials not configured' };
+  }
+
+  if (paymentOrderId) {
+    const { data: existingProfile, error: readError } = await supabaseAdmin
+      .from('profiles')
+      .select('last_subscription_order_id')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (readError) return { success: false, error: readError.message };
+    if (existingProfile?.last_subscription_order_id === paymentOrderId) {
+      return { success: true };
+    }
   }
 
   const now = new Date();
@@ -52,17 +66,38 @@ export async function activateSubscription(
     subscriptionEnd.setDate(0);
   }
 
-  const { error } = await supabaseAdmin
+  let updateQuery = supabaseAdmin
     .from('profiles')
     .update({
       subscription_status: 'active',
       subscription_plan: plan,
       subscription_end: subscriptionEnd.toISOString(),
+      ...(paymentOrderId ? { last_subscription_order_id: paymentOrderId } : {}),
     })
     .eq('email', email);
 
+  if (paymentOrderId) {
+    updateQuery = updateQuery.or(
+      `last_subscription_order_id.is.null,last_subscription_order_id.neq.${paymentOrderId}`,
+    );
+  }
+
+  const { data: updatedProfiles, error } = await updateQuery.select('last_subscription_order_id');
+
   if (error) {
     return { success: false, error: error.message };
+  }
+  if (paymentOrderId && (!updatedProfiles || updatedProfiles.length === 0)) {
+    const { data: currentProfile, error: verifyError } = await supabaseAdmin
+      .from('profiles')
+      .select('last_subscription_order_id')
+      .eq('email', email)
+      .maybeSingle();
+    if (verifyError) return { success: false, error: verifyError.message };
+    if (currentProfile?.last_subscription_order_id === paymentOrderId) {
+      return { success: true };
+    }
+    return { success: false, error: 'Subscription activation was claimed by another request' };
   }
 
   return { success: true };

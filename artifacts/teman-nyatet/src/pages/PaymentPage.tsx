@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { NotebookPen, LogOut } from 'lucide-react';
+import { toast } from 'sonner';
+import { openPaymentCheckout, type PaymentPlan } from '@/lib/payment';
 
 export default function PaymentPage() {
-  const paymentUrl = import.meta.env.VITE_MAYAR_PAYMENT_URL || '#';
   const { user, refreshProfile } = useAuthContext();
   const [skipping, setSkipping] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState<PaymentPlan | null>(null);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -32,6 +34,17 @@ export default function PaymentPage() {
     }
   };
 
+  const handleCheckout = async (plan: PaymentPlan) => {
+    setCheckoutPlan(plan);
+    try {
+      await openPaymentCheckout(plan);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Gagal menyiapkan pembayaran. Coba lagi.');
+    } finally {
+      setCheckoutPlan(null);
+    }
+  };
+
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center p-5 sm:p-6 bg-background">
       <div className="w-full max-w-sm flex flex-col items-center text-center mb-8">
@@ -51,12 +64,14 @@ export default function PaymentPage() {
           <div className="border border-border rounded-2xl p-4 flex flex-col bg-surface/40">
             <h3 className="font-semibold text-lg">Bulanan</h3>
             <p className="text-2xl font-bold mt-1 mb-4">Rp 100.000<span className="text-sm font-normal text-muted-foreground"> / bulan</span></p>
-            <a 
-              href={paymentUrl} 
-               className="w-full min-h-11 py-2.5 rounded-xl border-2 border-primary text-primary font-semibold text-center hover:bg-primary/5 transition-colors"
+            <button
+              type="button"
+              onClick={() => void handleCheckout('monthly')}
+              disabled={checkoutPlan !== null}
+              className="w-full min-h-11 py-2.5 rounded-xl border-2 border-primary text-primary font-semibold text-center hover:bg-primary/5 transition-colors disabled:opacity-50"
             >
-              Pilih Bulanan
-            </a>
+              {checkoutPlan === 'monthly' ? 'Menyiapkan pembayaran…' : 'Pilih Bulanan'}
+            </button>
           </div>
 
           <div className="border-2 border-primary rounded-2xl p-4 flex flex-col relative overflow-hidden shadow-elevation-1">
@@ -65,12 +80,14 @@ export default function PaymentPage() {
             </div>
             <h3 className="font-semibold text-lg text-primary">Tahunan</h3>
             <p className="text-2xl font-bold mt-1 mb-4">Rp 249.000<span className="text-sm font-normal text-muted-foreground"> / tahun</span></p>
-            <a 
-              href={paymentUrl} 
-               className="w-full min-h-11 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-center hover:opacity-90 shadow-elevation-1 transition-opacity"
+            <button
+              type="button"
+              onClick={() => void handleCheckout('yearly')}
+              disabled={checkoutPlan !== null}
+              className="w-full min-h-11 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-center hover:opacity-90 shadow-elevation-1 transition-opacity disabled:opacity-50"
             >
-              Pilih Tahunan
-            </a>
+              {checkoutPlan === 'yearly' ? 'Menyiapkan pembayaran…' : 'Pilih Tahunan'}
+            </button>
           </div>
         </div>
 

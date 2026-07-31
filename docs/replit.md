@@ -41,8 +41,9 @@ The API server requires these values for its core auth and data paths:
 - `OPENAI_API_KEY` — API key for note summarization (AI feature). If unset, `POST /api/notes/:id/summarize` returns `503`. Defaults to SumoPod-compatible endpoint.
 - `INITIAL_AI_CREDITS` — initial AI summarization balance for new users; defaults to `10`. Keep aligned with Supabase `app.initial_ai_credits`.
 - `CRON_SECRET` — random string securing `/api/cron/archive-expired`; the cron route returns an error when it is missing.
-- `MAYAR_WEBHOOK_SECRET` — Mayar webhook signing secret (`/api/mayar-webhook` fails closed if unset)
-- `VITE_MAYAR_PAYMENT_URL` — Mayar payment page URL (frontend falls back to `#` if unset)
+- `SUMOPOD_PAYMENT_API_KEY` — server-only SumoPod Sandbox payment API key
+- `SUMOPOD_PAYMENT_BASE_URL` — SumoPod payment base URL (defaults to Sandbox)
+- `SUMOPOD_WEBHOOK_SECRET` — optional webhook signing secret when configured by SumoPod
 - `VITE_API_SERVER_URL` — set to `https://teman-nyatet-api-server.vercel.app` for the Vercel frontend project. Leave unset in Replit dev because the Vite proxy handles `/api` → `localhost:8080`; production also has this URL as a fallback.
 - `GOOGLE_REDIRECT_URI` — OAuth callback URL registered in Google Cloud Console. **Pre-configured**: this is set as a `[userenv.shared]` variable in `.replit` (not a Secret) pointing to the current workspace's dev domain. You only need to register this URI in Google Cloud Console. On Vercel production, set it explicitly as `https://teman-nyatet-api-server.vercel.app/api/auth/google/callback`.
 - `FRONTEND_URL` — used by the API server when redirecting the browser after OAuth callback (defaults to `https://<REPLIT_DEV_DOMAIN>` or `http://localhost:5000` if unset)
@@ -70,7 +71,7 @@ OAuth and the data API will fail closed until the `google_refresh_token` column 
 ## Stack
 
 - **Frontend:** React 19 + Vite 7, TypeScript, Tailwind CSS 4, Wouter, Vaul, Recharts, TanStack Query, React Hook Form, Zod
-- **Backend:** Express 5 (Mayar webhooks + cron jobs + notes/transactions/todos/links data API + Google OAuth flow)
+- **Backend:** Express 5 (SumoPod Sandbox checkout/webhook + legacy Mayar compatibility + cron jobs + notes/transactions/todos/links data API + Google OAuth flow)
 - **Auth:** Supabase Auth
 - **App data (notes, transactions, todos, links):** Each user connects their Google Drive via OAuth. The backend auto-creates a Google Spreadsheet in the user's own Drive (using `drive.file` scope — least privilege). The spreadsheet ID is stored in `profiles.spreadsheet_id`; the OAuth refresh token in `profiles.google_refresh_token`. No service account needed — each API call uses the user's own OAuth token.
 - **Subscription/profile data:** Supabase Postgres (`profiles` table).
@@ -100,7 +101,9 @@ OAuth and the data API will fail closed until the `google_refresh_token` column 
   - `src/routes/{notes,todos,links,transactions}.ts` — Data routes with input validation
   - `src/routes/profile.ts` — `POST /profile/avatar` to Supabase Storage
   - `src/routes/subscription.ts` — `GET /subscription/status`
-  - `src/routes/webhook.ts` — Mayar webhook handler
+  - `src/routes/payment.ts` — SumoPod payment-link creation
+  - `src/routes/sumopod-webhook.ts` — SumoPod webhook reconciliation
+  - `src/routes/webhook.ts` — legacy Mayar compatibility handler
   - `src/routes/cron.ts` — `/api/cron/archive-expired`
   - `src/app.ts` — `helmet()`, CORS, global + per-user rate limiting, JSON body limits
 - `lib/api-spec/` — OpenAPI spec + generated API client (regenerate after any spec change)

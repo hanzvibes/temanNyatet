@@ -9,6 +9,7 @@ import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sh
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
+import { openPaymentCheckout, type PaymentPlan } from '@/lib/payment';
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -66,6 +67,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
   const [subStatus, setSubStatus] = useState<SubscriptionStatus | null>(null);
   const [subLoading, setSubLoading] = useState(false);
   const [subError, setSubError] = useState<string | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const drawerContentRef = useRef<HTMLDivElement>(null);
   const settingsScrollRef = useRef<HTMLDivElement>(null);
@@ -85,9 +87,20 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
 
   const isPro = profile?.subscription_status === 'active';
 
+  const handleSubscriptionCheckout = async (plan: PaymentPlan) => {
+    setCheckoutLoading(true);
+    try {
+      await openPaymentCheckout(plan);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Gagal menyiapkan pembayaran. Coba lagi.');
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
   // Fetch the authoritative subscription status from the API when the user
   // opens the subscription section. We don't rely solely on the cached profile
-  // because Mayar webhooks / admin actions can change server-side fields the
+  // because payment webhooks / admin actions can change server-side fields the
   // profile may not yet have picked up.
   const loadSubscription = async () => {
     setSubLoading(true);
@@ -781,57 +794,31 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                           {/* ── CTA button — context-sensitive ── */}
                           {(() => {
                             const st = subStatus?.subscription_status;
-                            const mayarUrl = import.meta.env.VITE_MAYAR_PAYMENT_URL || '#';
 
                             if (st === 'active') {
-                              // Active: open Mayar portal in new tab — do NOT navigate to /payment
-                              // because AuthGuard blocks active users from reaching /payment and
-                              // immediately redirects them to /catatan.
                               return (
                                 <Button
-                                  asChild
+                                  onClick={() => void handleSubscriptionCheckout(subStatus?.subscription_plan ?? 'yearly')}
+                                  disabled={checkoutLoading}
                                   className="w-full gap-2"
                                   size="lg"
                                 >
-                                  <a
-                                    href={mayarUrl === '#' ? undefined : mayarUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={() => {
-                                      if (mayarUrl === '#') {
-                                        toast.error('Tautan langganan belum dikonfigurasi. Hubungi support.');
-                                      }
-                                    }}
-                                  >
                                     <Crown size={16} strokeWidth={2.5} />
-                                    Kelola Langganan
-                                  </a>
+                                    {checkoutLoading ? 'Menyiapkan pembayaran…' : 'Kelola Langganan'}
                                 </Button>
                               );
                             }
 
                             if (st === 'archived') {
-                              // Archived: same — open Mayar URL in new tab to re-subscribe.
-                              // AuthGuard blocks archived users from /payment too (→ /archived).
                               return (
                                 <Button
-                                  asChild
+                                  onClick={() => void handleSubscriptionCheckout('yearly')}
+                                  disabled={checkoutLoading}
                                   className="w-full gap-2"
                                   size="lg"
                                 >
-                                  <a
-                                    href={mayarUrl === '#' ? undefined : mayarUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={() => {
-                                      if (mayarUrl === '#') {
-                                        toast.error('Tautan langganan belum dikonfigurasi. Hubungi support.');
-                                      }
-                                    }}
-                                  >
                                     <Sparkles size={16} strokeWidth={2.5} />
-                                    Perpanjang Langganan
-                                  </a>
+                                    {checkoutLoading ? 'Menyiapkan pembayaran…' : 'Perpanjang Langganan'}
                                 </Button>
                               );
                             }

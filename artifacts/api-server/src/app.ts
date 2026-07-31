@@ -84,10 +84,10 @@ app.use(
   }),
 );
 
-// The Mayar webhook route must receive the raw body so we can verify the
-// HMAC-SHA256 signature against exact bytes. Mount express.raw() for that
-// specific path BEFORE the global express.json() parser consumes the body.
+// Payment webhook routes must receive the raw body before express.json() parses
+// it so provider signatures can be verified against the exact bytes.
 app.use("/api/mayar-webhook", express.raw({ type: "application/json", limit: "1mb" }));
+app.use("/api/sumopod-webhook", express.raw({ type: "application/json", limit: "1mb" }));
 
 // All other routes get JSON-parsed bodies. 256kb comfortably covers even a
 // long-form note while still bounding request size against abuse.

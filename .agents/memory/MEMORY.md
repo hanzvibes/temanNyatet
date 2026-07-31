@@ -20,3 +20,4 @@
 - [Public legal route auth](public-legal-route-auth.md) — privacy and terms pages must render independently from auth loading and onboarding redirects.
 - [Supabase auth callback lock](supabase-auth-callback-lock.md) — never await nested Supabase operations inside onAuthStateChange; defer them after the callback returns.
 - [Stale development service worker](stale-dev-service-worker.md) — Replit previews can retain an old PWA worker that serves stale HTML and blocks the module graph.
+- [SumoPod payment idempotency](sumopod-payment-idempotency.md) — webhook retries must be safe at both the local order claim and profile activation boundaries.

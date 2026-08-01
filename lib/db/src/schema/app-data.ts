@@ -1,5 +1,6 @@
 import {
   boolean,
+  check,
   index,
   integer,
   jsonb,
@@ -10,6 +11,7 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -58,6 +60,8 @@ export const transactionsTable = pgTable(
   (table) => [
     index("transactions_user_date_idx").on(table.userId, table.date),
     index("transactions_user_updated_idx").on(table.userId, table.updatedAt),
+    index("transactions_user_active_date_idx").on(table.userId, table.deletedAt, table.date),
+    check("transactions_amount_positive", sql`${table.amount} > 0`),
   ],
 );
 

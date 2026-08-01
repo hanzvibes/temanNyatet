@@ -2,7 +2,13 @@ import { Router, type IRouter } from 'express';
 import { requireAuth, userRateLimit } from '../middleware/requireAuth.js';
 import { createData, deleteData, listData, reorderNotes, updateData } from '../lib/data-store.js';
 import { SheetsAccessError } from '../lib/google-sheets.js';
-import { optionalString, optionalTags, requireString, ValidationError } from '../lib/validate.js';
+import {
+  optionalString,
+  optionalTags,
+  requireNonEmptyUpdates,
+  requireString,
+  ValidationError,
+} from '../lib/validate.js';
 import { consumeCredit, CreditsExhaustedError, getCreditBalance } from '../lib/credit-service.js';
 
 const router: IRouter = Router();
@@ -65,7 +71,8 @@ router.put('/notes/:id', requireAuth, userRateLimit, async (req, res) => {
     if ('content' in body) updates.content = requireString(body.content, 'content', CONTENT_MAX);
     if ('tags' in body) updates.tags = optionalTags(body.tags);
     if ('color' in body) updates.color = optionalString(body.color, 'color', 100);
-    const row = await updateData('notes', req.params.id as string, req.userId!, updates, req.spreadsheetId, req.sheetsClient);
+      requireNonEmptyUpdates(updates, 'updates');
+      const row = await updateData('notes', req.params.id as string, req.userId!, updates, req.spreadsheetId, req.sheetsClient);
     if (!row) {
       res.status(404).json({ error: 'Note not found' });
       return;

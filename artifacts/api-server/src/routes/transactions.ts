@@ -2,7 +2,14 @@ import { Router, type IRouter } from 'express';
 import { requireAuth, userRateLimit } from '../middleware/requireAuth.js';
 import { createData, deleteData, listData, updateData } from '../lib/data-store.js';
 import { SheetsAccessError } from '../lib/google-sheets.js';
-import { optionalString, requireEnum, requireString, ValidationError } from '../lib/validate.js';
+import {
+  optionalString,
+  requireEnum,
+  requireNonEmptyUpdates,
+  requireString,
+  requireValidDateTime,
+  ValidationError,
+} from '../lib/validate.js';
 
 const router: IRouter = Router();
 const SHEET = '💰 Transactions';
@@ -40,7 +47,7 @@ router.post('/transactions', requireAuth, userRateLimit, async (req, res) => {
     const amount = parseAmount(body.amount);
     const category = requireString(body.category, 'category', FIELD_MAX);
     const source = requireString(body.source, 'source', FIELD_MAX);
-    const date = requireString(body.date, 'date', DATE_MAX);
+    const date = requireValidDateTime(body.date, 'date');
     const note = optionalString(body.note, 'note', NOTE_MAX);
     const row = await createData('transactions', req.userId!, { type, amount, category, source, note, date }, req.spreadsheetId, req.sheetsClient);
     res.status(201).json({ data: row });
@@ -66,8 +73,9 @@ router.put('/transactions/:id', requireAuth, userRateLimit, async (req, res) => 
     if ('amount' in body) updates.amount = parseAmount(body.amount);
     if ('category' in body) updates.category = requireString(body.category, 'category', FIELD_MAX);
     if ('source' in body) updates.source = requireString(body.source, 'source', FIELD_MAX);
-    if ('date' in body) updates.date = requireString(body.date, 'date', DATE_MAX);
+    if ('date' in body) updates.date = requireValidDateTime(body.date, 'date');
     if ('note' in body) updates.note = optionalString(body.note, 'note', NOTE_MAX);
+    requireNonEmptyUpdates(updates, 'updates');
     const row = await updateData('transactions', req.params.id as string, req.userId!, updates, req.spreadsheetId, req.sheetsClient);
     if (!row) {
       res.status(404).json({ error: 'Transaction not found' });

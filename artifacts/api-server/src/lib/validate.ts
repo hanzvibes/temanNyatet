@@ -6,6 +6,47 @@
 
 export class ValidationError extends Error {}
 
+const CALENDAR_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+export function requireCalendarDate(value: unknown, field: string): string {
+  if (typeof value !== 'string' || !CALENDAR_DATE.test(value)) {
+    throw new ValidationError(`${field} must use YYYY-MM-DD format`);
+  }
+  const [, year, month, day] = CALENDAR_DATE.exec(value) as RegExpExecArray;
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), 12));
+  if (
+    date.getUTCFullYear() !== Number(year) ||
+    date.getUTCMonth() !== Number(month) - 1 ||
+    date.getUTCDate() !== Number(day)
+  ) {
+    throw new ValidationError(`${field} must be a valid calendar date`);
+  }
+  return value;
+}
+
+export function requireValidDateTime(value: unknown, field: string): string {
+  if (typeof value !== 'string' || !value.trim()) {
+    throw new ValidationError(`${field} must be a valid date`);
+  }
+  const input = value.trim();
+  if (CALENDAR_DATE.test(input)) return requireCalendarDate(input, field);
+  const parsed = new Date(input);
+  if (Number.isNaN(parsed.getTime())) {
+    throw new ValidationError(`${field} must be a valid date`);
+  }
+  return input;
+}
+
+export function requireNonEmptyUpdates<T extends Record<string, unknown>>(
+  updates: T,
+  field: string,
+): T {
+  if (Object.keys(updates).length === 0) {
+    throw new ValidationError(`${field} must contain at least one field`);
+  }
+  return updates;
+}
+
 export function requireString(value: unknown, field: string, maxLength: number): string {
   if (typeof value !== 'string' || !value.trim()) {
     throw new ValidationError(`${field} is required and must be a non-empty string`);

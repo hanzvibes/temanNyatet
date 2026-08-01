@@ -15,6 +15,13 @@
       "when": 1785564292590,
       "tag": "0001_fearless_kabuki",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785606111891,
+      "tag": "0002_rainy_liz_osborn",
+      "breakpoints": true
     }
   ]
 }

@@ -15,7 +15,17 @@ import {
   type Transaction,
 } from '@workspace/db';
 import { normalizeNoteTitle } from './note-fields.js';
-import { normalizeStoredNullableText, nullableText } from './nullable-fields.js';
+import {
+  normalizeStoredNullableText,
+  nullableText,
+  requiredStoredText,
+} from './nullable-fields.js';
+import {
+  coerceApiBoolean,
+  coerceApiNumber,
+  parseApiDateTime,
+  serializeTodoDate,
+} from './postgres-fields.js';
 
 type Entity = 'notes' | 'transactions' | 'todos' | 'links';
 type AppRow = Note | Transaction | Todo | Link;
@@ -46,12 +56,23 @@ function toApiRow(row: AppRow, entity: Entity): Record<string, unknown> {
 
   return Object.fromEntries(Object.entries(source).map(([key, value]) => {
     const apiKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
-    const normalizedValue = entity === 'notes' && key === 'title'
+    let normalizedValue = entity === 'notes' && key === 'title'
       ? normalizeNoteTitle(value)
       : nullableFields.includes(key)
         ? normalizeStoredNullableText(value)
         : value;
-    return [apiKey, normalizedValue instanceof Date ? normalizedValue.toISOString() : normalizedValue];
+    if (entity === 'notes' && key === 'position') {
+      normalizedValue = coerceApiNumber(value);
+    } else if (entity === 'transactions' && key === 'amount') {
+      normalizedValue = coerceApiNumber(value) ?? 0;
+    } else if (entity === 'todos' && key === 'dueDate') {
+      normalizedValue = serializeTodoDate(value);
+    } else if (entity === 'todos' && key === 'isDone') {
+      normalizedValue = coerceApiBoolean(value);
+    } else if (normalizedValue instanceof Date) {
+      normalizedValue = normalizedValue.toISOString();
+    }
+    return [apiKey, normalizedValue];
   }));
 }
 
@@ -59,9 +80,9 @@ function fromApiFields(entity: Entity, fields: Record<string, unknown>): Record<
   if (entity === 'notes') {
     return {
       ...(fields.title !== undefined ? { title: normalizeNoteTitle(fields.title) } : {}),
-      ...(fields.content !== undefined ? { content: nullableText(fields.content) } : {}),
+      ...(fields.content !== undefined ? { content: requiredStoredText(fields.content) } : {}),
       ...(fields.tags !== undefined ? { tags: fields.tags } : {}),
-      ...(fields.position !== undefined ? { position: nullableText(fields.position) } : {}),
+      ...(fields.position !== undefined ? { position: coerceApiNumber(fields.position) } : {}),
       ...(fields.color !== undefined ? { color: fields.color === null ? null : String(fields.color) } : {}),
     };
   }
@@ -69,25 +90,25 @@ function fromApiFields(entity: Entity, fields: Record<string, unknown>): Record<
     return {
       ...(fields.type !== undefined ? { type: fields.type } : {}),
       ...(fields.amount !== undefined ? { amount: String(fields.amount) } : {}),
-      ...(fields.category !== undefined ? { category: nullableText(fields.category) } : {}),
-      ...(fields.source !== undefined ? { source: nullableText(fields.source) } : {}),
-      ...(fields.note !== undefined ? { note: nullableText(fields.note) } : {}),
-      ...(fields.date !== undefined ? { date: new Date(String(fields.date)) } : {}),
+      ...(fields.category !== undefined ? { category: requiredStoredText(fields.category) } : {}),
+      ...(fields.source !== undefined ? { source: requiredStoredText(fields.source) } : {}),
+      ...(fields.note !== undefined ? { note: requiredStoredText(fields.note) } : {}),
+      ...(fields.date !== undefined ? { date: parseApiDateTime(fields.date) } : {}),
     };
   }
   if (entity === 'todos') {
     return {
       ...(fields.title !== undefined ? { title: String(fields.title) } : {}),
-      ...(fields.description !== undefined ? { description: nullableText(fields.description) } : {}),
-      ...(fields.due_date !== undefined ? { dueDate: fields.due_date ? new Date(String(fields.due_date)) : null } : {}),
+      ...(fields.description !== undefined ? { description: requiredStoredText(fields.description) } : {}),
+      ...(fields.due_date !== undefined ? { dueDate: fields.due_date ? parseApiDateTime(fields.due_date) : null } : {}),
       ...(fields.due_time !== undefined ? { dueTime: nullableText(fields.due_time) } : {}),
-      ...(fields.is_done !== undefined ? { isDone: Boolean(fields.is_done) } : {}),
+      ...(fields.is_done !== undefined ? { isDone: coerceApiBoolean(fields.is_done) } : {}),
     };
   }
   return {
     ...(fields.title !== undefined ? { title: String(fields.title) } : {}),
     ...(fields.url !== undefined ? { url: String(fields.url) } : {}),
-    ...(fields.note !== undefined ? { note: nullableText(fields.note) } : {}),
+      ...(fields.note !== undefined ? { note: requiredStoredText(fields.note) } : {}),
   };
 }
 
@@ -153,9 +174,10 @@ export function createPostgresRepository(database: RepositoryDb = db) {
 
     async remove(entity: Entity, id: string, userId: string): Promise<boolean> {
       const table = tableFor(entity);
+      const timestamp = now();
       const rows = await database
         .update(table)
-        .set({ deletedAt: now(), updatedAt: now() } as never)
+        .set({ deletedAt: timestamp, updatedAt: timestamp } as never)
         .where(and(eq(table.id, id), eq(table.userId, userId), isNull(table.deletedAt)))
         .returning({ id: table.id });
       return rows.length > 0;
@@ -163,12 +185,14 @@ export function createPostgresRepository(database: RepositoryDb = db) {
 
     async reorderNotes(userId: string, orderedIds: string[]): Promise<void> {
       const basePosition = 1_000_000_000;
-      for (const [index, id] of orderedIds.entries()) {
-        await database
-          .update(notesTable)
-          .set({ position: String(basePosition - index), updatedAt: now() })
-          .where(and(eq(notesTable.id, id), eq(notesTable.userId, userId), isNull(notesTable.deletedAt)));
-      }
+      await database.transaction(async (transaction) => {
+        for (const [index, id] of orderedIds.entries()) {
+          await transaction
+            .update(notesTable)
+            .set({ position: String(basePosition - index), updatedAt: now() })
+            .where(and(eq(notesTable.id, id), eq(notesTable.userId, userId), isNull(notesTable.deletedAt)));
+        }
+      });
     },
 
     async transactionSummary(userId: string, startDate?: string, endDate?: string) {

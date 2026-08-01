@@ -31,3 +31,4 @@
 - [Transaction date normalization](transaction-date-normalization.md) — normalize YYYY-MM-DD from both Sheets and PostgreSQL ISO timestamps before finance date filtering.
 - [Null string normalization](null-string-normalization.md) — never coerce nullable text with String(value); null must not become visible text.
 - [Vercel declaration emit](vercel-typescript-declaration-emit.md) — explicit router/client types prevent pnpm-internal paths from breaking Vercel's post-build declaration emit.
+- [PostgreSQL nullable API boundary](postgres-nullable-boundary.md) — map nullable API text to schema-safe empty values on write and back to null on read when columns are NOT NULL.

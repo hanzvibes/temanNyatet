@@ -2,7 +2,14 @@ import { Router, type IRouter } from 'express';
 import { requireAuth, userRateLimit } from '../middleware/requireAuth.js';
 import { createData, deleteData, listData, updateData } from '../lib/data-store.js';
 import { SheetsAccessError } from '../lib/google-sheets.js';
-import { optionalBoolean, optionalString, requireString, ValidationError } from '../lib/validate.js';
+import {
+  optionalBoolean,
+  optionalString,
+  requireCalendarDate,
+  requireNonEmptyUpdates,
+  requireString,
+  ValidationError,
+} from '../lib/validate.js';
 
 const router: IRouter = Router();
 const SHEET = '✅ Todos';
@@ -29,7 +36,9 @@ router.post('/todos', requireAuth, userRateLimit, async (req, res) => {
     const body = req.body ?? {};
     const title = requireString(body.title, 'title', TITLE_MAX);
     const description = optionalString(body.description, 'description', DESCRIPTION_MAX);
-    const due_date = optionalString(body.due_date, 'due_date', DATE_MAX);
+    const due_date = body.due_date == null || body.due_date === ''
+      ? null
+      : requireCalendarDate(body.due_date, 'due_date');
     const due_time = optionalString(body.due_time, 'due_time', DATE_MAX);
     const is_done = optionalBoolean(body.is_done, 'is_done');
     const row = await createData('todos', req.userId!, { title, description, due_date, due_time, is_done }, req.spreadsheetId, req.sheetsClient);
@@ -54,9 +63,14 @@ router.put('/todos/:id', requireAuth, userRateLimit, async (req, res) => {
     const updates: Record<string, unknown> = {};
     if ('title' in body) updates.title = requireString(body.title, 'title', TITLE_MAX);
     if ('description' in body) updates.description = optionalString(body.description, 'description', DESCRIPTION_MAX);
-    if ('due_date' in body) updates.due_date = optionalString(body.due_date, 'due_date', DATE_MAX);
+    if ('due_date' in body) {
+      updates.due_date = body.due_date == null || body.due_date === ''
+        ? null
+        : requireCalendarDate(body.due_date, 'due_date');
+    }
     if ('due_time' in body) updates.due_time = optionalString(body.due_time, 'due_time', DATE_MAX);
     if ('is_done' in body) updates.is_done = optionalBoolean(body.is_done, 'is_done');
+    requireNonEmptyUpdates(updates, 'updates');
     const row = await updateData('todos', req.params.id as string, req.userId!, updates, req.spreadsheetId, req.sheetsClient);
     if (!row) {
       res.status(404).json({ error: 'Todo not found' });

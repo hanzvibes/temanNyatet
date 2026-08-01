@@ -2,7 +2,13 @@ import { Router, type IRouter } from 'express';
 import { requireAuth, userRateLimit } from '../middleware/requireAuth.js';
 import { createData, deleteData, listData, updateData } from '../lib/data-store.js';
 import { SheetsAccessError } from '../lib/google-sheets.js';
-import { optionalString, requireHttpUrl, requireString, ValidationError } from '../lib/validate.js';
+import {
+  optionalString,
+  requireHttpUrl,
+  requireNonEmptyUpdates,
+  requireString,
+  ValidationError,
+} from '../lib/validate.js';
 
 const router: IRouter = Router();
 const SHEET = '🔗 Links';
@@ -52,6 +58,7 @@ router.put('/links/:id', requireAuth, userRateLimit, async (req, res) => {
     if ('title' in body) updates.title = requireString(body.title, 'title', TITLE_MAX);
     if ('url' in body) updates.url = requireHttpUrl(body.url, 'url');
     if ('note' in body) updates.note = optionalString(body.note, 'note', NOTE_MAX);
+    requireNonEmptyUpdates(updates, 'updates');
     const row = await updateData('links', req.params.id as string, req.userId!, updates, req.spreadsheetId, req.sheetsClient);
     if (!row) {
       res.status(404).json({ error: 'Link not found' });

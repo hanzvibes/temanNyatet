@@ -459,7 +459,9 @@ export default function KeuanganPage() {
   const { groupedTx, sortedDates } = useMemo(() => {
     const grouped = filteredTransactions.reduce(
       (acc, tx) => {
-        const d = tx.date;
+        // Normalize to YYYY-MM-DD so PostgreSQL ISO timestamps and
+        // Google Sheets date-only strings both group by the same key.
+        const d = tx.date.slice(0, 10);
         if (!acc[d]) acc[d] = [];
         acc[d].push(tx);
         return acc;
@@ -656,8 +658,10 @@ export default function KeuanganPage() {
                   {sortedDates.map((dateStr) => {
                     const dayTxs = groupedTx[dateStr];
                     const dayNet = dayTxs.reduce(
-                      (acc, tx) =>
-                        tx.type === 'income' ? acc + tx.amount : acc - tx.amount,
+                      (acc, tx) => {
+                        const amt = Number(tx.amount) || 0;
+                        return tx.type === 'income' ? acc + amt : acc - amt;
+                      },
                       0,
                     );
 

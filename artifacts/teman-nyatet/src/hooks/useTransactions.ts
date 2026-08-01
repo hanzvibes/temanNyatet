@@ -13,11 +13,18 @@ import { startOfMonth, endOfMonth, format } from 'date-fns';
 const POLL_INTERVAL_MS = 15000;
 const REFETCH_EVENT = 'teman-nyatet:refetch:transactions';
 
+/** Safely parse a date string to a numeric timestamp; returns 0 for invalid inputs. */
+function safeTime(value: string | null | undefined): number {
+  if (!value) return 0;
+  const t = Date.parse(value);
+  return Number.isFinite(t) ? t : 0;
+}
+
 function sortTransactions(txs: Transaction[]): Transaction[] {
   return [...txs].sort((a, b) => {
-    const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+    const dateDiff = safeTime(b.date) - safeTime(a.date);
     if (dateDiff !== 0) return dateDiff;
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    return safeTime(b.created_at) - safeTime(a.created_at);
   });
 }
 
@@ -92,15 +99,18 @@ export function useTransactions(userId?: string) {
     let balance = 0; // Balance is all-time, not just monthly
 
     transactions.forEach(tx => {
+      // PostgreSQL returns `amount` as a numeric string; coerce to number.
+      const amount = Number(tx.amount) || 0;
+
       // All time balance
-      if (tx.type === 'income') balance += tx.amount;
-      else if (tx.type === 'expense') balance -= tx.amount;
+      if (tx.type === 'income') balance += amount;
+      else if (tx.type === 'expense') balance -= amount;
 
       // Monthly stats
-      const txDate = new Date(tx.date);
+      const txDate = new Date(tx.date.slice(0, 10) + 'T12:00:00');
       if (txDate >= start && txDate <= end) {
-        if (tx.type === 'income') income += tx.amount;
-        else if (tx.type === 'expense') expense += tx.amount;
+        if (tx.type === 'income') income += amount;
+        else if (tx.type === 'expense') expense += amount;
       }
     });
 
@@ -120,10 +130,11 @@ export function useTransactions(userId?: string) {
     }
 
     transactions.forEach(tx => {
-      const key = tx.date.substring(0, 7); // yyyy-MM
+      const amount = Number(tx.amount) || 0;
+      const key = tx.date.slice(0, 7); // yyyy-MM
       if (months[key]) {
-        if (tx.type === 'income') months[key].income += tx.amount;
-        else if (tx.type === 'expense') months[key].expense += tx.amount;
+        if (tx.type === 'income') months[key].income += amount;
+        else if (tx.type === 'expense') months[key].expense += amount;
       }
     });
 

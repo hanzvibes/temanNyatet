@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { apiGet, apiPost, apiPut, apiDelete, SpreadsheetApiError } from '@/lib/apiClient';
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/apiClient';
 import type { Note, NoteInsert, NoteUpdate } from '@/lib/database.types';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
@@ -31,12 +31,6 @@ function ensureCacheCleanupWired() {
     if (event === 'SIGNED_OUT') notesByUser.clear();
   });
   cacheSubscriber = data.subscription;
-}
-
-function dispatchSheetError(code: string): void {
-  window.dispatchEvent(
-    new CustomEvent('teman-nyatet:spreadsheet-error', { detail: { code } }),
-  );
 }
 
 export function useNotes(userId?: string) {
@@ -72,10 +66,6 @@ export function useNotes(userId?: string) {
       }));
       setError(null);
     } catch (err) {
-      if (err instanceof SpreadsheetApiError) {
-        dispatchSheetError(err.code);
-        return;
-      }
       setError(err as Error);
       if (firstLoad.current) toast.error('Gagal mengambil catatan');
     } finally {
@@ -106,7 +96,6 @@ export function useNotes(userId?: string) {
       window.dispatchEvent(new CustomEvent(REFETCH_EVENT));
       return data;
     } catch (err) {
-      if (err instanceof SpreadsheetApiError) { dispatchSheetError(err.code); return; }
       toast.error('Gagal menyimpan catatan');
       throw err;
     }
@@ -119,7 +108,6 @@ export function useNotes(userId?: string) {
       toast.success('Catatan diperbarui!');
       return data;
     } catch (err) {
-      if (err instanceof SpreadsheetApiError) { dispatchSheetError(err.code); return; }
       toast.error('Gagal memperbarui catatan');
       throw err;
     }
@@ -132,7 +120,6 @@ export function useNotes(userId?: string) {
       await apiDelete(`/notes/${id}`);
     } catch (err) {
       setNotes(prev);
-      if (err instanceof SpreadsheetApiError) { dispatchSheetError(err.code); return; }
       throw err;
     }
   };
@@ -151,7 +138,6 @@ export function useNotes(userId?: string) {
       await apiPost('/notes/reorder', { orderedIds });
     } catch (err) {
       setNotes(prev);
-      if (err instanceof SpreadsheetApiError) { dispatchSheetError(err.code); return; }
       throw err;
     }
   };

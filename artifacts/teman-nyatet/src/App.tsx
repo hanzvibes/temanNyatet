@@ -7,8 +7,6 @@ import React, { Suspense, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useOrientation } from '@/hooks/useOrientation';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
-import { apiGet } from '@/lib/apiClient';
-
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import PwaUpdatePrompt from '@/components/PwaUpdatePrompt';
 import OfflineIndicator from '@/components/OfflineIndicator';
@@ -39,7 +37,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       // Keep recently visited pages instant without constantly re-requesting
-      // the same Google Sheets-backed data on tab switches.
+      // the same data on tab switches.
       staleTime: 60_000,
       // Preserve cache data after a route unmounts so returning to a tab paints
       // immediately while the next request refreshes it in the background.
@@ -131,52 +129,6 @@ const ROUTE_ENTRIES: Array<{ path: string; component: React.ComponentType }> = [
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuthContext();
   const [location, setLocation] = useLocation();
-  const [dataStatus, setDataStatus] = React.useState<{ dataReady: boolean; dataStore: 'postgres' | 'sheets' } | null>(null);
-
-  // Listen for spreadsheet access errors dispatched by data hooks.
-  // When the API server returns SPREADSHEET_NOT_FOUND or
-  // SPREADSHEET_ACCESS_DENIED, the hook fires this event and we redirect
-  // the user to the connect/recovery page immediately.
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const code = (e as CustomEvent<{ code: string }>).detail?.code ?? 'SPREADSHEET_NOT_FOUND';
-      if (location !== '/connect-sheet') {
-        setLocation(`/connect-sheet?error=${code}`);
-      }
-    };
-    window.addEventListener('teman-nyatet:spreadsheet-error', handler);
-    return () => window.removeEventListener('teman-nyatet:spreadsheet-error', handler);
-  }, [location, setLocation]);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!user || !profile) {
-      setDataStatus(null);
-      return;
-    }
-    void apiGet<{
-      dataReady: boolean;
-      dataStore: 'postgres' | 'sheets';
-    }>('/spreadsheet/status')
-      .then((status) => {
-        if (
-          !cancelled
-          && typeof status?.dataReady === 'boolean'
-          && (status.dataStore === 'postgres' || status.dataStore === 'sheets')
-        ) {
-          setDataStatus(status);
-        } else if (!cancelled) {
-          // Never make a routing decision from an empty/304 response.
-          setDataStatus(null);
-        }
-      })
-      .catch(() => {
-        // Do not guess the user's data path from the profile. A temporary
-        // status failure must not send a PostgreSQL user to Google connect.
-        if (!cancelled) setDataStatus(null);
-      });
-    return () => { cancelled = true; };
-  }, [user, profile]);
 
   const PUBLIC_ROUTES = new Set(['/login', '/auth/confirm', '/privacy-policy', '/terms-of-service']);
   const PUBLIC_LEGAL_ROUTES = new Set(['/privacy-policy', '/terms-of-service']);
@@ -194,11 +146,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     }
 
     if (profile) {
-      if (dataStatus && !dataStatus.dataReady) {
-        // Only users on the Sheets data path need to connect Google. Users
-        // already migrated to PostgreSQL can enter the app immediately.
-        if (location !== '/connect-sheet') setLocation('/connect-sheet');
-      } else if (
+      if (
         profile.subscription_status === 'pending'
         && location !== '/payment'
         && location !== '/subscription'
@@ -227,7 +175,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
         }
       }
     }
-  }, [user, profile, dataStatus, loading, location, setLocation]);
+  }, [user, profile, loading, location, setLocation]);
 
   if (PUBLIC_LEGAL_ROUTES.has(location)) {
     return <>{children}</>;

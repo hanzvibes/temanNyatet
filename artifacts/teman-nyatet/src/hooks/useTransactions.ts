@@ -1,13 +1,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { apiGet, apiPost, apiDelete, SpreadsheetApiError } from '@/lib/apiClient';
+import { apiGet, apiPost, apiDelete } from '@/lib/apiClient';
 import type { Transaction, TransactionInsert, MonthlySummary } from '@/lib/database.types';
 import { toast } from 'sonner';
 
-function dispatchSheetError(code: string): void {
-  window.dispatchEvent(
-    new CustomEvent('teman-nyatet:spreadsheet-error', { detail: { code } }),
-  );
-}
 import { startOfMonth, endOfMonth, format } from 'date-fns';
 
 const POLL_INTERVAL_MS = 15000;
@@ -42,7 +37,6 @@ export function useTransactions(userId?: string) {
       setTransactions(sortTransactions(data || []));
       setError(null);
     } catch (err) {
-      if (err instanceof SpreadsheetApiError) { dispatchSheetError(err.code); return; }
       setError(err as Error);
       if (firstLoad.current) toast.error('Gagal mengambil transaksi');
     } finally {

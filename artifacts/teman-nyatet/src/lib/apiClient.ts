@@ -29,10 +29,9 @@ if (import.meta.env.DEV && !API_BASE) {
 let refreshPromise: Promise<string | null> | null = null;
 
 // ─── Typed error for spreadsheet access failures ────────────────────────────
-// Thrown when the API server returns a 503 with a specific error code
-// (SPREADSHEET_NOT_FOUND or SPREADSHEET_ACCESS_DENIED). Data hooks catch
-// this and dispatch a global 'teman-nyatet:spreadsheet-error' event so the
-// AuthGuard can redirect the user to the recovery / reconnect page.
+// Thrown when the API server returns a 503/428 with a spreadsheet-related
+// error code. Google Sheets is an optional backup feature; these errors are
+// surfaced to the caller rather than triggering forced redirects.
 
 export class SpreadsheetApiError extends Error {
   constructor(

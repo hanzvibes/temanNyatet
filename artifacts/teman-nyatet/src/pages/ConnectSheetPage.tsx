@@ -9,12 +9,13 @@ import {
   ExternalLink,
   Loader2,
   Chrome,
-  ShieldCheck,
+  CloudUpload,
   AlertCircle,
   AlertTriangle,
   RefreshCw,
   Unlink,
   WifiOff,
+  ArrowLeft,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -56,11 +57,11 @@ interface GoogleStatus {
 const ERROR_MESSAGES: Record<string, { title: string; body: string }> = {
   GOOGLE_NOT_CONNECTED: {
     title: 'Google Drive belum terhubung',
-    body: 'Hubungkan Google Drive kamu untuk menggunakan fitur ini.',
+    body: 'Hubungkan Google Drive untuk mengaktifkan fitur backup spreadsheet.',
   },
   SPREADSHEET_NOT_CONNECTED: {
     title: 'Spreadsheet belum siap',
-    body: 'Terjadi masalah saat menyiapkan spreadsheet. Coba hubungkan ulang Google Drive.',
+    body: 'Terjadi masalah saat menyiapkan spreadsheet backup. Coba hubungkan ulang Google Drive.',
   },
   OAUTH_DENIED: {
     title: 'Izin ditolak',
@@ -314,15 +315,15 @@ export default function ConnectSheetPage() {
             {/* Header */}
             <div className="flex flex-col items-center text-center mb-7">
               <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-elevation-2 text-primary-foreground">
-                <ShieldCheck size={28} />
+                <CloudUpload size={28} />
               </div>
               <h1 className="text-page-title">
-                {status?.connected ? 'Google Drive Terhubung' : 'Hubungkan Google Drive'}
+                {status?.connected ? 'Backup Spreadsheet Aktif' : 'Backup ke Google Spreadsheet'}
               </h1>
               <p className="text-muted-foreground text-sm mt-2 max-w-xs leading-relaxed">
                 {status?.connected
-                  ? 'Catatan, keuangan, todo, dan link-mu tersimpan aman di Google Spreadsheet pribadimu.'
-                  : 'Data kamu disimpan di Google Spreadsheet milikmu sendiri — bukan di server kami. Hubungkan Google Drive untuk memulai.'}
+                  ? 'Data kamu di-backup secara otomatis ke Google Spreadsheet pribadimu sebagai salinan cadangan.'
+                  : 'Data kamu sudah aman tersimpan di server kami. Hubungkan Google Drive jika ingin membuat salinan cadangan di spreadsheet pribadimu.'}
               </p>
             </div>
 
@@ -361,9 +362,9 @@ export default function ConnectSheetPage() {
                 <Alert variant="destructive" className="items-center text-center">
                   <AlertCircle aria-hidden="true" className="mt-0.5" />
                   <div className="min-w-0">
-                    <AlertTitle>Putuskan Google Drive?</AlertTitle>
+                    <AlertTitle>Nonaktifkan backup?</AlertTitle>
                     <AlertDescription>
-                      Data di spreadsheet-mu tidak akan terhapus, tapi kamu perlu hubungkan ulang untuk mengakses app.
+                      Data di spreadsheet-mu tidak akan terhapus. Kamu tetap bisa menggunakan semua fitur aplikasi — hanya backup otomatis ke spreadsheet yang dimatikan.
                     </AlertDescription>
                   </div>
                 </Alert>
@@ -373,7 +374,7 @@ export default function ConnectSheetPage() {
                   className="w-full min-h-12 bg-destructive text-destructive-foreground font-semibold py-3 px-4 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {disconnecting ? <Loader2 size={16} className="animate-spin" /> : <Unlink size={16} />}
-                  {disconnecting ? 'Memutus...' : 'Ya, Putuskan'}
+                  {disconnecting ? 'Menonaktifkan...' : 'Ya, Nonaktifkan'}
                 </button>
                 <button
                   onClick={() => setShowDisconnect(false)}
@@ -383,14 +384,20 @@ export default function ConnectSheetPage() {
                 </button>
               </div>
             ) : (
-              // ── Not connected — main connect CTA ────────────────────────────
+              // ── Not connected — optional connect CTA ─────────────────────────
               <div className="space-y-4">
-                {/* Privacy callout */}
-                 <div className="bg-secondary/50 border border-border rounded-2xl p-4 space-y-2 shadow-elevation-1">
+                {/* Info callout */}
+                <div className="bg-secondary/50 border border-border rounded-2xl p-4 space-y-2 shadow-elevation-1">
                   <div className="flex items-start gap-2.5">
                     <Check size={15} className="flex-shrink-0 text-primary mt-0.5" />
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      Spreadsheet dibuat otomatis di <span className="font-medium text-foreground">Google Drive-mu sendiri</span>
+                      Data kamu <span className="font-medium text-foreground">sudah aman</span> di database kami — spreadsheet adalah cadangan tambahan
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <Check size={15} className="flex-shrink-0 text-primary mt-0.5" />
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Spreadsheet cadangan dibuat di <span className="font-medium text-foreground">Google Drive-mu sendiri</span> — mudah diakses dan diexpor
                     </p>
                   </div>
                   <div className="flex items-start gap-2.5">
@@ -399,18 +406,12 @@ export default function ConnectSheetPage() {
                       Kami hanya minta akses ke file yang kami buat — bukan seluruh Drive-mu
                     </p>
                   </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check size={15} className="flex-shrink-0 text-primary mt-0.5" />
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Data tidak pernah melewati server kami — langsung ke spreadsheet-mu
-                    </p>
-                  </div>
                 </div>
 
                 <button
                   onClick={handleConnect}
                   disabled={connecting}
-                   className="w-full min-h-12 bg-primary text-primary-foreground font-semibold py-3.5 px-4 rounded-xl shadow-elevation-1 hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2.5"
+                  className="w-full min-h-12 bg-primary text-primary-foreground font-semibold py-3.5 px-4 rounded-xl shadow-elevation-1 hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2.5"
                 >
                   {connecting ? (
                     <>
@@ -451,7 +452,13 @@ export default function ConnectSheetPage() {
             )}
 
             {/* Footer */}
-            <div className="mt-6 pt-5 border-t border-border flex items-center justify-center">
+            <div className="mt-6 pt-5 border-t border-border flex items-center justify-between gap-3">
+              <button
+                onClick={() => setLocation('/catatan')}
+                className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
+              >
+                <ArrowLeft size={16} /> Kembali ke Aplikasi
+              </button>
               <button
                 onClick={handleLogout}
                 className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"

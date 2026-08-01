@@ -27,7 +27,7 @@ externalPort = 80
 GOOGLE_REDIRECT_URI = "https://6d40c01c-89b6-4e55-9260-ecc37149fc8f-00-1g480sphjcn6w.pike.replit.dev/api/auth/google/callback"
 
 [userenv.development]
-FRONTEND_URL = "https://71863587-dc17-4573-a5dc-e08900cddafb-00-1j55ur5mokzj7.sisko.replit.dev/"
+FRONTEND_URL = "23w0p5q0dqqtf.pike.replit.dev"
 SUMOPOD_PAYMENT_BASE_URL = "https://api-pay-sandbox.sumopod.com"
 APP_DATA_POSTGRES_USER_IDS = "1ac39987-84c2-41d3-b005-e35ac40bdd19,96cd3fa6-615f-4fa5-b3a3-1c1f6b9255f7,f7b40b6c-e15f-4d50-afe3-c188e75f164d,63e0a9c1-59fc-433a-8392-44f36aaa67fb,4e0b11e6-e94c-4577-846e-482eef5cb124,caddaab3-1d0a-46f6-863d-655d27c7e11c,13895d2b-3de3-4ccf-9233-cc54e09bdb17,372e4d91-d957-4986-9b3e-c3221b85c72c,7905d620-837a-40d8-b6ee-d217307c9b72"
 APP_DATA_STORE = "postgres"

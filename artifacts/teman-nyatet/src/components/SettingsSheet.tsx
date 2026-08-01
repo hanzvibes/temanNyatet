@@ -5,7 +5,7 @@ import { useLocation } from 'wouter';
 import { supabase } from '@/lib/supabase';
 import { apiGet, apiUpload } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet, MessageSquare, Crown, Calendar, Sparkles, Sun, Moon, Monitor, Database, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet, MessageSquare, Crown, Calendar, Sparkles, Sun, Moon, Monitor, Database, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
@@ -27,10 +27,9 @@ interface SubscriptionStatus {
   credit_balance: number;
 }
 
-interface DataStatus {
-  dataReady: boolean;
-  dataStore: 'postgres' | 'sheets';
-  googleConnected: boolean;
+interface GoogleBackupStatus {
+  connected: boolean;
+  spreadsheetId: string | null;
 }
 
 interface SettingsSheetProps {
@@ -83,8 +82,8 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
   const settingsScrollRef = useRef<HTMLDivElement>(null);
   const initialMenuHeightRef = useRef<number | null>(null);
   const [menuMinHeight, setMenuMinHeight] = useState<number | null>(null);
-  const [dataStatus, setDataStatus] = useState<DataStatus | null>(null);
-  const [dataStatusLoading, setDataStatusLoading] = useState(false);
+  const [backupStatus, setBackupStatus] = useState<GoogleBackupStatus | null>(null);
+  const [backupStatusLoading, setBackupStatusLoading] = useState(false);
 
   // Form state
   const [nameInput, setNameInput] = useState('');
@@ -99,14 +98,15 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
 
   const isPro = profile?.subscription_status === 'active';
 
-  const loadDataStatus = async () => {
-    setDataStatusLoading(true);
+  const loadBackupStatus = async () => {
+    setBackupStatusLoading(true);
     try {
-      setDataStatus(await apiGet<DataStatus>('/spreadsheet/status'));
+      const data = await apiGet<{ connected: boolean; spreadsheetId: string | null }>('/auth/google/status');
+      setBackupStatus(data);
     } catch {
-      setDataStatus(null);
+      setBackupStatus(null);
     } finally {
-      setDataStatusLoading(false);
+      setBackupStatusLoading(false);
     }
   };
 
@@ -166,7 +166,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
   }, [activeSection]);
 
   useEffect(() => {
-    if (open && activeSection === null) void loadDataStatus();
+    if (open && activeSection === null) void loadBackupStatus();
   }, [open, activeSection]);
 
   useEffect(() => {
@@ -507,24 +507,21 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
 
                       <div className="mb-3 rounded-2xl border border-border bg-secondary/50 p-3.5">
                         <div className="flex items-start gap-3">
-                          <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                            dataStatus?.dataReady ? 'bg-primary/12 text-primary' : 'bg-amber-500/12 text-amber-700 dark:text-amber-300'
-                          }`}>
-                            {dataStatus?.dataReady ? <CheckCircle2 size={18} /> : <Database size={18} />}
+                          <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
+                            <Database size={18} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold text-foreground">Data kamu</p>
+                            <p className="text-sm font-bold text-foreground">Penyimpanan Data</p>
                             <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                              {dataStatusLoading
-                                ? 'Memeriksa status penyimpanan…'
-                                : dataStatus?.dataReady
-                                  ? 'Tersimpan dan siap digunakan.'
-                                  : 'Sambungkan Google Drive untuk mengakses data kamu.'}
+                              Data tersimpan aman di server kami (PostgreSQL).
+                              {backupStatusLoading
+                                ? ' Memeriksa status backup…'
+                                : backupStatus?.connected
+                                  ? ' Backup ke Google Spreadsheet aktif.'
+                                  : ' Backup ke Google Spreadsheet belum diaktifkan.'}
                             </p>
                           </div>
-                          {!dataStatus?.dataReady && !dataStatusLoading && (
-                            <AlertTriangle size={16} className="mt-1 shrink-0 text-amber-600 dark:text-amber-300" />
-                          )}
+                          <CheckCircle2 size={16} className="mt-1 shrink-0 text-primary" />
                         </div>
                       </div>
 
@@ -556,7 +553,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                           <div className="flex h-[clamp(2.25rem,7vw,2.5rem)] w-[clamp(2.25rem,7vw,2.5rem)] flex-shrink-0 items-center justify-center rounded-xl border border-border bg-secondary">
                             <Sheet size={18} className="text-muted-foreground w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
                           </div>
-                          <span className="flex-1 font-bold text-foreground text-[clamp(0.875rem,3vw,1.125rem)]">Spreadsheet Saya</span>
+                          <span className="flex-1 font-bold text-foreground text-[clamp(0.875rem,3vw,1.125rem)]">Backup Spreadsheet</span>
                           <ChevronRight size={16} className="text-muted-foreground/50 w-[clamp(1rem,3vw,1.25rem)] h-[clamp(1rem,3vw,1.25rem)]" strokeWidth={2.5} />
                         </button>
                       </div>

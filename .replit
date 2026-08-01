@@ -27,7 +27,7 @@ externalPort = 80
 GOOGLE_REDIRECT_URI = "https://6d40c01c-89b6-4e55-9260-ecc37149fc8f-00-1g480sphjcn6w.pike.replit.dev/api/auth/google/callback"
 
 [userenv.development]
-FRONTEND_URL = "https://c8f2aedd-2b1c-4d47-9e4d-606153259fa0-00-qc91t2kbkj54.sisko.replit.dev"
+FRONTEND_URL = "https://71863587-dc17-4573-a5dc-e08900cddafb-00-1j55ur5mokzj7.sisko.replit.dev/"
 SUMOPOD_PAYMENT_BASE_URL = "https://api-pay-sandbox.sumopod.com"
 
 [workflows]

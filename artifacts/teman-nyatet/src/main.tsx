@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import { setAuthTokenGetter } from '@workspace/api-client-react';
 import { supabase } from '@/lib/supabase';
+import { inject } from '@vercel/analytics';
 import App from './App';
 import type { ThemeMode } from '@/hooks/useTheme';
 import { resolveTheme } from '@/hooks/useTheme';
@@ -94,3 +95,6 @@ if ('requestIdleCallback' in window) {
 } else {
   setTimeout(registerServiceWorker, 1000);
 }
+
+// Initialize Vercel Web Analytics
+inject();

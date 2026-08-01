@@ -7,7 +7,7 @@
 //   3. User consents on Google → browser redirected to /api/auth/google/callback
 //   4. Callback: verify state, exchange code for tokens, auto-create spreadsheet
 //   5. Redirect browser to frontend success/error page
-import { Router } from 'express';
+import { Router, type IRouter } from 'express';
 import { requireUser } from '../middleware/requireAuth.js';
 import { supabaseAdmin } from '../lib/supabase-admin.js';
 import {
@@ -22,7 +22,7 @@ import {
 import { ensureSheetsInitialized } from '../lib/sheet-store.js';
 import { invalidateUserSheetCache } from '../lib/user-sheet.js';
 
-const router = Router();
+const router: IRouter = Router();
 
 function getFrontendUrl(): string {
   const replitDomain = process.env['REPLIT_DEV_DOMAIN'];

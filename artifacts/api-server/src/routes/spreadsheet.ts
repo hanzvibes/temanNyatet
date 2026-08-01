@@ -1,6 +1,6 @@
 // Spreadsheet management routes (status + repair + validate).
 // The connect flow is now handled by OAuth in routes/auth-google.ts.
-import { Router } from 'express';
+import { Router, type IRouter } from 'express';
 import { requireAuth, requireUser, userRateLimit } from '../middleware/requireAuth.js';
 import { supabaseAdmin } from '../lib/supabase-admin.js';
 import { SheetsAccessError } from '../lib/google-sheets.js';
@@ -8,7 +8,7 @@ import { repairHeaders, SHEET_SCHEMAS } from '../lib/sheet-store.js';
 import { invalidateUserSheetCache } from '../lib/user-sheet.js';
 import { usesPostgresDataStoreForUser } from '../lib/data-store.js';
 
-const router = Router();
+const router: IRouter = Router();
 
 // ─── GET /api/spreadsheet/status ────────────────────────────────────────────
 // Returns connection state for the current user. Uses requireUser (not

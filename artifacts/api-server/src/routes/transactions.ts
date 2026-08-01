@@ -1,10 +1,10 @@
-import { Router } from 'express';
+import { Router, type IRouter } from 'express';
 import { requireAuth, userRateLimit } from '../middleware/requireAuth.js';
 import { createData, deleteData, listData, updateData } from '../lib/data-store.js';
 import { SheetsAccessError } from '../lib/google-sheets.js';
 import { optionalString, requireEnum, requireString, ValidationError } from '../lib/validate.js';
 
-const router = Router();
+const router: IRouter = Router();
 const SHEET = '💰 Transactions';
 const FIELD_MAX = 200;
 const NOTE_MAX = 5_000;

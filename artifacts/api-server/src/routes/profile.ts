@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type IRouter } from 'express';
 import * as multerMod from 'multer';
 import { requireUser } from '../middleware/requireAuth.js';
 import { supabaseAdmin } from '../lib/supabase-admin.js';
@@ -11,7 +11,7 @@ import { supabaseAdmin } from '../lib/supabase-admin.js';
 // attached properties (`MulterError`, `memoryStorage`) at runtime.
 const multer = ((multerMod as any).default ?? multerMod) as any;
 
-const router = Router();
+const router: IRouter = Router();
 
 const AVATAR_BUCKET = 'avatars';
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024; // 5MB

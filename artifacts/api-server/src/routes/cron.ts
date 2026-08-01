@@ -1,8 +1,8 @@
-import { Router } from 'express';
+import { Router, type IRouter } from 'express';
 import crypto from 'crypto';
 import { archiveExpiredAccounts } from '../lib/supabase-admin.js';
 
-const router = Router();
+const router: IRouter = Router();
 
 // Constant-time secret comparison using HMAC to normalize to fixed-length digests.
 // This prevents timing attacks even when secrets differ in length.

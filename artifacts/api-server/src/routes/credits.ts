@@ -1,8 +1,8 @@
-import { Router } from 'express';
+import { Router, type IRouter } from 'express';
 import { requireUser } from '../middleware/requireAuth.js';
 import { getCreditBalance } from '../lib/credit-service.js';
 
-const router = Router();
+const router: IRouter = Router();
 
 router.get('/credits', requireUser, async (req, res) => {
   try {

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type IRouter } from 'express';
 import {
   getPaymentOrder,
   markPaymentOrderCompleted,
@@ -17,7 +17,7 @@ import {
 import { authorizeSumopodWebhook } from '../lib/sumopod-webhook-auth.js';
 import { activateSubscription } from '../lib/supabase-admin.js';
 
-const router = Router();
+const router: IRouter = Router();
 const CREDIT_ORDER_PREFIX = 'TN-CREDIT-';
 
 function isCreditOrder(orderId: string): boolean {

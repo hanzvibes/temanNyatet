@@ -38,7 +38,11 @@ export function getRedirectUri(): string {
   return 'http://localhost:5000/api/auth/google/callback';
 }
 
-export async function createOAuth2Client() {
+// Keep the lazy Google client out of the public declaration surface. The
+// google-auth-library package is brought in transitively by googleapis and
+// has had multiple versions in the workspace; exposing its concrete type
+// makes TypeScript declaration emit depend on a pnpm-internal path.
+export async function createOAuth2Client(): Promise<any> {
   const google = await getGoogle();
   return new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, getRedirectUri());
 }

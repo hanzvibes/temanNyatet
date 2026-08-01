@@ -1,10 +1,10 @@
-import { Router } from 'express';
+import { Router, type IRouter } from 'express';
 import { supabaseAdmin } from '../lib/supabase-admin.js';
 import { getCreditBalance } from '../lib/credit-service.js';
 import { requireUser } from '../middleware/requireAuth.js';
 import { listPaymentOrdersForUser } from '../lib/payment-orders.js';
 
-const router = Router();
+const router: IRouter = Router();
 const SUBSCRIPTION_FEATURES = [
   'Catatan tanpa batas',
   'Akses Ringkas AI',

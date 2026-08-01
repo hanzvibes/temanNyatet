@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type IRouter } from 'express';
 import { requireAuth, userRateLimit } from '../middleware/requireAuth.js';
 import { listData } from '../lib/data-store.js';
 import { SheetsAccessError } from '../lib/google-sheets.js';
@@ -15,7 +15,7 @@ import {
 import { CreditsExhaustedError, getCreditBalance } from '../lib/credit-service.js';
 import { ValidationError, requireEnum, requireString } from '../lib/validate.js';
 
-const router = Router();
+const router: IRouter = Router();
 const SHEET = '💰 Transactions';
 const AI_BASE_URL = (process.env['OPENAI_BASE_URL'] ?? 'https://ai.sumopod.com').replace(/\/+$/, '');
 const AI_MODEL = process.env['OPENAI_MODEL'] ?? 'gpt-4o-mini';

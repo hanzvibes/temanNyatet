@@ -1,10 +1,10 @@
-import { Router } from 'express';
+import { Router, type IRouter } from 'express';
 import crypto from 'crypto';
 import { activateSubscription } from '../lib/supabase-admin.js';
 import { grantCreditToEmail } from '../lib/credit-service.js';
 import { MayarPaymentProvider } from '../lib/payment-provider.js';
 
-const router = Router();
+const router: IRouter = Router();
 const paymentProvider = new MayarPaymentProvider();
 
 // Verify Mayar webhook HMAC-SHA256 signature against the EXACT raw body bytes

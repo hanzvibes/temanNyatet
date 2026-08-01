@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { Router } from 'express';
+import { Router, type IRouter } from 'express';
 import { requireUser } from '../middleware/requireAuth.js';
 import { supabaseAdmin } from '../lib/supabase-admin.js';
 import {
@@ -15,7 +15,7 @@ import {
   SumopodProviderError,
 } from '../lib/sumopod-payment.js';
 
-const router = Router();
+const router: IRouter = Router();
 
 function frontendUrl(req: Parameters<typeof requireUser>[0]): string {
   return (process.env['FRONTEND_URL'] || `${req.protocol}://${req.get('host')}`).replace(/\/$/, '');

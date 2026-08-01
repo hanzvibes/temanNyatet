@@ -10,10 +10,5 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src"],
-  "references": [
-    {
-      "path": "../../lib/db"
-    }
-  ]
+  "include": ["src"]
 }

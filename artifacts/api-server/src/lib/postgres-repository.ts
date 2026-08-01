@@ -104,7 +104,7 @@ export function createPostgresRepository(database: RepositoryDb = db) {
         .from(table)
         .where(and(eq(table.userId, userId), isNull(table.deletedAt)))
         .orderBy(desc(table.updatedAt), asc(table.id));
-      return rows.map((row) => toApiRow(row as AppRow, entity));
+      return (rows as unknown as AppRow[]).map((row) => toApiRow(row, entity));
     },
 
     async getById(entity: Entity, id: string, userId: string): Promise<Record<string, unknown> | null> {

@@ -34,6 +34,14 @@ Mode default tetap `sheets`. Setelah pilot diverifikasi:
 APP_DATA_STORE=postgres
 ```
 
+Untuk rollout bertahap, isi allowlist user:
+
+```text
+APP_DATA_POSTGRES_USER_IDS=<supabase-user-id-1>,<supabase-user-id-2>
+```
+
+Jika allowlist tidak kosong, hanya user yang tercantum yang memakai PostgreSQL. User lain tetap memakai Google Sheets.
+
 Saat mode PostgreSQL aktif:
 
 - notes, transactions, todos, links, reorder notes, dan transaction-summary generator membaca PostgreSQL;

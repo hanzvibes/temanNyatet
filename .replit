@@ -29,6 +29,8 @@ GOOGLE_REDIRECT_URI = "https://6d40c01c-89b6-4e55-9260-ecc37149fc8f-00-1g480sphj
 [userenv.development]
 FRONTEND_URL = "https://71863587-dc17-4573-a5dc-e08900cddafb-00-1j55ur5mokzj7.sisko.replit.dev/"
 SUMOPOD_PAYMENT_BASE_URL = "https://api-pay-sandbox.sumopod.com"
+APP_DATA_POSTGRES_USER_IDS = "63e0a9c1-59fc-433a-8392-44f36aaa67fb"
+APP_DATA_STORE = "postgres"
 
 [workflows]
 runButton = "Project"

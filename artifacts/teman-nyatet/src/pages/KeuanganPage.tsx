@@ -49,6 +49,7 @@ import {
   type TransactionSummary,
   type TransactionSummaryPeriod,
 } from '@/lib/transaction-summary';
+import { transactionDateValue } from '@/lib/transaction-date';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatRupiah = (amount: number) =>
@@ -83,7 +84,7 @@ const txSchema = z.object({
 });
 
 type TxFormValues = z.infer<typeof txSchema>;
-type PeriodFilter = 'today' | 'week' | 'month' | 'custom';
+type PeriodFilter = 'all' | 'today' | 'week' | 'month' | 'custom';
 
 // ─── Balance Hero ─────────────────────────────────────────────────────────────
 function BalanceHero({
@@ -209,7 +210,7 @@ export default function KeuanganPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [txType, setTxType] = useState<TransactionType>('expense');
   const [search, setSearch] = useState('');
-  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('month');
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
   const [customStartDate, setCustomStartDate] = useState(() => format(startOfMonth(new Date()), 'yyyy-MM-dd'));
   const [customEndDate, setCustomEndDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
   const [customDraftStartDate, setCustomDraftStartDate] = useState(() => format(startOfMonth(new Date()), 'yyyy-MM-dd'));
@@ -269,6 +270,7 @@ export default function KeuanganPage() {
 
   const periodRange = useMemo(() => {
     const now = new Date();
+    if (periodFilter === 'all') return null;
     if (periodFilter === 'today') return { start: startOfDay(now), end: endOfDay(now) };
     if (periodFilter === 'week') {
       return {
@@ -286,7 +288,7 @@ export default function KeuanganPage() {
   }, [customEndDate, customStartDate, periodFilter]);
 
   const summaryPeriod = useMemo<TransactionSummaryPeriod | null>(() => {
-    if (periodFilter === 'today') return null;
+    if (!periodRange || periodFilter === 'today') return null;
     if (periodFilter === 'week') {
       return {
         periodType: 'week',
@@ -404,10 +406,12 @@ export default function KeuanganPage() {
 
   const periodTransactions = useMemo(
     () =>
-      transactions.filter((tx) => {
-        const txDate = new Date(`${tx.date}T12:00:00`);
-        return isWithinInterval(txDate, periodRange);
-      }),
+      periodRange
+        ? transactions.filter((tx) => {
+            const txDate = transactionDateValue(tx.date);
+            return isWithinInterval(txDate, periodRange);
+          })
+        : transactions,
     [periodRange, transactions],
   );
 
@@ -554,6 +558,7 @@ export default function KeuanganPage() {
             <div className="rounded-2xl bg-muted/55 p-1 [scrollbar-width:none]">
               <div className="flex min-w-0 gap-1 overflow-x-auto">
               {([
+                ['all', 'Semua'],
                 ['today', 'Hari ini'],
                 ['week', 'Minggu ini'],
                 ['month', 'Bulan ini'],
@@ -618,7 +623,7 @@ export default function KeuanganPage() {
                 <PageEmpty
                   accent="keuangan"
                   icon={Wallet}
-                  title={search ? 'Tidak ada hasil pencarian' : 'Belum ada transaksi bulan ini'}
+                      title={search ? 'Tidak ada hasil pencarian' : periodFilter === 'all' ? 'Belum ada transaksi' : 'Belum ada transaksi di periode ini'}
                   description={
                     search
                       ? 'Coba kata kunci lain atau hapus filter.'

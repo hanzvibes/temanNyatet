@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth, userRateLimit } from '../middleware/requireAuth.js';
-import { createRow, deleteRow, listByUser, updateRow } from '../lib/sheet-store.js';
+import { createData, deleteData, listData, updateData } from '../lib/data-store.js';
 import { SheetsAccessError } from '../lib/google-sheets.js';
 import { optionalString, requireEnum, requireString, ValidationError } from '../lib/validate.js';
 
@@ -21,7 +21,7 @@ function parseAmount(value: unknown): number {
 
 router.get('/transactions', requireAuth, userRateLimit, async (req, res) => {
   try {
-    const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!, req.sheetsClient!);
+    const rows = await listData('transactions', req.userId!, req.spreadsheetId, req.sheetsClient);
     res.status(200).json({ data: rows });
   } catch (err) {
     if (err instanceof SheetsAccessError) {
@@ -42,7 +42,7 @@ router.post('/transactions', requireAuth, userRateLimit, async (req, res) => {
     const source = requireString(body.source, 'source', FIELD_MAX);
     const date = requireString(body.date, 'date', DATE_MAX);
     const note = optionalString(body.note, 'note', NOTE_MAX);
-    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, { type, amount, category, source, note, date }, req.sheetsClient!);
+    const row = await createData('transactions', req.userId!, { type, amount, category, source, note, date }, req.spreadsheetId, req.sheetsClient);
     res.status(201).json({ data: row });
   } catch (err) {
     if (err instanceof ValidationError) {
@@ -68,7 +68,7 @@ router.put('/transactions/:id', requireAuth, userRateLimit, async (req, res) => 
     if ('source' in body) updates.source = requireString(body.source, 'source', FIELD_MAX);
     if ('date' in body) updates.date = requireString(body.date, 'date', DATE_MAX);
     if ('note' in body) updates.note = optionalString(body.note, 'note', NOTE_MAX);
-    const row = await updateRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, updates, req.sheetsClient!);
+    const row = await updateData('transactions', req.params.id as string, req.userId!, updates, req.spreadsheetId, req.sheetsClient);
     if (!row) {
       res.status(404).json({ error: 'Transaction not found' });
       return;
@@ -90,7 +90,7 @@ router.put('/transactions/:id', requireAuth, userRateLimit, async (req, res) => 
 
 router.delete('/transactions/:id', requireAuth, userRateLimit, async (req, res) => {
   try {
-    const ok = await deleteRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, req.sheetsClient!);
+    const ok = await deleteData('transactions', req.params.id as string, req.userId!, req.spreadsheetId, req.sheetsClient);
     if (!ok) {
       res.status(404).json({ error: 'Transaction not found' });
       return;

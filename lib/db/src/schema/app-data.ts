@@ -104,7 +104,8 @@ export const syncOutboxTable = pgTable(
     status: syncStatus("status").notNull().default("pending"),
     attempts: integer("attempts").notNull().default(0),
     lastError: text("last_error"),
-    ...timestamps,
+    createdAt: timestamps.createdAt,
+    updatedAt: timestamps.updatedAt,
   },
   (table) => [
     uniqueIndex("sync_outbox_event_idx").on(

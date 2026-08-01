@@ -4,6 +4,7 @@ import * as rateLimitMod from 'express-rate-limit';
 import { ipKeyGenerator } from 'express-rate-limit';
 import { supabaseAdmin } from '../lib/supabase-admin.js';
 import { getUserSheetConnection } from '../lib/user-sheet.js';
+import { usesPostgresDataStore } from '../lib/data-store.js';
 
 // express-rate-limit ships CJS UMD types (`export = X` in `dist/index.d.ts`)
 // alongside an ESM default-export shim. Vercel's tsc post-build type-check
@@ -88,6 +89,12 @@ export async function requireUser(req: Request, res: Response, next: NextFunctio
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const userId = await verifyToken(req, res);
   if (!userId) return;
+
+  if (usesPostgresDataStore()) {
+    req.userId = userId;
+    next();
+    return;
+  }
 
   let connection: { spreadsheetId: string; sheets: sheets_v4.Sheets } | null;
   try {

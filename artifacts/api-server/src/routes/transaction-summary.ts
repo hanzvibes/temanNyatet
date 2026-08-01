@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth, userRateLimit } from '../middleware/requireAuth.js';
-import { listByUser } from '../lib/sheet-store.js';
+import { listData } from '../lib/data-store.js';
 import { SheetsAccessError } from '../lib/google-sheets.js';
 import {
   aggregateTransactions,
@@ -136,7 +136,7 @@ router.post('/transactions/summary/generate', requireAuth, userRateLimit, async 
     );
     const apiKey = process.env['OPENAI_API_KEY'];
     const currentBalance = await getCreditBalance(req.userId!);
-    const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!, req.sheetsClient!);
+    const rows = await listData('transactions', req.userId!, req.spreadsheetId, req.sheetsClient);
     const aggregate = aggregateTransactions(mapSheetRows(rows as Array<Record<string, unknown>>), period);
 
     if (aggregate.current.transactionCount === 0) {

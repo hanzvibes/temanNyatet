@@ -1,0 +1,1 @@
+ALTER TABLE "sync_outbox" DROP COLUMN "deleted_at";

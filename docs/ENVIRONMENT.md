@@ -31,6 +31,7 @@ Create `.env.local` in `artifacts/teman-nyatet/` for local development. On Verce
 |---|---|---|
 | `VITE_SITE_URL` | Current browser origin | Canonical domain sent as `emailRedirectTo` in Supabase sign-up emails. Leave unset in Replit/Vercel preview — the app uses `window.location.origin`. Set to `https://temannyatet.id` if using a custom domain. |
 | `VITE_API_SERVER_URL` | Replit: relative `/api/*`; production: `https://teman-nyatet-api-server.vercel.app` | API server base URL when frontend and API are on different origins. Leave unset in Replit dev (Vite proxies `/api` → `localhost:8080`). Set it explicitly in the Vercel frontend project; the production build also has this same URL as a code fallback. |
+| `APP_DATA_STORE` | `sheets` | Data source for notes, transactions, todos, and links. Change to `postgres` only after the selected Google Sheets data has been imported to SumoPod PostgreSQL. |
 | `PORT` | `5173` | Vite dev server port. Replit sets this to `5000` automatically. |
 | `BASE_PATH` | `/` | Vite `base` option. Leave unset unless deploying to a subpath. |
 
@@ -49,6 +50,7 @@ Create `.env.local` in `artifacts/api-server/` for local development. On Vercel,
 | `GOOGLE_CLIENT_ID` | OAuth 2.0 Client ID from Google Cloud Console. Format: `<id>.apps.googleusercontent.com` |
 | `GOOGLE_CLIENT_SECRET` | OAuth 2.0 Client Secret. Format: `GOCSPX-<secret>` |
 | `GOOGLE_OAUTH_STATE_SECRET` | Random hex string for HMAC-signing OAuth state params (CSRF protection). Generate: `openssl rand -hex 32`. Must be the same value across all environments sharing one OAuth credential. |
+| `DATABASE_URL` | SumoPod PostgreSQL connection string. Keep it server-only in Replit Secrets; never expose it to the browser. |
 
 ### Optional
 
@@ -96,6 +98,7 @@ On Replit, secrets are set in the Secrets panel (not `.env.local` files). The fo
 | `MAYAR_WEBHOOK_SECRET` | Legacy Mayar compatibility secret (optional) |
 | `OPENAI_API_KEY` | AI summarization API key (optional, adds `gpt-4o-mini` note summarization) |
 | `INITIAL_AI_CREDITS` | Initial AI credit balance for new users (optional, defaults to `10`) |
+| `DATABASE_URL` | SumoPod PostgreSQL connection string (server-only) |
 
 ### Pre-configured Replit environment variables
 

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth, userRateLimit } from '../middleware/requireAuth.js';
-import { createRow, deleteRow, listByUser, reorderRows, updateRow } from '../lib/sheet-store.js';
+import { createData, deleteData, listData, reorderNotes, updateData } from '../lib/data-store.js';
 import { SheetsAccessError } from '../lib/google-sheets.js';
 import { optionalString, optionalTags, requireString, ValidationError } from '../lib/validate.js';
 import { consumeCredit, CreditsExhaustedError, getCreditBalance } from '../lib/credit-service.js';
@@ -16,7 +16,7 @@ const OPENAI_TIMEOUT_MS = 30_000;
 
 router.get('/notes', requireAuth, userRateLimit, async (req, res) => {
   try {
-    const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!, req.sheetsClient!);
+    const rows = await listData('notes', req.userId!, req.spreadsheetId, req.sheetsClient);
     rows.sort((a, b) => {
       const posA = Number(a.position) || 0;
       const posB = Number(b.position) || 0;
@@ -41,7 +41,7 @@ router.post('/notes', requireAuth, userRateLimit, async (req, res) => {
     const title = optionalString(body.title, 'title', TITLE_MAX);
     const tags = optionalTags(body.tags);
     const color = optionalString(body.color, 'color', 100);
-    const row = await createRow(req.spreadsheetId!, SHEET, req.userId!, { title, content, tags, color }, req.sheetsClient!);
+    const row = await createData('notes', req.userId!, { title, content, tags, color }, req.spreadsheetId, req.sheetsClient);
     res.status(201).json({ data: row });
   } catch (err) {
     if (err instanceof ValidationError) {
@@ -65,7 +65,7 @@ router.put('/notes/:id', requireAuth, userRateLimit, async (req, res) => {
     if ('content' in body) updates.content = requireString(body.content, 'content', CONTENT_MAX);
     if ('tags' in body) updates.tags = optionalTags(body.tags);
     if ('color' in body) updates.color = optionalString(body.color, 'color', 100);
-    const row = await updateRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, updates, req.sheetsClient!);
+    const row = await updateData('notes', req.params.id as string, req.userId!, updates, req.spreadsheetId, req.sheetsClient);
     if (!row) {
       res.status(404).json({ error: 'Note not found' });
       return;
@@ -99,7 +99,7 @@ router.post('/notes/:id/summarize', requireAuth, userRateLimit, async (req, res)
       return;
     }
 
-    const rows = await listByUser(req.spreadsheetId!, SHEET, req.userId!, req.sheetsClient!);
+    const rows = await listData('notes', req.userId!, req.spreadsheetId, req.sheetsClient);
     const note = rows.find((row) => row.id === req.params.id);
     if (!note) {
       res.status(404).json({ error: 'Note not found' });
@@ -197,7 +197,7 @@ router.post('/notes/reorder', requireAuth, userRateLimit, async (req, res) => {
       res.status(400).json({ error: 'orderedIds must be an array of strings' });
       return;
     }
-    await reorderRows(req.spreadsheetId!, SHEET, req.userId!, orderedIds, req.sheetsClient!);
+    await reorderNotes(req.userId!, orderedIds, req.spreadsheetId, req.sheetsClient);
     res.status(204).send();
   } catch (err) {
     if (err instanceof SheetsAccessError) {
@@ -211,7 +211,7 @@ router.post('/notes/reorder', requireAuth, userRateLimit, async (req, res) => {
 
 router.delete('/notes/:id', requireAuth, userRateLimit, async (req, res) => {
   try {
-    const ok = await deleteRow(req.spreadsheetId!, SHEET, req.params.id as string, req.userId!, req.sheetsClient!);
+    const ok = await deleteData('notes', req.params.id as string, req.userId!, req.spreadsheetId, req.sheetsClient);
     if (!ok) {
       res.status(404).json({ error: 'Note not found' });
       return;

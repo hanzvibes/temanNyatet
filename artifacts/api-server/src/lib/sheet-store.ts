@@ -8,6 +8,8 @@
 import type { sheets_v4 } from 'googleapis';
 import { newId, withGoogleRetry } from './google-sheets.js';
 import { logger } from './logger.js';
+import { normalizeStoredNullableText } from './nullable-fields.js';
+import { normalizeNoteTitle } from './note-fields.js';
 
 // ─── Sheet schemas ──────────────────────────────────────────────────────────
 
@@ -159,6 +161,10 @@ function decodeValue(header: string, value: unknown): unknown {
   if (header === 'is_done') return value === 'true' || value === true;
   if (header === 'amount') return Number(value) || 0;
   if (header === 'position') return Number(value) || 0;
+  if (header === 'title') return normalizeNoteTitle(value);
+  if (['content', 'color', 'category', 'source', 'note', 'description', 'due_time'].includes(header)) {
+    return normalizeStoredNullableText(value);
+  }
   return value;
 }
 

@@ -13,23 +13,28 @@
 
 ---
 
-## ADR-001: Google Sheets as the app data backend
+## ADR-001: Progressive PostgreSQL app-data rollout with Google Sheets fallback
 
-**Decision**: Store all user app data (notes, transactions, todos, links) in a private Google Spreadsheet in each user's own Google Drive — not in a shared database.
+**Decision**: Use SumoPod PostgreSQL as the primary app-data store for users
+whose Sheets data has been successfully imported, while retaining each user's
+private Google Spreadsheet as the migration source and fallback for users not
+yet allowlisted.
 
 **Why**:
-- User owns their data — they can view, export, or delete it directly from Google Sheets
-- No server-side storage cost that scales with number of users
-- Indonesian market trust: many users are cautious about storing personal/financial data on a third-party server
-- Google Drive provides free storage under the 15 GB limit for most users
-- `drive.file` scope is least-privilege — the app can only access spreadsheets it created
+- PostgreSQL avoids reading entire Sheets tabs and filtering in memory on normal
+  CRUD requests, improving latency and query behavior
+- Import-only rollout preserves existing Sheets data and keeps rollback possible
+- Google Sheets remains available for migration and for users with invalid or
+  missing Google grants
+- The allowlist prevents an empty or partially imported database from appearing
+  as missing user data
 
 **Tradeoffs accepted**:
-- No cross-user queries, aggregations, or reporting
-- Google API rate limits apply (mitigated by per-user isolation)
-- In-process sheet lock (`sheetLocks` Map) doesn't work with horizontal scaling
-- All data is stored as strings in cells; type coercion is handled manually in `sheet-store.ts`
-- Soft-delete to `_Archive` tab rather than physical deletion (can be cleaned up manually)
+- PostgreSQL writes are not mirrored to Sheets yet
+- `sync_outbox` exists as the boundary for a future asynchronous mirror worker
+- Two data paths must remain behaviorally compatible during rollout
+- Sheets users still have Google API rate limits and in-process locking
+- Migration is import-only and does not delete or mutate Sheets rows
 
 ---
 

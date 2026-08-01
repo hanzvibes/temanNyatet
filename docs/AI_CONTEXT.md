@@ -24,11 +24,12 @@ TemanNyatet is a SaaS note-taking PWA for Indonesian users. It has four core mod
 
 Give Indonesian users a private, mobile-first productivity app where their data lives in their own Google Drive — not on a shared server. The app is a SaaS subscription with a freemium-style gate: users sign up free, must pay to access features.
 
-## Current implementation status (as of July 2026)
+## Current implementation status (as of August 2026)
 
 - All four feature modules: fully implemented and live
 - Auth flow: complete (Supabase email/password + email confirmation)
-- Google OAuth + Sheets data backend: complete (per-user spreadsheet, auto-created on first connect)
+- Google OAuth + Sheets migration source: complete (per-user spreadsheet, auto-created on first connect)
+- PostgreSQL app-data pilot: schema and import-only migration complete; 9 users are allowlisted, 1 user with an invalid Google grant remains on Sheets
 - Subscription gate (SumoPod checkout/webhook): implemented in source; production webhook deployment still requires redeploy verification
 - AI credit system: complete (10 initial credits, atomic debit/grant RPCs, audit ledger)
 - AI note summarization: complete; failed requests do not consume credits
@@ -48,7 +49,7 @@ Give Indonesian users a private, mobile-first productivity app where their data 
 | Forms | React Hook Form + Zod |
 | Backend | Express 5, TypeScript, Pino (logging), Helmet, CORS, express-rate-limit |
 | Auth | Supabase Auth (email/password, email confirmation required) |
-| App data | Google Sheets API — per-user spreadsheet in their own Drive |
+| App data | SumoPod PostgreSQL for migrated allowlisted users; Google Sheets fallback/migration source for others |
 | Profile/sub | Supabase Postgres (`profiles` table) |
 | AI credits | Supabase Postgres (`user_credits`, `credit_ledger`, atomic RPCs) |
 | Payments | SumoPod Sandbox (server-side checkout, local payment orders, idempotent webhook reconciliation) |
@@ -111,11 +112,11 @@ Frontend (Vite SPA)
   ↓ /api/* (Vite proxy in dev, direct URL in prod)
 API Server (Express 5)
   ├── Supabase Admin SDK  →  verify JWT, read/write profiles
-  └── Google Sheets API  →  CRUD on user's private spreadsheet
+   ├── Data-store boundary → PostgreSQL or user's private spreadsheet
    └── Supabase RPCs       →  atomic AI credit balance + ledger updates
 ```
 
-- **Data storage**: App data (notes, transactions, todos, links) lives in 4 tabs of each user's own Google Spreadsheet. Supabase only stores the `profiles` row (subscription, tokens, spreadsheet ID).
+- **Data storage**: Migrated allowlisted users use SumoPod PostgreSQL for notes, transactions, todos, and links. Other users use the four tabs in their own Google Spreadsheet. Supabase stores auth/profile/subscription/credits.
 - **Auth guard flow**: unauthenticated → `/login` (public: `/login`, `/auth/confirm`); no spreadsheet → `/connect-sheet`; `pending` → `/payment`; `archived` → `/archived`; `active` → feature pages.
 - **Navigation**: CachedSwitch keeps all visited pages mounted (DOM `hidden` toggle), React Query cache stays alive. Bottom sheet nav on mobile, sidebar on desktop (lg+).
 - **Polling**: Data hooks poll every 15 s. TanStack Query `staleTime: 30 s`, `gcTime: 30 min`.
@@ -135,19 +136,21 @@ API Server (Express 5)
 
 ## Important constraints
 
-1. **Google Sheets has no transactions** — `sheet-store.ts` uses an in-process `Map` lock per spreadsheet+sheet. This lock doesn't survive horizontal scaling.
+1. **Google Sheets has no transactions** — the Sheets path uses an in-process `Map` lock per spreadsheet+sheet. This lock doesn't survive horizontal scaling.
 2. **Email confirmation required** — `AuthContext` signs out users whose email is not confirmed. Supabase must have "Confirm email" enabled.
 3. **`005_phase1_schema.sql` drops legacy tables** — `notes`, `transactions`, `todos`, `links` Supabase tables are dropped. Never write app data to those legacy tables; use the API server. Credit tables added by `006_ai_credits.sql` are intentionally live.
 4. **`GOOGLE_REDIRECT_URI` must be byte-exact** — must match Google Cloud Console and Vercel env var exactly. Any mismatch → `redirect_uri_mismatch` OAuth error.
 5. **Vercel Cron is GET only** — `POST /api/cron/archive-expired` requires an external scheduler (GitHub Actions, cron-job.org), not Vercel Cron.
-6. **Production webhook route must be verified after deploy** — the current source registers `/api/sumopod-webhook`, but a stale Vercel API deployment can return `404 Cannot POST /api/sumopod-webhook` until redeployed from `main` with Root Directory `artifacts/api-server`.
-6. **pnpm version pinned** at `10.26.1` in root `package.json`. Do not upgrade to pnpm 11 without migrating `onlyBuiltDependencies` → `allowBuilds`.
+6. **Production webhook route must be verified after deploy** — health and webhook routes are separate checks.
+7. **PostgreSQL rollout is allowlist-based** — do not add a user until import succeeds; an invalid Google grant stays on Sheets until reconnect.
+8. **Numeric API values need coercion** — PostgreSQL `numeric` can serialize as a string; use `Number(value) || 0` before arithmetic.
+9. **pnpm version pinned** at `10.26.1` in root `package.json`. Do not upgrade to pnpm 11 without migrating `onlyBuiltDependencies` → `allowBuilds`.
 
 ## Known technical debt
 
 | Item | Impact | File |
 |---|---|---|
-| `lib/db/` is unused | Dead scaffolding, empty Drizzle schema | `lib/db/src/schema/index.ts` |
+| `sync_outbox` has no worker yet | PostgreSQL writes are not mirrored to Sheets | `lib/db`, `artifacts/api-server/src/lib/data-store.ts` |
 | `lib/api-client-react` generated client only used for token wiring | Orval pipeline maintained for one use | `artifacts/teman-nyatet/src/main.tsx` |
 | Three migration files share `002_*` prefix | Filename-order ambiguity | `supabase/migrations/` |
 | `fix_profiles_rls_recursion.sql` is ad-hoc | Not in numbered sequence | `supabase/migrations/` |
@@ -155,11 +158,12 @@ API Server (Express 5)
 | Data hooks use module-level Map cache + polling | Custom caching layer parallel to TanStack Query | `artifacts/teman-nyatet/src/hooks/` |
 | API server tsconfig needs `"dom"` lib | Vercel build fails without it; local `@types/node` v25 masks the issue locally | `artifacts/api-server/tsconfig.json` |
 
-## Current priorities (July 2026)
+## Current priorities (August 2026)
 
-1. UX improvements to the four feature pages (empty states, form UX, mobile polish)
-2. Setting up the external cron scheduler (TASK-001)
-3. Publishing the Google OAuth consent screen beyond 100 test users (TASK-002)
+1. Implement the asynchronous `sync_outbox` mirror worker with retry/status handling
+2. Add repository/data-store tests and verify PostgreSQL writes end-to-end
+3. Re-migrate the user whose Google grant is invalid after reconnect
+4. Expand the PostgreSQL allowlist only after mirror and write-path verification
 
 ## Recent changes
 

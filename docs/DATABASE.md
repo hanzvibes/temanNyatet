@@ -17,14 +17,18 @@
 
 ## Overview
 
-TemanNyatet uses **two data stores** with distinct responsibilities:
+TemanNyatet uses **three data stores** with distinct responsibilities:
 
 | Store | What lives there |
 |---|---|
 | **Supabase Postgres** | `profiles` — user metadata, subscription, Google OAuth tokens, spreadsheet ID; `user_credits` and `credit_ledger` — AI credit balance and immutable audit history |
-| **Google Sheets (per user)** | All app data — notes, transactions, todos, links |
+| **SumoPod PostgreSQL** | Migrated app data — `notes`, `transactions`, `todos`, `links`, and `sync_outbox` |
+| **Google Sheets (per user)** | Migration source and fallback app-data store for users not yet allowlisted for PostgreSQL |
 
-App data never touches Supabase. The `notes`, `transactions`, `todos`, and `links` Supabase tables were created by `001_initial_schema.sql` and **dropped by `005_phase1_schema.sql`**. They no longer exist in production.
+App data never touches the legacy Supabase tables. The `notes`, `transactions`,
+`todos`, and `links` Supabase tables were created by `001_initial_schema.sql`
+and **dropped by `005_phase1_schema.sql`**. SumoPod PostgreSQL app-data tables
+are a separate database/schema managed through `lib/db`.
 
 ---
 
@@ -112,6 +116,23 @@ value used by the API server's `INITIAL_AI_CREDITS` environment variable.
 
 ---
 
+## SumoPod PostgreSQL app-data schema
+
+The active tables are `notes`, `transactions`, `todos`, `links`, and
+`sync_outbox`. Every app-data table has an owning `user_id`, timestamps, and a
+soft-delete marker. The repository always filters by both `id` and `user_id`
+and excludes soft-deleted rows.
+
+Important implementation detail: PostgreSQL `numeric` values such as
+transaction `amount` may arrive in Node as strings. API consumers must coerce
+numeric values before arithmetic (`Number(value) || 0`). Dates are returned as
+ISO timestamps and the finance UI normalizes them to `YYYY-MM-DD` for
+date-only filtering and grouping.
+
+`sync_outbox` is currently prepared for the future Sheets mirror. It is not
+yet processed by a worker, so PostgreSQL writes are not automatically exported
+back to Sheets.
+
 ## Google Sheets schema (per-user spreadsheet)
 
 Each user's spreadsheet is created automatically when they connect Google Drive. It contains 5 tabs:
@@ -193,7 +214,7 @@ Google Sheets stores everything as strings. `sheet-store.ts` handles coercion:
 
 - **`tags`**: serialized as JSON string, deserialized on read
 - **`is_done`**: stored as `'true'`/`'false'`, parsed as boolean on read
-- **Numeric values** (`amount`, `position`): stored as string, parsed with `Number()` on read
+- **Numeric values** (`amount`, `position`): Sheets stores them as strings; the Sheets reader parses them, and the frontend also guards API values because PostgreSQL `numeric` can serialize as a string
 - **Formula injection guard**: strings starting with `=`, `+`, `-`, `@`, tab, or carriage return are prefixed with `'` to prevent CSV/spreadsheet formula injection
 
 ---

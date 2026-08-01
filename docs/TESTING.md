@@ -1,6 +1,6 @@
 # TESTING.md — TemanNyatet
 
-> Documents the current testing state and what should be tested. No automated test suite exists yet.
+> Documents the current automated and manual testing state.
 
 ## Related documentation
 
@@ -16,7 +16,11 @@
 
 ## Current state
 
-**No automated tests exist in this repository** as of July 2026. All testing is currently manual.
+Automated regression tests currently cover note-title normalization, transaction
+summary calculations, AI summary validation/copy, bottom navigation scroll
+behavior, overlay state, and transaction-date normalization. The latest full
+run passed **21 tests with 0 failures**. Repository/data-store integration tests
+are still outstanding.
 
 This is tracked as a documentation debt item. The priorities below are ordered by risk.
 
@@ -71,6 +75,8 @@ This is tracked as a documentation debt item. The priorities below are ordered b
 - [ ] Search filters by category and note
 - [ ] Recharts bar chart renders (on Keuangan page with data)
 - [ ] "Hari Ini" / "Kemarin" date group labels display correctly
+- [ ] PostgreSQL numeric-string `amount` renders a valid balance, never `RpNaN`
+- [ ] PostgreSQL ISO timestamps and Sheets `YYYY-MM-DD` values group/filter identically
 
 ### Todo
 
@@ -95,7 +101,7 @@ This is tracked as a documentation debt item. The priorities below are ordered b
 ### Subscription gate / SumoPod Sandbox
 
 - [ ] New user → `/payment` page
-- [ ] Confirm SumoPod production API deployment is current: `GET /api/healthz` returns `200` and `POST /api/sumopod-webhook` no longer returns `404 Cannot POST`
+- [ ] Confirm SumoPod production API deployment is current: `GET /api/healthz` returns `200` and a valid `POST /api/sumopod-webhook` is accepted
 - [ ] SumoPod dashboard webhook URL is `https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook`
 - [ ] Click SumoPod **Save & Test** and inspect the API deployment log
 - [ ] Trigger SumoPod `payment.test` → order remains `pending` and profile is not activated by the test event
@@ -145,11 +151,21 @@ This is tracked as a documentation debt item. The priorities below are ordered b
 
 ---
 
-## What to automate first (priority order)
+## What to automate next (priority order)
 
-When a test suite is added, implement in this order:
+When expanding the current test suite, implement in this order:
 
-### 1. API server unit tests (highest ROI)
+### 1. Repository/data-store tests (highest ROI)
+
+Test PostgreSQL repository and data-store selection:
+- create/update/delete for all four entities
+- ownership isolation and soft-delete visibility
+- note reorder
+- transaction summary
+- allowlist selection and no silent Sheets fallback
+- PostgreSQL write success independent of future mirror failure
+
+### 2. API server unit tests
 
 Test `sheet-store.ts` with a mocked Google Sheets client:
 - `createRow` generates valid UUID and correct schema

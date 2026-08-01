@@ -17,7 +17,7 @@ A note-taking SaaS web app + PWA for Indonesian users. Four core modules: Catata
 - Frontend: React 19 + Vite 7, TypeScript, Tailwind CSS 4, Wouter, Vaul, Recharts, TanStack Query, React Hook Form, Zod
 - Backend: Express 5 (API server)
 - Auth: Supabase Auth (email/password with confirmation)
-- App data: per-user Google Spreadsheet via OAuth2 (authored by the API server in the user's own Google Drive)
+- App data: PostgreSQL SumoPod for migrated pilot users; Google Sheets via per-user OAuth2 remains the migration source and fallback for users not yet migrated
 - Subscription/profile data: Supabase Postgres (`profiles` table)
 - AI credits: Supabase Postgres (`user_credits` + immutable `credit_ledger`)
 - UI: shadcn/ui components, vaul (bottom sheets), Recharts (finance charts), date-fns, lucide-react
@@ -30,13 +30,13 @@ A note-taking SaaS web app + PWA for Indonesian users. Four core modules: Catata
 - `artifacts/teman-nyatet/` — React+Vite frontend SPA
 - `artifacts/api-server/` — Express API (SumoPod Sandbox checkout/webhook, legacy Mayar webhook compatibility, subscription status, cron, Google OAuth, data routes)
 - `lib/api-spec/` — OpenAPI spec + Orval config + generated API client packages
-- `lib/db/` — Drizzle scaffolding (currently unused; migrations are run manually via Supabase SQL Editor)
+- `lib/db/` — Drizzle schema and migrations for the PostgreSQL app-data store
 - `supabase/migrations/` — DB schema for `profiles` and RLS policies
 - `artifacts/teman-nyatet/src/contexts/AuthContext.tsx` — Supabase auth state + profile loading
 - `artifacts/teman-nyatet/src/hooks/` — `useNotes`, `useTransactions`, `useTodos`, `useLinks` (call the API server, not Supabase directly)
 - `artifacts/teman-nyatet/src/pages/` — all page components
 - `artifacts/teman-nyatet/src/lib/apiClient.ts` — custom fetch wrapper that sends Supabase access token as Bearer and retries on 401
-- `artifacts/teman-nyatet/src/lib/database.types.ts` — TypeScript schema types (notes/transactions/todos/links are legacy Supabase table shapes; data lives in Google Sheets)
+- `artifacts/teman-nyatet/src/lib/database.types.ts` — TypeScript shapes for API responses (the API may read PostgreSQL or Google Sheets)
 - `artifacts/api-server/src/lib/google-oauth.ts` — OAuth2 client, redirect URI logic, HMAC-signed state
 - `artifacts/api-server/src/lib/user-sheet.ts` — resolves `spreadsheet_id` + `google_refresh_token` into a per-user Sheets client
 - `artifacts/api-server/src/lib/sheet-store.ts` — generic CRUD against Google Sheets tabs
@@ -56,7 +56,7 @@ A note-taking SaaS web app + PWA for Indonesian users. Four core modules: Catata
 ## Architecture decisions
 
 - **Supabase for auth and profile only**: User authentication and the `profiles` table live in Supabase. RLS policies enforce row-level access to `profiles`.
-- **Google Sheets for app data**: Notes, transactions, todos, and links are stored in a private Google Spreadsheet created automatically in the user's own Drive via OAuth. The API server translates REST requests into Google Sheets API calls.
+- **Progressive app-data migration**: Notes, transactions, todos, and links use PostgreSQL for successfully migrated allowlisted users. Other users remain on their private Google Spreadsheet. PostgreSQL does not silently fall back to Sheets; the data-store boundary chooses the source explicitly.
 - **API server required for data**: The frontend calls `https://.../api/...` (proxied to the API server in local dev). Each request carries a Supabase access token; the API server verifies it with Supabase and resolves the user's spreadsheet connection.
 - **React+Vite instead of Next.js**: The Replit workspace scaffolds React+Vite. Server-side requirements (SumoPod webhook, legacy Mayar compatibility webhook, cron, OAuth callback) are implemented as Express routes.
 - **Vaul for bottom sheets**: Feature input forms use the `vaul` library for mobile-feel drawer animations.
@@ -85,12 +85,12 @@ _Populate as you build._
 - Google OAuth env vars are required for the API server: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_OAUTH_STATE_SECRET`
 - SumoPod Sandbox webhook URL for the current production API:
   `https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook`
-- The repository contains the SumoPod webhook route, but the currently observed Vercel production deployment still returns `404 Cannot POST /api/sumopod-webhook`. Redeploy the API project from `main` with Root Directory `artifacts/api-server` before using SumoPod `Save & Test` or real Sandbox checkout.
+- The repository contains the SumoPod webhook route. Verify the deployed API route after every production deploy before using SumoPod `Save & Test`; Replit workflows are not production webhook targets.
 - SumoPod's Webhook Signing Secret and Webhook Token must never be committed or pasted into chat. The backend accepts either a valid `X-Sumopod-Signature`/`X-Signature` using `SUMOPOD_WEBHOOK_SECRET` or a valid `X-Webhook-Token` using `SUMOPOD_WEBHOOK_TOKEN`.
 - Run all `supabase/migrations/*.sql` files in order in the Supabase SQL Editor before launch (see [`docs/SUPABASE-SETUP.md`](./docs/SUPABASE-SETUP.md))
 - `profiles` has RLS enabled; the `fix_profiles_rls_recursion.sql` script must also be applied if you hit an "infinite recursion detected in policy" error
 - The auto-create profile trigger runs on `auth.users` INSERT; `AuthContext` also has a client-side fallback upsert
-- `notes`, `transactions`, `todos`, and `links` tables are created by `001_initial_schema.sql` but dropped by `005_phase1_schema.sql`; app data lives in Google Sheets, not these tables
+- `notes`, `transactions`, `todos`, and `links` Supabase tables are legacy and are not used. PostgreSQL app-data tables in `lib/db` are separate from Supabase and are used for migrated users; Google Sheets remains the fallback/migration source.
 
 ## Environment Variables Required
 
@@ -233,7 +233,7 @@ The frontend API client uses `/api` through the Vite proxy in Replit development
 - API production is reachable at `https://teman-nyatet-api-server.vercel.app`; `GET /api/healthz` returns `{"status":"ok"}`.
 - The SumoPod URL configured in the dashboard is the correct API route:
   `https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook`.
-- The active API deployment currently responds `404 Cannot POST /api/sumopod-webhook`, so the API project must be redeployed from the latest `main` source before webhook testing can pass.
+  - Confirm `POST /api/sumopod-webhook` on the active production API after deployment; do not infer webhook availability from `/api/healthz` alone.
 - Replit workflows are development/testing only. They are not production webhook targets.
 
 Google Cloud Console Authorized redirect URI untuk OAuth credential **wajib** persis byte-for-byte sama dengan `GOOGLE_REDIRECT_URI` di Vercel. Lihat [`docs/GOOGLE-CLOUD-OAUTH.md`](./docs/GOOGLE-CLOUD-OAUTH.md) untuk checklist lengkap (setup, verifikasi, rotasi secret).

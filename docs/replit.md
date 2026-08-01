@@ -1,6 +1,6 @@
 # TemanNyatet
 
-A note-taking SaaS PWA for Indonesian users. Four core modules: Catatan (Notes), Keuangan (Finance), To Do List, and Link Saver. Mobile-first with bottom sheet patterns ("sat-set" UX). Each user stores their own data in a private Google Spreadsheet created automatically by the app in their own Google Drive via OAuth2.
+A note-taking SaaS PWA for Indonesian users. Four core modules: Catatan (Notes), Keuangan (Finance), To Do List, and Link Saver. Mobile-first with bottom sheet patterns ("sat-set" UX). Migrated users use SumoPod PostgreSQL; Google Sheets remains the per-user migration source and fallback.
 
 ## Related documentation
 
@@ -74,7 +74,7 @@ OAuth and the data API will fail closed until the `google_refresh_token` column 
 - **Frontend:** React 19 + Vite 7, TypeScript, Tailwind CSS 4, Wouter, Vaul, Recharts, TanStack Query, React Hook Form, Zod
 - **Backend:** Express 5 (SumoPod Sandbox checkout/webhook + legacy Mayar compatibility + cron jobs + notes/transactions/todos/links data API + Google OAuth flow)
 - **Auth:** Supabase Auth
-- **App data (notes, transactions, todos, links):** Each user connects their Google Drive via OAuth. The backend auto-creates a Google Spreadsheet in the user's own Drive (using `drive.file` scope — least privilege). The spreadsheet ID is stored in `profiles.spreadsheet_id`; the OAuth refresh token in `profiles.google_refresh_token`. No service account needed — each API call uses the user's own OAuth token.
+- **App data (notes, transactions, todos, links):** The API selects PostgreSQL or Google Sheets through `APP_DATA_STORE` and `APP_DATA_POSTGRES_USER_IDS`. PostgreSQL is used for successfully migrated allowlisted users. Other users connect Google Drive via per-user OAuth; the backend auto-creates a private spreadsheet using the least-privilege `drive.file` scope. PostgreSQL writes are not mirrored to Sheets yet; `sync_outbox` is reserved for the future mirror worker.
 - **Subscription/profile data:** Supabase Postgres (`profiles` table).
 - **API client:** Orval-generated from `lib/api-spec/openapi.yaml` into `lib/api-client-react` and `lib/api-zod`. The generated client is wired for auth in `main.tsx`; the data hooks currently use a custom client in `src/lib/apiClient.ts`. Regenerate with `pnpm --filter @workspace/api-spec run codegen`.
 - **Package manager:** pnpm 10.26.1 (monorepo)
@@ -108,7 +108,8 @@ OAuth and the data API will fail closed until the `google_refresh_token` column 
   - `src/routes/cron.ts` — `/api/cron/archive-expired`
   - `src/app.ts` — `helmet()`, CORS, global + per-user rate limiting, JSON body limits
 - `lib/api-spec/` — OpenAPI spec + generated API client (regenerate after any spec change)
-- `lib/db/` — Drizzle scaffolding (currently unused; migrations are run manually via Supabase SQL Editor)
+- `lib/db/` — Drizzle schema and migrations for SumoPod PostgreSQL app-data
+  tables; Supabase migrations remain separate and are run in the Supabase SQL Editor
 - `supabase/migrations/` — DB schema for `profiles`
 
 ## Replit setup notes

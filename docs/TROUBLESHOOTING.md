@@ -131,17 +131,29 @@ stale, or webhook signature validation rejected the request.
 
 ---
 
-## Data / Google Sheets
+## Data / PostgreSQL and Google Sheets
 
 ### Notes/transactions not loading (spinning forever)
 
 **Symptom**: `PageLoading` spinner doesn't resolve.  
-**Cause**: API server not running, or Google Sheets API call failing.  
+**Cause**: API server not running, selected data store unavailable, or Google
+Sheets API call failing for a Sheets-path user.
 **Fix**:
 1. Check `GET /api/healthz` → should return `{"status":"ok"}`. In production use `https://teman-nyatet-api-server.vercel.app/api/healthz`.
-2. Check `GET /api/auth/google/status` → should show `connected: true`.
-3. Check API server logs for Google API errors.
-4. Try `POST /api/spreadsheet/repair` to fix missing tabs.
+2. Check the selected data-store mode and allowlist in the API environment.
+3. For a Sheets-path user, check `GET /api/auth/google/status` → `connected: true`.
+4. Check API server logs for PostgreSQL or Google API errors.
+5. For a Sheets-path user, try `POST /api/spreadsheet/repair` to fix missing tabs.
+
+### Finance hero displays `RpNaN`
+
+**Cause**: PostgreSQL `numeric` values can arrive in Node as strings. Adding
+them without coercion can produce invalid totals or string concatenation.
+
+**Fix**: The current frontend converts transaction amounts with
+`Number(value) || 0` before balance, monthly, chart, and daily-net arithmetic.
+If the issue reappears, check the API payload and confirm the latest frontend
+build is deployed.
 
 ### Data appears stale / not updating
 

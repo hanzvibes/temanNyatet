@@ -13,7 +13,9 @@
 
 - Satu aplikasi untuk empat kebutuhan harian: Catatan, Keuangan, To-Do, dan Link Saver.
 - Mobile-first dan terasa ringan untuk penggunaan sehari-hari.
-- Data aplikasi tersimpan di Google Spreadsheet pribadi pengguna.
+- Data aplikasi tersimpan aman melalui penyimpanan per-user: pengguna yang
+  belum dimigrasikan memakai Google Spreadsheet pribadi, sementara pengguna
+  pilot memakai PostgreSQL terisolasi berdasarkan user ID.
 - Ringkas AI membantu merangkum catatan berbahasa Indonesia.
 - Pengguna baru mendapat 10 credit AI untuk mencoba fitur ringkasan.
 

@@ -39,6 +39,13 @@ Runner memproses user satu per satu. Kegagalan satu user tidak menghentikan
 user berikutnya. Exit code `2` berarti ada user yang gagal dan user tersebut
 tidak boleh dimasukkan ke allowlist PostgreSQL.
 
+## Status pilot saat ini
+
+Schema PostgreSQL sudah diterapkan. Dari 10 user yang memiliki Google Sheets
+terhubung, 9 berhasil diimpor dan allowlisted untuk PostgreSQL. Satu user gagal
+karena Google mengembalikan `invalid_grant`; user tersebut tetap memakai Sheets
+dan tidak boleh dimasukkan ke allowlist sampai reconnect berhasil.
+
 ## Rollout mode aplikasi
 
 Mode default tetap `sheets`. Setelah pilot diverifikasi:
@@ -60,7 +67,8 @@ Saat mode PostgreSQL aktif:
 - notes, transactions, todos, links, reorder notes, dan transaction-summary generator membaca PostgreSQL;
 - Supabase tetap digunakan untuk auth, profile, subscription, payment metadata, dan AI credits;
 - Google Sheets tidak dipanggil pada request CRUD normal;
-- Google Sheets belum menjadi mirror otomatis pada fase ini.
+- Google Sheets belum menjadi mirror otomatis pada fase ini; implementasi
+  `sync_outbox` worker masih menjadi pekerjaan lanjutan.
 
 Rollback aman dengan mengembalikan:
 

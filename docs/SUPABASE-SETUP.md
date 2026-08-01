@@ -136,7 +136,8 @@ CRON_SECRET=your-random-cron-secret
    currently validated by the backend.
 7. Before clicking **Save & Test**, redeploy the API Vercel project from
    `main` with Root Directory `artifacts/api-server`; the last observed
-   deployment returned `404 Cannot POST /api/sumopod-webhook`.
+   deployment returned `404 Cannot POST /api/sumopod-webhook`; verify the active
+   API deployment's webhook route directly after redeploying.
 
 ## 7. Vercel Cron (Optional)
 Add to `vercel.json` at the API server root directory:
@@ -168,4 +169,8 @@ Photos are uploaded through the API server (`POST /api/profile/avatar`) and stor
 | `todos` | Legacy table — created by `001_initial_schema.sql`, dropped by `005_phase1_schema.sql`. Not used. |
 | `links` | Legacy table — created by `001_initial_schema.sql`, dropped by `005_phase1_schema.sql`. Not used. |
 
-All live app data (notes, transactions, todos, links) lives in each user's private Google Spreadsheet. The `profiles` table has RLS enabled — users can only access their own row.
+App data is selected through the API data-store boundary: migrated allowlisted
+users use SumoPod PostgreSQL, while other users use their private Google
+Spreadsheet. Supabase stores auth, profiles, subscriptions, payment metadata,
+and AI credits. The `profiles` table has RLS enabled — users can only access
+their own row.

@@ -35,11 +35,9 @@ The current SumoPod Sandbox webhook URL is:
 https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook
 ```
 
-That URL is correct. However, the currently observed production API deployment
-returns `404 Cannot POST /api/sumopod-webhook`, while `GET /api/healthz`
-returns `200`. This means the active Vercel deployment is older than the
-repository source that contains the route. Redeploy the API Vercel project
-before using SumoPod **Save & Test** or attempting a real Sandbox payment.
+Verify that URL with a valid `POST` after every API deployment. `GET
+/api/healthz` only verifies process health and does not prove that the webhook
+route in the active deployment is current.
 
 ## Configuration
 

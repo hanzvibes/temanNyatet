@@ -28,7 +28,9 @@ Authorization: Bearer <supabase-access-token>
 
 The token is obtained from `supabase.auth.getSession()` on the frontend. The API server verifies it against Supabase. Email must be confirmed; unconfirmed users get `401`.
 
-Data routes additionally require a connected Google Spreadsheet. If the user has not completed Google OAuth, the response is:
+Users on the Google Sheets path additionally require a connected Google
+Spreadsheet. PostgreSQL-allowlisted users do not require Sheets for normal
+CRUD requests. If a Sheets-path user has not completed Google OAuth, the response is:
 
 ```json
 HTTP 428
@@ -550,9 +552,8 @@ payment ID, amount, and pending status before marking the order completed and
 activating the matching plan. The local order claim and profile activation are
 idempotent, so webhook retries do not extend a subscription twice.
 
-The currently observed production API deployment must be redeployed from the
-latest `main` source before this route can be tested if it returns
-`404 Cannot POST /api/sumopod-webhook`.
+Verify this route on the active production deployment after each API deploy.
+`GET /api/healthz` alone does not verify webhook routing.
 
 ### `POST /api/mayar-webhook` (legacy compatibility)
 

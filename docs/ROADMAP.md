@@ -18,7 +18,10 @@
 ### Core app
 - [x] Four feature modules: Catatan, Keuangan, To-Do List, Link Saver
 - [x] Supabase Auth — email/password with confirmation
-- [x] Per-user Google Spreadsheet as data backend (Google OAuth2, `drive.file` scope)
+- [x] Per-user Google Spreadsheet as migration source/fallback (Google OAuth2, `drive.file` scope)
+- [x] SumoPod PostgreSQL app-data schema for notes, transactions, todos, links, and sync outbox
+- [x] Import-only Sheets → PostgreSQL migration with ID-preserving idempotent upsert
+- [x] Progressive PostgreSQL rollout for successfully migrated users
 - [x] Auto-create spreadsheet on first Google Drive connect
 - [x] Subscription gate — SumoPod payment link + webhook → `subscription_status: active`
 - [x] Subscription plans: monthly (Rp100.000) and yearly (Rp249.000)
@@ -62,10 +65,10 @@
 ### Deployment
 - [x] Production on Vercel (two-project setup)
 - [x] Vercel deployment documentation ([`docs/GOOGLE-CLOUD-OAUTH.md`](./GOOGLE-CLOUD-OAUTH.md))
-- [ ] Redeploy the production API from `main` so `/api/sumopod-webhook` is live
+- [ ] Verify the production `/api/sumopod-webhook` route after the next API deploy
 
 ### Documentation
-- [x] Documentation synchronized with the current Vercel/SumoPod Sandbox architecture
+- [x] Documentation synchronized with the current Vercel/SumoPod/PostgreSQL rollout architecture
 
 ---
 
@@ -79,16 +82,17 @@
 ## Planned
 
 ### UX (known issues)
-- [ ] Issue #2 — (to be described by maintainer)
-- [ ] Issue #3 — (to be described by maintainer)
 - [ ] Keyboard accessibility for long-press delete actions (Keuangan, Link Saver) — currently mouse/touch only
 - [ ] Confirm dialog before delete (alternative to long-press with no confirmation)
 
 ### Technical debt
+- [ ] Implement asynchronous `sync_outbox` worker with retry and failed/succeeded status
+- [ ] Add repository/data-store integration tests and end-to-end pilot write verification
+- [ ] Re-migrate the user with invalid Google grant after reconnect
 - [ ] Migrate data hooks (`useNotes`, `useTransactions`, `useTodos`, `useLinks`) from module-level Map cache to `useQuery` — unify caching, gain automatic retry
 - [ ] Consolidate three `002_*` migration files into one (or renumber to avoid filename-order ambiguity)
 - [ ] Promote `fix_profiles_rls_recursion.sql` to a numbered migration
-- [ ] Remove `lib/db/` (unused Drizzle scaffolding) or adopt it for real schema management
+- [ ] Expand PostgreSQL app-data rollout after mirror and write-path verification
 - [ ] Audit `lib/api-spec/openapi.yaml` against current route implementations; regenerate or remove Orval pipeline if unused beyond token wiring
 
 ### Infrastructure

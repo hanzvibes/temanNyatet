@@ -18,7 +18,10 @@
 
 **TemanNyatet** ("Friend Note-Taker" in Indonesian) is a mobile-first SaaS productivity PWA targeting Indonesian users. It provides four integrated modules in a single app: notes, personal finance tracking, to-do list, and link saving.
 
-**Core differentiator**: Each user's data lives in their own private Google Spreadsheet — not on a shared server. The app connects to the user's Google Drive and manages a spreadsheet there. Users own their data.
+**Core differentiator**: Users retain a private Google Drive/Sheets data path,
+while the app can progressively migrate successfully connected users to
+PostgreSQL for faster everyday reads and writes. The migration is import-only
+and does not delete or alter the user's Sheets data.
 
 ---
 

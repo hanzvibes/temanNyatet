@@ -22,8 +22,8 @@
 |---|---|---|
 | Frontend | Vercel | `https://teman-nyatet.vercel.app` |
 | API server | Vercel | `https://teman-nyatet-api-server.vercel.app` |
-| Database | Supabase | Managed Postgres |
-| App data | Google Sheets | Per-user private spreadsheet |
+| Auth/profile/credits | Supabase | Managed Postgres |
+| App data | SumoPod PostgreSQL + Google Sheets | PostgreSQL for migrated users; Sheets migration source/fallback |
 
 Development runs on Replit. Both services are configured as workflows in the Replit workspace.
 
@@ -101,11 +101,9 @@ In SumoPod Sandbox **Settings → Webhook**, set the webhook URL to:
 https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook
 ```
 
-This URL is the API route, not the frontend URL. The current repository
-contains the route, but the last observed production deployment returned
-`404 Cannot POST /api/sumopod-webhook`; redeploy the API project from the
-latest `main` branch with Root Directory `artifacts/api-server` before using
-SumoPod **Save & Test**.
+This URL is the API route, not the frontend URL. Verify a valid POST against
+the active deployment after each API deploy; a healthy `/api/healthz` response
+does not prove that webhook routing is current.
 
 Configure the payment redirects in SumoPod:
 ```

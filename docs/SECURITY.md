@@ -59,7 +59,7 @@
 
 | Control | Implementation |
 |---|---|
-| Data isolation | Each user's data is in their own private Google Spreadsheet — physically isolated |
+| Data isolation | PostgreSQL queries are scoped by `user_id`; Sheets users have separate private spreadsheets; both paths enforce per-user ownership |
 | RLS | Supabase RLS on `profiles` — users can only read/update their own row |
 | Profile access | Only service role key (server-side) and the authenticated user's own JWT can read their profile |
 | Avatar uploads | Server-side only via service role key — no direct frontend-to-Supabase storage uploads |

@@ -106,7 +106,11 @@ apiClient.setTokenGetter(async () => {
 
 ### Why Google OAuth
 
-App data (notes, transactions, todos, links) is stored in a private Google Spreadsheet in each user's own Google Drive. The API server needs OAuth tokens to read/write this spreadsheet on the user's behalf.
+Users on the Sheets data path store notes, transactions, todos, and links in a
+private Google Spreadsheet in their own Google Drive. Migrated PostgreSQL users
+do not require Sheets for normal CRUD requests, but Google OAuth remains the
+migration source and fallback path. The API server needs OAuth tokens only
+when the selected request path uses Sheets or migration.
 
 ### Scopes requested
 

@@ -9,7 +9,7 @@
 | README — project overview & docs map | [`README.md`](../README.md) |
 | AI_CONTEXT — quick reference for AI agents | [`AI_CONTEXT.md`](./AI_CONTEXT.md) |
 | API — complete route reference | [`API.md`](./API.md) |
-| DATABASE — Supabase schema + Google Sheets schemas | [`DATABASE.md`](./DATABASE.md) |
+| DATABASE — Supabase + PostgreSQL app-data + Google Sheets schemas | [`DATABASE.md`](./DATABASE.md) |
 | AUTH — Supabase + Google OAuth flows | [`AUTH.md`](./AUTH.md) |
 | DEPLOYMENT — Vercel deployment runbook | [`DEPLOYMENT.md`](./DEPLOYMENT.md) |
 | DECISIONS — architecture decision records | [`DECISIONS.md`](./DECISIONS.md) |
@@ -211,9 +211,15 @@ Two levels:
 | `requireAuth` | Calls `requireUser` + resolves `spreadsheetId` + builds `sheetsClient`, returns `428 GOOGLE_NOT_CONNECTED` if missing |
 | `userRateLimit` | Per-user 120 req/min (in-memory, `express-rate-limit`) |
 
-### Data layer — `sheet-store.ts`
+### Data layer — `data-store.ts`
 
-All app data lives in Google Sheets. `sheet-store.ts` provides:
+`data-store.ts` selects the source per request. With `APP_DATA_STORE=postgres`,
+an empty allowlist sends all users to PostgreSQL; with
+`APP_DATA_POSTGRES_USER_IDS`, only listed users use PostgreSQL. Users outside
+the allowlist remain on Google Sheets. There is no silent fallback from a
+failed PostgreSQL request to Sheets.
+
+The Google Sheets path (`sheet-store.ts`) provides:
 
 - `ensureSheetsInitialized()` — creates missing tabs, writes/repairs headers; cached per spreadsheet per process lifetime
 - `listByUser()` — reads all rows for a user from a named sheet tab
@@ -223,6 +229,12 @@ All app data lives in Google Sheets. `sheet-store.ts` provides:
 - `reorderRows()` — updates `position` column for Notes drag-and-drop
 - `repairHeaders()` — force-re-initializes headers (used by spreadsheet repair route)
 - `withSheetLock()` — per-spreadsheet+sheet in-process queue lock (no transaction support)
+
+The PostgreSQL path (`postgres-repository.ts`) provides CRUD, ownership
+filtering, soft delete, note reorder, and transaction-summary aggregation.
+The current rollout is import-only: PostgreSQL writes are not mirrored back to
+Google Sheets yet. `sync_outbox` is reserved for the planned asynchronous
+mirror worker.
 
 Sheet tab names are emoji-prefixed: `📝 Notes`, `💰 Transactions`, `✅ Todos`, `🔗 Links`, `📦 _Archive`.
 
@@ -273,10 +285,9 @@ Replit is used for development only. Workflows:
 Vite dev server proxies `/api/*` → `localhost:8080` so frontend and API share an origin in dev. Production uses `VITE_API_SERVER_URL`; if it is missing, `src/lib/apiClient.ts` falls back to `https://teman-nyatet-api-server.vercel.app`.
 
 The production SumoPod webhook target is
-`https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook`. The current
-source registers this route, but the last observed production deployment
-returned `404 Cannot POST /api/sumopod-webhook`; a fresh API deployment from
-`main` is required before declaring webhook delivery operational.
+`https://teman-nyatet-api-server.vercel.app/api/sumopod-webhook`. Verify this
+POST route on the active Vercel deployment after each API deploy; a healthy
+`/api/healthz` response does not prove that webhook routing is current.
 
 ---
 
@@ -303,7 +314,7 @@ See `DECISIONS.md` for the full rationale. Summary:
 
 | Decision | Choice | Why |
 |---|---|---|
-| App data storage | Google Sheets (per user) | User owns their data; no server storage cost |
+| App data storage | PostgreSQL pilot + Google Sheets fallback | Faster database queries for migrated users while preserving the Sheets migration/fallback path |
 | Auth | Supabase | Managed auth, RLS, email confirmation built-in |
 | Payment | SumoPod Sandbox | Server-created payment links with local order reconciliation and idempotent webhook activation |
 | Routing | CachedSwitch | Instant tab switches, no refetch on navigation |

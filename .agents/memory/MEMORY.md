@@ -29,3 +29,4 @@
 - [Supabase PostgREST schema cache](supabase-postgrest-schema-cache.md) — newly applied RPC migrations may require an explicit schema-cache reload before REST RPC discovery works.
 - [PostgreSQL progressive rollout](postgres-progressive-rollout.md) — allowlist only successfully migrated users; keep invalid Google grants on the Sheets path until reconnect.
 - [Transaction date normalization](transaction-date-normalization.md) — normalize YYYY-MM-DD from both Sheets and PostgreSQL ISO timestamps before finance date filtering.
+- [Null string normalization](null-string-normalization.md) — never coerce nullable text with String(value); null must not become visible text.

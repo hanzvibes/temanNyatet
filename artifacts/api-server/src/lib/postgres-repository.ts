@@ -14,6 +14,7 @@ import {
   type Todo,
   type Transaction,
 } from '@workspace/db';
+import { normalizeNoteTitle } from './note-fields.js';
 
 type Entity = 'notes' | 'transactions' | 'todos' | 'links';
 type AppRow = Note | Transaction | Todo | Link;
@@ -45,7 +46,7 @@ function toApiRow(row: AppRow): Record<string, unknown> {
 function fromApiFields(entity: Entity, fields: Record<string, unknown>): Record<string, unknown> {
   if (entity === 'notes') {
     return {
-      ...(fields.title !== undefined ? { title: String(fields.title) } : {}),
+      ...(fields.title !== undefined ? { title: normalizeNoteTitle(fields.title) } : {}),
       ...(fields.content !== undefined ? { content: String(fields.content) } : {}),
       ...(fields.tags !== undefined ? { tags: fields.tags } : {}),
       ...(fields.position !== undefined ? { position: String(fields.position) } : {}),

@@ -16,6 +16,10 @@ const router = Router();
 
 router.get('/spreadsheet/status', requireUser, async (req, res) => {
   try {
+    // This is an authenticated control-plane status, not cacheable content.
+    // A browser 304 has no JSON body; treating that empty response as `{}` on
+    // the client can look like `dataReady: false` and trap users in Connect.
+    res.set('Cache-Control', 'no-store');
     const { data: profile, error } = await supabaseAdmin
       .from('profiles')
       .select('google_refresh_token, spreadsheet_id')

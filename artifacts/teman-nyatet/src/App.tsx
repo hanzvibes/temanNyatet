@@ -154,9 +154,21 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       setDataStatus(null);
       return;
     }
-    void apiGet<{ dataReady: boolean; dataStore: 'postgres' | 'sheets' }>('/spreadsheet/status')
+    void apiGet<{
+      dataReady: boolean;
+      dataStore: 'postgres' | 'sheets';
+    }>('/spreadsheet/status')
       .then((status) => {
-        if (!cancelled) setDataStatus(status);
+        if (
+          !cancelled
+          && typeof status?.dataReady === 'boolean'
+          && (status.dataStore === 'postgres' || status.dataStore === 'sheets')
+        ) {
+          setDataStatus(status);
+        } else if (!cancelled) {
+          // Never make a routing decision from an empty/304 response.
+          setDataStatus(null);
+        }
       })
       .catch(() => {
         // Do not guess the user's data path from the profile. A temporary

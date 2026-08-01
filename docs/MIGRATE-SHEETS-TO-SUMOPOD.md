@@ -26,6 +26,19 @@ pnpm --filter @workspace/api-server exec tsx scripts/migrate-sheets-to-postgres.
 
 Runner memeriksa bahwa spreadsheet ID cocok dengan profile user, lalu mencetak jumlah `imported`, `skipped`, `invalid`, dan detail error baris. Rerun aman karena setiap row di-upsert berdasarkan `id`.
 
+## Migrasi semua user yang sudah terhubung
+
+Untuk memproses semua profile yang memiliki `spreadsheet_id` dan
+`google_refresh_token`, jalankan runner batch:
+
+```bash
+pnpm --filter @workspace/api-server exec tsx scripts/migrate-all-sheets-to-postgres.ts
+```
+
+Runner memproses user satu per satu. Kegagalan satu user tidak menghentikan
+user berikutnya. Exit code `2` berarti ada user yang gagal dan user tersebut
+tidak boleh dimasukkan ke allowlist PostgreSQL.
+
 ## Rollout mode aplikasi
 
 Mode default tetap `sheets`. Setelah pilot diverifikasi:

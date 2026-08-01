@@ -6,6 +6,7 @@ import { supabaseAdmin } from '../lib/supabase-admin.js';
 import { SheetsAccessError } from '../lib/google-sheets.js';
 import { repairHeaders, SHEET_SCHEMAS } from '../lib/sheet-store.js';
 import { invalidateUserSheetCache } from '../lib/user-sheet.js';
+import { usesPostgresDataStoreForUser } from '../lib/data-store.js';
 
 const router = Router();
 
@@ -29,6 +30,8 @@ router.get('/spreadsheet/status', requireUser, async (req, res) => {
       data: {
         connected: hasToken && !!spreadsheetId,
         googleConnected: hasToken,
+        dataStore: usesPostgresDataStoreForUser(req.userId!) ? 'postgres' : 'sheets',
+        dataReady: usesPostgresDataStoreForUser(req.userId!) || (hasToken && !!spreadsheetId),
         spreadsheetId,
         spreadsheetUrl: spreadsheetId
           ? `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`

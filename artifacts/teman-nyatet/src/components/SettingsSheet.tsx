@@ -5,7 +5,7 @@ import { useLocation } from 'wouter';
 import { supabase } from '@/lib/supabase';
 import { apiGet, apiUpload } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet, MessageSquare, Crown, Calendar, Sparkles, Sun, Moon, Monitor } from 'lucide-react';
+import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet, MessageSquare, Crown, Calendar, Sparkles, Sun, Moon, Monitor, Database, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,12 @@ interface SubscriptionStatus {
   subscription_end: string | null;
   days_remaining: number | null;
   credit_balance: number;
+}
+
+interface DataStatus {
+  dataReady: boolean;
+  dataStore: 'postgres' | 'sheets';
+  googleConnected: boolean;
 }
 
 interface SettingsSheetProps {
@@ -77,6 +83,8 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
   const settingsScrollRef = useRef<HTMLDivElement>(null);
   const initialMenuHeightRef = useRef<number | null>(null);
   const [menuMinHeight, setMenuMinHeight] = useState<number | null>(null);
+  const [dataStatus, setDataStatus] = useState<DataStatus | null>(null);
+  const [dataStatusLoading, setDataStatusLoading] = useState(false);
 
   // Form state
   const [nameInput, setNameInput] = useState('');
@@ -90,6 +98,17 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
     : user?.email?.substring(0, 2).toUpperCase() || 'TN';
 
   const isPro = profile?.subscription_status === 'active';
+
+  const loadDataStatus = async () => {
+    setDataStatusLoading(true);
+    try {
+      setDataStatus(await apiGet<DataStatus>('/spreadsheet/status'));
+    } catch {
+      setDataStatus(null);
+    } finally {
+      setDataStatusLoading(false);
+    }
+  };
 
   const handleSubscriptionCheckout = async (plan: PaymentPlan) => {
     setCheckoutLoading(true);
@@ -145,6 +164,10 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
     if (activeSection === 'subscription') loadSubscription();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSection]);
+
+  useEffect(() => {
+    if (open && activeSection === null) void loadDataStatus();
+  }, [open, activeSection]);
 
   useEffect(() => {
     const openSubscription = (event: Event) => {
@@ -481,6 +504,29 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
 
                       {/* Divider */}
                       <div className="mb-[clamp(0.375rem,1.5vw,0.625rem)] h-px bg-border" />
+
+                      <div className="mb-3 rounded-2xl border border-border bg-secondary/50 p-3.5">
+                        <div className="flex items-start gap-3">
+                          <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                            dataStatus?.dataReady ? 'bg-primary/12 text-primary' : 'bg-amber-500/12 text-amber-700 dark:text-amber-300'
+                          }`}>
+                            {dataStatus?.dataReady ? <CheckCircle2 size={18} /> : <Database size={18} />}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold text-foreground">Data kamu</p>
+                            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                              {dataStatusLoading
+                                ? 'Memeriksa status penyimpanan…'
+                                : dataStatus?.dataReady
+                                  ? 'Tersimpan dan siap digunakan.'
+                                  : 'Sambungkan Google Drive untuk mengakses data kamu.'}
+                            </p>
+                          </div>
+                          {!dataStatus?.dataReady && !dataStatusLoading && (
+                            <AlertTriangle size={16} className="mt-1 shrink-0 text-amber-600 dark:text-amber-300" />
+                          )}
+                        </div>
+                      </div>
 
                       {/* Menu items */}
                       <div className="space-y-0.5">

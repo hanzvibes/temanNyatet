@@ -113,9 +113,13 @@ function NoteCardBody({
 }) {
   return (
     <>
-      <div className="flex justify-end mb-1 -mt-1 -mr-1">{handle}</div>
+      {handle && (
+        <div className="absolute right-2 top-2 z-10">
+          {handle}
+        </div>
+      )}
       {note.title && (
-        <h3 className="font-bold mb-2 leading-tight text-lg">
+        <h3 className="pr-9 font-bold mb-2 leading-tight text-lg">
           {note.title}
         </h3>
       )}
@@ -211,7 +215,7 @@ const MemoSortableNoteCard = memo(SortableNoteCard);
 function DragOverlayCard({ note, color }: { note: Note; color: string }) {
   return (
     <div
-      className="rounded-[1.5rem] border p-5 cursor-grabbing"
+      className="w-[min(80vw,22rem)] rounded-[1.5rem] border p-5 cursor-grabbing"
       style={{
         backgroundColor: color,
         color: getNoteColor(color).foreground,
@@ -369,7 +373,7 @@ export function SortableNoteGrid({
         <div
           role="list"
           aria-label="Daftar catatan. Tekan tombol grip pada kartu untuk mengubah urutan."
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-start"
+          className="grid grid-cols-1 gap-4 items-start sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           data-notes-version={itemsKey}
         >
           <AnimatePresence>

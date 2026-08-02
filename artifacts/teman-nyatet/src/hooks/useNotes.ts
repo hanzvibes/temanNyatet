@@ -42,6 +42,15 @@ export function useNotes(userId?: string) {
   const [loading, setLoading] = useState(() => !(userId && notesByUser.has(userId)));
   const [error, setError] = useState<Error | null>(null);
   const firstLoad = useRef(true);
+  const notesRef = useRef(notes);
+  const pendingReorderRef = useRef<{ requestId: number; orderedIds: string[] } | null>(null);
+  const reorderRequestIdRef = useRef(0);
+  const reorderQueueRef = useRef(Promise.resolve());
+
+  // Keep a synchronous snapshot for drag interactions. React state updates are
+  // asynchronous, so a second quick drop must build on the first optimistic
+  // order instead of reading the previous render.
+  notesRef.current = notes;
 
   // Mirror React state into the module-level cache so subsequent mounts on
   // the same tab (or any other consumer) can hydrate from it. Logout is
@@ -56,6 +65,10 @@ export function useNotes(userId?: string) {
     try {
       const data = await apiGet<Note[]>('/notes');
       const safeNotes = normalizeNotes(data);
+      // A poll can return before the reorder request reaches the database.
+      // Keep the user's optimistic order visible until the latest write has
+      // completed; otherwise cards visibly jump back every 15 seconds.
+      if (pendingReorderRef.current) return;
       // Server already sorts by position desc, then created_at desc.
       setNotes(safeNotes.sort((a, b) => {
         const posA = a.position ?? 0;
@@ -126,18 +139,36 @@ export function useNotes(userId?: string) {
   const reorderNotes = async (orderedIds: string[]) => {
     // Optimistic reorder so the UI feels instant.
     const orderedSet = new Set(orderedIds);
-    const prev = [...notes];
+    const prev = [...notesRef.current];
     const reordered = orderedIds
       .map(id => prev.find(n => n.id === id))
       .filter((n): n is Note => n !== undefined);
     const unchanged = prev.filter(n => !orderedSet.has(n.id));
     const next = [...reordered, ...unchanged];
+    const requestId = ++reorderRequestIdRef.current;
+    pendingReorderRef.current = { requestId, orderedIds };
+    notesRef.current = next;
     setNotes(next);
+
+    // Serialize writes so rapid successive drops cannot finish out of order
+    // and leave the database with an older arrangement.
+    const write = reorderQueueRef.current.then(() =>
+      apiPost('/notes/reorder', { orderedIds }),
+    );
+    reorderQueueRef.current = write.then(() => undefined, () => undefined);
+
     try {
-      await apiPost('/notes/reorder', { orderedIds });
+      await write;
+      if (pendingReorderRef.current?.requestId === requestId) {
+        pendingReorderRef.current = null;
+      }
     } catch (err) {
-      setNotes(prev);
-      throw err;
+      if (pendingReorderRef.current?.requestId === requestId) {
+        pendingReorderRef.current = null;
+        notesRef.current = prev;
+        setNotes(prev);
+        toast.error('Gagal menyimpan urutan catatan');
+      }
     }
   };
 

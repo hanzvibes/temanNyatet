@@ -67,12 +67,20 @@ function registerServiceWorker() {
   }
 
   try {
-    registerSW({
+    // updateSW is returned by registerSW and lets us force-reload the page so
+    // the newly-activated SW's fresh assets are used immediately.
+    const updateSW = registerSW({
       // Don't force an update check synchronously on first paint; let the app
       // render first, then check for updates in the background.
       immediate: false,
       onNeedRefresh() {
-        window.dispatchEvent(new Event('pwa:update-available'));
+        // With registerType:'autoUpdate', the new SW has already called
+        // skipWaiting and is now the active SW. Reload the page so the browser
+        // fetches JS/CSS from the new SW's precache instead of stale chunks.
+        // We do this silently — no user prompt — to guarantee users always
+        // run the latest version. Data is never lost because the app persists
+        // everything to the server before any reload can happen.
+        updateSW(true);
       },
       onOfflineReady() {
         // App is ready to work offline — could show a toast here if needed.

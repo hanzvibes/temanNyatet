@@ -19,8 +19,11 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      // Use 'prompt' strategy: registerSW in main.tsx controls when to update.
-      registerType: 'prompt',
+      // 'autoUpdate': new SW calls skipWaiting immediately on install so it
+      // activates without waiting for user interaction. This prevents the
+      // stuck-loading bug where an old SW keeps serving stale cached chunks
+      // after a new Vercel deployment changes asset hashes.
+      registerType: 'autoUpdate',
       injectRegister: false, // We register manually in main.tsx
       // Keep development previews free of a synthetic SW precache pass. The
       // production build still emits the full PWA service worker.
@@ -31,6 +34,9 @@ export default defineConfig({
       },
       manifest: false, // We manage manifest.json in public/ ourselves
       workbox: {
+        // After skipWaiting activates the new SW, immediately claim all open
+        // tabs so they don't keep running stale JS from the old SW's cache.
+        clientsClaim: true,
         // Precache all Vite-built assets automatically.
         // Keep the install-time precache small. Fonts and image assets are
         // fetched on demand and cached by the browser, so they do not delay

@@ -78,10 +78,9 @@ export default function BottomSheetNav() {
   };
 
   // Animate HEIGHT — pill grows upward since it's bottom-anchored.
-  // Keep the navigation collapsed by default. It should not cover a newly
-  // opened page; users can expand it from the handle or an explicit page
-  // action can request it.
-  const initialSnap: SnapState = 'collapsed';
+  // Open at the half snap by default so navigation and primary actions are
+  // immediately discoverable on every app page.
+  const initialSnap: SnapState = 'half';
   const h = useMotionValue(SNAP[initialSnap]);
   const navScrollOffset = useMotionValue(0);
   const scrollState = useRef(createBottomNavScrollState());
@@ -138,14 +137,12 @@ export default function BottomSheetNav() {
     return () => window.removeEventListener(OVERLAY_EVENT, handleOverlayChange);
   }, []);
 
-  // Keep the sheet collapsed when navigating. Opening it on every route
-  // change made pages such as Spreadsheet Backup and Subscription appear with
-  // the bottom sheet unexpectedly covering the content.
+  // Keep the sheet at the comfortable half snap when navigating.
   const prevLocation = useRef(location);
   useEffect(() => {
     if (location !== prevLocation.current) {
       prevLocation.current = location;
-      snapTo('collapsed');
+      snapTo('half');
     }
   }, [location]);
 

@@ -1,3 +1,2 @@
 - [PostgreSQL primary architecture](pg-primary-arch.md) — data store refactor: postgres is always primary, Sheets is optional backup only; requireAuth no longer resolves Sheets connection.
 - [Notes reorder synchronization](notes-reorder-sync.md) — optimistic drag order must be protected from polling and persisted through serialized writes.
-- [Bottom sheet navigation state](bottom-sheet-navigation-state.md) — route changes keep the mobile nav collapsed; only explicit user/page actions open it.

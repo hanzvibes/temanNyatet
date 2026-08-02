@@ -1,0 +1,1 @@
+- [PostgreSQL primary architecture](pg-primary-arch.md) — data store refactor: postgres is always primary, Sheets is optional backup only; requireAuth no longer resolves Sheets connection.

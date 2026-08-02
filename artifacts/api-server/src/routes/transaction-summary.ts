@@ -1,7 +1,6 @@
 import { Router, type IRouter } from 'express';
 import { requireAuth, userRateLimit } from '../middleware/requireAuth.js';
 import { listData } from '../lib/data-store.js';
-import { SheetsAccessError } from '../lib/google-sheets.js';
 import {
   aggregateTransactions,
   resolveSummaryPeriod,
@@ -16,7 +15,6 @@ import { CreditsExhaustedError, getCreditBalance } from '../lib/credit-service.j
 import { ValidationError, requireEnum, requireString } from '../lib/validate.js';
 
 const router: IRouter = Router();
-const SHEET = '💰 Transactions';
 const AI_BASE_URL = (process.env['OPENAI_BASE_URL'] ?? 'https://ai.sumopod.com').replace(/\/+$/, '');
 const AI_MODEL = process.env['OPENAI_MODEL'] ?? 'gpt-4o-mini';
 const OPENAI_TIMEOUT_MS = 30_000;
@@ -136,7 +134,7 @@ router.post('/transactions/summary/generate', requireAuth, userRateLimit, async 
     );
     const apiKey = process.env['OPENAI_API_KEY'];
     const currentBalance = await getCreditBalance(req.userId!);
-    const rows = await listData('transactions', req.userId!, req.spreadsheetId, req.sheetsClient);
+    const rows = await listData('transactions', req.userId!);
     const aggregate = aggregateTransactions(mapSheetRows(rows as Array<Record<string, unknown>>), period);
 
     if (aggregate.current.transactionCount === 0) {
@@ -193,10 +191,6 @@ router.post('/transactions/summary/generate', requireAuth, userRateLimit, async 
   } catch (err) {
     if (err instanceof ValidationError) {
       res.status(400).json({ error: err.message });
-      return;
-    }
-    if (err instanceof SheetsAccessError) {
-      res.status(503).json({ error: err.code, message: err.message });
       return;
     }
     req.log.error({ err }, 'Failed to generate transaction summary');

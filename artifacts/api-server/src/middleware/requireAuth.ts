@@ -4,7 +4,6 @@ import * as rateLimitMod from 'express-rate-limit';
 import { ipKeyGenerator } from 'express-rate-limit';
 import { supabaseAdmin } from '../lib/supabase-admin.js';
 import { getUserSheetConnection } from '../lib/user-sheet.js';
-import { usesPostgresDataStoreForUser } from '../lib/data-store.js';
 
 // express-rate-limit ships CJS UMD types (`export = X` in `dist/index.d.ts`)
 // alongside an ESM default-export shim. Vercel's tsc post-build type-check
@@ -17,6 +16,7 @@ declare global {
   namespace Express {
     interface Request {
       userId?: string;
+      // Only populated by requireSheetConnection — used by optional backup routes.
       spreadsheetId?: string;
       sheetsClient?: sheets_v4.Sheets;
     }
@@ -74,7 +74,8 @@ export const userRateLimit = rateLimit({
 });
 
 // Verifies the caller's token and attaches req.userId.
-// Use for endpoints that don't need the Sheets client (profile, auth/google).
+// All app data routes use this — PostgreSQL is always the data store so no
+// further connection setup is needed.
 export async function requireUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   const userId = await verifyToken(req, res);
   if (!userId) return;
@@ -82,19 +83,20 @@ export async function requireUser(req: Request, res: Response, next: NextFunctio
   next();
 }
 
-// Verifies the caller's token AND resolves their per-user Google Sheets client.
-// Responds 428 if the user hasn't connected Google OAuth yet, or hasn't had a
-// spreadsheet created. The frontend should never hit this in practice (it gates
-// routes behind /connect-sheet), but the API enforces it independently.
-export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
+// requireAuth is now identical to requireUser. PostgreSQL is always used for
+// app data (notes, transactions, todos, links). Google Sheets is an optional
+// backup feature handled separately.
+export const requireAuth = requireUser;
+
+// Verifies the caller's token AND resolves their Google Sheets client.
+// Used exclusively by optional backup management routes (spreadsheet repair /
+// validate). Returns 428 if Google OAuth has not been connected, so the
+// frontend can surface a helpful "connect backup" prompt instead of a generic
+// error. App data routes must NOT use this — they always read from PostgreSQL
+// and must never fail because Google is not connected.
+export async function requireSheetConnection(req: Request, res: Response, next: NextFunction): Promise<void> {
   const userId = await verifyToken(req, res);
   if (!userId) return;
-
-  if (usesPostgresDataStoreForUser(userId)) {
-    req.userId = userId;
-    next();
-    return;
-  }
 
   let connection: { spreadsheetId: string; sheets: sheets_v4.Sheets } | null;
   try {
@@ -108,7 +110,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   if (!connection) {
     res.status(428).json({
       error: 'GOOGLE_NOT_CONNECTED',
-      message: 'Hubungkan Google Drive kamu terlebih dahulu untuk menggunakan fitur ini.',
+      message: 'Hubungkan Google Drive untuk menggunakan fitur backup spreadsheet.',
     });
     return;
   }

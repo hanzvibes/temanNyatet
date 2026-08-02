@@ -1,5 +1,5 @@
 // Thin client for the api-server, which owns notes/transactions/todos/links
-// data (stored in Google Sheets). Auth still goes through Supabase directly —
+// data (stored in PostgreSQL). Auth still goes through Supabase directly —
 // we forward the Supabase access token as a Bearer token.
 //
 // Access tokens expire (default 1 hour). Supabase auto-refreshes them in many

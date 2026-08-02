@@ -1,7 +1,6 @@
 import { Router, type IRouter } from 'express';
 import { requireAuth, userRateLimit } from '../middleware/requireAuth.js';
 import { createData, deleteData, listData, reorderNotes, updateData } from '../lib/data-store.js';
-import { SheetsAccessError } from '../lib/google-sheets.js';
 import {
   optionalString,
   optionalTags,
@@ -12,7 +11,6 @@ import {
 import { consumeCredit, CreditsExhaustedError, getCreditBalance } from '../lib/credit-service.js';
 
 const router: IRouter = Router();
-const SHEET = '📝 Notes';
 const TITLE_MAX = 200;
 const CONTENT_MAX = 50_000;
 const SUMMARY_CONTENT_MAX = 50_000;
@@ -22,7 +20,7 @@ const OPENAI_TIMEOUT_MS = 30_000;
 
 router.get('/notes', requireAuth, userRateLimit, async (req, res) => {
   try {
-    const rows = await listData('notes', req.userId!, req.spreadsheetId, req.sheetsClient);
+    const rows = await listData('notes', req.userId!);
     rows.sort((a, b) => {
       const posA = Number(a.position) || 0;
       const posB = Number(b.position) || 0;
@@ -31,10 +29,6 @@ router.get('/notes', requireAuth, userRateLimit, async (req, res) => {
     });
     res.status(200).json({ data: rows });
   } catch (err) {
-    if (err instanceof SheetsAccessError) {
-      res.status(503).json({ error: err.code, message: err.message });
-      return;
-    }
     req.log.error({ err }, 'Failed to list notes');
     res.status(500).json({ error: 'Failed to load notes' });
   }
@@ -47,15 +41,11 @@ router.post('/notes', requireAuth, userRateLimit, async (req, res) => {
     const title = optionalString(body.title, 'title', TITLE_MAX);
     const tags = optionalTags(body.tags);
     const color = optionalString(body.color, 'color', 100);
-    const row = await createData('notes', req.userId!, { title, content, tags, color }, req.spreadsheetId, req.sheetsClient);
+    const row = await createData('notes', req.userId!, { title, content, tags, color });
     res.status(201).json({ data: row });
   } catch (err) {
     if (err instanceof ValidationError) {
       res.status(400).json({ error: err.message });
-      return;
-    }
-    if (err instanceof SheetsAccessError) {
-      res.status(503).json({ error: err.code, message: err.message });
       return;
     }
     req.log.error({ err }, 'Failed to create note');
@@ -71,8 +61,8 @@ router.put('/notes/:id', requireAuth, userRateLimit, async (req, res) => {
     if ('content' in body) updates.content = requireString(body.content, 'content', CONTENT_MAX);
     if ('tags' in body) updates.tags = optionalTags(body.tags);
     if ('color' in body) updates.color = optionalString(body.color, 'color', 100);
-      requireNonEmptyUpdates(updates, 'updates');
-      const row = await updateData('notes', req.params.id as string, req.userId!, updates, req.spreadsheetId, req.sheetsClient);
+    requireNonEmptyUpdates(updates, 'updates');
+    const row = await updateData('notes', req.params.id as string, req.userId!, updates);
     if (!row) {
       res.status(404).json({ error: 'Note not found' });
       return;
@@ -81,10 +71,6 @@ router.put('/notes/:id', requireAuth, userRateLimit, async (req, res) => {
   } catch (err) {
     if (err instanceof ValidationError) {
       res.status(400).json({ error: err.message });
-      return;
-    }
-    if (err instanceof SheetsAccessError) {
-      res.status(503).json({ error: err.code, message: err.message });
       return;
     }
     req.log.error({ err }, 'Failed to update note');
@@ -106,7 +92,7 @@ router.post('/notes/:id/summarize', requireAuth, userRateLimit, async (req, res)
       return;
     }
 
-    const rows = await listData('notes', req.userId!, req.spreadsheetId, req.sheetsClient);
+    const rows = await listData('notes', req.userId!);
     const note = rows.find((row) => row.id === req.params.id);
     if (!note) {
       res.status(404).json({ error: 'Note not found' });
@@ -187,10 +173,6 @@ router.post('/notes/:id/summarize', requireAuth, userRateLimit, async (req, res)
       res.status(504).json({ error: 'AI summary request timed out' });
       return;
     }
-    if (err instanceof SheetsAccessError) {
-      res.status(503).json({ error: err.code, message: err.message });
-      return;
-    }
     req.log.error({ err }, 'Failed to summarize note');
     res.status(500).json({ error: 'Failed to generate AI summary' });
   }
@@ -204,13 +186,9 @@ router.post('/notes/reorder', requireAuth, userRateLimit, async (req, res) => {
       res.status(400).json({ error: 'orderedIds must be an array of strings' });
       return;
     }
-    await reorderNotes(req.userId!, orderedIds, req.spreadsheetId, req.sheetsClient);
+    await reorderNotes(req.userId!, orderedIds);
     res.status(204).send();
   } catch (err) {
-    if (err instanceof SheetsAccessError) {
-      res.status(503).json({ error: err.code, message: err.message });
-      return;
-    }
     req.log.error({ err }, 'Failed to reorder notes');
     res.status(500).json({ error: 'Failed to reorder notes' });
   }
@@ -218,17 +196,13 @@ router.post('/notes/reorder', requireAuth, userRateLimit, async (req, res) => {
 
 router.delete('/notes/:id', requireAuth, userRateLimit, async (req, res) => {
   try {
-    const ok = await deleteData('notes', req.params.id as string, req.userId!, req.spreadsheetId, req.sheetsClient);
+    const ok = await deleteData('notes', req.params.id as string, req.userId!);
     if (!ok) {
       res.status(404).json({ error: 'Note not found' });
       return;
     }
     res.status(204).send();
   } catch (err) {
-    if (err instanceof SheetsAccessError) {
-      res.status(503).json({ error: err.code, message: err.message });
-      return;
-    }
     req.log.error({ err }, 'Failed to delete note');
     res.status(500).json({ error: 'Failed to delete note' });
   }

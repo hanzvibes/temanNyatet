@@ -1,7 +1,6 @@
 import { Router, type IRouter } from 'express';
 import { requireAuth, userRateLimit } from '../middleware/requireAuth.js';
 import { createData, deleteData, listData, updateData } from '../lib/data-store.js';
-import { SheetsAccessError } from '../lib/google-sheets.js';
 import {
   optionalString,
   requireHttpUrl,
@@ -11,19 +10,14 @@ import {
 } from '../lib/validate.js';
 
 const router: IRouter = Router();
-const SHEET = '🔗 Links';
 const TITLE_MAX = 200;
 const NOTE_MAX = 5_000;
 
 router.get('/links', requireAuth, userRateLimit, async (req, res) => {
   try {
-    const rows = await listData('links', req.userId!, req.spreadsheetId, req.sheetsClient);
+    const rows = await listData('links', req.userId!);
     res.status(200).json({ data: rows });
   } catch (err) {
-    if (err instanceof SheetsAccessError) {
-      res.status(503).json({ error: err.code, message: err.message });
-      return;
-    }
     req.log.error({ err }, 'Failed to list links');
     res.status(500).json({ error: 'Failed to load links' });
   }
@@ -35,15 +29,11 @@ router.post('/links', requireAuth, userRateLimit, async (req, res) => {
     const title = requireString(body.title, 'title', TITLE_MAX);
     const url = requireHttpUrl(body.url, 'url');
     const note = optionalString(body.note, 'note', NOTE_MAX);
-    const row = await createData('links', req.userId!, { title, url, note }, req.spreadsheetId, req.sheetsClient);
+    const row = await createData('links', req.userId!, { title, url, note });
     res.status(201).json({ data: row });
   } catch (err) {
     if (err instanceof ValidationError) {
       res.status(400).json({ error: err.message });
-      return;
-    }
-    if (err instanceof SheetsAccessError) {
-      res.status(503).json({ error: err.code, message: err.message });
       return;
     }
     req.log.error({ err }, 'Failed to create link');
@@ -59,7 +49,7 @@ router.put('/links/:id', requireAuth, userRateLimit, async (req, res) => {
     if ('url' in body) updates.url = requireHttpUrl(body.url, 'url');
     if ('note' in body) updates.note = optionalString(body.note, 'note', NOTE_MAX);
     requireNonEmptyUpdates(updates, 'updates');
-    const row = await updateData('links', req.params.id as string, req.userId!, updates, req.spreadsheetId, req.sheetsClient);
+    const row = await updateData('links', req.params.id as string, req.userId!, updates);
     if (!row) {
       res.status(404).json({ error: 'Link not found' });
       return;
@@ -70,10 +60,6 @@ router.put('/links/:id', requireAuth, userRateLimit, async (req, res) => {
       res.status(400).json({ error: err.message });
       return;
     }
-    if (err instanceof SheetsAccessError) {
-      res.status(503).json({ error: err.code, message: err.message });
-      return;
-    }
     req.log.error({ err }, 'Failed to update link');
     res.status(500).json({ error: 'Failed to update link' });
   }
@@ -81,17 +67,13 @@ router.put('/links/:id', requireAuth, userRateLimit, async (req, res) => {
 
 router.delete('/links/:id', requireAuth, userRateLimit, async (req, res) => {
   try {
-    const ok = await deleteData('links', req.params.id as string, req.userId!, req.spreadsheetId, req.sheetsClient);
+    const ok = await deleteData('links', req.params.id as string, req.userId!);
     if (!ok) {
       res.status(404).json({ error: 'Link not found' });
       return;
     }
     res.status(204).send();
   } catch (err) {
-    if (err instanceof SheetsAccessError) {
-      res.status(503).json({ error: err.code, message: err.message });
-      return;
-    }
     req.log.error({ err }, 'Failed to delete link');
     res.status(500).json({ error: 'Failed to delete link' });
   }

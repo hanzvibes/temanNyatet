@@ -5,9 +5,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { normalizeNotes, noteTimestamp } from '@/lib/noteData';
 
-// Data now lives in a Google Sheet (via the api-server), which has no
-// realtime push. We poll so edits made directly in the sheet still show up
-// without a manual refresh.
+// Data lives in PostgreSQL (via the api-server). We poll so changes made
+// from another device or session still show up without a manual refresh.
 const POLL_INTERVAL_MS = 15000;
 const REFETCH_EVENT = 'teman-nyatet:refetch:notes';
 

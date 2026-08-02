@@ -1,18 +1,18 @@
-// Spreadsheet management routes (status + repair + validate).
-// The connect flow is now handled by OAuth in routes/auth-google.ts.
+// Spreadsheet backup management routes (status, repair, validate).
+// These are OPTIONAL backup features — app data always reads from PostgreSQL.
+// The connect flow is handled by routes/auth-google.ts.
 import { Router, type IRouter } from 'express';
-import { requireAuth, requireUser, userRateLimit } from '../middleware/requireAuth.js';
+import { requireSheetConnection, requireUser, userRateLimit } from '../middleware/requireAuth.js';
 import { supabaseAdmin } from '../lib/supabase-admin.js';
 import { SheetsAccessError } from '../lib/google-sheets.js';
 import { repairHeaders, SHEET_SCHEMAS } from '../lib/sheet-store.js';
 import { invalidateUserSheetCache } from '../lib/user-sheet.js';
-import { usesPostgresDataStoreForUser } from '../lib/data-store.js';
 
 const router: IRouter = Router();
 
 // ─── GET /api/spreadsheet/status ────────────────────────────────────────────
 // Returns connection state for the current user. Uses requireUser (not
-// requireAuth) so this can be polled even before Google is connected.
+// requireSheetConnection) so this can be polled even before Google is connected.
 
 router.get('/spreadsheet/status', requireUser, async (req, res) => {
   try {
@@ -32,10 +32,12 @@ router.get('/spreadsheet/status', requireUser, async (req, res) => {
 
     res.status(200).json({
       data: {
+        // PostgreSQL is always the data store — data is always ready regardless
+        // of whether Google Sheets backup is connected.
         connected: hasToken && !!spreadsheetId,
         googleConnected: hasToken,
-        dataStore: usesPostgresDataStoreForUser(req.userId!) ? 'postgres' : 'sheets',
-        dataReady: usesPostgresDataStoreForUser(req.userId!) || (hasToken && !!spreadsheetId),
+        dataStore: 'postgres',
+        dataReady: true,
         spreadsheetId,
         spreadsheetUrl: spreadsheetId
           ? `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`
@@ -50,9 +52,9 @@ router.get('/spreadsheet/status', requireUser, async (req, res) => {
 
 // ─── POST /api/spreadsheet/repair ───────────────────────────────────────────
 // Re-writes correct header rows to all sheet tabs without touching data rows.
-// Use when a user has accidentally renamed or deleted header columns.
+// Requires Google to be connected (backup feature).
 
-router.post('/spreadsheet/repair', requireAuth, userRateLimit, async (req, res) => {
+router.post('/spreadsheet/repair', requireSheetConnection, userRateLimit, async (req, res) => {
   try {
     const result = await repairHeaders(req.spreadsheetId!, req.sheetsClient!);
     invalidateUserSheetCache(req.userId!);
@@ -69,10 +71,9 @@ router.post('/spreadsheet/repair', requireAuth, userRateLimit, async (req, res) 
 
 // ─── POST /api/spreadsheet/validate ─────────────────────────────────────────
 // Checks that the connected spreadsheet has the required tabs and header rows.
-// Returns a structured report so the frontend can show a "spreadsheet healthy"
-// indicator or prompt the user to repair.
+// Requires Google to be connected (backup feature).
 
-router.post('/spreadsheet/validate', requireAuth, userRateLimit, async (req, res) => {
+router.post('/spreadsheet/validate', requireSheetConnection, userRateLimit, async (req, res) => {
   try {
     const spreadsheetId = req.spreadsheetId!;
     const sheets = req.sheetsClient!;

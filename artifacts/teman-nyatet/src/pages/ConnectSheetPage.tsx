@@ -375,27 +375,6 @@ export default function ConnectSheetPage() {
                       : <><Chrome size={16} /> Hubungkan Google Drive</>}
                   </button>
 
-                  {status?.redirectUri && (
-                    <div className="rounded-2xl border border-border bg-secondary/40 p-3">
-                      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                        Redirect URI
-                      </p>
-                      <div className="flex items-stretch gap-2">
-                        <code className="flex-1 break-all rounded-lg bg-background px-2.5 py-2 font-mono text-xs leading-relaxed text-foreground">
-                          {status.redirectUri}
-                        </code>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(status.redirectUri || '');
-                            toast.success('URI disalin ke clipboard');
-                          }}
-                          className="shrink-0 min-h-9 rounded-lg bg-primary/10 px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
-                        >
-                          Salin
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
             </div>

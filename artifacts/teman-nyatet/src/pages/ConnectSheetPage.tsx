@@ -16,35 +16,30 @@ import {
   Unlink,
   WifiOff,
   ArrowLeft,
+  ShieldCheck,
+  FolderOpen,
+  Lock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// Translate raw API error codes / fetch error strings into user-friendly
-// Indonesian messages shown in the connect-button toast.
 function translateConnectError(err: unknown): string {
   const msg = err instanceof Error ? err.message : String(err);
-  if (msg === 'SERVER_NOT_DEPLOYED') {
+  if (msg === 'SERVER_NOT_DEPLOYED')
     return 'Server API belum aktif di Vercel. Lakukan deploy ulang project api-server di dashboard Vercel.';
-  }
-  if (msg === 'NETWORK_ERROR') {
+  if (msg === 'NETWORK_ERROR')
     return 'Tidak dapat menghubungi server API. Periksa koneksi internet atau pastikan server sudah aktif.';
-  }
-  if (msg === 'CORS_BLOCKED') {
+  if (msg === 'CORS_BLOCKED')
     return 'Permintaan diblokir CORS. Pastikan ALLOWED_ORIGINS di api-server sudah mencantumkan domain frontend.';
-  }
-  if (msg === 'WRONG_RESPONSE_HTML') {
+  if (msg === 'WRONG_RESPONSE_HTML')
     return 'Frontend menerima HTML, bukan JSON. Biasanya ini karena VITE_API_SERVER_URL di Vercel belum di-set atau salah — pastikan mengarah ke URL api-server (https://teman-nyatet-api-server.vercel.app), BUKAN ke domain frontend.';
-  }
-  if (msg.includes('status 404')) {
+  if (msg.includes('status 404'))
     return 'Server API tidak ditemukan (404). Pastikan VITE_API_SERVER_URL sudah di-set di Vercel frontend, atau api-server sudah ter-deploy.';
-  }
-  if (msg.includes('status 5')) {
+  if (msg.includes('status 5'))
     return `Server API error (${msg}). Periksa log Vercel api-server untuk detail.`;
-  }
   return msg;
 }
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface GoogleStatus {
   connected: boolean;
@@ -53,7 +48,6 @@ interface GoogleStatus {
   redirectUri?: string | null;
 }
 
-// Error messages surfaced via ?error= query param from the OAuth callback.
 const ERROR_MESSAGES: Record<string, { title: string; body: string }> = {
   GOOGLE_NOT_CONNECTED: {
     title: 'Google Drive belum terhubung',
@@ -89,6 +83,12 @@ const ERROR_MESSAGES: Record<string, { title: string; body: string }> = {
   },
 };
 
+const BACKUP_BENEFITS = [
+  { icon: ShieldCheck, text: 'Data kamu sudah aman di server kami — ini cuma cadangan tambahan' },
+  { icon: FolderOpen,  text: 'Spreadsheet tersimpan di Google Drive-mu sendiri, mudah diakses' },
+  { icon: Lock,        text: 'Kami hanya minta akses ke file yang kami buat, bukan seluruh Drive' },
+];
+
 export default function ConnectSheetPage() {
   const { refreshProfile } = useAuthContext();
   const [, setLocation] = useLocation();
@@ -98,8 +98,6 @@ export default function ConnectSheetPage() {
   const [disconnecting, setDisconnecting] = useState(false);
   const [showDisconnect, setShowDisconnect] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
-  // Set when the API server itself is unreachable — shown as a persistent banner
-  // so the user (or developer) knows the root cause before clicking anything.
   const [apiServerError, setApiServerError] = useState<string | null>(null);
 
   const params = new URLSearchParams(window.location.search);
@@ -113,13 +111,11 @@ export default function ConnectSheetPage() {
   const loadStatus = async (): Promise<GoogleStatus | null> => {
     try {
       const data = await apiGet<GoogleStatus>('/auth/google/status');
-      setApiServerError(null); // clear any previous server-unreachable banner
+      setApiServerError(null);
       setStatus(data);
       return data;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      // Surface infra-level errors (server not deployed, network, CORS) as a
-      // persistent banner so the user knows the root cause immediately.
       if (
         msg === 'SERVER_NOT_DEPLOYED' ||
         msg === 'NETWORK_ERROR' ||
@@ -141,12 +137,6 @@ export default function ConnectSheetPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // If redirected back from OAuth with ?connected=true, poll the API server until
-  // it confirms the connection, then refresh the profile and navigate. We poll
-  // /auth/google/status (the source of truth) because the previous "fire once at
-  // 1.2s" approach could leave the user stuck on "Mengalihkan ke aplikasi..." if
-  // the Supabase profile fetch was delayed by a slow mobile network or
-  // backgrounded tab.
   useEffect(() => {
     if (connectedParam !== 'true') return;
     setIsNavigating(true);
@@ -155,60 +145,36 @@ export default function ConnectSheetPage() {
     let pollTimer: ReturnType<typeof setTimeout> | null = null;
 
     const refreshAndGo = async () => {
-      try {
-        await refreshProfileRef.current();
-      } catch {
-        // Swallow — AuthContext logs warnings; AuthGuard will skip the redirect
-        // if the profile fetch returns null.
-      }
+      try { await refreshProfileRef.current(); } catch { /* see effect above */ }
       if (cancelled) return;
-      // Force the navigation explicitly so we're not solely dependent on
-      // AuthGuard's effect — gives us a guaranteed escape hatch even if the
-      // profile state hasn't propagated yet.
       setLocation('/catatan');
     };
 
     const checkAndProceed = async (attempt: number) => {
       if (cancelled) return;
       const result = await loadStatus();
-      if (result?.connected) {
-        refreshAndGo();
-        return;
-      }
-      // After ~10s of polling without success, give up the wait and force-fetch
-      // the profile anyway — the user already saw "Berhasil!" so they shouldn't
-      // be stranded.
-      if (attempt >= 10) {
-        refreshAndGo();
-        return;
-      }
+      if (result?.connected) { refreshAndGo(); return; }
+      if (attempt >= 10) { refreshAndGo(); return; }
       pollTimer = setTimeout(() => checkAndProceed(attempt + 1), 1000);
     };
 
     checkAndProceed(0);
-
     return () => {
       cancelled = true;
       if (pollTimer) clearTimeout(pollTimer);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectedParam, setLocation]);
 
   const handleManualContinue = async () => {
     setIsNavigating(true);
-    try {
-      await refreshProfileRef.current();
-    } catch {
-      // ignore — see effect above
-    }
+    try { await refreshProfileRef.current(); } catch { /* ignore */ }
     setLocation('/catatan');
   };
 
   const handleConnect = async () => {
     setConnecting(true);
     try {
-      // Get the OAuth URL from the backend, then redirect the browser there.
-      // Server-side response shape: { data: { url } }; apiClient auto-unwraps
-      // `data.data` so this returns { url: string }.
       const data = await apiGet<{ url: string }>('/auth/google/initiate');
       if (!data?.url) {
         const message = 'Server tidak mengembalikan tautan Google. Periksa konfigurasi GOOGLE_CLIENT_ID di api-server.';
@@ -221,7 +187,6 @@ export default function ConnectSheetPage() {
     } catch (err) {
       const detail = translateConnectError(err);
       console.error('[handleConnect] /auth/google/initiate failed:', err);
-      // Also update the banner so the persistent state reflects the failure.
       setApiServerError(detail);
       toast.error(detail);
       setConnecting(false);
@@ -248,264 +213,244 @@ export default function ConnectSheetPage() {
 
   if (loadingStatus) {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex min-h-dvh items-center justify-center bg-background">
+        <Loader2 className="h-7 w-7 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-dvh flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-background to-secondary/30 relative overflow-hidden">
-      {/* Decorative blobs */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
+    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-background p-5 sm:p-6">
+      {/* Background blobs */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
       </div>
 
       <AnimatePresence>
         {!isNavigating && (
           <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            initial={{ opacity: 0, y: 20, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -16, scale: 0.98 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="relative w-full max-w-md bg-card/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-border p-6 sm:p-8"
+            exit={{ opacity: 0, y: -12, scale: 0.98 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="relative w-full max-w-sm overflow-hidden rounded-[2rem] border border-card-border bg-card shadow-elevated"
           >
-            {/* API server unreachable banner — shown when the health/status check
-                fails at the infra level (server not deployed, CORS, network). */}
+            {/* Alerts */}
             <AnimatePresence>
-              {apiServerError && (
+              {(apiServerError || recoveryInfo) && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mb-5"
+                  className="border-b border-border"
                 >
-                  <Alert variant="warning">
-                    <WifiOff aria-hidden="true" />
-                    <div className="min-w-0">
-                      <AlertTitle>Server API tidak dapat diakses</AlertTitle>
-                      <AlertDescription>{apiServerError}</AlertDescription>
-                    </div>
-                  </Alert>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Error / recovery alert */}
-            <AnimatePresence>
-              {recoveryInfo && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mb-5"
-                >
-                  <Alert variant="destructive">
-                    <AlertTriangle aria-hidden="true" />
-                    <div className="min-w-0">
-                      <AlertTitle>{recoveryInfo.title}</AlertTitle>
-                      <AlertDescription>{recoveryInfo.body}</AlertDescription>
-                    </div>
-                  </Alert>
+                  {apiServerError && (
+                    <Alert variant="warning" className="rounded-none border-0">
+                      <WifiOff aria-hidden="true" />
+                      <div className="min-w-0">
+                        <AlertTitle>Server API tidak dapat diakses</AlertTitle>
+                        <AlertDescription>{apiServerError}</AlertDescription>
+                      </div>
+                    </Alert>
+                  )}
+                  {recoveryInfo && (
+                    <Alert variant="destructive" className="rounded-none border-0">
+                      <AlertTriangle aria-hidden="true" />
+                      <div className="min-w-0">
+                        <AlertTitle>{recoveryInfo.title}</AlertTitle>
+                        <AlertDescription>{recoveryInfo.body}</AlertDescription>
+                      </div>
+                    </Alert>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
 
             {/* Header */}
-            <div className="flex flex-col items-center text-center mb-7">
-              <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-elevation-2 text-primary-foreground">
-                <CloudUpload size={28} />
+            <div className="border-b border-border px-6 py-6">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary shadow-elevation-2 text-primary-foreground">
+                <CloudUpload size={22} />
               </div>
-              <h1 className="text-page-title">
+              <h1 className="text-[1.375rem] font-semibold leading-tight tracking-tight text-foreground">
                 {status?.connected ? 'Backup Spreadsheet Aktif' : 'Backup ke Google Spreadsheet'}
               </h1>
-              <p className="text-muted-foreground text-sm mt-2 max-w-xs leading-relaxed">
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                 {status?.connected
-                  ? 'Data kamu di-backup secara otomatis ke Google Spreadsheet pribadimu sebagai salinan cadangan.'
-                  : 'Data kamu sudah aman tersimpan di server kami. Hubungkan Google Drive jika ingin membuat salinan cadangan di spreadsheet pribadimu.'}
+                  ? 'Data kamu di-backup secara otomatis ke Google Spreadsheet pribadimu.'
+                  : 'Opsional: buat salinan cadangan data di Google Drive-mu sendiri.'}
               </p>
             </div>
 
-            {status?.connected && !showDisconnect ? (
-              // ── Connected state ──────────────────────────────────────────────
-              <div className="space-y-3">
-                <a
-                  href={status.spreadsheetUrl ?? '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full min-h-12 flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold py-3 px-4 rounded-xl shadow-elevation-1 hover:opacity-90 transition-opacity"
-                >
-                  Buka Spreadsheet <ExternalLink size={16} />
-                </a>
+            {/* Body */}
+            <div className="px-6 py-5">
+              {status?.connected && !showDisconnect ? (
+                // ── Connected ──
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 rounded-2xl bg-income/8 border border-income/20 px-4 py-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-income/15">
+                      <Check size={15} className="text-income" strokeWidth={2.5} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Terhubung</p>
+                      <p className="text-xs text-muted-foreground">Backup aktif berjalan otomatis</p>
+                    </div>
+                  </div>
 
-                <div className="flex gap-2">
+                  <a
+                    href={status.spreadsheetUrl ?? '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex w-full min-h-11 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-elevation-1 transition-opacity hover:opacity-90"
+                  >
+                    Buka Spreadsheet <ExternalLink size={14} />
+                  </a>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleConnect}
+                      disabled={connecting}
+                      className="flex flex-1 min-h-10 items-center justify-center gap-1.5 rounded-xl border border-border py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground disabled:opacity-50"
+                    >
+                      {connecting ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+                      Hubungkan Ulang
+                    </button>
+                    <button
+                      onClick={() => setShowDisconnect(true)}
+                      className="flex flex-1 min-h-10 items-center justify-center gap-1.5 rounded-xl border border-border py-2 text-xs font-semibold text-destructive/70 transition-colors hover:bg-destructive/5 hover:text-destructive"
+                    >
+                      <Unlink size={13} /> Putuskan
+                    </button>
+                  </div>
+                </div>
+              ) : status?.connected && showDisconnect ? (
+                // ── Disconnect confirm ──
+                <div className="space-y-3">
+                  <Alert variant="destructive">
+                    <AlertCircle aria-hidden="true" />
+                    <div className="min-w-0">
+                      <AlertTitle>Nonaktifkan backup?</AlertTitle>
+                      <AlertDescription>
+                        Data di spreadsheet tidak akan terhapus. Semua fitur aplikasi tetap bisa digunakan.
+                      </AlertDescription>
+                    </div>
+                  </Alert>
+                  <button
+                    onClick={handleDisconnect}
+                    disabled={disconnecting}
+                    className="flex w-full min-h-11 items-center justify-center gap-2 rounded-xl bg-destructive text-sm font-semibold text-destructive-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+                  >
+                    {disconnecting ? <Loader2 size={15} className="animate-spin" /> : <Unlink size={15} />}
+                    {disconnecting ? 'Menonaktifkan...' : 'Ya, Nonaktifkan Backup'}
+                  </button>
+                  <button
+                    onClick={() => setShowDisconnect(false)}
+                    className="w-full py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    Batal
+                  </button>
+                </div>
+              ) : (
+                // ── Not connected ──
+                <div className="space-y-4">
+                  {/* Benefits */}
+                  <div className="space-y-2">
+                    {BACKUP_BENEFITS.map(({ icon: Icon, text }) => (
+                      <div key={text} className="flex items-start gap-3">
+                        <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-secondary">
+                          <Icon size={13} className="text-muted-foreground" />
+                        </div>
+                        <p className="text-xs leading-relaxed text-muted-foreground">{text}</p>
+                      </div>
+                    ))}
+                  </div>
+
                   <button
                     onClick={handleConnect}
                     disabled={connecting}
-                    className="flex-1 min-h-11 flex items-center justify-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-xl py-2.5 transition-colors hover:bg-secondary/50 disabled:opacity-50"
+                    className="flex w-full min-h-12 items-center justify-center gap-2.5 rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-elevation-1 transition-opacity hover:opacity-90 disabled:opacity-50"
                   >
-                    {connecting ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-                    Hubungkan Ulang
+                    {connecting
+                      ? <><Loader2 size={16} className="animate-spin" /> Menghubungkan...</>
+                      : <><Chrome size={16} /> Hubungkan Google Drive</>}
                   </button>
-                  <button
-                    onClick={() => setShowDisconnect(true)}
-                    className="flex-1 min-h-11 flex items-center justify-center gap-1.5 text-sm font-medium text-destructive/70 hover:text-destructive border border-border rounded-xl py-2.5 transition-colors hover:bg-destructive/5"
-                  >
-                    <Unlink size={14} /> Putuskan
-                  </button>
-                </div>
-              </div>
-            ) : status?.connected && showDisconnect ? (
-              // ── Disconnect confirm ───────────────────────────────────────────
-              <div className="space-y-3">
-                <Alert variant="destructive" className="items-center text-center">
-                  <AlertCircle aria-hidden="true" className="mt-0.5" />
-                  <div className="min-w-0">
-                    <AlertTitle>Nonaktifkan backup?</AlertTitle>
-                    <AlertDescription>
-                      Data di spreadsheet-mu tidak akan terhapus. Kamu tetap bisa menggunakan semua fitur aplikasi — hanya backup otomatis ke spreadsheet yang dimatikan.
-                    </AlertDescription>
-                  </div>
-                </Alert>
-                <button
-                  onClick={handleDisconnect}
-                  disabled={disconnecting}
-                  className="w-full min-h-12 bg-destructive text-destructive-foreground font-semibold py-3 px-4 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {disconnecting ? <Loader2 size={16} className="animate-spin" /> : <Unlink size={16} />}
-                  {disconnecting ? 'Menonaktifkan...' : 'Ya, Nonaktifkan'}
-                </button>
-                <button
-                  onClick={() => setShowDisconnect(false)}
-                  className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
-                >
-                  Batal
-                </button>
-              </div>
-            ) : (
-              // ── Not connected — optional connect CTA ─────────────────────────
-              <div className="space-y-4">
-                {/* Info callout */}
-                <div className="bg-secondary/50 border border-border rounded-2xl p-4 space-y-2 shadow-elevation-1">
-                  <div className="flex items-start gap-2.5">
-                    <Check size={15} className="flex-shrink-0 text-primary mt-0.5" />
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Data kamu <span className="font-medium text-foreground">sudah aman</span> di database kami — spreadsheet adalah cadangan tambahan
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check size={15} className="flex-shrink-0 text-primary mt-0.5" />
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Spreadsheet cadangan dibuat di <span className="font-medium text-foreground">Google Drive-mu sendiri</span> — mudah diakses dan diexpor
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Check size={15} className="flex-shrink-0 text-primary mt-0.5" />
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Kami hanya minta akses ke file yang kami buat — bukan seluruh Drive-mu
-                    </p>
-                  </div>
-                </div>
 
-                <button
-                  onClick={handleConnect}
-                  disabled={connecting}
-                  className="w-full min-h-12 bg-primary text-primary-foreground font-semibold py-3.5 px-4 rounded-xl shadow-elevation-1 hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2.5"
-                >
-                  {connecting ? (
-                    <>
-                      <Loader2 size={18} className="animate-spin" /> Menghubungkan...
-                    </>
-                  ) : (
-                    <>
-                      <Chrome size={18} /> Hubungkan Google Drive
-                    </>
-                  )}
-                </button>
-
-                {status?.redirectUri && (
-                  <div className="bg-muted/50 border border-border rounded-2xl p-3 sm:p-4">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">
-                      Redirect URI untuk Google Cloud Console
-                    </p>
-                    <div className="flex items-stretch gap-2">
-                      <code className="text-xs sm:text-[13px] text-foreground break-all flex-1 bg-background rounded px-2.5 py-2 font-mono leading-relaxed">
-                        {status.redirectUri}
-                      </code>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(status.redirectUri || '');
-                          toast.success('URI disalin ke clipboard');
-                        }}
-                        className="flex-shrink-0 min-h-11 px-3 rounded-lg text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 active:scale-95 transition-all"
-                      >
-                        Salin
-                      </button>
+                  {status?.redirectUri && (
+                    <div className="rounded-2xl border border-border bg-secondary/40 p-3">
+                      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        Redirect URI
+                      </p>
+                      <div className="flex items-stretch gap-2">
+                        <code className="flex-1 break-all rounded-lg bg-background px-2.5 py-2 font-mono text-xs leading-relaxed text-foreground">
+                          {status.redirectUri}
+                        </code>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(status.redirectUri || '');
+                            toast.success('URI disalin ke clipboard');
+                          }}
+                          className="shrink-0 min-h-9 rounded-lg bg-primary/10 px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
+                        >
+                          Salin
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2.5 leading-relaxed">
-                      Pastikan URI di atas <strong>persis sama</strong> (termasuk https:// dan / di akhir) dengan yang didaftarkan di Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client IDs → Authorized redirect URIs.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Footer */}
-            <div className="mt-6 pt-5 border-t border-border flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between border-t border-border px-6 py-4">
               <button
                 onClick={() => setLocation('/catatan')}
-                className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
+                className="flex min-h-10 items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
-                <ArrowLeft size={16} /> Kembali ke Aplikasi
+                <ArrowLeft size={15} /> Kembali ke Aplikasi
               </button>
               <button
                 onClick={handleLogout}
-                className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors"
+                className="flex min-h-10 items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
               >
-                <LogOut size={16} /> Keluar
+                <LogOut size={15} /> Keluar
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Success overlay — shown while profile is refreshing and routing to app */}
+      {/* Success / navigating overlay */}
       <AnimatePresence>
         {isNavigating && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.05 }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
+            exit={{ opacity: 0, scale: 1.04 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
             className="absolute inset-0 flex flex-col items-center justify-center p-6"
           >
-            <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mb-4 shadow-xl text-primary-foreground">
+            <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-elevated">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
+                transition={{ type: 'spring', stiffness: 220, damping: 15, delay: 0.1 }}
               >
-                <Check size={36} strokeWidth={3} />
+                <Check size={34} strokeWidth={3} />
               </motion.div>
             </div>
-            <h2 className="text-2xl font-bold text-foreground mb-1">Berhasil!</h2>
-            <p className="text-muted-foreground text-sm mb-4 text-center max-w-xs">
+            <h2 className="text-2xl font-bold text-foreground">Berhasil!</h2>
+            <p className="mt-1.5 max-w-[240px] text-center text-sm text-muted-foreground">
               Google Drive terhubung. Spreadsheet pribadi kamu sudah siap.
             </p>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 size={16} className="animate-spin" />
+            <div className="mt-5 flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 size={15} className="animate-spin" />
               Mengalihkan ke aplikasi...
             </div>
-
-            {/* Fallback: if the auto-redirect stalls (slow network, backgrounded
-                tab), let the user tap "Lanjut ke Aplikasi" to force the move.
-                Without this, a user could be stranded on this screen forever. */}
             <button
               onClick={handleManualContinue}
-              className="mt-6 text-sm font-medium text-primary hover:underline"
+              className="mt-4 text-sm font-semibold text-primary hover:underline"
             >
-              Lanjut ke Aplikasi
+              Lanjut sekarang
             </button>
           </motion.div>
         )}

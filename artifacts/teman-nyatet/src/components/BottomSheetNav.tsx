@@ -137,13 +137,12 @@ export default function BottomSheetNav() {
     return () => window.removeEventListener(OVERLAY_EVENT, handleOverlayChange);
   }, []);
 
-  // Keep the sheet fully open when navigating so all tabs and actions remain
-  // immediately available after a navigation click.
+  // Keep the sheet at the comfortable half snap when navigating.
   const prevLocation = useRef(location);
   useEffect(() => {
     if (location !== prevLocation.current) {
       prevLocation.current = location;
-      snapTo('expanded');
+      snapTo('half');
     }
   }, [location]);
 
@@ -250,7 +249,7 @@ export default function BottomSheetNav() {
     const handleOpenRequest = (event: Event) => {
       const transactionType = (event as CustomEvent<{ transactionType?: TransactionType }>).detail?.transactionType;
       setRequestedTransactionType(transactionType);
-      snapTo('expanded');
+      snapTo('half');
     };
     window.addEventListener('teman-nyatet:open-bottom-sheet', handleOpenRequest);
     return () => window.removeEventListener('teman-nyatet:open-bottom-sheet', handleOpenRequest);
@@ -282,8 +281,8 @@ export default function BottomSheetNav() {
 
   const onPointerUp = (e: React.PointerEvent) => {
     if (!isDragging.current && Math.abs(dragStartClientY.current - e.clientY) < 4) {
-      // Tap on handle → open fully so all navigation and actions are visible.
-      snapTo(snapState === 'collapsed' ? 'expanded' : 'collapsed');
+      // Tap on handle → toggle between collapsed and the half snap.
+      snapTo(snapState === 'collapsed' ? 'half' : 'collapsed');
       return;
     }
     const cur = h.get();

@@ -64,63 +64,68 @@
 }
 
 :root {
-  --background: 80 8% 97%; /* clean neutral canvas — less yellow cast */
-  --foreground: 150 22% 12%; /* deeper ink for stronger contrast */
+  /* ── Bills on Chain Design Tokens ─────────────────────────────────────
+     Primary palette: dark charcoal (#1a1a1a) + gold accent (#d4af37).
+     Semantic: success green (#10b981), blockchain blue (#0066ff),
+               warning amber (#f59e0b), error red (#ef4444).            */
 
-  --surface: 150 8% 93%; /* neutral sage grouping surface */
-  --surface-foreground: 150 15% 18%;
+  --background: 210 20% 98%;   /* #f9fafb — grey canvas */
+  --foreground: 215 28% 17%;   /* #1f2937 — dark ink */
 
-  --border: 150 10% 82%; /* slightly more defined */
+  --surface: 0 0% 96%;         /* #f5f5f5 — grouping surface */
+  --surface-foreground: 0 0% 20%; /* #333333 */
 
-  --card: 0 0% 100%;
-  --card-foreground: 150 22% 12%;
-  --card-border: 150 8% 85%;
+  --border: 220 13% 91%;       /* #e5e7eb */
+
+  --card: 0 0% 100%;           /* #ffffff */
+  --card-foreground: 215 28% 17%;
+  --card-border: 220 13% 91%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 150 22% 12%;
-  --popover-border: 150 8% 85%;
+  --popover-foreground: 215 28% 17%;
+  --popover-border: 220 13% 91%;
 
-  --primary: 152 36% 33%; /* richer, cleaner sage-green */
+  --primary: 0 0% 10%;         /* #1a1a1a — charcoal */
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 150 8% 91%;
-  --secondary-foreground: 150 15% 20%;
+  --secondary: 0 0% 96%;       /* #f5f5f5 */
+  --secondary-foreground: 0 0% 20%; /* #333333 */
 
-  --muted: 150 6% 91%;
-  --muted-foreground: 150 9% 36%; /* darker: better label & caption contrast */
+  --muted: 0 0% 96%;
+  --muted-foreground: 220 9% 46%; /* #6b7280 */
 
-  --accent: 150 14% 87%;
-  --accent-foreground: 150 22% 12%;
+  --accent: 43 64% 52%;        /* #d4af37 — diamond gold */
+  --accent-foreground: 0 0% 10%;
 
-  --destructive: 0 84% 60%;
+  --destructive: 0 84% 60%;    /* #ef4444 */
   --destructive-foreground: 0 0% 100%;
 
-  --input: 150 10% 79%; /* more visible input border */
-  --ring: 152 36% 33%;
+  --input: 220 13% 82%;        /* #d1d5db */
+  --ring: 217 100% 50%;        /* #0066ff — blockchain blue focus ring */
 
-  /* Button border accents — each is a complete hsl() value so the @theme
-     var() wrapper picks them up without an extra hsl() layer. */
-  --primary-border: hsl(152 44% 24%);     /* dark sage rim on primary button */
-  --secondary-border: hsl(150 10% 82%);   /* soft rim on secondary button */
-  --muted-border: hsl(150 8% 80%);
-  --accent-border: hsl(150 12% 78%);
-  --destructive-border: hsl(0 68% 48%);   /* deeper red rim on destructive */
+  /* Button border accents */
+  --primary-border: hsl(0 0% 5%);         /* near-black rim on primary */
+  --secondary-border: hsl(220 13% 82%);   /* soft grey rim */
+  --muted-border: hsl(220 13% 85%);
+  --accent-border: hsl(43 64% 40%);       /* deeper gold rim */
+  --destructive-border: hsl(0 72% 50%);
 
-  --finance: 43 83% 58%;
-  --finance-text: 38 76% 29%;
-  --todo: 211 42% 67%;
-  --todo-text: 211 47% 30%;
-  --linksaver: 0 53% 69%;
-  --linksaver-text: 0 54% 32%;
-  --income: 146 54% 42%;
-  --expense: 0 72% 59%;
+  /* Semantic app section colors */
+  --finance: 43 64% 52%;       /* gold — finance/keuangan */
+  --finance-text: 43 76% 28%;
+  --todo: 217 100% 50%;        /* blockchain blue — todos */
+  --todo-text: 217 80% 30%;
+  --linksaver: 220 9% 55%;     /* neutral muted — links */
+  --linksaver-text: 220 9% 28%;
+  --income: 160 84% 39%;       /* #10b981 — success green */
+  --expense: 0 84% 60%;        /* #ef4444 — error red */
 
-  --app-font-sans: 'Poppins', sans-serif;
-  --radius: 0.875rem;
+  --app-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --radius: 0.5rem;             /* 8px — Bills on Chain standard radius */
 
-  --shadow-1: 0 1px 2px rgba(10, 30, 20, 0.04), 0 1px 4px rgba(10, 30, 20, 0.04);
-  --shadow-2: 0 3px 10px rgba(10, 30, 20, 0.07), 0 1px 2px rgba(10, 30, 20, 0.04);
-  --shadow-3: 0 10px 26px rgba(10, 30, 20, 0.11), 0 3px 8px rgba(10, 30, 20, 0.06);
+  --shadow-1: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-2: 0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-3: 0 10px 15px -3px rgba(0, 0, 0, 0.10), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 
   /* Bottom-nav clearance.
      BottomSheetNav is anchored `bottom: 20px` with
@@ -131,25 +136,20 @@
      overrun by the pill. Same value used here and in PwaInstallPrompt. */
   --bottom-nav-collapsed-h: 96px;
 
-  /* Sticky-note palette (Catatan grid).
-     Four soft tints picked deterministically by hashing the note id so each
-     card keeps its color across reorder/remount. Light values are pale pastels
-     that read as "paper"-ish on cream. Dark values are flat dark tints of
-     the same hue that keep section identity without producing bright blobs on
-     the slate canvas — they sit one step brighter than the surrounding card
-     so cards still pop, but no longer look like flashlights. */
-  --note-card-1: hsl(152 32% 89%);
-  --note-card-1-foreground: hsl(152 30% 19%);
-  --note-card-1-border: hsl(152 26% 76%);
-  --note-card-2: hsl(43 82% 89%);
-  --note-card-2-foreground: hsl(38 42% 22%);
-  --note-card-2-border: hsl(43 58% 74%);
-  --note-card-3: hsl(211 48% 91%);
-  --note-card-3-foreground: hsl(211 38% 22%);
-  --note-card-3-border: hsl(211 38% 78%);
-  --note-card-4: hsl(0 52% 91%);
-  --note-card-4-foreground: hsl(0 34% 24%);
-  --note-card-4-border: hsl(0 38% 79%);
+  /* Sticky-note palette — Bills on Chain tints.
+     Warm neutral pastels matching the gold + charcoal palette. */
+  --note-card-1: hsl(43 60% 92%);          /* warm cream — gold tint */
+  --note-card-1-foreground: hsl(43 50% 18%);
+  --note-card-1-border: hsl(43 50% 78%);
+  --note-card-2: hsl(217 60% 93%);         /* soft blue — blockchain tint */
+  --note-card-2-foreground: hsl(217 40% 20%);
+  --note-card-2-border: hsl(217 40% 78%);
+  --note-card-3: hsl(160 50% 91%);         /* soft green — success tint */
+  --note-card-3-foreground: hsl(160 40% 18%);
+  --note-card-3-border: hsl(160 38% 74%);
+  --note-card-4: hsl(0 60% 93%);           /* soft red — error tint */
+  --note-card-4-foreground: hsl(0 38% 22%);
+  --note-card-4-border: hsl(0 42% 78%);
 }
 
 /* ── Dark mode ─────────────────────────────────────────────────────────
@@ -167,68 +167,70 @@
      a brand signal at dark-mode contrast (WCAG AA on the dark fg).
 */
 .dark {
-  --background: 150 14% 8%;
-  --foreground: 80 20% 94%;
+  /* ── Dark mode — Bills on Chain dark palette ──────────────────────────
+     Deep charcoal canvas, lifted card surfaces, gold accent stays. */
 
-  --surface: 150 12% 11%;
-  --surface-foreground: 80 15% 90%;
+  --background: 0 0% 4%;          /* #0a0a0a — near-black canvas */
+  --foreground: 0 0% 96%;         /* #f5f5f5 — light text */
 
-  --border: 150 10% 22%;
+  --surface: 0 0% 10%;            /* #1a1a1a — lifted surface */
+  --surface-foreground: 0 0% 83%; /* #d4d4d4 */
 
-  --card: 150 12% 12%;
-  --card-foreground: 80 20% 94%;
-  --card-border: 150 10% 22%;
+  --border: 0 0% 20%;             /* #333333 */
 
-  --popover: 150 12% 13%;
-  --popover-foreground: 80 20% 94%;
-  --popover-border: 150 10% 22%;
+  --card: 0 0% 10%;               /* #1a1a1a */
+  --card-foreground: 0 0% 96%;
+  --card-border: 0 0% 20%;
 
-  --primary: 152 40% 60%;          /* brighter in dark mode — stays WCAG AA */
-  --primary-foreground: 150 14% 9%;
+  --popover: 0 0% 13%;            /* #222222 */
+  --popover-foreground: 0 0% 96%;
+  --popover-border: 0 0% 20%;
 
-  --secondary: 150 10% 17%;
-  --secondary-foreground: 80 15% 90%;
+  --primary: 0 0% 96%;            /* #f5f5f5 — inverted in dark */
+  --primary-foreground: 0 0% 10%;
 
-  --muted: 150 10% 17%;
-  --muted-foreground: 80 10% 62%;   /* enough contrast on dark card */
+  --secondary: 0 0% 20%;          /* #333333 */
+  --secondary-foreground: 0 0% 83%;
 
-  --accent: 150 14% 22%;
-  --accent-foreground: 80 20% 94%;
+  --muted: 0 0% 20%;
+  --muted-foreground: 216 12% 64%; /* #9ca3af */
 
-  --destructive: 0 75% 60%;
-  --destructive-foreground: 40 30% 95%;
+  --accent: 43 64% 52%;           /* #d4af37 — gold stays same in dark */
+  --accent-foreground: 0 0% 10%;
 
-  --input: 150 10% 25%;
-  --ring: 152 40% 60%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
 
-  --primary-border: hsl(152 42% 52%);
-  --secondary-border: hsl(150 10% 24%);
-  --muted-border: hsl(150 8% 24%);
-  --accent-border: hsl(150 14% 27%);
-  --destructive-border: hsl(0 58% 47%);
+  --input: 0 0% 22%;              /* slightly lighter than border */
+  --ring: 217 100% 50%;           /* #0066ff */
 
-  --finance-text: 43 90% 72%;
-  --todo-text: 211 55% 78%;
-  --linksaver-text: 0 62% 79%;
+  --primary-border: hsl(0 0% 85%);
+  --secondary-border: hsl(0 0% 28%);
+  --muted-border: hsl(0 0% 26%);
+  --accent-border: hsl(43 64% 42%);
+  --destructive-border: hsl(0 72% 50%);
 
-  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(0, 0, 0, 0.10);
-  --shadow-2: 0 3px 10px rgba(0, 0, 0, 0.24), 0 1px 3px rgba(0, 0, 0, 0.12);
-  --shadow-3: 0 8px 24px rgba(0, 0, 0, 0.34), 0 3px 8px rgba(0, 0, 0, 0.16);
+  --finance-text: 43 80% 68%;
+  --todo-text: 217 80% 72%;
+  --linksaver-text: 220 9% 70%;
 
-  /* See :root — dark variants of the same palette so note cards keep their
-     hue identity but stop popping as bright blobs on the slate canvas. */
-  --note-card-1: hsl(152 24% 24%);
-  --note-card-1-foreground: hsl(152 22% 91%);
-  --note-card-1-border: hsl(152 20% 35%);
-  --note-card-2: hsl(43 30% 25%);
-  --note-card-2-foreground: hsl(43 46% 92%);
-  --note-card-2-border: hsl(43 26% 38%);
-  --note-card-3: hsl(211 28% 25%);
-  --note-card-3-foreground: hsl(211 38% 92%);
-  --note-card-3-border: hsl(211 24% 38%);
-  --note-card-4: hsl(0 25% 25%);
-  --note-card-4-foreground: hsl(0 35% 92%);
-  --note-card-4-border: hsl(0 24% 38%);
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.30), 0 1px 2px rgba(0, 0, 0, 0.18);
+  --shadow-2: 0 4px 10px rgba(0, 0, 0, 0.40), 0 2px 4px rgba(0, 0, 0, 0.20);
+  --shadow-3: 0 10px 24px rgba(0, 0, 0, 0.50), 0 4px 8px rgba(0, 0, 0, 0.24);
+
+  /* Dark note cards — same hue as light but dark tints */
+  --note-card-1: hsl(43 30% 20%);
+  --note-card-1-foreground: hsl(43 50% 90%);
+  --note-card-1-border: hsl(43 34% 32%);
+  --note-card-2: hsl(217 30% 20%);
+  --note-card-2-foreground: hsl(217 48% 90%);
+  --note-card-2-border: hsl(217 28% 34%);
+  --note-card-3: hsl(160 28% 20%);
+  --note-card-3-foreground: hsl(160 38% 90%);
+  --note-card-3-border: hsl(160 26% 34%);
+  --note-card-4: hsl(0 28% 20%);
+  --note-card-4-foreground: hsl(0 40% 90%);
+  --note-card-4-border: hsl(0 28% 34%);
 }
 
 @layer base {
@@ -323,20 +325,8 @@
 }
 
 @layer utilities {
-  /*
-   * Keep existing component markup consistent with the lighter type system.
-   * Size, color, tracking, and spacing continue to carry hierarchy while
-   * direct bold utilities no longer make dense screens feel visually heavy.
-   */
-  .font-black,
-  .font-extrabold {
-    font-weight: 600;
-  }
-
-  .font-bold,
-  .font-semibold {
-    font-weight: 500;
-  }
+  /* Font weights follow Bills on Chain spec:
+     semibold = 600, bold = 700, extrabold = 800 — no override needed. */
 }
 
 @layer base {

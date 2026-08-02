@@ -78,9 +78,9 @@ export default function BottomSheetNav() {
   };
 
   // Animate HEIGHT — pill grows upward since it's bottom-anchored.
-  // Catatan opens at the half snap by default so the primary "Tambah"
-  // actions are immediately discoverable on the app's main page.
-  const initialSnap: SnapState = location === '/catatan' ? 'half' : 'collapsed';
+  // Open at the half snap by default so navigation and primary actions are
+  // immediately discoverable on every app page.
+  const initialSnap: SnapState = 'half';
   const h = useMotionValue(SNAP[initialSnap]);
   const navScrollOffset = useMotionValue(0);
   const scrollState = useRef(createBottomNavScrollState());

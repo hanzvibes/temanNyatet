@@ -5,7 +5,7 @@ import { useLocation } from 'wouter';
 import { supabase } from '@/lib/supabase';
 import { apiGet, apiUpload } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet, MessageSquare, Crown, Calendar, Sparkles, Sun, Moon, Monitor, Database, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet, MessageSquare, Crown, Calendar, Sparkles, Database, CheckCircle2, CircleAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
@@ -415,6 +415,12 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
             style={activeSection === null && menuMinHeight !== null ? { minHeight: menuMinHeight } : undefined}
             className="bg-card flex flex-col rounded-t-[clamp(1.25rem,4vw,2rem)] fixed bottom-0 left-0 right-0 z-50 outline-none mx-auto w-full sm:max-w-[540px] md:max-w-[600px] lg:max-w-[640px] xl:max-w-[720px] max-h-[min(88vh,48rem)] will-change-transform"
           >
+            <Drawer.Title className="sr-only">
+              {activeSection ? 'Detail pengaturan' : 'Pengaturan akun'}
+            </Drawer.Title>
+            <Drawer.Description className="sr-only">
+              Kelola profil, langganan, backup data, dan preferensi aplikasi.
+            </Drawer.Description>
             <div className="mx-auto mt-[clamp(0.5rem,1.5vw,0.75rem)] mb-0 h-[clamp(0.25rem,0.8vw,0.375rem)] w-[clamp(2.5rem,8vw,3rem)] flex-shrink-0 rounded-full bg-muted-foreground/20" />
 
             {/* Header row */}
@@ -505,35 +511,46 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                       {/* Divider */}
                       <div className="mb-[clamp(0.375rem,1.5vw,0.625rem)] h-px bg-border" />
 
-                      <div className="mb-3 rounded-2xl border border-border bg-secondary/50 p-3.5">
+                      <div className={`mb-4 rounded-2xl border p-3.5 ${
+                        backupStatus?.connected
+                          ? 'border-primary/20 bg-primary/[0.06]'
+                          : 'border-border bg-secondary/50'
+                      }`}>
                         <div className="flex items-start gap-3">
-                          <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
+                          <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                            backupStatus?.connected ? 'bg-primary/12 text-primary' : 'bg-muted text-muted-foreground'
+                          }`}>
                             <Database size={18} />
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-bold text-foreground">Penyimpanan Data</p>
                             <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                              Data tersimpan aman di server kami (PostgreSQL).
+                              Data utama tersimpan aman di server kami.
                               {backupStatusLoading
                                 ? ' Memeriksa status backup…'
                                 : backupStatus?.connected
-                                  ? ' Backup ke Google Spreadsheet aktif.'
-                                  : ' Backup ke Google Spreadsheet belum diaktifkan.'}
+                                  ? ' Backup Google Spreadsheet aktif.'
+                                  : ' Backup Google Spreadsheet belum aktif.'}
                             </p>
                           </div>
-                          <CheckCircle2 size={16} className="mt-1 shrink-0 text-primary" />
+                          {backupStatus?.connected ? (
+                            <CheckCircle2 size={16} aria-label="Backup aktif" className="mt-1 shrink-0 text-primary" />
+                          ) : (
+                            <CircleAlert size={16} aria-label="Backup belum aktif" className="mt-1 shrink-0 text-muted-foreground" />
+                          )}
                         </div>
                       </div>
 
-                      {/* Menu items */}
-                      <div className="space-y-0.5">
+                      {/* Account actions */}
+                      <div className="space-y-1">
+                        <p className="px-3 text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                          Akun
+                        </p>
                         {[
-                          { key: 'name' as const,     icon: User,  label: 'Ganti Nama' },
-                          { key: 'password' as const, icon: Lock,  label: 'Ganti Password' },
-                          { key: 'phone' as const,    icon: Phone, label: 'Ganti Nomor HP' },
-                          { key: 'subscription' as const, icon: Crown, label: 'Informasi Langganan' },
-                          { key: 'feedback' as const, icon: MessageSquare, label: 'Kirim Feedback' },
-                        ].map(({ key, icon: Icon, label }) => (
+                          { key: 'name' as const, icon: User, label: 'Ganti Nama', description: 'Nama yang tampil di aplikasi' },
+                          { key: 'password' as const, icon: Lock, label: 'Ganti Password', description: 'Amankan akses ke akunmu' },
+                          { key: 'phone' as const, icon: Phone, label: 'Ganti Nomor HP', description: profile?.phone ? profile.phone : 'Tambahkan nomor untuk melengkapi profil' },
+                        ].map(({ key, icon: Icon, label, description }) => (
                           <button
                             key={key}
                             onClick={() => handleOpenSection(key)}
@@ -542,8 +559,36 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                             <div className="flex h-[clamp(2.25rem,7vw,2.5rem)] w-[clamp(2.25rem,7vw,2.5rem)] flex-shrink-0 items-center justify-center rounded-xl border border-border bg-secondary">
                               <Icon size={18} className="text-muted-foreground w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
                             </div>
-                            <span className="flex-1 font-bold text-foreground text-[clamp(0.875rem,3vw,1.125rem)]">{label}</span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block font-bold text-foreground text-[clamp(0.875rem,3vw,1.125rem)]">{label}</span>
+                              <span className="mt-0.5 block truncate text-xs font-medium text-muted-foreground">{description}</span>
+                            </span>
                             <ChevronRight size={16} className="text-muted-foreground/50 w-[clamp(1rem,3vw,1.25rem)] h-[clamp(1rem,3vw,1.25rem)]" strokeWidth={2.5} />
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Subscription and integrations */}
+                      <div className="mt-5 space-y-1">
+                        <p className="px-3 text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                          Langganan &amp; data
+                        </p>
+                        {[
+                          { key: 'subscription' as const, icon: Crown, label: 'Informasi Langganan', description: isPro ? 'Kelola paket PRO dan AI Credit' : 'Lihat paket dan manfaat PRO' },
+                        ].map(({ key, icon: Icon, label, description }) => (
+                          <button
+                            key={key}
+                            onClick={() => handleOpenSection(key)}
+                            className="flex min-h-14 w-full items-center gap-[clamp(0.625rem,2.5vw,0.875rem)] rounded-[clamp(0.625rem,2.5vw,1rem)] px-[clamp(0.625rem,2.5vw,1rem)] py-2 text-left transition-colors hover:bg-secondary active:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+                          >
+                            <div className="flex h-[clamp(2.25rem,7vw,2.5rem)] w-[clamp(2.25rem,7vw,2.5rem)] flex-shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
+                              <Icon size={18} className="text-primary" strokeWidth={2.2} />
+                            </div>
+                            <span className="min-w-0 flex-1">
+                              <span className="block font-bold text-foreground text-[clamp(0.875rem,3vw,1.125rem)]">{label}</span>
+                              <span className="mt-0.5 block truncate text-xs font-medium text-muted-foreground">{description}</span>
+                            </span>
+                            <ChevronRight size={16} className="text-muted-foreground/50" strokeWidth={2.5} />
                           </button>
                         ))}
                         <button
@@ -553,7 +598,12 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                           <div className="flex h-[clamp(2.25rem,7vw,2.5rem)] w-[clamp(2.25rem,7vw,2.5rem)] flex-shrink-0 items-center justify-center rounded-xl border border-border bg-secondary">
                             <Sheet size={18} className="text-muted-foreground w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
                           </div>
-                          <span className="flex-1 font-bold text-foreground text-[clamp(0.875rem,3vw,1.125rem)]">Backup Spreadsheet</span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block font-bold text-foreground text-[clamp(0.875rem,3vw,1.125rem)]">Backup Spreadsheet</span>
+                            <span className="mt-0.5 block truncate text-xs font-medium text-muted-foreground">
+                              {backupStatus?.connected ? 'Google Spreadsheet terhubung' : 'Simpan salinan ke Google Spreadsheet'}
+                            </span>
+                          </span>
                           <ChevronRight size={16} className="text-muted-foreground/50 w-[clamp(1rem,3vw,1.25rem)] h-[clamp(1rem,3vw,1.25rem)]" strokeWidth={2.5} />
                         </button>
                       </div>
@@ -562,7 +612,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                           theme preference saved by main.tsx boot. Lives below the
                           menu and above the destructive divider so accidental
                           taps force-clear plugins can't reach it. */}
-                      <div className="space-y-2 pt-3">
+                      <div className="space-y-2 pt-5">
                         <h3 className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest px-[clamp(0.75rem,3vw,1.25rem)]">
                           Tampilan
                         </h3>

@@ -11,6 +11,26 @@
 //   3. If refresh fails, signs the user out so AuthContext redirects to login.
 import { supabase } from './supabase';
 
+type ApiLogLevel = 'info' | 'warn' | 'error';
+
+function logApi(level: ApiLogLevel, event: string, fields: Record<string, unknown> = {}) {
+  if (import.meta.env.PROD && level === 'info') return;
+  const payload = { scope: 'api', event, ...fields };
+  // Keep logs machine-readable in production while avoiding tokens and bodies.
+  console[level](JSON.stringify(payload));
+}
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string,
+    public readonly status?: number,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 const configuredApiBase = (import.meta.env.VITE_API_SERVER_URL as string | undefined)?.replace(/\/$/, '');
 // The frontend and API are separate Vercel projects in production. Keep local
 // development on the relative /api path so Vite can proxy to localhost:8080,
@@ -61,12 +81,12 @@ async function refreshToken(): Promise<string | null> {
     try {
       const { data: { session }, error } = await supabase.auth.refreshSession();
       if (error) {
-        console.warn('[apiClient] Session refresh failed:', error.message);
+        logApi('warn', 'auth.refresh_failed', { message: error.message });
         return null;
       }
       return session?.access_token ?? null;
     } catch (err) {
-      console.warn('[apiClient] Session refresh threw:', err);
+      logApi('warn', 'auth.refresh_threw', { message: err instanceof Error ? err.message : 'unknown' });
       return null;
     } finally {
       refreshPromise = null;
@@ -86,7 +106,7 @@ async function handle<T>(res: Response): Promise<T> {
   // otherwise look like a successful empty result.
   const contentType = res.headers.get('content-type') ?? '';
   if (contentType.includes('text/html')) {
-    throw new Error('WRONG_RESPONSE_HTML');
+    throw new ApiError('Server mengembalikan respons yang tidak valid.', 'WRONG_RESPONSE_HTML', res.status);
   }
 
   // Vercel returns plain-text "DEPLOYMENT_NOT_FOUND" with a 404 when the
@@ -95,7 +115,7 @@ async function handle<T>(res: Response): Promise<T> {
   if (res.status === 404) {
     const vercelError = res.headers.get('x-vercel-error');
     if (vercelError === 'DEPLOYMENT_NOT_FOUND') {
-      throw new Error('SERVER_NOT_DEPLOYED');
+      throw new ApiError('Server belum tersedia.', 'SERVER_NOT_DEPLOYED', res.status);
     }
     // Generic 404 from a deployed server (route not found) — fall through.
   }
@@ -118,7 +138,7 @@ async function handle<T>(res: Response): Promise<T> {
     ) {
       throw new SpreadsheetApiError(code, body?.message ?? code);
     }
-    throw new Error(code ?? `Request failed with status ${res.status}`);
+    throw new ApiError(body?.message ?? `Request failed with status ${res.status}`, code ?? 'HTTP_ERROR', res.status);
   }
   return (body?.data ?? body) as T;
 }
@@ -126,6 +146,8 @@ async function handle<T>(res: Response): Promise<T> {
 async function fetchWithAuth<T>(path: string, init: RequestInit): Promise<T> {
   const token = await getToken();
   const url = `${API_BASE}/api${path}`;
+  const startedAt = performance.now();
+  const method = init.method ?? 'GET';
 
   let res: Response;
   try {
@@ -141,10 +163,19 @@ async function fetchWithAuth<T>(path: string, init: RequestInit): Promise<T> {
     // unreachable. Surface a descriptive error instead of an untyped TypeError.
     const isCors = networkErr instanceof TypeError && networkErr.message.toLowerCase().includes('cors');
     if (isCors) {
-      throw new Error('CORS_BLOCKED');
+      logApi('error', 'request.cors_blocked', { method, path });
+      throw new ApiError('Koneksi ke server diblokir.', 'CORS_BLOCKED');
     }
-    throw new Error('NETWORK_ERROR');
+    logApi('warn', 'request.network_error', { method, path });
+    throw new ApiError('Tidak dapat terhubung ke server.', 'NETWORK_ERROR');
   }
+
+  logApi(res.ok ? 'info' : 'warn', 'request.completed', {
+    method,
+    path,
+    status: res.status,
+    durationMs: Math.round(performance.now() - startedAt),
+  });
 
   if (res.status === 401) {
     const newToken = await refreshToken();
@@ -159,14 +190,14 @@ async function fetchWithAuth<T>(path: string, init: RequestInit): Promise<T> {
           },
         });
       } catch {
-        throw new Error('NETWORK_ERROR');
+        throw new ApiError('Tidak dapat terhubung ke server.', 'NETWORK_ERROR');
       }
       return handle<T>(retryRes);
     }
 
     // Refresh failed: clear the session so AuthContext sees the user as signed
     // out and AuthGuard redirects to /login.
-    console.warn('[apiClient] Auth refresh failed, signing out');
+    logApi('warn', 'auth.sign_out_after_refresh_failure');
     await supabase.auth.signOut();
   }
 

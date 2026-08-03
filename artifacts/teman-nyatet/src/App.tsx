@@ -33,6 +33,15 @@ const Toaster = React.lazy(() =>
   })),
 );
 
+function logClientError(event: string, error: unknown, context?: string) {
+  console.error(JSON.stringify({
+    scope: 'client',
+    event,
+    message: error instanceof Error ? error.message : String(error),
+    ...(context ? { context } : {}),
+  }));
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -65,7 +74,7 @@ class AppErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: unknown, info: React.ErrorInfo) {
-    console.error('[AppErrorBoundary] Render failed:', error, info.componentStack);
+    logClientError('render_failed', error, info.componentStack ?? undefined);
   }
 
   private handleReload = () => {

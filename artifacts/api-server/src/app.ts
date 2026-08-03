@@ -105,4 +105,16 @@ app.get("/", (_req, res) => {
 
 app.use("/api", router);
 
+// Last-resort JSON error boundary: keep request failures isolated from the
+// process and make them diagnosable without exposing stack traces or secrets.
+app.use((err: unknown, req: any, res: any, _next: unknown) => {
+  const error = err instanceof Error ? err : new Error(String(err));
+  req.log?.error({ err: error, route: req.originalUrl }, "request failed");
+  if (res.headersSent) return;
+  res.status((err as any)?.statusCode ?? 500).json({
+    error: "INTERNAL_SERVER_ERROR",
+    message: "Terjadi kesalahan pada server.",
+  });
+});
+
 export default app;

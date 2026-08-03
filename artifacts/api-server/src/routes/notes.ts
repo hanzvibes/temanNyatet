@@ -9,6 +9,7 @@ import {
   ValidationError,
 } from '../lib/validate.js';
 import { consumeCredit, CreditsExhaustedError, getCreditBalance } from '../lib/credit-service.js';
+import { syncNoteLinks } from '../lib/note-link-sync.js';
 
 const router: IRouter = Router();
 const TITLE_MAX = 200;
@@ -43,6 +44,9 @@ router.post('/notes', requireAuth, userRateLimit, async (req, res) => {
     const color = optionalString(body.color, 'color', 100);
     const row = await createData('notes', req.userId!, { title, content, tags, color });
     res.status(201).json({ data: row });
+    void syncNoteLinks(req.userId!, title, content, req.log).catch((syncError) => {
+      req.log.warn({ err: syncError }, 'Automatic note link sync failed');
+    });
   } catch (err) {
     if (err instanceof ValidationError) {
       res.status(400).json({ error: err.message });
@@ -68,6 +72,11 @@ router.put('/notes/:id', requireAuth, userRateLimit, async (req, res) => {
       return;
     }
     res.status(200).json({ data: row });
+    if ('title' in updates || 'content' in updates) {
+      void syncNoteLinks(req.userId!, updates.title ?? row.title, updates.content ?? row.content, req.log).catch((syncError) => {
+        req.log.warn({ err: syncError }, 'Automatic note link sync failed');
+      });
+    }
   } catch (err) {
     if (err instanceof ValidationError) {
       res.status(400).json({ error: err.message });

@@ -9,6 +9,17 @@ import { normalizeNotes, noteTimestamp } from '@/lib/noteData';
 // from another device or session still show up without a manual refresh.
 const POLL_INTERVAL_MS = 15000;
 const REFETCH_EVENT = 'teman-nyatet:refetch:notes';
+const REFETCH_LINKS_EVENT = 'teman-nyatet:refetch:links';
+
+function refreshLinksAfterNoteSave() {
+  // The API persists the note response first and syncs links in the
+  // background. Refresh now for fast feedback, then once more after the
+  // background sync has had time to finish.
+  window.dispatchEvent(new CustomEvent(REFETCH_LINKS_EVENT));
+  window.setTimeout(() => {
+    window.dispatchEvent(new CustomEvent(REFETCH_LINKS_EVENT));
+  }, 750);
+}
 
 // ── Module-level cache ────────────────────────────────────────────────────────
 // Why: wouter's `<Switch>` only renders the matched route. Navigating between
@@ -106,6 +117,7 @@ export function useNotes(userId?: string) {
       setNotes(prev => [data, ...prev]);
       toast.success('Catatan disimpan!');
       window.dispatchEvent(new CustomEvent(REFETCH_EVENT));
+      refreshLinksAfterNoteSave();
       return data;
     } catch (err) {
       toast.error('Gagal menyimpan catatan');
@@ -118,6 +130,7 @@ export function useNotes(userId?: string) {
       const data = await apiPut<Note>(`/notes/${id}`, updates);
       setNotes(prev => prev.map(n => n.id === id ? data : n));
       toast.success('Catatan diperbarui!');
+      refreshLinksAfterNoteSave();
       return data;
     } catch (err) {
       toast.error('Gagal memperbarui catatan');

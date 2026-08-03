@@ -154,6 +154,38 @@ function SummaryDetails({
   );
 }
 
+function SummarySkeleton() {
+  return (
+    <div
+      className="space-y-4 py-4"
+      role="status"
+      aria-live="polite"
+      aria-label="Memuat ringkasan keuangan"
+    >
+      <div className="space-y-2">
+        <div className="h-4 w-11/12 animate-pulse rounded-full bg-muted" />
+        <div className="h-3 w-2/5 animate-pulse rounded-full bg-muted" />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="h-16 animate-pulse rounded-xl bg-income/10" />
+        <div className="h-16 animate-pulse rounded-xl bg-expense/10" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <div className="h-3 w-32 animate-pulse rounded-full bg-muted" />
+          <div className="h-3 w-full animate-pulse rounded-full bg-muted" />
+          <div className="h-3 w-4/5 animate-pulse rounded-full bg-muted" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-3 w-24 animate-pulse rounded-full bg-muted" />
+          <div className="h-3 w-full animate-pulse rounded-full bg-muted" />
+          <div className="h-3 w-3/4 animate-pulse rounded-full bg-muted" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function TransactionSummaryCard({
   period,
   summary,
@@ -198,11 +230,11 @@ export default function TransactionSummaryCard({
                 <span className="truncate text-[10px] font-bold text-muted-foreground">{periodLabel[period.periodType]}</span>
               </div>
               {loading ? (
-                <p className="mt-0.5 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                  <Loader2 size={12} className="animate-spin text-primary" />
-                  Memeriksa ringkasan…
-                </p>
-              ) : loadError || generateError ? (
+                <div className="mt-2 space-y-1.5" role="status" aria-label="Memuat ringkasan AI">
+                  <div className="h-2.5 w-32 animate-pulse rounded-full bg-primary/20" />
+                  <div className="h-2.5 w-20 animate-pulse rounded-full bg-primary/10" />
+                </div>
+              ) : loadError || (generateError && !summary) ? (
                 <p className="mt-0.5 truncate text-xs font-semibold text-destructive">
                   Gagal memuat ringkasan
                 </p>
@@ -277,9 +309,8 @@ export default function TransactionSummaryCard({
         </div>
 
         {loading && (
-          <div className="relative flex items-center gap-2 border-t border-primary/15 px-4 py-4 text-sm text-muted-foreground sm:px-5">
-            <Loader2 size={16} className="animate-spin text-primary" />
-            Memeriksa ringkasan terakhir…
+          <div className="relative border-t border-primary/15 px-4 sm:px-5">
+            <SummarySkeleton />
           </div>
         )}
 
@@ -295,7 +326,7 @@ export default function TransactionSummaryCard({
                   Coba lagi
                 </Button>
               </div>
-            ) : generateError ? (
+            ) : generateError && !summary ? (
               <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <p className="flex items-start gap-2 text-sm font-medium text-destructive">
                   <AlertCircle size={16} className="mt-0.5 shrink-0" />

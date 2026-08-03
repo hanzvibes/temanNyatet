@@ -193,7 +193,7 @@ export default function CatatanPage() {
         setCreditsExhaustedOpen(true);
         return;
       }
-      setSummaryError('Ringkasan belum berhasil dibuat. Coba lagi.');
+      setSummaryError('Ringkasan belum berhasil dibuat. Periksa koneksi lalu coba lagi.');
     } finally {
       setIsSummarizing(false);
     }
@@ -577,7 +577,7 @@ export default function CatatanPage() {
                                   </div>
 
                                   <AnimatePresence mode="wait" initial={false}>
-                                    {isSummarizing ? (
+                                    {isSummarizing && !summary ? (
                                       <motion.div
                                         key="loading"
                                         initial={{ opacity: 0 }}
@@ -604,25 +604,39 @@ export default function CatatanPage() {
                                         ))}
                                       </motion.div>
                                     ) : summary ? (
-                                      <motion.p
+                                      <motion.div
                                         key="result"
                                         initial={{ opacity: 0, y: 4 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.3, delay: 0.04, ease: [0.32, 0.72, 0, 1] }}
-                                        className="text-sm leading-relaxed text-foreground/85"
+                                        className="space-y-2"
                                       >
-                                        {summary}
-                                      </motion.p>
+                                        <p className="text-sm leading-relaxed text-foreground/85">{summary}</p>
+                                        {isSummarizing && (
+                                          <p className="flex items-center gap-1.5 text-[11px] font-semibold text-primary/80" role="status" aria-live="polite">
+                                            <Loader2 size={12} className="animate-spin" />
+                                            Memperbarui ringkasan…
+                                          </p>
+                                        )}
+                                      </motion.div>
                                     ) : (
-                                      <motion.p
+                                      <motion.div
                                         key="error"
                                         initial={{ opacity: 0, y: 4 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ duration: 0.3, delay: 0.04 }}
-                                        className="text-sm leading-relaxed text-destructive"
+                                        className="space-y-2"
                                       >
-                                        {summaryError}
-                                      </motion.p>
+                                        <p className="text-sm leading-relaxed text-destructive">{summaryError}</p>
+                                        <button
+                                          type="button"
+                                          onClick={handleSummarize}
+                                          disabled={isSummarizing}
+                                          className="min-h-10 rounded-lg px-2 text-xs font-bold text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                        >
+                                          {isSummarizing ? 'Mencoba lagi…' : 'Coba lagi'}
+                                        </button>
+                                      </motion.div>
                                     )}
                                   </AnimatePresence>
                                 </div>

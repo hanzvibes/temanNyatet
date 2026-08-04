@@ -121,11 +121,12 @@
   --expense: 0 84% 60%;        /* #ef4444 — error red */
 
   --app-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --radius: 0.5rem;             /* 8px — Bills on Chain standard radius */
+  --radius: 0.75rem;            /* 12px — consistent rounded scale */
 
-  --shadow-1: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-2: 0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-3: 0 10px 15px -3px rgba(0, 0, 0, 0.10), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  /* Ultra-soft, warm-tinted layered shadows for a clean premium feel */
+  --shadow-1: 0 1px 3px rgba(30, 41, 59, 0.04), 0 1px 2px rgba(30, 41, 59, 0.03);
+  --shadow-2: 0 4px 16px rgba(30, 41, 59, 0.07), 0 2px 6px rgba(30, 41, 59, 0.04);
+  --shadow-3: 0 8px 32px rgba(30, 41, 59, 0.09), 0 4px 12px rgba(30, 41, 59, 0.06);
 
   /* Bottom-nav clearance.
      BottomSheetNav is anchored `bottom: 20px` with
@@ -214,9 +215,9 @@
   --todo-text: 217 80% 72%;
   --linksaver-text: 220 9% 70%;
 
-  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.30), 0 1px 2px rgba(0, 0, 0, 0.18);
-  --shadow-2: 0 4px 10px rgba(0, 0, 0, 0.40), 0 2px 4px rgba(0, 0, 0, 0.20);
-  --shadow-3: 0 10px 24px rgba(0, 0, 0, 0.50), 0 4px 8px rgba(0, 0, 0, 0.24);
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-2: 0 4px 16px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.20);
+  --shadow-3: 0 8px 32px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.28);
 
   /* Dark note cards — same hue as light but dark tints */
   --note-card-1: hsl(43 30% 20%);

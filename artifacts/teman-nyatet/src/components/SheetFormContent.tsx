@@ -37,6 +37,7 @@ import {
 } from '@/lib/database.types';
 import { toast } from 'sonner';
 import { getNoteColor, NOTE_COLORS } from '@/lib/noteColors';
+import VoiceRecordButton from '@/components/VoiceRecordButton';
 
 // ─── Shared input style helpers ───────────────────────────────────────────────
 // [color-scheme:light] + dark:[color-scheme:dark] keeps browser-native controls
@@ -83,6 +84,14 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
   const tags = form.watch('tags');
   const selectedColor = form.watch('color');
 
+  const handleVoiceTranscript = (text: string) => {
+    const current = form.getValues('content');
+    form.setValue('content', current ? `${current}\n${text}` : text, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-3 h-full">
       <input
@@ -98,6 +107,10 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
       {form.formState.errors.content && (
         <FormError size="xs">{form.formState.errors.content.message}</FormError>
       )}
+      <VoiceRecordButton
+        onTranscript={handleVoiceTranscript}
+        className="shrink-0"
+      />
       {/* Tags */}
       <div className="flex flex-wrap gap-2">
         {NOTE_TAGS.map(({ name: tag, icon: Icon }) => {

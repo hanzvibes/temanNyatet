@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import App from './App';
 import type { ThemeMode } from '@/hooks/useTheme';
 import { resolveTheme } from '@/hooks/useTheme';
+import { applyAppearanceToDom, FONT_FAMILIES, RADIUS_VALUES, type AppearancePrefs } from '@/hooks/useAppearance';
 import './index.css';
 
 // ── Theme bootstrap (runs synchronously before first paint) ─────────────────
@@ -24,6 +25,25 @@ import './index.css';
   }
   const effective = resolveTheme(mode);
   document.documentElement.classList.toggle('dark', effective === 'dark');
+})();
+
+// ── Appearance bootstrap (runs synchronously before first paint) ─────────────
+// Reads font and radius preferences from localStorage and applies CSS variable
+// overrides to <html> so the first paint uses the user's chosen font and
+// corner radius without any flash.
+(function bootAppearance() {
+  const prefs: AppearancePrefs = { font: 'inter', radius: 'default' };
+  try {
+    const raw = window.localStorage.getItem('teman-nyatet:appearance');
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<AppearancePrefs>;
+      if (parsed.font && parsed.font in FONT_FAMILIES) prefs.font = parsed.font;
+      if (parsed.radius && parsed.radius in RADIUS_VALUES) prefs.radius = parsed.radius;
+    }
+  } catch {
+    // Ignore storage / parse errors; defaults apply.
+  }
+  applyAppearanceToDom(prefs);
 })();
 
 // Attach Supabase access token to all generated API hook requests.

@@ -5,9 +5,9 @@ import { useLocation } from 'wouter';
 import { supabase } from '@/lib/supabase';
 import { apiGet, apiUpload } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet, MessageSquare, Crown, Calendar, Sparkles, Database, CheckCircle2, CircleAlert } from 'lucide-react';
+import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet, MessageSquare, Crown, Calendar, Sparkles, Database, CheckCircle2, CircleAlert, Paintbrush } from 'lucide-react';
 import { toast } from 'sonner';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import AppearanceSection from '@/components/AppearanceSection';
 import { Button } from '@/components/ui/button';
 import { openPaymentCheckout, type PaymentPlan } from '@/lib/payment';
 import TopUpSection from '@/components/TopUpSection';
@@ -17,7 +17,7 @@ import { publishOverlayState } from '@/lib/overlay-state';
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-type ActiveSection = null | 'name' | 'password' | 'phone' | 'feedback' | 'subscription' | 'topup';
+type ActiveSection = null | 'name' | 'password' | 'phone' | 'feedback' | 'subscription' | 'topup' | 'appearance';
 
 interface SubscriptionStatus {
   subscription_status: 'pending' | 'active' | 'archived';
@@ -608,17 +608,24 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                         </button>
                       </div>
 
-                      {/* Tema — three-button segmented control reading/writing the
-                          theme preference saved by main.tsx boot. Lives below the
-                          menu and above the destructive divider so accidental
-                          taps force-clear plugins can't reach it. */}
-                      <div className="space-y-2 pt-5">
-                        <h3 className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest px-[clamp(0.75rem,3vw,1.25rem)]">
+                      {/* Tampilan — navigates to the Appearance section */}
+                      <div className="mt-5 space-y-1">
+                        <p className="px-3 text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-muted-foreground">
                           Tampilan
-                        </h3>
-                        <div className="px-[clamp(0.25rem,1vw,0.5rem)]">
-                          <ThemeToggle />
-                        </div>
+                        </p>
+                        <button
+                          onClick={() => handleOpenSection('appearance')}
+                          className="flex min-h-14 w-full items-center gap-[clamp(0.625rem,2.5vw,0.875rem)] rounded-[clamp(0.625rem,2.5vw,1rem)] px-[clamp(0.625rem,2.5vw,1rem)] py-2 hover:bg-secondary active:bg-secondary/80 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+                        >
+                          <div className="flex h-[clamp(2.25rem,7vw,2.5rem)] w-[clamp(2.25rem,7vw,2.5rem)] flex-shrink-0 items-center justify-center rounded-xl border border-border bg-secondary">
+                            <Paintbrush size={18} className="text-muted-foreground w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
+                          </div>
+                          <span className="min-w-0 flex-1">
+                            <span className="block font-bold text-foreground text-[clamp(0.875rem,3vw,1.125rem)]">Tampilan</span>
+                            <span className="mt-0.5 block truncate text-xs font-medium text-muted-foreground">Font, sudut, dan tema</span>
+                          </span>
+                          <ChevronRight size={16} className="text-muted-foreground/50 w-[clamp(1rem,3vw,1.25rem)] h-[clamp(1rem,3vw,1.25rem)]" strokeWidth={2.5} />
+                        </button>
                       </div>
 
                       {/* Divider */}
@@ -1011,6 +1018,10 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                       <TopUpSection
                         creditBalance={subStatus?.credit_balance ?? 0}
                       />
+                    </div>
+                  ) : activeSection === 'appearance' ? (
+                    <div className="pt-[clamp(0.25rem,1vw,0.5rem)]">
+                      <AppearanceSection />
                     </div>
                   ) : (
                     <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">

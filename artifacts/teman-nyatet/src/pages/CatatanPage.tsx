@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { getNoteColor, NOTE_COLORS, NOTE_COLOR_PALETTE } from '@/lib/noteColors';
 import { apiGet, apiPost } from '@/lib/apiClient';
 import { formatNoteDate } from '@/lib/noteData';
+import VoiceRecordButton from '@/components/VoiceRecordButton';
 import {
   Dialog,
   DialogContent,
@@ -293,6 +294,13 @@ export default function CatatanPage() {
     setSummaryError(null);
   };
 
+  /** Appends (or sets) transcribed voice text into the note content field. */
+  const handleVoiceTranscript = (text: string) => {
+    const current = form.getValues('content');
+    const next = current ? `${current}\n${text}` : text;
+    form.setValue('content', next, { shouldValidate: true });
+  };
+
   return (
     <div className="flex min-h-dvh h-full flex-col bg-background pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
 
@@ -464,6 +472,10 @@ export default function CatatanPage() {
                               {form.formState.errors.content.message}
                             </FormError>
                           )}
+                          <VoiceRecordButton
+                            onTranscript={handleVoiceTranscript}
+                            className="pt-1"
+                          />
 
                           {/* Tags */}
                           <div>
@@ -792,6 +804,11 @@ export default function CatatanPage() {
                 {form.formState.errors.content && (
                   <FormError>{form.formState.errors.content.message}</FormError>
                 )}
+
+                {/* Voice input */}
+                <VoiceRecordButton
+                  onTranscript={handleVoiceTranscript}
+                />
 
                 {/* Tags */}
                 <div>

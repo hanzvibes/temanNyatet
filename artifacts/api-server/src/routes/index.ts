@@ -15,6 +15,8 @@ import creditsRouter from './credits.js';
 import paymentRouter from './payment.js';
 import creditPaymentRouter from './credit-payment.js';
 import sumopodWebhookRouter from './sumopod-webhook.js';
+import transcribeRouter from './transcribe.js';
+
 
 const router: IRouter = Router();
 
@@ -34,5 +36,6 @@ router.use(creditsRouter);
 router.use(paymentRouter);
 router.use(creditPaymentRouter);
 router.use(sumopodWebhookRouter);
+router.use(transcribeRouter);
 
 export default router;

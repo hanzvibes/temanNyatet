@@ -296,9 +296,15 @@ export default function CatatanPage() {
 
   /** Appends (or sets) transcribed voice text into the note content field. */
   const handleVoiceTranscript = (text: string) => {
+    // The Voice AI control belongs to the page, so it can be used before the
+    // note drawer is opened. In that case, open a fresh note editor first.
+    if (!isFormOpen) handleOpenForm();
     const current = form.getValues('content');
     const next = current ? `${current}\n${text}` : text;
-    form.setValue('content', next, { shouldValidate: true });
+    form.setValue('content', next, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
   return (
@@ -384,6 +390,14 @@ export default function CatatanPage() {
             )}
           </div>
         )}
+      </div>
+
+      {/* Voice AI — owned by the Catatan page, not by either bottom sheet. */}
+      <div className="pointer-events-auto fixed bottom-[calc(7.5rem+env(safe-area-inset-bottom))] right-4 z-[45] sm:right-6 lg:bottom-6">
+        <VoiceRecordButton
+          onTranscript={handleVoiceTranscript}
+          className="flex-row-reverse rounded-full border border-border/60 bg-card/95 py-1 pl-2 pr-1 shadow-elevation-2 backdrop-blur-xl"
+        />
       </div>
 
       {/* ── Note Detail Modal ─────────────────────────────────────────────── */}
@@ -472,10 +486,6 @@ export default function CatatanPage() {
                               {form.formState.errors.content.message}
                             </FormError>
                           )}
-                          <VoiceRecordButton
-                            onTranscript={handleVoiceTranscript}
-                            className="pt-1"
-                          />
 
                           {/* Tags */}
                           <div>
@@ -804,11 +814,6 @@ export default function CatatanPage() {
                 {form.formState.errors.content && (
                   <FormError>{form.formState.errors.content.message}</FormError>
                 )}
-
-                {/* Voice input */}
-                <VoiceRecordButton
-                  onTranscript={handleVoiceTranscript}
-                />
 
                 {/* Tags */}
                 <div>

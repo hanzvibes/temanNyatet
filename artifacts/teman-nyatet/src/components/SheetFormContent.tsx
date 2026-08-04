@@ -3,7 +3,7 @@
  * shown inside BottomSheetNav when the user pulls the sheet up.
  * Each form is its own component so only the active hook is called.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useNotes }        from '@/hooks/useNotes';
 import { useTransactions } from '@/hooks/useTransactions';
@@ -82,23 +82,6 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
 
   const tags = form.watch('tags');
   const selectedColor = form.watch('color');
-
-  useEffect(() => {
-    const handleVoiceTranscript = (event: Event) => {
-      const text = (event as CustomEvent<{ text?: string }>).detail?.text;
-      if (!text) return;
-      const current = form.getValues('content');
-      form.setValue('content', current ? `${current}\n${text}` : text, {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
-    };
-
-    window.addEventListener('teman-nyatet:voice-transcript', handleVoiceTranscript);
-    return () => {
-      window.removeEventListener('teman-nyatet:voice-transcript', handleVoiceTranscript);
-    };
-  }, [form]);
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-3 h-full">

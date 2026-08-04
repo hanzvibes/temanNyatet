@@ -3,7 +3,7 @@
  * shown inside BottomSheetNav when the user pulls the sheet up.
  * Each form is its own component so only the active hook is called.
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useNotes }        from '@/hooks/useNotes';
 import { useTransactions } from '@/hooks/useTransactions';
@@ -37,7 +37,6 @@ import {
 } from '@/lib/database.types';
 import { toast } from 'sonner';
 import { getNoteColor, NOTE_COLORS } from '@/lib/noteColors';
-import VoiceRecordButton from '@/components/VoiceRecordButton';
 
 // ─── Shared input style helpers ───────────────────────────────────────────────
 // [color-scheme:light] + dark:[color-scheme:dark] keeps browser-native controls
@@ -84,13 +83,22 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
   const tags = form.watch('tags');
   const selectedColor = form.watch('color');
 
-  const handleVoiceTranscript = (text: string) => {
-    const current = form.getValues('content');
-    form.setValue('content', current ? `${current}\n${text}` : text, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-  };
+  useEffect(() => {
+    const handleVoiceTranscript = (event: Event) => {
+      const text = (event as CustomEvent<{ text?: string }>).detail?.text;
+      if (!text) return;
+      const current = form.getValues('content');
+      form.setValue('content', current ? `${current}\n${text}` : text, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    };
+
+    window.addEventListener('teman-nyatet:voice-transcript', handleVoiceTranscript);
+    return () => {
+      window.removeEventListener('teman-nyatet:voice-transcript', handleVoiceTranscript);
+    };
+  }, [form]);
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-3 h-full">
@@ -107,10 +115,6 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
       {form.formState.errors.content && (
         <FormError size="xs">{form.formState.errors.content.message}</FormError>
       )}
-      <VoiceRecordButton
-        onTranscript={handleVoiceTranscript}
-        className="shrink-0"
-      />
       {/* Tags */}
       <div className="flex flex-wrap gap-2">
         {NOTE_TAGS.map(({ name: tag, icon: Icon }) => {

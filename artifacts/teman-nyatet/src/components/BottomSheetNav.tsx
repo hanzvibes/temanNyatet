@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, useMotionValue, animate, AnimatePresence } from 'framer-motion';
+import { motion, useMotionValue, useTransform, animate, AnimatePresence } from 'framer-motion';
 import { Link, useLocation } from 'wouter';
 import { NotebookPen, Wallet, CheckSquare, Link2 } from 'lucide-react';
 import SheetFormContent from '@/components/SheetFormContent';
@@ -7,6 +7,7 @@ import { useHaptic, HAPTIC } from '@/hooks/useHaptic';
 import { useOrientation } from '@/hooks/useOrientation';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import type { TransactionType } from '@/lib/database.types';
+import VoiceRecordButton from '@/components/VoiceRecordButton';
 import {
   createBottomNavScrollState,
   getBottomNavMaxOffset,
@@ -314,6 +315,16 @@ export default function BottomSheetNav() {
   };
 
   const isOpen = snapState !== 'collapsed';
+  const voiceButtonBottom = useTransform(
+    h,
+    (height) => height + bottomGap + 16,
+  );
+
+  const handleVoiceTranscript = (text: string) => {
+    window.dispatchEvent(
+      new CustomEvent('teman-nyatet:voice-transcript', { detail: { text } }),
+    );
+  };
 
   return (
     <div className="lg:hidden">
@@ -469,6 +480,20 @@ export default function BottomSheetNav() {
           </div>
         </div>
       </motion.div>
+
+      {/* Voice AI — deliberately outside the drawer so it floats above the
+          bottom navigation and remains easy to reach while the note form is open. */}
+      {isOpen && location.startsWith('/catatan') && (
+        <motion.div
+          className="fixed right-4 z-[60] sm:right-6"
+          style={{ bottom: voiceButtonBottom }}
+        >
+          <VoiceRecordButton
+            onTranscript={handleVoiceTranscript}
+            className="flex-row-reverse rounded-full border border-border/60 bg-card/95 py-1 pl-2 pr-1 shadow-elevation-2 backdrop-blur-xl"
+          />
+        </motion.div>
+      )}
     </div>
   );
 }

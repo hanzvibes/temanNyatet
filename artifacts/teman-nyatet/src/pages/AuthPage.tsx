@@ -39,6 +39,11 @@ export default function AuthPage() {
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(isLogin ? loginSchema : registerSchema),
     defaultValues: { email: '', password: '', confirmPassword: '' },
+    // Validate as soon as a field is touched (not only on submit) so mobile
+    // users see format errors before the keyboard closes, instead of losing
+    // scroll position after tapping submit.
+    mode: 'onTouched',
+    reValidateMode: 'onChange',
   });
 
   useEffect(() => {

@@ -1,4 +1,5 @@
 import { Drawer } from 'vaul';
+import { Loader2 } from 'lucide-react';
 import type { UseFormReturn } from 'react-hook-form';
 import { FormError } from '@/components/PageStates';
 import { NOTE_TAGS } from '@/lib/categoryIcons';
@@ -46,8 +47,13 @@ export default function NoteFormSheet({
               </h3>
               <button
                 type="submit"
-                className="min-h-11 rounded-full bg-primary/12 px-5 py-2 text-sm font-bold text-primary transition-all hover:bg-primary/20 active:scale-95"
+                disabled={form.formState.isSubmitting}
+                aria-busy={form.formState.isSubmitting}
+                className="flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-primary/12 px-5 py-2 text-sm font-bold text-primary transition-all hover:bg-primary/20 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
               >
+                {form.formState.isSubmitting && (
+                  <Loader2 size={15} className="animate-spin" aria-hidden="true" />
+                )}
                 Simpan
               </button>
             </div>

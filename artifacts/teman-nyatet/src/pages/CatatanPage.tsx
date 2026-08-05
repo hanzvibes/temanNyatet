@@ -391,10 +391,10 @@ export default function CatatanPage() {
       </div>
 
       {/* Voice AI — owned by the Catatan page, not by either bottom sheet. */}
-      <div className="pointer-events-auto fixed bottom-[calc(7.5rem+env(safe-area-inset-bottom))] right-4 z-[60] sm:right-6 lg:bottom-6">
+      <div className="pointer-events-auto fixed bottom-[calc(7.5rem+env(safe-area-inset-bottom))] right-3 z-[60] sm:right-6 lg:bottom-6">
         <VoiceRecordButton
           onTranscript={handleVoiceTranscript}
-          className="flex-row-reverse rounded-full border border-border/60 bg-card/95 py-1 pl-2 pr-1 shadow-elevation-2 backdrop-blur-xl"
+          className="flex-row-reverse rounded-full border border-border/60 bg-card/95 py-1 pl-2 pr-1 shadow-elevation-2 backdrop-blur-xl sm:pl-3"
         />
       </div>
 

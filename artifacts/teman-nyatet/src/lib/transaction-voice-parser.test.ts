@@ -25,6 +25,22 @@ test('maps an Indonesian expense voice command into transaction fields', () => {
   );
 });
 
+test('parses the amount after the description, including spaced speech units', () => {
+  const expected = {
+    type: 'expense' as const,
+    amount: '20.000',
+    category: 'Makanan',
+    note: 'Kopi',
+    source: undefined,
+    date: undefined,
+  };
+
+  assert.deepEqual(parseTransactionVoiceTranscript('beli Kopi 20rb', NOW), expected);
+  assert.deepEqual(parseTransactionVoiceTranscript('20rb beli kopi', NOW), expected);
+  assert.deepEqual(parseTransactionVoiceTranscript('beli Kopi 20 rb', NOW), expected);
+  assert.deepEqual(parseTransactionVoiceTranscript('beli Kopi 20 ribu', NOW), expected);
+});
+
 test('supports income, numeric amounts, relative dates, and bank sources', () => {
   assert.deepEqual(
     parseTransactionVoiceTranscript('Pemasukan Rp 1.500.000 dari gaji tanggal 3 Agustus pakai BCA', NOW),

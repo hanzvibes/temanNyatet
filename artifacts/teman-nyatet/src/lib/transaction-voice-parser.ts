@@ -125,7 +125,13 @@ function normalizeText(text: string): string {
     .replace(/[“”"'`]/g, '')
     .replace(/[^\p{L}\p{N},./-]+/gu, ' ')
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim()
+    // SpeechRecognition may transcribe "20rb" as "20 rb". Keep monetary
+    // units attached so the digit parser treats the pair as one amount.
+    .replace(
+      /(\d(?:[\d.,]*\d)?)\s+(ribu|rb|juta|jt|miliar|milyar|m)\b/gi,
+      '$1$2',
+    );
 }
 
 function hasWord(text: string, word: string): boolean {

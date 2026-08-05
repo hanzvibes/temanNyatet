@@ -1,16 +1,19 @@
 # TemanNyatet
 
-A mobile-first productivity PWA for notes, finance tracking, todos, and link saving. Built in Indonesian.
+A productivity web app ("Catat sat-set, urusan beres") built with React + Vite (frontend) and Express (API server), backed by Supabase for auth and Google Sheets for data storage.
 
-## Stack
+## Project structure
 
-- **Frontend** (`artifacts/teman-nyatet`): React + Vite + Tailwind CSS + shadcn/ui, served on port 5000
-- **Backend** (`artifacts/api-server`): Express 5 + Drizzle ORM, served on port 8080
-- **Auth/DB**: Supabase (Postgres + Row Level Security + Google OAuth)
-- **Payments**: SumoPod
-- **Package manager**: pnpm (workspace monorepo)
+This is a pnpm workspace (monorepo):
 
-## Running the project
+```
+artifacts/teman-nyatet/   — React/Vite frontend (port 5000)
+artifacts/api-server/     — Express API server (port 8080)
+lib/                      — Shared libraries (db, api-client, etc.)
+pnpm-workspace.yaml       — Workspace + catalog config
+```
+
+## Running locally on Replit
 
 Two workflows are configured and start automatically:
 
@@ -19,58 +22,38 @@ Two workflows are configured and start automatically:
 | `artifacts/teman-nyatet: web` | `pnpm --filter @workspace/teman-nyatet run dev` | 5000 |
 | `artifacts/api-server: API Server` | `pnpm --filter @workspace/api-server run dev` | 8080 |
 
-## Install dependencies
+The Vite dev server proxies `/api` requests to `localhost:8080`, so the frontend and API work together seamlessly in dev without setting `VITE_API_SERVER_URL`.
 
+Install all dependencies from the repo root:
 ```bash
 pnpm install
 ```
 
-## Required secrets
+## Environment secrets
 
-All secrets are configured in the Replit environment:
+All secrets are managed via Replit Secrets. Required variables:
 
-| Secret | Description |
-|---|---|
-| `SUPABASE_URL` | Supabase project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (backend only) |
-| `VITE_SUPABASE_URL` | Supabase URL exposed to the frontend |
-| `VITE_SUPABASE_ANON_KEY` | Supabase anon key exposed to the frontend |
-| `GOOGLE_CLIENT_ID` | Google OAuth 2.0 client ID |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth 2.0 client secret |
-| `GOOGLE_OAUTH_STATE_SECRET` | HMAC signing secret for OAuth state |
-| `SESSION_SECRET` | Express session secret |
-| `DATABASE_URL` | Postgres connection string (for Drizzle) |
-| `OPENAI_API_KEY` | OpenAI API key |
-| `OPENAI_BASE_URL` | OpenAI base URL |
-| `OPENAI_MODEL` | OpenAI model name |
-| `CRON_SECRET` | Secret for cron job endpoints |
-| `MAYAR_WEBHOOK_SECRET` | SumoPod/Mayar webhook verification secret |
-| `GOOGLE_SERVICE_ACCOUNT_KEY` | Google service account JSON (Sheets integration) |
-| `GOOGLE_SHEETS_SPREADSHEET_ID` | Google Sheets spreadsheet ID |
+**API server** (`artifacts/api-server`):
+- `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` — Supabase project credentials
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — Google OAuth 2.0
+- `GOOGLE_OAUTH_STATE_SECRET` — HMAC signing secret for OAuth CSRF protection
+- `GOOGLE_SERVICE_ACCOUNT_KEY` / `GOOGLE_SHEETS_SPREADSHEET_ID` — Sheets backup
+- `MAYAR_WEBHOOK_SECRET` — Legacy payment webhook
+- `CRON_SECRET` — Auth for `/api/cron/archive-expired`
+- `OPENAI_API_KEY` / `OPENAI_BASE_URL` / `OPENAI_MODEL` — AI features
+- `DATABASE_URL` — Postgres connection (Supabase)
 
-## Database migrations
+**Frontend** (`artifacts/teman-nyatet`):
+- `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` — Supabase client credentials
 
-Supabase migrations are in `supabase/migrations/`. Run them in order via the Supabase SQL Editor.
+## Stack
 
-## Project structure
-
-```
-artifacts/
-  api-server/       # Express backend
-  teman-nyatet/     # React frontend (PWA)
-lib/
-  api-client-react/ # React Query hooks generated from API spec
-  api-spec/         # OpenAPI / API contract
-  api-zod/          # Zod schemas
-  db/               # Drizzle schema & migrations
-supabase/
-  migrations/       # Supabase SQL migrations
-docs/
-  architecture.md   # Arsitektur, alur data, dan impact refactor
-scripts/
-  post-merge.sh     # Runs after task-agent merges
-```
+- **Frontend**: React 19, Vite 7, Tailwind CSS 4, Radix UI, TanStack Query, Zustand, Wouter, Framer Motion
+- **Backend**: Express 5, Drizzle ORM, Pino logger, esbuild
+- **Auth**: Supabase Auth + Google OAuth
+- **Data**: Supabase (Postgres) + Google Sheets
+- **Payments**: SumoPod (sandbox)
 
 ## User preferences
 
-_None recorded yet._
+<!-- Add any personal preferences here -->

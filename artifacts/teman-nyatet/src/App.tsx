@@ -199,13 +199,37 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // Supabase can finish signing in before the route redirect effect above has
+  // updated the URL. Do not render /login during that small transition:
+  // MainLayout would otherwise see an authenticated user and mount the app
+  // navigation while Router is still rendering the login page underneath it.
+  // Keep this guard here (rather than navigating during render) so Wouter
+  // remains responsible for the actual URL change.
+  if (user && location === '/login') {
+    return (
+      <div className="min-h-dvh w-full flex flex-col items-center justify-center gap-3 bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+        <p className="text-xs font-semibold text-muted-foreground tracking-wide">Menyiapkan halaman utama…</p>
+      </div>
+    );
+  }
+
   return <>{children}</>;
 }
 
 function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuthContext();
   const [location] = useLocation();
-  const showNav = Boolean(user && profile && profile.subscription_status !== 'archived');
+  // Keep app navigation out of public/auth routes. During a successful login,
+  // auth state can update one render before the router moves from /login to
+  // /catatan; without this route check the bottom sheet appears over AuthPage.
+  const isPublicRoute = location === '/login' || location === '/auth/confirm';
+  const showNav = Boolean(
+    user &&
+    profile &&
+    profile.subscription_status !== 'archived' &&
+    !isPublicRoute,
+  );
   const { isLandscape } = useOrientation();
   const isSubscriptionPage = location === '/subscription';
 

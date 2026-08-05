@@ -37,6 +37,7 @@ import {
 } from '@/lib/database.types';
 import { toast } from 'sonner';
 import { getNoteColor, NOTE_COLORS } from '@/lib/noteColors';
+import VoiceRecordButton from '@/components/VoiceRecordButton';
 
 // ─── Shared input style helpers ───────────────────────────────────────────────
 // [color-scheme:light] + dark:[color-scheme:dark] keeps browser-native controls
@@ -209,6 +210,15 @@ function KeuanganSheetForm({
     form.setValue('category', '');
   };
 
+  const handleVoiceTranscript = (text: string) => {
+    const current = form.getValues('note')?.trim() ?? '';
+    const next = current ? `${current}\n${text}` : text;
+    form.setValue('note', next, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
+
   const cats = txType === 'expense' ? DEFAULT_EXPENSE_CATEGORIES : DEFAULT_INCOME_CATEGORIES;
   const cat  = form.watch('category');
 
@@ -312,10 +322,24 @@ function KeuanganSheetForm({
         )}
       </div>
 
-      {/* Note */}
-      <input {...form.register('note')} type="text"
-        placeholder="Catatan tambahan (opsional)"
-        className={inpFocus('finance')} />
+      {/* Note + voice recording */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-pill-tag px-0.5">
+            Catatan tambahan <span className="normal-case tracking-normal font-medium opacity-60">(opsional)</span>
+          </span>
+          <VoiceRecordButton
+            onTranscript={handleVoiceTranscript}
+            className="shrink-0 rounded-full border border-finance/20 bg-finance/5 py-0.5 pl-2 pr-1 shadow-sm"
+          />
+        </div>
+        <textarea
+          {...form.register('note')}
+          rows={2}
+          placeholder="Tulis catatan atau gunakan rekaman suara"
+          className={`${inpFocus('finance')} min-h-[4.5rem] resize-none leading-relaxed`}
+        />
+      </div>
 
       <Button type="submit" className="w-full bg-finance text-finance-text border-transparent hover:bg-finance/90 mt-auto" onClick={() => haptic(HAPTIC.tap)}>
         Simpan Transaksi 💾

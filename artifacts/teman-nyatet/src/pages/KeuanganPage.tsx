@@ -42,7 +42,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import SearchBar from '@/components/SearchBar';
-import VoiceRecordButton from '@/components/VoiceRecordButton';
 import TransactionSummaryCard from '@/components/TransactionSummaryCard';
 import {
   generateTransactionSummary,
@@ -455,15 +454,6 @@ export default function KeuanganPage() {
     } catch {
       // handled in hook
     }
-  };
-
-  const handleVoiceTranscript = (text: string) => {
-    const current = form.getValues('note')?.trim() ?? '';
-    const next = current ? `${current}\n${text}` : text;
-    form.setValue('note', next, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
   };
 
   const { groupedTx, sortedDates } = useMemo(() => {
@@ -950,20 +940,14 @@ export default function KeuanganPage() {
 
                 {/* ── Note ── */}
                 <div className="mb-2">
-                  <div className="mb-2.5 flex items-center justify-between gap-3">
-                    <label className="text-pill-label">
-                      Catatan <span className="normal-case tracking-normal font-medium opacity-60">(opsional)</span>
-                    </label>
-                    <VoiceRecordButton
-                      onTranscript={handleVoiceTranscript}
-                      className="rounded-full border border-finance/20 bg-finance/5 py-0.5 pl-2 pr-1 shadow-sm"
-                    />
-                  </div>
-                  <textarea
+                  <label className="text-pill-label mb-2.5 block">
+                    Catatan <span className="normal-case tracking-normal font-medium opacity-60">(opsional)</span>
+                  </label>
+                  <input
                     {...form.register('note')}
-                    rows={2}
-                    placeholder="Misal: Beli kopi susu… atau gunakan rekaman suara"
-                    className="min-h-[5.25rem] w-full resize-none rounded-xl border border-border bg-background px-4 py-3.5 text-sm font-medium leading-relaxed text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-finance focus:ring-2 focus:ring-finance/20"
+                    type="text"
+                    placeholder="Misal: Beli kopi susu…"
+                    className="w-full rounded-xl border border-border bg-background py-3.5 px-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-finance focus:ring-2 focus:ring-finance/20"
                   />
                 </div>
               </div>

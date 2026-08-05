@@ -12,7 +12,8 @@ export const DEFAULT_EXPENSE_CATEGORIES = [
 ] as const;
 
 export const DEFAULT_PAYMENT_SOURCES = [
-  'BCA', 'BRI', 'BNI', 'Mandiri', 'GoPay', 'OVO', 'Dana', 'Cash', 'Lainnya',
+  'BCA', 'BRI', 'BNI', 'Mandiri', 'GoPay', 'OVO', 'Dana', 'QRIS',
+  'Transfer', 'Debit', 'E-Wallet', 'Cash', 'Lainnya',
 ] as const;
 
 /**

@@ -42,6 +42,9 @@ import {
   createTransactionFormDefaults,
   type TransactionFormValues,
 } from '@/lib/transactions';
+import {
+  parseTransactionVoiceTranscript,
+} from '@/lib/transaction-voice-parser';
 
 // ─── Shared input style helpers ───────────────────────────────────────────────
 // [color-scheme:light] + dark:[color-scheme:dark] keeps browser-native controls
@@ -203,11 +206,30 @@ function KeuanganSheetForm({
 
   useEffect(() => {
     if (!initialVoiceTranscript) return;
-    const current = form.getValues('note')?.trim() ?? '';
-    form.setValue('note', current ? `${current}\n${initialVoiceTranscript}` : initialVoiceTranscript, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
+    const parsed = parseTransactionVoiceTranscript(initialVoiceTranscript);
+    if (parsed.type) {
+      form.setValue('type', parsed.type, { shouldDirty: true, shouldValidate: true });
+      setTxType(parsed.type);
+    }
+    if (parsed.amount !== undefined) {
+      form.setValue('amount', parsed.amount, { shouldDirty: true, shouldValidate: true });
+    }
+    if (parsed.category !== undefined) {
+      form.setValue('category', parsed.category, { shouldDirty: true, shouldValidate: true });
+    }
+    if (parsed.source !== undefined) {
+      form.setValue('source', parsed.source, { shouldDirty: true, shouldValidate: true });
+    }
+    if (parsed.date !== undefined) {
+      form.setValue('date', parsed.date, { shouldDirty: true, shouldValidate: true });
+    }
+    if (parsed.note !== undefined) {
+      const current = form.getValues('note')?.trim() ?? '';
+      form.setValue('note', current ? `${current}\n${parsed.note}` : parsed.note, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
     onVoiceTranscriptApplied?.();
   }, [initialVoiceTranscript]);
 

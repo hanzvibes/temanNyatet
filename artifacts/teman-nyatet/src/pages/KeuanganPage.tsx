@@ -45,6 +45,9 @@ import {
   createTransactionFormDefaults,
   type TransactionFormValues,
 } from '@/lib/transactions';
+import {
+  parseTransactionVoiceTranscript,
+} from '@/lib/transaction-voice-parser';
 import { requestBottomSheet, requestSettingsTopUp } from '@/lib/app-events';
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -296,13 +299,32 @@ export default function KeuanganPage() {
 
   const handleVoiceTranscript = (text: string) => {
     const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+    const parsed = parseTransactionVoiceTranscript(text);
 
     if (isFormOpen || isDesktop) {
-      const current = form.getValues('note')?.trim() ?? '';
-      form.setValue('note', current ? `${current}\n${text}` : text, {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
+      if (parsed.type) {
+        form.setValue('type', parsed.type, { shouldDirty: true, shouldValidate: true });
+        setTxType(parsed.type);
+      }
+      if (parsed.amount !== undefined) {
+        form.setValue('amount', parsed.amount, { shouldDirty: true, shouldValidate: true });
+      }
+      if (parsed.category !== undefined) {
+        form.setValue('category', parsed.category, { shouldDirty: true, shouldValidate: true });
+      }
+      if (parsed.source !== undefined) {
+        form.setValue('source', parsed.source, { shouldDirty: true, shouldValidate: true });
+      }
+      if (parsed.date !== undefined) {
+        form.setValue('date', parsed.date, { shouldDirty: true, shouldValidate: true });
+      }
+      if (parsed.note !== undefined) {
+        const current = form.getValues('note')?.trim() ?? '';
+        form.setValue('note', current ? `${current}\n${parsed.note}` : parsed.note, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+      }
       if (!isFormOpen) setIsFormOpen(true);
       return;
     }
@@ -310,7 +332,7 @@ export default function KeuanganPage() {
     // The mobile transaction form lives inside BottomSheetNav. Let it open
     // itself and apply the transcript once its form has mounted.
     requestBottomSheet({
-      transactionType: 'expense',
+      transactionType: parsed.type ?? 'expense',
       voiceTranscript: text,
     });
   };

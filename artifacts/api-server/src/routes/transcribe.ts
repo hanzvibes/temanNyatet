@@ -20,13 +20,10 @@ const upload = multer({
 
 const router: IRouter = Router();
 
-// Whisper transcription always targets the official OpenAI API endpoint unless
-// a dedicated WHISPER_BASE_URL is configured.  The project's OPENAI_BASE_URL
-// may point to a chat-only proxy (e.g. SumoPod) that doesn't expose
-// /v1/audio/transcriptions, so we intentionally do NOT fall back to it.
-const WHISPER_BASE_URL = (
-  process.env['WHISPER_BASE_URL'] ?? 'https://api.openai.com'
-).replace(/\/+$/, '');
+// SumoPod's documented endpoint is chat-completions, not audio transcription.
+// Keep STT opt-in so a SumoPod chat key is never sent to api.openai.com and
+// never produces a misleading 401 when the browser speech path is used.
+const WHISPER_BASE_URL = process.env['WHISPER_BASE_URL']?.replace(/\/+$/, '');
 const OPENAI_API_KEY = process.env['OPENAI_API_KEY'];
 const TRANSCRIBE_TIMEOUT_MS = 30_000;
 
@@ -35,7 +32,9 @@ const TRANSCRIBE_TIMEOUT_MS = 30_000;
  *
  * Accepts a multipart/form-data request with a single `audio` field
  * (any browser-native audio format: webm, ogg, mp4, etc.).  Pipes the
- * audio to the OpenAI Whisper transcription API and returns the transcript.
+   * audio to the configured Whisper-compatible transcription API and returns
+   * the transcript. The endpoint is optional because Chrome Android can use
+   * its native speech recognition service.
  *
  * Response: { data: { transcript: string } }
  */
@@ -74,9 +73,9 @@ router.post(
         return;
       }
 
-      if (!OPENAI_API_KEY) {
-        req.log.warn('OPENAI_API_KEY not set — transcription unavailable');
-        res.status(503).json({ error: 'Transcription service not configured' });
+       if (!OPENAI_API_KEY || !WHISPER_BASE_URL) {
+         req.log.warn('Audio transcription provider not configured');
+         res.status(503).json({ error: 'Audio transcription provider not configured' });
         return;
       }
 

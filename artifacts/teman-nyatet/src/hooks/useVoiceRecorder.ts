@@ -1,6 +1,56 @@
 import { useState, useRef, useCallback } from 'react';
 import { apiUpload } from '@/lib/apiClient';
 
+// Chrome on Android exposes speech recognition as webkitSpeechRecognition.
+// These small local types keep the feature usable without adding a dependency
+// or relying on non-standard DOM typings.
+interface SpeechRecognitionAlternativeLike {
+  transcript: string;
+}
+
+interface SpeechRecognitionResultLike {
+  isFinal: boolean;
+  length: number;
+  [index: number]: SpeechRecognitionAlternativeLike;
+}
+
+interface SpeechRecognitionEventLike extends Event {
+  resultIndex: number;
+  results: {
+    length: number;
+    [index: number]: SpeechRecognitionResultLike;
+  };
+}
+
+interface SpeechRecognitionErrorEventLike extends Event {
+  error: string;
+}
+
+interface SpeechRecognitionLike {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+}
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
+
+function getSpeechRecognition(): SpeechRecognitionConstructor | null {
+  if (typeof window === 'undefined') return null;
+  return (
+    (window as Window & { SpeechRecognition?: SpeechRecognitionConstructor }).SpeechRecognition ??
+    (window as Window & { webkitSpeechRecognition?: SpeechRecognitionConstructor }).webkitSpeechRecognition ??
+    null
+  );
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type RecorderStatus =
@@ -61,6 +111,9 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
 
   const recorderRef  = useRef<MediaRecorder | null>(null);
   const streamRef    = useRef<MediaStream | null>(null);
+  const speechRecognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const speechTranscriptRef = useRef('');
+  const speechStopRequestedRef = useRef(false);
   const chunksRef    = useRef<Blob[]>([]);
   const startTimeRef = useRef<number>(0);
 
@@ -71,12 +124,7 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
   }, []);
 
   const startRecording = useCallback(async () => {
-    // Guard: browser support
-    if (
-      typeof window === 'undefined' ||
-      !navigator.mediaDevices?.getUserMedia ||
-      typeof MediaRecorder === 'undefined'
-    ) {
+    if (typeof window === 'undefined') {
       setStatus('error');
       setErrorCode('not_supported');
       return;
@@ -85,6 +133,97 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
     setStatus('requesting_permission');
     setErrorCode(null);
     setTranscript('');
+
+    // SumoPod's documented API is chat-completions only. On supported Chrome
+    // browsers, use the browser's speech service for the audio-to-text step;
+    // the resulting text is still sent through the normal note/AI flow.
+    const SpeechRecognition = getSpeechRecognition();
+    if (SpeechRecognition) {
+      speechTranscriptRef.current = '';
+      speechStopRequestedRef.current = false;
+
+      let recognition: SpeechRecognitionLike;
+      try {
+        recognition = new SpeechRecognition();
+      } catch {
+        setStatus('error');
+        setErrorCode('not_supported');
+        return;
+      }
+
+      speechRecognitionRef.current = recognition;
+      recognition.lang = 'id-ID';
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        startTimeRef.current = Date.now();
+        setStatus('recording');
+      };
+
+      recognition.onresult = (event) => {
+        let finalText = '';
+        for (let index = 0; index < event.results.length; index += 1) {
+          const result = event.results[index];
+          if (result.isFinal && result[0]) {
+            finalText += `${result[0].transcript} `;
+          }
+        }
+        speechTranscriptRef.current = finalText.trim();
+      };
+
+      recognition.onerror = (event) => {
+        speechRecognitionRef.current = null;
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          setStatus('error');
+          setErrorCode('permission_denied');
+        } else if (event.error === 'no-speech') {
+          setStatus('error');
+          setErrorCode('no_speech');
+        } else if (event.error !== 'aborted') {
+          setStatus('error');
+          setErrorCode('transcription_failed');
+        }
+      };
+
+      recognition.onend = () => {
+        speechRecognitionRef.current = null;
+        const elapsed = Date.now() - startTimeRef.current;
+        const text = speechTranscriptRef.current.trim();
+
+        // If Chrome ends its speech session while the pointer is still held,
+        // finish normally rather than leaving the button stuck in recording.
+        if (elapsed < MIN_RECORDING_MS) {
+          setStatus('error');
+          setErrorCode('too_short');
+        } else if (!text) {
+          setStatus('error');
+          setErrorCode('no_speech');
+        } else {
+          setTranscript(text);
+          setStatus('done');
+          if (navigator.vibrate) navigator.vibrate(10);
+        }
+      };
+
+      try {
+        recognition.start();
+      } catch {
+        speechRecognitionRef.current = null;
+        setStatus('error');
+        setErrorCode('transcription_failed');
+      }
+      return;
+    }
+
+    // Fallback for browsers without the Web Speech API. This path requires a
+    // separately configured OpenAI-compatible audio transcription provider.
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setStatus('error');
+      setErrorCode('not_supported');
+      return;
+    }
 
     // Request microphone access
     let stream: MediaStream;
@@ -155,6 +294,12 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
   }, [releaseStream]);
 
   const stopRecording = useCallback(() => {
+    if (speechRecognitionRef.current) {
+      speechStopRequestedRef.current = true;
+      speechRecognitionRef.current.stop();
+      return;
+    }
+
     if (recorderRef.current?.state === 'recording') {
       recorderRef.current.stop();
     } else {
@@ -165,6 +310,9 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
   }, [releaseStream]);
 
   const reset = useCallback(() => {
+    speechRecognitionRef.current?.abort();
+    speechRecognitionRef.current = null;
+    speechStopRequestedRef.current = false;
     setStatus('idle');
     setTranscript('');
     setErrorCode(null);

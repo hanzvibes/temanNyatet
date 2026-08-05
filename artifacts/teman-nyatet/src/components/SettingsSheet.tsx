@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { openPaymentCheckout, type PaymentPlan } from '@/lib/payment';
 import TopUpSection from '@/components/TopUpSection';
 import AiSummaryDetails from '@/components/AiSummaryDetails';
+import SettingsDetailForm from '@/components/SettingsDetailForm';
 import { publishOverlayState } from '@/lib/overlay-state';
 import { APP_EVENTS, subscribeToAppEvent } from '@/lib/app-events';
 
@@ -388,8 +389,6 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
     }
   };
 
-  const INP = 'w-full bg-secondary border border-border rounded-xl outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 font-bold text-foreground transition-all py-3 px-4 text-sm';
-
   if (!isViewportActive) return null;
 
   return (
@@ -649,85 +648,34 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                         <span className="flex-1 font-bold text-destructive text-[clamp(0.875rem,3vw,1.125rem)]">Keluar</span>
                       </button>
                     </>
-                  ) : activeSection === 'name' ? (
-                    <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
-                      <div>
-                        <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Nama Baru</label>
-                        <input
-                          type="text"
-                          value={nameInput}
-                          onChange={e => setNameInput(e.target.value)}
-                          placeholder="Masukkan nama kamu"
-                          className={INP}
-                          autoFocus
-                          onKeyDown={e => e.key === 'Enter' && handleSaveName()}
-                        />
-                      </div>
-                      <Button
-                        onClick={handleSaveName}
-                        disabled={saving}
-                        className="w-full"
-                        size="lg"
-                      >
-                        {saving ? 'Menyimpan...' : 'Simpan Nama'}
-                      </Button>
-                    </div>
-                  ) : activeSection === 'password' ? (
-                    <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
-                      <div>
-                        <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Password Baru</label>
-                        <input
-                          type="password"
-                          value={newPassword}
-                          onChange={e => setNewPassword(e.target.value)}
-                          placeholder="Minimal 6 karakter"
-                          className={INP}
-                          autoFocus
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Konfirmasi Password</label>
-                        <input
-                          type="password"
-                          value={confirmPassword}
-                          onChange={e => setConfirmPassword(e.target.value)}
-                          placeholder="Ulangi password baru"
-                          className={INP}
-                          onKeyDown={e => e.key === 'Enter' && handleSavePassword()}
-                        />
-                      </div>
-                      <Button
-                        onClick={handleSavePassword}
-                        disabled={saving}
-                        className="w-full"
-                        size="lg"
-                      >
-                        {saving ? 'Menyimpan...' : 'Simpan Password'}
-                      </Button>
-                    </div>
-                  ) : activeSection === 'phone' ? (
-                    <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
-                      <div>
-                        <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Nomor HP</label>
-                        <input
-                          type="tel"
-                          value={phoneInput}
-                          onChange={e => setPhoneInput(e.target.value)}
-                          placeholder="Contoh: 08123456789"
-                          className={INP}
-                          autoFocus
-                          onKeyDown={e => e.key === 'Enter' && handleSavePhone()}
-                        />
-                      </div>
-                      <Button
-                        onClick={handleSavePhone}
-                        disabled={saving}
-                        className="w-full"
-                        size="lg"
-                      >
-                        {saving ? 'Menyimpan...' : 'Simpan Nomor HP'}
-                      </Button>
-                    </div>
+                  ) : activeSection === 'name' || activeSection === 'password' || activeSection === 'phone' ? (
+                    <SettingsDetailForm
+                      section={activeSection}
+                      value={
+                        activeSection === 'name'
+                          ? nameInput
+                          : activeSection === 'phone'
+                            ? phoneInput
+                            : newPassword
+                      }
+                      confirmValue={confirmPassword}
+                      onChange={
+                        activeSection === 'name'
+                          ? setNameInput
+                          : activeSection === 'phone'
+                            ? setPhoneInput
+                            : setNewPassword
+                      }
+                      onConfirmChange={setConfirmPassword}
+                      onSubmit={
+                        activeSection === 'name'
+                          ? handleSaveName
+                          : activeSection === 'phone'
+                            ? handleSavePhone
+                            : handleSavePassword
+                      }
+                      saving={saving}
+                    />
                   ) : activeSection === 'subscription' ? (
                     <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
                       {subLoading ? (
@@ -1031,28 +979,13 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                       <AppearanceSection />
                     </div>
                   ) : (
-                    <div className="pt-[clamp(0.25rem,1vw,0.5rem)] space-y-[clamp(1rem,3vw,1.5rem)]">
-                      <div>
-                        <label className="text-[clamp(0.625rem,2vw,0.75rem)] font-bold text-muted-foreground uppercase tracking-widest mb-[clamp(0.25rem,1vw,0.5rem)] block">Laporkan Bug / Saran</label>
-                        <textarea
-                          value={feedbackInput}
-                          onChange={e => setFeedbackInput(e.target.value)}
-                          placeholder="Jelaskan bug yang kamu temui atau saran kamu di sini..."
-                          className={`${INP} min-h-[8rem] resize-none`}
-                          autoFocus
-                        />
-                      </div>
-                      <Button
-                        onClick={handleSendFeedback}
-                        className="w-full"
-                        size="lg"
-                      >
-                        Kirim Feedback
-                      </Button>
-                      <p className="text-[clamp(0.75rem,2.5vw,1rem)] text-muted-foreground text-center">
-                        Akan membuka aplikasi email dengan alamat tujuan <strong className="text-foreground">rhn.rmdhniii@gmail.com</strong>.
-                      </p>
-                    </div>
+                    <SettingsDetailForm
+                      section="feedback"
+                      value={feedbackInput}
+                      onChange={setFeedbackInput}
+                      onSubmit={handleSendFeedback}
+                      saving={false}
+                    />
                   )}
                 </motion.div>
               </AnimatePresence>

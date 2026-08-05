@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { AnimatePresence, motion } from 'framer-motion';
-import { AnimatedListItem } from '@/components/AnimatedListItem';
-import { SwipeableTransactionRow } from '@/components/SwipeableTransactionRow';
 import SettingsSheet from '@/components/SettingsSheet';
+import TransactionFormSheet from '@/components/TransactionFormSheet';
 import { useCreate } from '@/contexts/CreateContext';
 import { useTransactions } from '@/hooks/useTransactions';
 import {
@@ -11,33 +9,25 @@ import {
   endOfWeek,
   endOfDay,
   format,
-  isToday,
   isWithinInterval,
-  isYesterday,
   startOfDay,
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
 import { id } from 'date-fns/locale';
 import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  Wallet,
-  TrendingUp,
-  TrendingDown,
-  CalendarDays,
   Plus,
 } from 'lucide-react';
-import { CATEGORY_ICON, FALLBACK_CATEGORY_ICON } from '@/lib/categoryIcons';
-import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { Button } from '@/components/ui/button';
-import { Drawer } from 'vaul';
 import type { TransactionType } from '@/lib/database.types';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import SearchBar from '@/components/SearchBar';
 import VoiceRecordButton from '@/components/VoiceRecordButton';
 import TransactionSummaryCard from '@/components/TransactionSummaryCard';
+import BalanceHero from '@/components/BalanceHero';
+import TransactionList from '@/components/TransactionList';
+import TransactionPeriodFilter, { type PeriodFilter } from '@/components/TransactionPeriodFilter';
 import {
   generateTransactionSummary,
   getCachedTransactionSummary,
@@ -50,132 +40,12 @@ import {
   DEFAULT_EXPENSE_CATEGORIES,
   DEFAULT_PAYMENT_SOURCES,
   formatRupiah,
-  formatRupiahCompact,
   parseTransactionAmount,
   transactionFormSchema,
   createTransactionFormDefaults,
   type TransactionFormValues,
 } from '@/lib/transactions';
 import { requestBottomSheet, requestSettingsTopUp } from '@/lib/app-events';
-
-const INP =
-  'w-full bg-card border border-border rounded-xl py-3 px-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 text-sm font-semibold text-foreground transition-all placeholder:text-muted-foreground/50';
-
-type PeriodFilter = 'all' | 'today' | 'week' | 'month' | 'custom';
-
-// ─── Balance Hero ─────────────────────────────────────────────────────────────
-function BalanceHero({
-  balance,
-  income,
-  expense,
-  aiSummary,
-}: {
-  balance: number;
-  income: number;
-  expense: number;
-  aiSummary?: React.ReactNode;
-}) {
-  const net = income - expense;
-  const totalActivity = income + expense;
-  const incomeRatio = totalActivity > 0 ? Math.round((income / totalActivity) * 100) : 50;
-  const isPositive = net >= 0;
-
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-      aria-label="Ringkasan saldo bulan ini"
-      className="relative overflow-hidden rounded-[1.75rem] border border-finance/25 bg-card p-5 shadow-elevation-1 sm:p-6"
-    >
-      <div className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-finance/10 blur-2xl" />
-
-      <div className="relative">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/75">
-              Saldo bulan ini
-            </p>
-            <p className="mt-1 text-xs font-medium text-muted-foreground">
-              {format(new Date(), 'MMMM yyyy', { locale: id })}
-            </p>
-          </div>
-          <div className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-bold ${
-            isPositive ? 'bg-income/10 text-income' : 'bg-expense/10 text-expense'
-          }`}>
-            {isPositive ? <TrendingUp size={13} strokeWidth={2.5} /> : <TrendingDown size={13} strokeWidth={2.5} />}
-            <span>Arus bersih</span>
-          </div>
-        </div>
-
-        <motion.p
-          key={balance}
-          initial={{ opacity: 0.5, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-          className="mt-5 max-w-full break-words text-[clamp(2.15rem,10vw,3.5rem)] font-black leading-[1] tracking-[-0.06em] text-foreground tabular-nums"
-        >
-          {formatRupiah(balance)}
-        </motion.p>
-        <p className={`mt-2 flex items-center gap-1.5 text-xs font-bold tabular-nums ${
-          isPositive ? 'text-income' : 'text-expense'
-        }`}>
-          {isPositive ? '+' : ''}{formatRupiahCompact(net)} dari aktivitas bulan ini
-        </p>
-
-        <div className="mt-6 grid grid-cols-2 gap-2.5">
-          <div className="rounded-2xl bg-income/[0.07] px-3.5 py-3">
-            <div className="flex items-center gap-2 text-income">
-              <ArrowDownLeft size={15} strokeWidth={2.5} />
-              <span className="text-[10px] font-bold uppercase tracking-[0.13em]">Pemasukan</span>
-            </div>
-            <p className="mt-2 truncate text-sm font-black tabular-nums text-foreground">
-              {formatRupiahCompact(income)}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-expense/[0.07] px-3.5 py-3">
-            <div className="flex items-center gap-2 text-expense">
-              <ArrowUpRight size={15} strokeWidth={2.5} />
-              <span className="text-[10px] font-bold uppercase tracking-[0.13em]">Pengeluaran</span>
-            </div>
-            <p className="mt-2 truncate text-sm font-black tabular-nums text-foreground">
-              {formatRupiahCompact(expense)}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-5">
-          <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground">
-            <span>Komposisi arus kas</span>
-            <span className="tabular-nums">{incomeRatio}% masuk</span>
-          </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-expense/15">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${incomeRatio}%` }}
-              transition={{ duration: 0.6, delay: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
-              className="h-full rounded-full bg-income"
-            />
-          </div>
-          <div className="mt-1.5 flex justify-between text-[10px] font-semibold text-muted-foreground/65">
-            <span>Pemasukan</span>
-            <span>{100 - incomeRatio}% pengeluaran</span>
-          </div>
-        </div>
-
-        {aiSummary}
-      </div>
-    </motion.section>
-  );
-}
-
-// ─── Date Label ────────────────────────────────────────────────────────────────
-function getFormatDate(dateStr: string) {
-  const date = new Date(dateStr.length === 10 ? dateStr + 'T12:00:00' : dateStr);
-  if (isToday(date)) return 'Hari Ini';
-  if (isYesterday(date)) return 'Kemarin';
-  return format(date, 'd MMMM yyyy', { locale: id });
-}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function KeuanganPage() {
@@ -545,231 +415,28 @@ export default function KeuanganPage() {
               }
             />
 
-            {/* Period filter */}
-            <div className="rounded-2xl bg-muted/55 p-1 [scrollbar-width:none]">
-              <div className="flex min-w-0 gap-1 overflow-x-auto">
-              {([
-                ['all', 'Semua'],
-                ['today', 'Hari ini'],
-                ['week', 'Minggu ini'],
-                ['month', 'Bulan ini'],
-                ['custom', 'Custom range'],
-              ] as const).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setPeriodFilter(value)}
-                  className={`min-h-9 shrink-0 rounded-xl px-3.5 text-xs font-bold transition-all ${
-                    periodFilter === value
-                      ? 'bg-card text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:bg-card/60 hover:text-foreground'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-              </div>
-            </div>
+            <TransactionPeriodFilter
+              value={periodFilter}
+              customStartDate={customDraftStartDate}
+              customEndDate={customDraftEndDate}
+              onChange={setPeriodFilter}
+              onCustomStartDateChange={setCustomDraftStartDate}
+              onCustomEndDateChange={setCustomDraftEndDate}
+              onApplyCustomRange={applyCustomRange}
+            />
 
-            {periodFilter === 'custom' && (
-              <div className="grid gap-3 rounded-2xl border border-border/70 bg-card p-4 shadow-elevation-1 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-                <label className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                  Mulai
-                  <input
-                    type="date"
-                    value={customDraftStartDate}
-                    onChange={(event) => setCustomDraftStartDate(event.target.value)}
-                    className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none focus:border-finance focus:ring-2 focus:ring-finance/20"
-                  />
-                </label>
-                <label className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                  Sampai
-                  <input
-                    type="date"
-                    value={customDraftEndDate}
-                    onChange={(event) => setCustomDraftEndDate(event.target.value)}
-                    className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none focus:border-finance focus:ring-2 focus:ring-finance/20"
-                  />
-                </label>
-                <Button type="button" size="sm" onClick={applyCustomRange} className="h-11 rounded-xl px-5">
-                  Terapkan
-                </Button>
-              </div>
-            )}
-
-            {/* Search */}
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">Aktivitas</p>
-              <span className="text-[11px] font-medium text-muted-foreground/65">
-                {filteredTransactions.length} transaksi
-              </span>
-            </div>
             <SearchBar value={search} onChange={setSearch} placeholder="Cari transaksi..." />
-
-            {/* Transaction list */}
-            <div className="min-h-0 flex-1 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain -mx-1 px-1.5 pb-[calc(7rem+env(safe-area-inset-bottom))] [scrollbar-gutter:stable]">
-              {loading ? (
-                <PageLoading accent="keuangan" label="Memuat transaksi…" />
-              ) : sortedDates.length === 0 ? (
-                <PageEmpty
-                  accent="keuangan"
-                  icon={Wallet}
-                      title={search ? 'Tidak ada hasil pencarian' : periodFilter === 'all' ? 'Belum ada transaksi' : 'Belum ada transaksi di periode ini'}
-                  description={
-                    search
-                      ? 'Coba kata kunci lain atau hapus filter.'
-                      : 'Catat pemasukan dan pengeluaran kamu agar keuangan tetap terpantau.'
-                  }
-                  cta={
-                    !search ? (
-                      <div className="flex flex-wrap justify-center gap-2">
-                        <Button
-                          onClick={() => handleOpenForm('expense')}
-                          className="rounded-full bg-finance px-5 py-3 text-finance-text hover:bg-finance/90"
-                        >
-                          <ArrowUpRight size={16} strokeWidth={2.5} />
-                          Pengeluaran
-                        </Button>
-                        <Button
-                          onClick={() => handleOpenForm('income')}
-                          variant="outline"
-                          className="rounded-full border-income/30 px-5 py-3 text-income hover:bg-income/10"
-                        >
-                          <ArrowDownLeft size={16} strokeWidth={2.5} />
-                          Pemasukan
-                        </Button>
-                      </div>
-                    ) : undefined
-                  }
-                />
-              ) : (
-                <div className="space-y-6 pb-2">
-                  {sortedDates.map((dateStr) => {
-                    const dayTxs = groupedTx[dateStr];
-                    const dayNet = dayTxs.reduce(
-                      (acc, tx) => {
-                        const amt = Number(tx.amount) || 0;
-                        return tx.type === 'income' ? acc + amt : acc - amt;
-                      },
-                      0,
-                    );
-
-                    return (
-                      <div key={dateStr}>
-                        {/* Date row */}
-                        <div className="mb-2.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-1">
-                          <div className="flex items-center gap-2">
-                            <CalendarDays
-                              size={13}
-                              strokeWidth={2.3}
-                              className="text-muted-foreground/65 shrink-0"
-                            />
-                            <span className="text-xs font-bold text-foreground/75">
-                              {getFormatDate(dateStr)}
-                            </span>
-                          </div>
-                          <span
-                            className={`text-xs font-bold tabular-nums ${
-                              dayNet >= 0 ? 'text-income' : 'text-expense'
-                            }`}
-                          >
-                            {dayNet >= 0 ? '+' : ''}
-                            {formatRupiahCompact(dayNet)}
-                          </span>
-                        </div>
-
-                        {/* Transaction group */}
-                        <div className="overflow-hidden rounded-[1.25rem] border border-border/65 bg-card shadow-elevation-1">
-                          <AnimatePresence>
-                            {dayTxs.map((tx, i, arr) => {
-                              const Icon = CATEGORY_ICON[tx.category] ?? FALLBACK_CATEGORY_ICON;
-                              return (
-                                <div key={tx.id}>
-                                  <SwipeableTransactionRow
-                                    transactionId={tx.id}
-                                    isDeleting={deletingId === tx.id}
-                                    onDelete={handleSwipeDelete}
-                                    className="relative overflow-hidden"
-                                  >
-                                    <AnimatedListItem
-                                      tabIndex={0}
-                                      role="group"
-                                      aria-label={`Transaksi ${tx.category} ${formatRupiah(tx.amount)}`}
-                                      className="grid min-h-[4.5rem] grid-cols-[2.75rem_minmax(0,1fr)_minmax(4.75rem,34%)] items-center gap-x-2.5 px-3.5 py-3.5 transition-colors hover:bg-muted/20 active:bg-muted/40 select-none focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-2 focus-visible:ring-finance sm:grid-cols-[2.75rem_minmax(0,1fr)_minmax(5rem,auto)] sm:gap-x-3.5 sm:px-4"
-                                    >
-                                      {/* Icon */}
-                                      <div
-                                          className={`flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-xl ${
-                                          tx.type === 'income'
-                                            ? 'bg-income/10'
-                                            : 'bg-expense/8'
-                                        }`}
-                                      >
-                                        <Icon
-                                          size={18}
-                                          strokeWidth={2}
-                                          className={
-                                            tx.type === 'income'
-                                              ? 'text-income'
-                                              : 'text-expense'
-                                          }
-                                        />
-                                      </div>
-
-                                      {/* Category + meta */}
-                                      <div className="min-w-0">
-                                        <p className="truncate text-sm font-bold leading-5 text-foreground">
-                                          {tx.category}
-                                        </p>
-                                        <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
-                                            <span className="shrink-0 text-[11px] font-medium text-muted-foreground/75">
-                                            {tx.source}
-                                          </span>
-                                          {tx.note && (
-                                            <>
-                                              <span className="text-muted-foreground/30 text-[10px]">·</span>
-                                                <span className="min-w-0 truncate text-[11px] text-muted-foreground/65">
-                                                {tx.note}
-                                              </span>
-                                            </>
-                                          )}
-                                        </div>
-                                      </div>
-
-                                      {/* Amount */}
-                                      <div className="min-w-0 max-w-full shrink-0 overflow-hidden text-right">
-                                        <p
-                                          className={`break-words text-[clamp(11px,3.2vw,14px)] font-black tabular-nums leading-5 ${
-                                            tx.type === 'income'
-                                              ? 'text-income'
-                                              : 'text-foreground'
-                                          }`}
-                                        >
-                                          {tx.type === 'income' ? '+' : '−'}
-                                          {formatRupiahCompact(tx.amount)}
-                                        </p>
-                                        <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/55">
-                                          {tx.type === 'income' ? 'masuk' : 'keluar'}
-                                        </p>
-                                      </div>
-                                    </AnimatedListItem>
-                                  </SwipeableTransactionRow>
-
-                                  {/* Inset divider */}
-                                  {i < arr.length - 1 && (
-                                    <div className="ml-[3.75rem] border-b border-border/55" />
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </AnimatePresence>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <TransactionList
+              loading={loading}
+              search={search}
+              periodFilter={periodFilter}
+              filteredTransactions={filteredTransactions}
+              groupedTransactions={groupedTx}
+              sortedDates={sortedDates}
+              deletingId={deletingId}
+              onOpenForm={handleOpenForm}
+              onDelete={handleSwipeDelete}
+            />
           </div>
 
         </div>
@@ -783,186 +450,15 @@ export default function KeuanganPage() {
         />
       </div>
 
-      {/* ── Form Sheet ── */}
-      <Drawer.Root open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 bg-black/35 z-50 backdrop-blur-[2px]" />
-          <Drawer.Content
-            style={{
-              height: `${Math.min(Math.max(sheetViewportHeight * 0.92, 360), 720)}px`,
-              maxHeight: 'calc(100dvh - env(safe-area-inset-top))',
-            }}
-            className="fixed bottom-0 left-0 right-0 z-50 flex min-h-0 max-h-[calc(100dvh-env(safe-area-inset-top))] flex-col overflow-hidden rounded-t-[1.75rem] border-t border-border/60 bg-card shadow-elevation-3 outline-none sm:left-1/2 sm:right-auto sm:w-full sm:max-w-md sm:-translate-x-1/2"
-          >
-            {/* Drag handle */}
-            <div className="mx-auto mt-3.5 mb-1 h-1 w-10 flex-shrink-0 rounded-full bg-muted-foreground/20" />
-
-            <form
-              onSubmit={form.handleSubmit(onSubmitForm)}
-              className="flex min-h-0 flex-1 flex-col"
-            >
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5 sm:px-6">
-
-                {/* ── Type Toggle ── */}
-                <div className="my-5 flex rounded-[1rem] bg-muted/50 p-1">
-                  {(['expense', 'income'] as const).map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => {
-                        setTxType(t);
-                        form.setValue('type', t);
-                        form.setValue('category', '');
-                      }}
-                      className={`min-h-10 flex-1 rounded-[0.75rem] py-2.5 text-sm font-bold transition-all ${
-                        txType === t
-                          ? 'bg-card text-foreground shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground/80'
-                      }`}
-                    >
-                      {t === 'expense' ? 'Pengeluaran' : 'Pemasukan'}
-                    </button>
-                  ))}
-                </div>
-
-                {/* ── Amount ── */}
-                <div className="mb-5">
-                  <label className="text-pill-label mb-2.5 block">Nominal</label>
-                  <div className="relative">
-                    <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-xl font-bold text-muted-foreground/40 select-none">
-                      Rp
-                    </span>
-                    <input
-                      {...form.register('amount')}
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="0"
-                      className="w-full min-w-0 rounded-[1.25rem] border border-border bg-background py-4 pl-12 pr-4 text-[clamp(1.75rem,8vw,2.25rem)] font-black tracking-[-0.03em] text-foreground outline-none transition-all focus:border-finance focus:ring-2 focus:ring-finance/20 sm:py-5 sm:pl-13"
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, '');
-                        const formatted = val
-                          ? new Intl.NumberFormat('id-ID').format(Number(val))
-                          : '';
-                        form.setValue('amount', formatted, { shouldValidate: true });
-                      }}
-                    />
-                  </div>
-                  {form.formState.errors.amount && (
-                    <FormError className="mt-2 ml-1" size="xs">
-                      {form.formState.errors.amount.message as string}
-                    </FormError>
-                  )}
-                </div>
-
-                {/* ── Date & Source ── */}
-                <div className="mb-5 grid grid-cols-1 min-[380px]:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-pill-label mb-2.5 block">Tanggal</label>
-                    <input
-                      {...form.register('date')}
-                      type="date"
-                      className={`${INP} [color-scheme:light] dark:[color-scheme:dark]`}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-pill-label mb-2.5 block">Sumber</label>
-                    <select
-                      {...form.register('source')}
-                      className={`${INP} appearance-none`}
-                    >
-                      {DEFAULT_PAYMENT_SOURCES.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* ── Category Grid ── */}
-                <div className="mb-5">
-                  <label className="text-pill-label mb-3 block">Kategori</label>
-                  <div className="grid grid-cols-3 min-[380px]:grid-cols-4 gap-2 sm:grid-cols-5">
-                    {(txType === 'expense'
-                      ? DEFAULT_EXPENSE_CATEGORIES
-                      : DEFAULT_INCOME_CATEGORIES
-                    ).map((cat) => {
-                      const isSelected = form.watch('category') === cat;
-                      const Icon = CATEGORY_ICON[cat] ?? FALLBACK_CATEGORY_ICON;
-                      return (
-                        <button
-                          key={cat}
-                          type="button"
-                          onClick={() =>
-                            form.setValue('category', cat, { shouldValidate: true })
-                          }
-                          className={`flex min-h-[3.75rem] flex-col items-center justify-center gap-1.5 rounded-xl border px-1.5 py-2 transition-all ${
-                            isSelected
-                              ? 'border-finance/60 bg-finance/8 shadow-sm'
-                              : 'border-border/60 bg-card hover:bg-muted/40 hover:border-border'
-                          }`}
-                        >
-                          <div
-                            className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${
-                              isSelected
-                                ? txType === 'income'
-                                  ? 'bg-income'
-                                  : 'bg-expense'
-                                : 'bg-muted/70'
-                            }`}
-                          >
-                            <Icon
-                              size={14}
-                              strokeWidth={isSelected ? 2.5 : 2}
-                              className={isSelected ? 'text-white' : 'text-muted-foreground'}
-                            />
-                          </div>
-                          <span
-                            className={`text-[9.5px] font-bold text-center leading-tight w-full truncate transition-colors ${
-                              isSelected ? 'text-foreground' : 'text-muted-foreground'
-                            }`}
-                          >
-                            {cat}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {form.formState.errors.category && (
-                    <FormError className="mt-2.5 ml-1" size="xs">
-                      {form.formState.errors.category.message as string}
-                    </FormError>
-                  )}
-                </div>
-
-                {/* ── Note ── */}
-                <div className="mb-2">
-                  <label className="text-pill-label mb-2.5 block">
-                    Catatan <span className="normal-case tracking-normal font-medium opacity-60">(opsional)</span>
-                  </label>
-                  <input
-                    {...form.register('note')}
-                    type="text"
-                    placeholder="Misal: Beli kopi susu…"
-                    className="w-full rounded-xl border border-border bg-background py-3.5 px-4 text-sm font-medium text-foreground outline-none transition-all placeholder:text-muted-foreground/50 focus:border-finance focus:ring-2 focus:ring-finance/20"
-                  />
-                </div>
-              </div>
-
-              {/* ── Submit ── */}
-              <div className="shrink-0 border-t border-border/50 bg-card px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3.5 sm:px-6">
-                <Button
-                  type="submit"
-                  disabled={form.formState.isSubmitting}
-                  className="min-h-[3.25rem] w-full rounded-[1rem] bg-finance py-3.5 text-[15px] font-bold text-finance-text hover:bg-finance/90 disabled:cursor-not-allowed disabled:opacity-55 transition-all"
-                >
-                  {form.formState.isSubmitting ? 'Menyimpan…' : 'Simpan Transaksi'}
-                </Button>
-              </div>
-            </form>
-          </Drawer.Content>
-        </Drawer.Portal>
-      </Drawer.Root>
+      <TransactionFormSheet
+        open={isFormOpen}
+        type={txType}
+        viewportHeight={sheetViewportHeight}
+        form={form}
+        onOpenChange={setIsFormOpen}
+        onTypeChange={setTxType}
+        onSubmit={onSubmitForm}
+      />
     </div>
   );
 }

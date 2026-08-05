@@ -5,12 +5,18 @@ export const APP_EVENTS = {
   openBottomSheet: 'teman-nyatet:open-bottom-sheet',
   openSettingsSubscription: 'teman-nyatet:open-settings-subscription',
   openSettingsTopUp: 'teman-nyatet:open-settings-topup',
+  freePlanLimitReached: 'teman-nyatet:free-plan-limit-reached',
 } as const;
 
 export type BottomSheetRequest = {
   transactionType?: TransactionType;
   voiceTranscript?: string;
   voiceTransaction?: ParsedTransactionVoice;
+};
+
+export type FreePlanLimitRequest = {
+  resource: 'notes' | 'transactions';
+  limit: number;
 };
 
 function dispatch<T>(name: string, detail?: T, options?: CustomEventInit<T>) {
@@ -27,6 +33,10 @@ export function requestSettingsSubscription() {
 
 export function requestSettingsTopUp() {
   dispatch(APP_EVENTS.openSettingsTopUp);
+}
+
+export function requestFreePlanLimitDialog(detail: FreePlanLimitRequest) {
+  dispatch(APP_EVENTS.freePlanLimitReached, detail);
 }
 
 export function subscribeToAppEvent<T>(

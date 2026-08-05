@@ -1,6 +1,7 @@
 import { Router, type IRouter } from 'express';
 import { requireAuth, userRateLimit } from '../middleware/requireAuth.js';
-import { createData, deleteData, listData, updateData } from '../lib/data-store.js';
+import { createLimitedData, deleteData, listData, updateData } from '../lib/data-store.js';
+import { FREE_PLAN_LIMIT, FreePlanLimitError } from '../lib/plan-limits.js';
 import {
   optionalString,
   requireEnum,
@@ -43,11 +44,25 @@ router.post('/transactions', requireAuth, userRateLimit, async (req, res) => {
     const source = requireString(body.source, 'source', FIELD_MAX);
     const date = requireValidDateTime(body.date, 'date');
     const note = optionalString(body.note, 'note', NOTE_MAX);
-    const row = await createData('transactions', req.userId!, { type, amount, category, source, note, date });
+    const row = await createLimitedData(
+      'transactions',
+      req.userId!,
+      { type, amount, category, source, note, date },
+      FREE_PLAN_LIMIT,
+    );
     res.status(201).json({ data: row });
   } catch (err) {
     if (err instanceof ValidationError) {
       res.status(400).json({ error: err.message });
+      return;
+    }
+    if (err instanceof FreePlanLimitError) {
+      res.status(403).json({
+        error: 'FREE_PLAN_LIMIT_REACHED',
+        resource: err.entity,
+        limit: err.limit,
+        message: `Paket Free hanya dapat memiliki maksimal ${err.limit} transaksi.`,
+      });
       return;
     }
     req.log.error({ err }, 'Failed to create transaction');

@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/apiClient';
+import { apiGet, apiPost, apiPut, apiDelete, ApiError } from '@/lib/apiClient';
 import type { Note, NoteInsert, NoteUpdate } from '@/lib/database.types';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { normalizeNotes, noteTimestamp } from '@/lib/noteData';
+import { requestFreePlanLimitDialog } from '@/lib/app-events';
 
 // Data lives in PostgreSQL (via the api-server). We poll so changes made
 // from another device or session still show up without a manual refresh.
@@ -120,7 +121,14 @@ export function useNotes(userId?: string) {
       refreshLinksAfterNoteSave();
       return data;
     } catch (err) {
-      toast.error('Gagal menyimpan catatan');
+      if (err instanceof ApiError && err.code === 'FREE_PLAN_LIMIT_REACHED') {
+        requestFreePlanLimitDialog({
+          resource: 'notes',
+          limit: 3,
+        });
+      } else {
+        toast.error('Gagal menyimpan catatan');
+      }
       throw err;
     }
   };

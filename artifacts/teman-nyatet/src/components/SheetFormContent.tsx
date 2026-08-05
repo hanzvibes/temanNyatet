@@ -197,7 +197,8 @@ function KeuanganSheetForm({
       setTxType('expense');
       onSuccess();
     } catch {
-      toast.error('Gagal menyimpan transaksi.');
+      // useTransactions handles the error and opens the Free-plan dialog when
+      // the server rejects a create because the quota has been reached.
     }
   };
 

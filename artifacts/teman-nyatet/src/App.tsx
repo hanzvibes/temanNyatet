@@ -10,6 +10,7 @@ import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import PwaUpdatePrompt from '@/components/PwaUpdatePrompt';
 import OfflineIndicator from '@/components/OfflineIndicator';
+import FreePlanLimitDialog from '@/components/FreePlanLimitDialog';
 
 // Lazy load pages so the initial JS bundle stays small. This improves first
 // paint on slow mobile networks (especially iPhone on 3G/4G) and avoids a
@@ -156,12 +157,6 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
     if (profile) {
       if (
-        profile.subscription_status === 'pending'
-        && location !== '/payment'
-        && location !== '/subscription'
-      ) {
-        setLocation('/payment');
-      } else if (
         profile.subscription_status === 'archived'
         && location !== '/archived'
         && location !== '/subscription'
@@ -205,7 +200,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuthContext();
   const [location] = useLocation();
-  const showNav = user && profile?.subscription_status === 'active';
+  const showNav = Boolean(user && profile && profile.subscription_status !== 'archived');
   const { isLandscape } = useOrientation();
   const isSubscriptionPage = location === '/subscription';
 
@@ -245,6 +240,7 @@ function MainLayout({ children }: { children: React.ReactNode }) {
           <BottomSheetNav />
         </Suspense>
       </main>
+      <FreePlanLimitDialog />
     </div>
   );
 }

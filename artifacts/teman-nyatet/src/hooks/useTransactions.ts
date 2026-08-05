@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { apiGet, apiPost, apiDelete } from '@/lib/apiClient';
+import { apiGet, apiPost, apiDelete, ApiError } from '@/lib/apiClient';
 import type { Transaction, TransactionInsert, MonthlySummary } from '@/lib/database.types';
 import { toast } from 'sonner';
+import { requestFreePlanLimitDialog } from '@/lib/app-events';
 
 import { startOfMonth, endOfMonth, format } from 'date-fns';
 
@@ -67,7 +68,14 @@ export function useTransactions(userId?: string) {
       window.dispatchEvent(new CustomEvent(REFETCH_EVENT));
       return data;
     } catch (err) {
-      toast.error('Gagal menyimpan transaksi');
+      if (err instanceof ApiError && err.code === 'FREE_PLAN_LIMIT_REACHED') {
+        requestFreePlanLimitDialog({
+          resource: 'transactions',
+          limit: 3,
+        });
+      } else {
+        toast.error('Gagal menyimpan transaksi');
+      }
       throw err;
     }
   };

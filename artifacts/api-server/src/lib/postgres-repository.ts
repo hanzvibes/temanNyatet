@@ -3,6 +3,7 @@ import {
   db,
   linksTable,
   notesTable,
+  profilesTable,
   todosTable,
   transactionsTable,
   type Link,
@@ -26,6 +27,7 @@ import {
   parseApiDateTime,
   serializeTodoDate,
 } from './postgres-fields.js';
+import { FreePlanLimitError, type LimitedFreeEntity } from './plan-limits.js';
 
 type Entity = 'notes' | 'transactions' | 'todos' | 'links';
 type AppRow = Note | Transaction | Todo | Link;
@@ -155,6 +157,50 @@ export function createPostgresRepository(database: RepositoryDb = db) {
       } as NewRow;
       const rows = await database.insert(table).values(values as never).returning();
       return toApiRow(rows[0] as AppRow, entity);
+    },
+
+    async createWithFreePlanLimit(
+      entity: LimitedFreeEntity,
+      userId: string,
+      id: string,
+      fields: Record<string, unknown>,
+      limit: number,
+    ): Promise<Record<string, unknown>> {
+      return database.transaction(async (transaction) => {
+        // Serialize creates for this user so concurrent requests cannot both
+        // observe the same count and exceed the Free-plan limit.
+        await transaction.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}))`);
+
+        const [profile] = await transaction
+          .select({ subscriptionStatus: profilesTable.subscriptionStatus })
+          .from(profilesTable)
+          .where(eq(profilesTable.id, userId))
+          .limit(1);
+        const isPremium = profile?.subscriptionStatus === 'active';
+
+        if (!isPremium) {
+          const table = tableFor(entity);
+          const [{ count }] = await transaction
+            .select({ count: sql<number>`count(*)` })
+            .from(table)
+            .where(and(eq(table.userId, userId), isNull(table.deletedAt)));
+          if (Number(count) >= limit) {
+            throw new FreePlanLimitError(entity, limit);
+          }
+        }
+
+        const table = tableFor(entity);
+        const timestamp = now();
+        const values = {
+          id,
+          userId,
+          ...fromApiFields(entity, fields),
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        } as NewRow;
+        const rows = await transaction.insert(table).values(values as never).returning();
+        return toApiRow(rows[0] as AppRow, entity);
+      });
     },
 
     async update(

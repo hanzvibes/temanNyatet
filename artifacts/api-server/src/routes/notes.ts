@@ -1,6 +1,6 @@
 import { Router, type IRouter } from 'express';
 import { requireAuth, userRateLimit } from '../middleware/requireAuth.js';
-import { createData, deleteData, listData, reorderNotes, updateData } from '../lib/data-store.js';
+import { createLimitedData, deleteData, listData, reorderNotes, updateData } from '../lib/data-store.js';
 import {
   optionalString,
   optionalTags,
@@ -10,6 +10,7 @@ import {
 } from '../lib/validate.js';
 import { consumeCredit, CreditsExhaustedError, getCreditBalance } from '../lib/credit-service.js';
 import { syncNoteLinks } from '../lib/note-link-sync.js';
+import { FREE_PLAN_LIMIT, FreePlanLimitError } from '../lib/plan-limits.js';
 
 const router: IRouter = Router();
 const TITLE_MAX = 200;
@@ -42,7 +43,12 @@ router.post('/notes', requireAuth, userRateLimit, async (req, res) => {
     const title = optionalString(body.title, 'title', TITLE_MAX);
     const tags = optionalTags(body.tags);
     const color = optionalString(body.color, 'color', 100);
-    const row = await createData('notes', req.userId!, { title, content, tags, color });
+    const row = await createLimitedData(
+      'notes',
+      req.userId!,
+      { title, content, tags, color },
+      FREE_PLAN_LIMIT,
+    );
     res.status(201).json({ data: row });
     void syncNoteLinks(req.userId!, title, content, req.log).catch((syncError) => {
       req.log.warn({ err: syncError }, 'Automatic note link sync failed');
@@ -50,6 +56,15 @@ router.post('/notes', requireAuth, userRateLimit, async (req, res) => {
   } catch (err) {
     if (err instanceof ValidationError) {
       res.status(400).json({ error: err.message });
+      return;
+    }
+    if (err instanceof FreePlanLimitError) {
+      res.status(403).json({
+        error: 'FREE_PLAN_LIMIT_REACHED',
+        resource: err.entity,
+        limit: err.limit,
+        message: `Paket Free hanya dapat memiliki maksimal ${err.limit} catatan.`,
+      });
       return;
     }
     req.log.error({ err }, 'Failed to create note');

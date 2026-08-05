@@ -1,5 +1,6 @@
 import { newId } from './google-sheets.js';
 import { postgresRepository } from './postgres-repository.js';
+import type { LimitedFreeEntity } from './plan-limits.js';
 
 export type DataEntity = 'notes' | 'transactions' | 'todos' | 'links';
 
@@ -32,6 +33,15 @@ export async function createData(
   fields: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
   return postgresRepository.create(entity, userId, newId(), fields);
+}
+
+export async function createLimitedData(
+  entity: LimitedFreeEntity,
+  userId: string,
+  fields: Record<string, unknown>,
+  limit: number,
+): Promise<Record<string, unknown>> {
+  return postgresRepository.createWithFreePlanLimit(entity, userId, newId(), fields, limit);
 }
 
 export async function updateData(

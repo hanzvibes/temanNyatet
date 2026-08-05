@@ -7,6 +7,7 @@ import {
   numeric,
   pgEnum,
   pgTable,
+  uuid,
   text,
   timestamp,
   uniqueIndex,
@@ -43,6 +44,11 @@ export const notesTable = pgTable(
   },
   (table) => [index("notes_user_updated_idx").on(table.userId, table.updatedAt)],
 );
+
+export const profilesTable = pgTable("profiles", {
+  id: uuid("id").primaryKey(),
+  subscriptionStatus: text("subscription_status").notNull(),
+});
 
 export const transactionsTable = pgTable(
   "transactions",

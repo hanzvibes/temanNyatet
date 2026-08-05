@@ -3,7 +3,7 @@
  * shown inside BottomSheetNav when the user pulls the sheet up.
  * Each form is its own component so only the active hook is called.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useNotes }        from '@/hooks/useNotes';
 import { useTransactions } from '@/hooks/useTransactions';
@@ -37,7 +37,6 @@ import {
 } from '@/lib/database.types';
 import { toast } from 'sonner';
 import { getNoteColor, NOTE_COLORS } from '@/lib/noteColors';
-import VoiceRecordButton from '@/components/VoiceRecordButton';
 
 // ─── Shared input style helpers ───────────────────────────────────────────────
 // [color-scheme:light] + dark:[color-scheme:dark] keeps browser-native controls
@@ -160,9 +159,13 @@ type TxForm = z.infer<typeof txSchema>;
 function KeuanganSheetForm({
   onSuccess,
   initialTransactionType = 'expense',
+  initialVoiceTranscript,
+  onVoiceTranscriptApplied,
 }: {
   onSuccess: () => void;
   initialTransactionType?: TransactionType;
+  initialVoiceTranscript?: string;
+  onVoiceTranscriptApplied?: () => void;
 }) {
   const { user } = useAuthContext();
   const { createTransaction } = useTransactions(user?.id);
@@ -210,14 +213,15 @@ function KeuanganSheetForm({
     form.setValue('category', '');
   };
 
-  const handleVoiceTranscript = (text: string) => {
+  useEffect(() => {
+    if (!initialVoiceTranscript) return;
     const current = form.getValues('note')?.trim() ?? '';
-    const next = current ? `${current}\n${text}` : text;
-    form.setValue('note', next, {
+    form.setValue('note', current ? `${current}\n${initialVoiceTranscript}` : initialVoiceTranscript, {
       shouldDirty: true,
       shouldValidate: true,
     });
-  };
+    onVoiceTranscriptApplied?.();
+  }, [initialVoiceTranscript]);
 
   const cats = txType === 'expense' ? DEFAULT_EXPENSE_CATEGORIES : DEFAULT_INCOME_CATEGORIES;
   const cat  = form.watch('category');
@@ -322,24 +326,13 @@ function KeuanganSheetForm({
         )}
       </div>
 
-      {/* Note + voice recording */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-pill-tag px-0.5">
-            Catatan tambahan <span className="normal-case tracking-normal font-medium opacity-60">(opsional)</span>
-          </span>
-          <VoiceRecordButton
-            onTranscript={handleVoiceTranscript}
-            className="shrink-0 rounded-full border border-finance/20 bg-finance/5 py-0.5 pl-2 pr-1 shadow-sm"
-          />
-        </div>
-        <textarea
-          {...form.register('note')}
-          rows={2}
-          placeholder="Tulis catatan atau gunakan rekaman suara"
-          className={`${inpFocus('finance')} min-h-[4.5rem] resize-none leading-relaxed`}
-        />
-      </div>
+      {/* Note */}
+      <textarea
+        {...form.register('note')}
+        rows={2}
+        placeholder="Catatan tambahan (opsional)"
+        className={`${inpFocus('finance')} min-h-[4.5rem] resize-none leading-relaxed`}
+      />
 
       <Button type="submit" className="w-full bg-finance text-finance-text border-transparent hover:bg-finance/90 mt-auto" onClick={() => haptic(HAPTIC.tap)}>
         Simpan Transaksi 💾
@@ -490,10 +483,18 @@ const SECTION_META: Record<string, { label: string; color: string }> = {
 interface Props {
   path: string;
   initialTransactionType?: TransactionType;
+  initialVoiceTranscript?: string;
+  onVoiceTranscriptApplied?: () => void;
   onSuccess: () => void;
 }
 
-export default function SheetFormContent({ path, initialTransactionType, onSuccess }: Props) {
+export default function SheetFormContent({
+  path,
+  initialTransactionType,
+  initialVoiceTranscript,
+  onVoiceTranscriptApplied,
+  onSuccess,
+}: Props) {
   const section = Object.keys(SECTION_META).find(k => path.startsWith(k)) ?? '/catatan';
   const meta = SECTION_META[section];
 
@@ -507,6 +508,8 @@ export default function SheetFormContent({ path, initialTransactionType, onSucce
         {section === '/keuangan'  && (
           <KeuanganSheetForm
             initialTransactionType={initialTransactionType}
+            initialVoiceTranscript={initialVoiceTranscript}
+            onVoiceTranscriptApplied={onVoiceTranscriptApplied}
             onSuccess={onSuccess}
           />
         )}

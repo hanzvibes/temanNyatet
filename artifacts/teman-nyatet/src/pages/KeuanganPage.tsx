@@ -42,6 +42,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import SearchBar from '@/components/SearchBar';
+import VoiceRecordButton from '@/components/VoiceRecordButton';
 import TransactionSummaryCard from '@/components/TransactionSummaryCard';
 import {
   generateTransactionSummary,
@@ -456,6 +457,29 @@ export default function KeuanganPage() {
     }
   };
 
+  const handleVoiceTranscript = (text: string) => {
+    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+
+    if (isFormOpen || isDesktop) {
+      const current = form.getValues('note')?.trim() ?? '';
+      form.setValue('note', current ? `${current}\n${text}` : text, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      if (!isFormOpen) setIsFormOpen(true);
+      return;
+    }
+
+    // The mobile transaction form lives inside BottomSheetNav. Let it open
+    // itself and apply the transcript once its form has mounted.
+    window.dispatchEvent(new CustomEvent('teman-nyatet:open-bottom-sheet', {
+      detail: {
+        transactionType: 'expense' as TransactionType,
+        voiceTranscript: text,
+      },
+    }));
+  };
+
   const { groupedTx, sortedDates } = useMemo(() => {
     const grouped = filteredTransactions.reduce(
       (acc, tx) => {
@@ -784,6 +808,14 @@ export default function KeuanganPage() {
           </div>
 
         </div>
+      </div>
+
+      {/* Voice recording — page-owned and floating above BottomSheetNav. */}
+      <div className="pointer-events-auto fixed bottom-[calc(7.5rem+env(safe-area-inset-bottom))] right-3 z-[60] sm:right-6 lg:bottom-6">
+        <VoiceRecordButton
+          onTranscript={handleVoiceTranscript}
+          className="flex-row-reverse rounded-full border border-finance/25 bg-card/95 py-1 pl-2 pr-1 shadow-elevation-2 backdrop-blur-xl sm:pl-3"
+        />
       </div>
 
       {/* ── Form Sheet ── */}

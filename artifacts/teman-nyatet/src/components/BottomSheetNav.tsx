@@ -47,6 +47,7 @@ export default function BottomSheetNav() {
   // the mobile keyboard opens, instead of staying behind it.
   const [screenH, setScreenH] = useState(() => window.visualViewport?.height ?? window.innerHeight);
   const [requestedTransactionType, setRequestedTransactionType] = useState<TransactionType | undefined>();
+  const [requestedVoiceTranscript, setRequestedVoiceTranscript] = useState<string | undefined>();
   useEffect(() => {
     let frame = 0;
     const update = () => {
@@ -247,8 +248,13 @@ export default function BottomSheetNav() {
   // those pages to the sheet's internal motion state.
   useEffect(() => {
     const handleOpenRequest = (event: Event) => {
-      const transactionType = (event as CustomEvent<{ transactionType?: TransactionType }>).detail?.transactionType;
+      const detail = (event as CustomEvent<{
+        transactionType?: TransactionType;
+        voiceTranscript?: string;
+      }>).detail;
+      const transactionType = detail?.transactionType;
       setRequestedTransactionType(transactionType);
+      setRequestedVoiceTranscript(detail?.voiceTranscript);
       snapTo('half');
     };
     window.addEventListener('teman-nyatet:open-bottom-sheet', handleOpenRequest);
@@ -393,6 +399,8 @@ export default function BottomSheetNav() {
                   <SheetFormContent
                     path={location}
                     initialTransactionType={requestedTransactionType}
+                    initialVoiceTranscript={requestedVoiceTranscript}
+                    onVoiceTranscriptApplied={() => setRequestedVoiceTranscript(undefined)}
                     onSuccess={() => {
                       haptic(HAPTIC.success);
                       snapTo('collapsed');

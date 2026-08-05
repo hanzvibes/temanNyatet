@@ -160,3 +160,11 @@ overrides:
   # Deduplicate google-auth-library to resolve type conflicts between the version
   # bundled inside googleapis and any transitive version installed elsewhere.
   google-auth-library: "^10.9.0"
+  # Security patches for transitive dependencies.
+  fast-uri: "3.1.5"
+  "brace-expansion@2": "2.1.4"
+  "brace-expansion@5": "5.0.9"
+  ip-address: "10.4.0"
+  js-yaml: "4.3.0"
+  linkify-it: "5.0.2"
+  postcss: "8.5.23"

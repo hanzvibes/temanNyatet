@@ -103,19 +103,26 @@ export default function VoiceRecordButton({
   const { status, transcript, errorCode, startRecording, stopRecording, reset } =
     useVoiceRecorder();
 
+  // Keep the latest parent callback without making the delivery effect restart
+  // every time the parent page re-renders after form.setValue().
+  const onTranscriptRef = useRef(onTranscript);
+  useEffect(() => {
+    onTranscriptRef.current = onTranscript;
+  }, [onTranscript]);
+
   // Deliver transcript to parent exactly once when done
   const deliveredRef = useRef(false);
   useEffect(() => {
     if (!(status === 'done' && transcript && !deliveredRef.current)) return;
     deliveredRef.current = true;
-    onTranscript(transcript);
+    onTranscriptRef.current(transcript);
     // Auto-reset after a brief "done" flash so the button is ready again
     const t = window.setTimeout(() => {
       reset();
       deliveredRef.current = false;
     }, 1800);
     return () => window.clearTimeout(t);
-  }, [status, transcript, onTranscript, reset]);
+  }, [status, transcript, reset]);
 
   // Auto-reset error state after a moment so users can retry
   useEffect(() => {
@@ -135,6 +142,9 @@ export default function VoiceRecordButton({
     if (isDisabled) return;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     if (status === 'idle' || status === 'error' || status === 'done') {
+      // A new recording must always be deliverable, even if the previous
+      // "done" state is still visible.
+      deliveredRef.current = false;
       startRecording();
     }
   };

@@ -113,7 +113,7 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
   const streamRef    = useRef<MediaStream | null>(null);
   const speechRecognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const speechTranscriptRef = useRef('');
-  const speechStopRequestedRef = useRef(false);
+  const speechSessionRef = useRef(0);
   const chunksRef    = useRef<Blob[]>([]);
   const startTimeRef = useRef<number>(0);
 
@@ -139,8 +139,8 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
     // the resulting text is still sent through the normal note/AI flow.
     const SpeechRecognition = getSpeechRecognition();
     if (SpeechRecognition) {
+      const sessionId = ++speechSessionRef.current;
       speechTranscriptRef.current = '';
-      speechStopRequestedRef.current = false;
 
       let recognition: SpeechRecognitionLike;
       try {
@@ -158,11 +158,13 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
       recognition.maxAlternatives = 1;
 
       recognition.onstart = () => {
+        if (speechSessionRef.current !== sessionId) return;
         startTimeRef.current = Date.now();
         setStatus('recording');
       };
 
       recognition.onresult = (event) => {
+        if (speechSessionRef.current !== sessionId) return;
         let finalText = '';
         for (let index = 0; index < event.results.length; index += 1) {
           const result = event.results[index];
@@ -174,6 +176,10 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
       };
 
       recognition.onerror = (event) => {
+        if (speechSessionRef.current !== sessionId) return;
+        // Invalidate the matching onend callback. Some browsers fire onend
+        // after onerror, and that callback must not overwrite the error state.
+        speechSessionRef.current += 1;
         speechRecognitionRef.current = null;
         if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
           setStatus('error');
@@ -188,6 +194,8 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
       };
 
       recognition.onend = () => {
+        if (speechSessionRef.current !== sessionId) return;
+        speechSessionRef.current += 1;
         speechRecognitionRef.current = null;
         const elapsed = Date.now() - startTimeRef.current;
         const text = speechTranscriptRef.current.trim();
@@ -295,7 +303,6 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
 
   const stopRecording = useCallback(() => {
     if (speechRecognitionRef.current) {
-      speechStopRequestedRef.current = true;
       speechRecognitionRef.current.stop();
       return;
     }
@@ -310,9 +317,9 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
   }, [releaseStream]);
 
   const reset = useCallback(() => {
+    speechSessionRef.current += 1;
     speechRecognitionRef.current?.abort();
     speechRecognitionRef.current = null;
-    speechStopRequestedRef.current = false;
     setStatus('idle');
     setTranscript('');
     setErrorCode(null);

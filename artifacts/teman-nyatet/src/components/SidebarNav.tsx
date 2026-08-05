@@ -36,19 +36,19 @@ export default function SidebarNav() {
     : 'text-primary';
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 xl:w-72 2xl:w-80 min-h-dvh bg-card/80 border-r border-border/70 sticky top-0 h-dvh shrink-0">
+    <aside className="sticky top-0 hidden h-dvh min-h-dvh w-64 shrink-0 flex-col border-r border-border/70 bg-card/75 backdrop-blur-xl lg:flex xl:w-72 2xl:w-80">
       {/* Brand */}
-      <div className="px-6 pt-7 pb-6">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/70 mb-2">
+      <div className="px-6 pb-6 pt-8">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/70">
           TemanNyatet
         </p>
-        <h1 className="text-xl xl:text-[1.4rem] font-bold text-foreground leading-tight tracking-[-0.02em]">
+        <h1 className="text-xl font-bold leading-tight tracking-[-0.03em] text-foreground xl:text-[1.4rem]">
           Sat-set, beres! ✓
         </h1>
       </div>
 
       {/* Nav links */}
-      <nav className="flex flex-col gap-1.5 px-3">
+      <nav className="flex flex-col gap-1 px-3">
         {NAV_ITEMS.map((item) => {
           const isActive = location.startsWith(item.path);
           const Icon = item.icon;
@@ -56,10 +56,10 @@ export default function SidebarNav() {
             <Link
               key={item.path}
               href={item.path}
-              className={`min-h-11 flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-150 text-sm font-semibold select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
+              className={`flex min-h-11 select-none items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
                 isActive
                   ? 'bg-primary text-primary-foreground shadow-sm'
-                   : 'text-muted-foreground hover:bg-muted hover:text-foreground hover:translate-x-0.5'
+                    : 'text-muted-foreground hover:translate-x-0.5 hover:bg-muted/80 hover:text-foreground'
               }`}
             >
               <Icon size={17} strokeWidth={isActive ? 2.5 : 2} className={isActive ? '' : item.color} />
@@ -77,9 +77,9 @@ export default function SidebarNav() {
         {createSection && (
           <button
             onClick={() => triggerCreate(createSection)}
-            className="w-full min-h-11 flex items-center justify-center gap-2 bg-primary text-primary-foreground
-                       rounded-xl py-3 font-semibold text-sm hover:bg-primary/90 active:scale-[0.98]
-                       transition-all duration-150 shadow-sm
+            className="transition-press flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-elevation-1
+                       hover:bg-primary/90 active:scale-[0.98]
+                       duration-150
                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
                        focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
           >

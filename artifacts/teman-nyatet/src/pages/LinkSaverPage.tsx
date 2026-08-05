@@ -129,12 +129,11 @@ export default function LinkSaverPage() {
   }, [handleOpenForm]);
 
   return (
-    <div className="flex min-h-dvh h-full flex-col bg-background pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
+    <div className="app-page">
 
       {/* ── Header ── */}
-      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-border/40">
-        <div className="mx-auto max-w-screen-xl px-5 py-3 sm:px-6 sm:py-4 lg:px-10 lg:py-5">
-          <div className="flex items-center justify-between">
+      <div className="app-page-header">
+        <div className="app-page-header-inner">
             <div>
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">Link Saver</h1>
@@ -154,12 +153,11 @@ export default function LinkSaverPage() {
                 viewport="mobile"
               />
             </div>
-          </div>
         </div>
       </div>
 
       {/* ── Body ── */}
-      <div className="mx-auto w-full max-w-screen-xl px-5 pt-4 pb-6 sm:px-6 sm:pt-5 lg:px-10 lg:pt-6">
+      <div className="app-page-body">
         {loading ? (
           <PageLoading accent="link" label="Memuat link…" />
         ) : (
@@ -201,11 +199,11 @@ export default function LinkSaverPage() {
             {filteredLinks.length > 0 && (
               <>
                 {/* Section meta */}
-                <div className="flex items-center justify-between">
-                  <h2 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
+                <div className="app-section-meta">
+                  <h2>
                     Link Tersimpan
                   </h2>
-                  <span className="text-[11px] font-semibold text-muted-foreground/60 tabular-nums">
+                  <span>
                     {filteredLinks.length} link
                   </span>
                 </div>

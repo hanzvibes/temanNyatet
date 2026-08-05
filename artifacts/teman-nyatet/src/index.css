@@ -251,6 +251,8 @@
   body {
     @apply font-sans antialiased bg-background text-foreground selection:bg-primary/20;
     min-width: 320px;
+    letter-spacing: -0.01em;
+    text-rendering: optimizeLegibility;
     /* Prevent pull-to-refresh and rubber-band overscroll on the app shell,
        giving a locked, native-app feel. Scrollable regions use
        overscroll-behavior: contain themselves. */
@@ -266,6 +268,14 @@
   :where(button, a, input, textarea, select, [role='button']):focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 3px;
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    -webkit-font-smoothing: antialiased;
   }
 }
 
@@ -293,7 +303,7 @@
   }
 
   .text-page-title {
-    @apply text-[1.75rem] lg:text-3xl font-semibold leading-[1.12] tracking-[-0.025em] text-foreground;
+    @apply text-[1.7rem] sm:text-[1.85rem] lg:text-3xl font-semibold leading-[1.08] tracking-[-0.035em] text-foreground;
   }
 
   .text-modal-title {
@@ -317,7 +327,7 @@
   }
 
   .text-pill-label {
-    @apply text-xs font-medium uppercase tracking-wider text-muted-foreground;
+    @apply text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground;
   }
 
   .text-pill-tag {
@@ -336,7 +346,7 @@
      clearly distinct from filled text. */
   input::placeholder,
   textarea::placeholder {
-    @apply text-muted-foreground/65;
+    @apply text-muted-foreground/75;
   }
 }
 
@@ -385,6 +395,38 @@
 
   .shadow-elevated {
     box-shadow: var(--shadow-3);
+  }
+
+  .app-page {
+    @apply flex min-h-dvh h-full flex-col bg-background pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16;
+  }
+
+  .app-page-header {
+    @apply sticky top-0 z-10 border-b border-border/50 bg-background/85 backdrop-blur-xl;
+  }
+
+  .app-page-header-inner {
+    @apply mx-auto flex max-w-screen-xl items-center justify-between px-5 py-3.5 sm:px-6 sm:py-4 lg:px-10 lg:py-5;
+  }
+
+  .app-page-body {
+    @apply mx-auto w-full max-w-screen-xl px-5 pb-7 pt-5 sm:px-6 sm:pt-6 lg:px-10 lg:pb-10 lg:pt-7;
+  }
+
+  .app-section-meta {
+    @apply flex items-center justify-between px-0.5;
+  }
+
+  .app-section-meta > :first-child {
+    @apply text-[0.6875rem] font-bold uppercase tracking-[0.15em] text-muted-foreground/75;
+  }
+
+  .app-section-meta > :last-child {
+    @apply text-[0.6875rem] font-semibold tabular-nums text-muted-foreground/65;
+  }
+
+  .surface-card {
+    @apply border border-border/60 bg-card shadow-elevation-1;
   }
 
   .transition-press {
@@ -449,7 +491,7 @@
   button:active,
   a:active,
   [role='button']:active {
-    transform: scale(0.99);
+    transform: scale(0.985);
     transition: transform 0.12s ease;
   }
 

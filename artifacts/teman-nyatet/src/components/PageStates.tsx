@@ -75,17 +75,17 @@ export function PageEmpty({ icon: Icon, title, description, accent = 'catatan', 
     <div
       role="status"
       aria-live="polite"
-      className="flex flex-col items-center justify-center text-center min-h-[42vh] px-6 py-10 gap-4"
+      className="flex min-h-[42vh] flex-col items-center justify-center gap-4 px-6 py-12 text-center sm:py-14"
     >
       <div
-        className={`w-[4.25rem] h-[4.25rem] rounded-[1.25rem] ${t.containerBg} border ${t.containerBorder} flex items-center justify-center flex-shrink-0 shadow-elevation-1 animate-in fade-in duration-200`}
+        className={`flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-[1.35rem] border ${t.containerBg} ${t.containerBorder} shadow-elevation-1 animate-in fade-in zoom-in-95 duration-300`}
       >
         <Icon size={28} strokeWidth={2} className={t.iconText} />
       </div>
-      <div className="space-y-1 max-w-xs">
-        <p className={`font-semibold text-base leading-snug ${t.iconText}`}>{title}</p>
+      <div className="max-w-xs space-y-1.5">
+        <p className={`text-base font-semibold leading-snug tracking-[-0.015em] ${t.iconText}`}>{title}</p>
         {description && (
-          <p className="text-sm text-muted-foreground leading-[1.65] font-medium">
+          <p className="text-sm font-normal leading-[1.65] text-muted-foreground">
             {description}
           </p>
         )}
@@ -140,13 +140,13 @@ export function PageLoading({ accent = 'catatan', label = 'Memuat…' }: PageLoa
     <div
       role="status"
       aria-live="polite"
-      className="flex flex-col items-center justify-center min-h-[40vh] gap-3 px-6"
+      className="flex min-h-[40vh] flex-col items-center justify-center gap-3 px-6"
     >
       <div className="relative">
         <SkeletonShimmer className="absolute inset-0 -m-5 w-[calc(100%+2.5rem)] h-[calc(100%+2.5rem)] rounded-3xl opacity-35" />
         <Loader2 className={`relative w-6 h-6 animate-spin ${t.spinnerText}`} aria-hidden="true" />
       </div>
-      <p className="text-xs font-semibold text-muted-foreground tracking-wide">
+      <p className="text-xs font-semibold tracking-wide text-muted-foreground">
         {label}
       </p>
     </div>

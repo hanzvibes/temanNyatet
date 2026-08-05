@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useLocation } from 'wouter';
 import { supabase } from '@/lib/supabase';
 import {
   LogOut,
@@ -65,6 +66,7 @@ function StepIndicator({ current }: { current: number }) {
 
 export default function PaymentPage() {
   const [checkoutPlan, setCheckoutPlan] = useState<PaymentPlan | null>(null);
+  const [, setLocation] = useLocation();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -186,8 +188,16 @@ export default function PaymentPage() {
       </motion.div>
 
       <button
+        type="button"
+        onClick={() => setLocation('/catatan')}
+        className="mt-4 min-h-10 px-4 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+      >
+        Lewati untuk sekarang
+      </button>
+
+      <button
         onClick={handleLogout}
-        className="mt-5 flex min-h-10 items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="mt-2 flex min-h-10 items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <LogOut size={15} /> Keluar
       </button>

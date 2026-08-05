@@ -246,16 +246,10 @@ export interface CategoryTotal {
   type: TransactionType;
 }
 
-// Default categories for transactions
-export const DEFAULT_INCOME_CATEGORIES = [
-  'Gaji', 'Freelance', 'Bisnis', 'Investasi', 'Hadiah', 'Lainnya',
-] as const;
-
-export const DEFAULT_EXPENSE_CATEGORIES = [
-  'Makanan', 'Transport', 'Belanja', 'Tagihan', 'Kesehatan',
-  'Hiburan', 'Pendidikan', 'Lainnya',
-] as const;
-
-export const DEFAULT_PAYMENT_SOURCES = [
-  'BCA', 'BRI', 'BNI', 'Mandiri', 'GoPay', 'OVO', 'Dana', 'Cash', 'Lainnya',
-] as const;
+// Backward-compatible exports. New finance code should import these from the
+// transaction domain module so schemas, defaults, and helpers stay together.
+export {
+  DEFAULT_INCOME_CATEGORIES,
+  DEFAULT_EXPENSE_CATEGORIES,
+  DEFAULT_PAYMENT_SOURCES,
+} from './transactions';

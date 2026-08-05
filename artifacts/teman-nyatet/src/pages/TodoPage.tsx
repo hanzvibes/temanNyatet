@@ -3,6 +3,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import SettingsSheet from '@/components/SettingsSheet';
 import { useTodos } from '@/hooks/useTodos';
 import { useCreate } from '@/contexts/CreateContext';
+import { requestBottomSheet } from '@/lib/app-events';
 import {
   Loader2,
   CheckCircle,
@@ -378,7 +379,7 @@ export default function TodoPage() {
       setIsFormOpen(true);
       return;
     }
-    window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'));
+    requestBottomSheet();
   };
 
   const onSubmitEdit = useCallback(
@@ -465,7 +466,7 @@ export default function TodoPage() {
               <button
                 type="button"
                 className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-full border border-todo/30 text-todo-text transition-colors hover:bg-todo/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-todo focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                onClick={() => window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'))}
+                onClick={() => requestBottomSheet()}
                 aria-label="Buka menu tambah to-do"
               >
                 <PanelTopOpen size={18} strokeWidth={2.3} />

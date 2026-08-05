@@ -5,6 +5,7 @@ import { SwipeableRow } from '@/components/SwipeableRow';
 import SettingsSheet from '@/components/SettingsSheet';
 import { useLinks } from '@/hooks/useLinks';
 import { useCreate } from '@/contexts/CreateContext';
+import { requestBottomSheet } from '@/lib/app-events';
 import {
   Link2,
   Copy,
@@ -125,7 +126,7 @@ export default function LinkSaverPage() {
       handleOpenForm();
       return;
     }
-    window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'));
+    requestBottomSheet();
   }, [handleOpenForm]);
 
   return (
@@ -142,7 +143,7 @@ export default function LinkSaverPage() {
               <button
                 type="button"
                 className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-full border border-linksaver/30 text-linksaver-text transition-colors hover:bg-linksaver/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-linksaver focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                onClick={() => window.dispatchEvent(new Event('teman-nyatet:open-bottom-sheet'))}
+                onClick={() => requestBottomSheet()}
                 aria-label="Buka menu tambah link"
               >
                 <PanelTopOpen size={18} strokeWidth={2.3} />

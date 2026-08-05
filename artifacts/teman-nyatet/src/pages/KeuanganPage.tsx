@@ -32,15 +32,9 @@ import { CATEGORY_ICON, FALLBACK_CATEGORY_ICON } from '@/lib/categoryIcons';
 import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
 import { Button } from '@/components/ui/button';
 import { Drawer } from 'vaul';
-import {
-  TransactionType,
-  DEFAULT_INCOME_CATEGORIES,
-  DEFAULT_EXPENSE_CATEGORIES,
-  DEFAULT_PAYMENT_SOURCES,
-} from '@/lib/database.types';
+import type { TransactionType } from '@/lib/database.types';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import SearchBar from '@/components/SearchBar';
 import VoiceRecordButton from '@/components/VoiceRecordButton';
 import TransactionSummaryCard from '@/components/TransactionSummaryCard';
@@ -51,40 +45,22 @@ import {
   type TransactionSummaryPeriod,
 } from '@/lib/transaction-summary';
 import { transactionDateValue } from '@/lib/transaction-date';
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const formatRupiah = (amount: number) =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(amount);
-
-const formatRupiahCompact = (amount: number) => {
-  if (Math.abs(amount) >= 1_000_000)
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      notation: 'compact',
-      maximumFractionDigits: 1,
-    }).format(amount);
-  return formatRupiah(amount);
-};
+import {
+  DEFAULT_INCOME_CATEGORIES,
+  DEFAULT_EXPENSE_CATEGORIES,
+  DEFAULT_PAYMENT_SOURCES,
+  formatRupiah,
+  formatRupiahCompact,
+  parseTransactionAmount,
+  transactionFormSchema,
+  createTransactionFormDefaults,
+  type TransactionFormValues,
+} from '@/lib/transactions';
+import { requestBottomSheet, requestSettingsTopUp } from '@/lib/app-events';
 
 const INP =
   'w-full bg-card border border-border rounded-xl py-3 px-4 outline-none focus:border-finance focus:ring-2 focus:ring-finance/20 text-sm font-semibold text-foreground transition-all placeholder:text-muted-foreground/50';
 
-// ─── Schema ───────────────────────────────────────────────────────────────────
-const txSchema = z.object({
-  type: z.enum(['income', 'expense']),
-  amount: z.string().min(1, 'Nominal harus diisi'),
-  category: z.string().min(1, 'Pilih kategori'),
-  source: z.string().min(1, 'Pilih sumber dana'),
-  note: z.string().optional(),
-  date: z.string().min(1, 'Pilih tanggal'),
-});
-
-type TxFormValues = z.infer<typeof txSchema>;
 type PeriodFilter = 'all' | 'today' | 'week' | 'month' | 'custom';
 
 // ─── Balance Hero ─────────────────────────────────────────────────────────────
@@ -231,16 +207,9 @@ export default function KeuanganPage() {
       : 800,
   );
 
-  const form = useForm<TxFormValues>({
-    resolver: zodResolver(txSchema),
-    defaultValues: {
-      type: 'expense',
-      amount: '',
-      category: '',
-      source: 'Cash',
-      note: '',
-      date: format(new Date(), 'yyyy-MM-dd'),
-    },
+  const form = useForm<TransactionFormValues>({
+    resolver: zodResolver(transactionFormSchema),
+    defaultValues: createTransactionFormDefaults(),
   });
 
   useEffect(() => {
@@ -387,7 +356,7 @@ export default function KeuanganPage() {
       const message = err instanceof Error ? err.message : 'Gagal membuat ringkasan AI';
       setSummaryGenerateError(message);
       if (message === 'CREDITS_EXHAUSTED') {
-        window.dispatchEvent(new CustomEvent('teman-nyatet:open-settings-topup'));
+        requestSettingsTopUp();
       }
     } finally {
       setSummaryGenerating(false);
@@ -431,13 +400,11 @@ export default function KeuanganPage() {
   );
 
   const handleOpenForm = (type: TransactionType = 'expense') => {
-    window.dispatchEvent(new CustomEvent('teman-nyatet:open-bottom-sheet', {
-      detail: { transactionType: type },
-    }));
+    requestBottomSheet({ transactionType: type });
   };
 
-  const onSubmitForm = async (data: TxFormValues) => {
-    const amountNum = Number(data.amount.replace(/\D/g, ''));
+  const onSubmitForm = async (data: TransactionFormValues) => {
+    const amountNum = parseTransactionAmount(data.amount);
     if (!amountNum || amountNum <= 0) {
       form.setError('amount', { message: 'Nominal harus lebih dari 0' });
       return;
@@ -472,12 +439,10 @@ export default function KeuanganPage() {
 
     // The mobile transaction form lives inside BottomSheetNav. Let it open
     // itself and apply the transcript once its form has mounted.
-    window.dispatchEvent(new CustomEvent('teman-nyatet:open-bottom-sheet', {
-      detail: {
-        transactionType: 'expense' as TransactionType,
-        voiceTranscript: text,
-      },
-    }));
+    requestBottomSheet({
+      transactionType: 'expense',
+      voiceTranscript: text,
+    });
   };
 
   const { groupedTx, sortedDates } = useMemo(() => {
@@ -569,7 +534,7 @@ export default function KeuanganPage() {
                     balance={summaryBalance}
                     onGenerate={handleGenerateSummary}
                     onRetryLoad={loadSummary}
-                    onOpenTopUp={() => window.dispatchEvent(new CustomEvent('teman-nyatet:open-settings-topup'))}
+                    onOpenTopUp={requestSettingsTopUp}
                   />
                 ) : (
                   <div className="mt-6 flex items-start gap-3 rounded-[1.35rem] border border-primary/15 bg-primary/[0.05] px-4 py-3.5 text-xs font-semibold leading-relaxed text-muted-foreground">

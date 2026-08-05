@@ -35,6 +35,7 @@ import {
   type SubscriptionHistoryItem,
   type SubscriptionOverview,
 } from '@/lib/subscription';
+import { requestSettingsTopUp } from '@/lib/app-events';
 
 const FAQ_ITEMS = [
   {
@@ -428,7 +429,7 @@ export default function SubscriptionPage() {
                 <FeaturesCard features={overview.features} />
                 <div id="credit-usage"><CreditsCard credits={overview.credits} onBuy={() => {
                   toast.info('Buka menu Top Up AI Credit dari Pengaturan untuk memilih paket.');
-                  window.dispatchEvent(new CustomEvent('teman-nyatet:open-settings-topup'));
+                  requestSettingsTopUp();
                 }} /></div>
               </div>
               <AiSummaryDetails variant="full" />

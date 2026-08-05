@@ -13,6 +13,7 @@ import { openPaymentCheckout, type PaymentPlan } from '@/lib/payment';
 import TopUpSection from '@/components/TopUpSection';
 import AiSummaryDetails from '@/components/AiSummaryDetails';
 import { publishOverlayState } from '@/lib/overlay-state';
+import { APP_EVENTS, subscribeToAppEvent } from '@/lib/app-events';
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -180,7 +181,10 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
       setOpen(true);
       setActiveSection('subscription');
     };
-    window.addEventListener('teman-nyatet:open-settings-subscription', openSubscription);
+    const unsubscribeSubscription = subscribeToAppEvent(
+      APP_EVENTS.openSettingsSubscription,
+      openSubscription,
+    );
     const openTopUp = (event: Event) => {
       if (!isViewportActive || event.defaultPrevented) return;
       event.preventDefault();
@@ -190,10 +194,13 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
         setActiveSection('topup');
       }, 180);
     };
-    window.addEventListener('teman-nyatet:open-settings-topup', openTopUp);
+    const unsubscribeTopUp = subscribeToAppEvent(
+      APP_EVENTS.openSettingsTopUp,
+      openTopUp,
+    );
     return () => {
-      window.removeEventListener('teman-nyatet:open-settings-subscription', openSubscription);
-      window.removeEventListener('teman-nyatet:open-settings-topup', openTopUp);
+      unsubscribeSubscription();
+      unsubscribeTopUp();
     };
   }, [isViewportActive]);
 

@@ -30,13 +30,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  TransactionType,
-  DEFAULT_INCOME_CATEGORIES,
-  DEFAULT_EXPENSE_CATEGORIES,
-  DEFAULT_PAYMENT_SOURCES,
+  type TransactionType,
 } from '@/lib/database.types';
 import { toast } from 'sonner';
 import { getNoteColor, NOTE_COLORS } from '@/lib/noteColors';
+import {
+  DEFAULT_PAYMENT_SOURCES,
+  getTransactionCategories,
+  parseTransactionAmount,
+  transactionFormSchema,
+  createTransactionFormDefaults,
+  type TransactionFormValues,
+} from '@/lib/transactions';
 
 // ─── Shared input style helpers ───────────────────────────────────────────────
 // [color-scheme:light] + dark:[color-scheme:dark] keeps browser-native controls
@@ -146,16 +151,6 @@ function NoteSheetForm({ onSuccess }: { onSuccess: () => void }) {
 }
 
 // ─── Keuangan Form ────────────────────────────────────────────────────────────
-const txSchema = z.object({
-  type:   z.enum(['income', 'expense']),
-  amount: z.string().min(1),
-  category: z.string().min(1, 'Pilih kategori'),
-  source: z.string(),
-  note:   z.string().optional(),
-  date:   z.string(),
-});
-type TxForm = z.infer<typeof txSchema>;
-
 function KeuanganSheetForm({
   onSuccess,
   initialTransactionType = 'expense',
@@ -172,20 +167,13 @@ function KeuanganSheetForm({
   const haptic = useHaptic();
   const [txType, setTxType] = useState<TransactionType>(initialTransactionType);
 
-  const form = useForm<TxForm>({
-    resolver: zodResolver(txSchema),
-    defaultValues: {
-      type: initialTransactionType,
-      amount: '',
-      category: '',
-      source: 'Cash',
-      note: '',
-      date: format(new Date(), 'yyyy-MM-dd'),
-    },
+  const form = useForm<TransactionFormValues>({
+    resolver: zodResolver(transactionFormSchema),
+    defaultValues: createTransactionFormDefaults(initialTransactionType),
   });
 
-  const onSubmit = async (data: TxForm) => {
-    const amountNum = Number(data.amount.replace(/\D/g, ''));
+  const onSubmit = async (data: TransactionFormValues) => {
+    const amountNum = parseTransactionAmount(data.amount);
     if (!amountNum || amountNum <= 0) {
       form.setError('amount', { message: 'Nominal harus lebih dari 0' });
       return;
@@ -199,7 +187,7 @@ function KeuanganSheetForm({
         note: data.note || null,
         date: data.date,
       });
-      form.reset({ type: 'expense', amount: '', category: '', source: 'Cash', note: '', date: format(new Date(), 'yyyy-MM-dd') });
+       form.reset(createTransactionFormDefaults());
       setTxType('expense');
       onSuccess();
     } catch {
@@ -223,7 +211,7 @@ function KeuanganSheetForm({
     onVoiceTranscriptApplied?.();
   }, [initialVoiceTranscript]);
 
-  const cats = txType === 'expense' ? DEFAULT_EXPENSE_CATEGORIES : DEFAULT_INCOME_CATEGORIES;
+  const cats = getTransactionCategories(txType);
   const cat  = form.watch('category');
 
   return (

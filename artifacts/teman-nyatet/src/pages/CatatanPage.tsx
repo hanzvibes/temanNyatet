@@ -22,6 +22,7 @@ import { getNoteColor, NOTE_COLORS, NOTE_COLOR_PALETTE } from '@/lib/noteColors'
 import { apiGet, apiPost } from '@/lib/apiClient';
 import { formatNoteDate } from '@/lib/noteData';
 import VoiceRecordButton from '@/components/VoiceRecordButton';
+import { requestSettingsSubscription } from '@/lib/app-events';
 import {
   Dialog,
   DialogContent,
@@ -153,9 +154,7 @@ export default function CatatanPage() {
     // settings drawer. This keeps both portals from briefly stacking.
     const timer = window.setTimeout(() => {
       setOpenSubscriptionAfterClose(false);
-      window.dispatchEvent(
-        new CustomEvent('teman-nyatet:open-settings-subscription', { cancelable: true }),
-      );
+      requestSettingsSubscription();
     }, 260);
 
     return () => window.clearTimeout(timer);

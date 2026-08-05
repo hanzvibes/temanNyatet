@@ -8,6 +8,11 @@ import { useOrientation } from '@/hooks/useOrientation';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import type { TransactionType } from '@/lib/database.types';
 import {
+  APP_EVENTS,
+  subscribeToAppEvent,
+  type BottomSheetRequest,
+} from '@/lib/app-events';
+import {
   createBottomNavScrollState,
   getBottomNavMaxOffset,
   updateBottomNavScroll,
@@ -248,17 +253,13 @@ export default function BottomSheetNav() {
   // those pages to the sheet's internal motion state.
   useEffect(() => {
     const handleOpenRequest = (event: Event) => {
-      const detail = (event as CustomEvent<{
-        transactionType?: TransactionType;
-        voiceTranscript?: string;
-      }>).detail;
+      const detail = (event as CustomEvent<BottomSheetRequest>).detail;
       const transactionType = detail?.transactionType;
       setRequestedTransactionType(transactionType);
       setRequestedVoiceTranscript(detail?.voiceTranscript);
       snapTo('half');
     };
-    window.addEventListener('teman-nyatet:open-bottom-sheet', handleOpenRequest);
-    return () => window.removeEventListener('teman-nyatet:open-bottom-sheet', handleOpenRequest);
+    return subscribeToAppEvent(APP_EVENTS.openBottomSheet, handleOpenRequest);
   }, [SNAP.half]);
 
   // Drag — pointer capture on the handle bar only.

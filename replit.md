@@ -65,6 +65,8 @@ lib/
   db/               # Drizzle schema & migrations
 supabase/
   migrations/       # Supabase SQL migrations
+docs/
+  architecture.md   # Arsitektur, alur data, dan impact refactor
 scripts/
   post-merge.sh     # Runs after task-agent merges
 ```

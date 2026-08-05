@@ -41,7 +41,17 @@ export const notesTable = pgTable(
     color: text("color"),
     ...timestamps,
   },
-  (table) => [index("notes_user_updated_idx").on(table.userId, table.updatedAt)],
+  (table) => [
+    index("notes_user_updated_idx").on(table.userId, table.updatedAt),
+    // Matches the active-notes filter so soft-deleted rows are skipped before
+    // the API performs its compatibility sort.
+    index("notes_user_active_position_idx").on(
+      table.userId,
+      table.deletedAt,
+      table.position,
+      table.createdAt,
+    ),
+  ],
 );
 
 export const transactionsTable = pgTable(

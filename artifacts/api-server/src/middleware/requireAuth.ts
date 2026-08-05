@@ -11,6 +11,20 @@ import { getUserSheetConnection } from '../lib/user-sheet.js';
 // The namespace + `.default ?? mod` pattern is robust under both shapes.
 const rateLimit = ((rateLimitMod as any).default ?? rateLimitMod) as any;
 
+type VerifiedToken = {
+  userId: string;
+  emailConfirmed: boolean;
+  expiresAt: number;
+};
+
+// The API polls data endpoints frequently. Re-verifying the same access token
+// over the network for requests arriving within the same short window adds
+// avoidable latency, especially on mobile connections. This is intentionally
+// short-lived: revocations are still picked up on the next verification window.
+const TOKEN_CACHE_TTL_MS = 5_000;
+const verifiedTokenCache = new Map<string, VerifiedToken>();
+const tokenVerificationInFlight = new Map<string, Promise<VerifiedToken | null>>();
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
@@ -33,8 +47,42 @@ async function verifyToken(req: Request, res: Response): Promise<string | null> 
     return null;
   }
 
-  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !user) {
+  const now = Date.now();
+  const cached = verifiedTokenCache.get(token);
+  let verified = cached && cached.expiresAt > now ? cached : undefined;
+  if (!verified) {
+    verifiedTokenCache.delete(token);
+    const existingVerification = tokenVerificationInFlight.get(token);
+    const verification = existingVerification ?? (async () => {
+      const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+      if (error || !user) return null;
+      const result: VerifiedToken = {
+        userId: user.id,
+        emailConfirmed: Boolean(user.email_confirmed_at),
+        expiresAt: Date.now() + TOKEN_CACHE_TTL_MS,
+      };
+      verifiedTokenCache.set(token, result);
+      return result;
+    })();
+    if (!existingVerification) {
+      tokenVerificationInFlight.set(token, verification);
+      void verification.then(
+        () => {
+          if (tokenVerificationInFlight.get(token) === verification) {
+            tokenVerificationInFlight.delete(token);
+          }
+        },
+        () => {
+          if (tokenVerificationInFlight.get(token) === verification) {
+            tokenVerificationInFlight.delete(token);
+          }
+        },
+      );
+    }
+    verified = await verification ?? undefined;
+  }
+
+  if (!verified) {
     res.status(401).json({ error: 'Invalid or expired token' });
     return null;
   }
@@ -42,12 +90,12 @@ async function verifyToken(req: Request, res: Response): Promise<string | null> 
   // Enforce email verification on the server side too. An unverified user should
   // never be able to access protected resources, even if they somehow obtain a
   // session token while their email is still pending.
-  if (!user.email_confirmed_at) {
+  if (!verified.emailConfirmed) {
     res.status(401).json({ error: 'Email not confirmed. Silakan verifikasi email Anda terlebih dahulu sebelum login.' });
     return null;
   }
 
-  return user.id;
+  return verified.userId;
 }
 
 // Per-user rate limiter for data mutations. Mounted after authentication so the

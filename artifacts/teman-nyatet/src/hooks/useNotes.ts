@@ -31,7 +31,35 @@ function refreshLinksAfterNoteSave() {
 // a tab populates the grid instantly with the last-known data, while polling
 // continues to keep it fresh in the background.
 const notesByUser = new Map<string, Note[]>();
+const notesFetchesByUser = new Map<string, Promise<Note[]>>();
 let cacheSubscriber: { unsubscribe: () => void } | null = null;
+
+function sortNotes(notes: Note[]): Note[] {
+  return notes.sort((a, b) => {
+    const posA = a.position ?? 0;
+    const posB = b.position ?? 0;
+    if (posA !== posB) return posB - posA;
+    return noteTimestamp(b.created_at) - noteTimestamp(a.created_at);
+  });
+}
+
+// CatatanPage and the global bottom-sheet form can both mount useNotes at the
+// same time. Share the in-flight request so one screen transition cannot
+// produce two identical API calls and two simultaneous auth/database lookups.
+function fetchNotesForUser(userId: string): Promise<Note[]> {
+  const existing = notesFetchesByUser.get(userId);
+  if (existing) return existing;
+
+  const request = apiGet<Note[]>('/notes')
+    .then((data) => sortNotes(normalizeNotes(data)))
+    .finally(() => {
+      if (notesFetchesByUser.get(userId) === request) {
+        notesFetchesByUser.delete(userId);
+      }
+    });
+  notesFetchesByUser.set(userId, request);
+  return request;
+}
 
 // Drop cached data when the user signs out so the next sign-in (potentially
 // a different account on the same browser) cannot briefly read the previous
@@ -48,12 +76,16 @@ export function useNotes(userId?: string) {
   ensureCacheCleanupWired();
 
   // Hydrate from cache so tab re-entry shows the existing grid immediately.
+  const hasCachedNotes = Boolean(userId && notesByUser.has(userId));
   const [notes, setNotes] = useState<Note[]>(() =>
     userId ? notesByUser.get(userId) ?? [] : [],
   );
-  const [loading, setLoading] = useState(() => !(userId && notesByUser.has(userId)));
+  const [loading, setLoading] = useState(() => !hasCachedNotes);
   const [error, setError] = useState<Error | null>(null);
-  const firstLoad = useRef(true);
+  // Cached notes are already usable data. Refresh them in the background
+  // instead of replacing the visible grid with a spinner on every tab revisit.
+  const firstLoad = useRef(!hasCachedNotes);
+  const fetchInFlight = useRef(false);
   const notesRef = useRef(notes);
   const pendingReorderRef = useRef<{ requestId: number; orderedIds: string[] } | null>(null);
   const reorderRequestIdRef = useRef(0);
@@ -73,34 +105,34 @@ export function useNotes(userId?: string) {
 
   const fetchNotes = useCallback(async () => {
     if (!userId) return;
-    if (firstLoad.current) setLoading(true);
+    // Polling and mutation events can arrive close together. Do not create
+    // concurrent requests for the same user's notes.
+    if (fetchInFlight.current) return;
+    fetchInFlight.current = true;
+    if (firstLoad.current && notesRef.current.length === 0) setLoading(true);
     try {
-      const data = await apiGet<Note[]>('/notes');
-      const safeNotes = normalizeNotes(data);
+      const safeNotes = await fetchNotesForUser(userId);
       // A poll can return before the reorder request reaches the database.
       // Keep the user's optimistic order visible until the latest write has
       // completed; otherwise cards visibly jump back every 15 seconds.
       if (pendingReorderRef.current) return;
-      // Server already sorts by position desc, then created_at desc.
-      setNotes(safeNotes.sort((a, b) => {
-        const posA = a.position ?? 0;
-        const posB = b.position ?? 0;
-        if (posA !== posB) return posB - posA;
-        return noteTimestamp(b.created_at) - noteTimestamp(a.created_at);
-      }));
+      setNotes(safeNotes);
       setError(null);
     } catch (err) {
       setError(err as Error);
       if (firstLoad.current) toast.error('Gagal mengambil catatan');
     } finally {
-      setLoading(false);
+      if (firstLoad.current) setLoading(false);
       firstLoad.current = false;
+      fetchInFlight.current = false;
     }
   }, [userId]);
 
   useEffect(() => {
     if (!userId) return;
-    firstLoad.current = true;
+    // A cached empty array is still a valid cache entry. It should not flash
+    // the full-page loader while the background refresh is running.
+    firstLoad.current = !hasCachedNotes;
     void fetchNotes().catch(() => undefined);
     const interval = setInterval(() => {
       void fetchNotes().catch(() => undefined);

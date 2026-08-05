@@ -101,9 +101,13 @@ export function useNotes(userId?: string) {
   useEffect(() => {
     if (!userId) return;
     firstLoad.current = true;
-    fetchNotes();
-    const interval = setInterval(fetchNotes, POLL_INTERVAL_MS);
-    const onExternalChange = () => fetchNotes();
+    void fetchNotes().catch(() => undefined);
+    const interval = setInterval(() => {
+      void fetchNotes().catch(() => undefined);
+    }, POLL_INTERVAL_MS);
+    const onExternalChange = () => {
+      void fetchNotes().catch(() => undefined);
+    };
     window.addEventListener(REFETCH_EVENT, onExternalChange);
     return () => {
       clearInterval(interval);

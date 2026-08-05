@@ -49,9 +49,13 @@ export function useTransactions(userId?: string) {
   useEffect(() => {
     if (!userId) return;
     firstLoad.current = true;
-    fetchTransactions();
-    const interval = setInterval(fetchTransactions, POLL_INTERVAL_MS);
-    const onExternalChange = () => fetchTransactions();
+    void fetchTransactions().catch(() => undefined);
+    const interval = setInterval(() => {
+      void fetchTransactions().catch(() => undefined);
+    }, POLL_INTERVAL_MS);
+    const onExternalChange = () => {
+      void fetchTransactions().catch(() => undefined);
+    };
     window.addEventListener(REFETCH_EVENT, onExternalChange);
     return () => {
       clearInterval(interval);
@@ -151,6 +155,6 @@ export function useTransactions(userId?: string) {
     deleteTransaction,
     monthlySummary,
     monthlyChartData,
-    refetch: fetchTransactions
+    refetch: fetchTransactions,
   };
 }

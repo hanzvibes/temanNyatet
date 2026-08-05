@@ -396,7 +396,10 @@ export function SortableNoteGrid({
         </div>
       </SortableContext>
 
-      <DragOverlay>
+      {/* Disable dnd-kit's default drop animation. It animates the dragged
+          card back to its original grid position before unmounting, which is
+          especially noticeable when the card is dropped on the delete target. */}
+      <DragOverlay dropAnimation={null}>
         {activeNote ? (
           <motion.div
             animate={

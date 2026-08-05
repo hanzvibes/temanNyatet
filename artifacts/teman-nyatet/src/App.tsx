@@ -157,6 +157,11 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
     if (profile) {
       if (
+        profile.subscription_status === 'pending'
+        && location === '/payment'
+      ) {
+        setLocation('/catatan');
+      } else if (
         profile.subscription_status === 'archived'
         && location !== '/archived'
         && location !== '/subscription'

@@ -3,7 +3,6 @@ import {
   db,
   linksTable,
   notesTable,
-  profilesTable,
   todosTable,
   transactionsTable,
   type Link,
@@ -28,6 +27,7 @@ import {
   serializeTodoDate,
 } from './postgres-fields.js';
 import { FreePlanLimitError, type LimitedFreeEntity } from './plan-limits.js';
+import { supabaseAdmin } from './supabase-admin.js';
 
 type Entity = 'notes' | 'transactions' | 'todos' | 'links';
 type AppRow = Note | Transaction | Todo | Link;
@@ -166,17 +166,18 @@ export function createPostgresRepository(database: RepositoryDb = db) {
       fields: Record<string, unknown>,
       limit: number,
     ): Promise<Record<string, unknown>> {
+      const { data: profile, error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', userId)
+        .maybeSingle();
+      if (profileError) throw profileError;
+      const isPremium = profile?.subscription_status === 'active';
+
       return database.transaction(async (transaction) => {
         // Serialize creates for this user so concurrent requests cannot both
         // observe the same count and exceed the Free-plan limit.
         await transaction.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}))`);
-
-        const [profile] = await transaction
-          .select({ subscriptionStatus: profilesTable.subscriptionStatus })
-          .from(profilesTable)
-          .where(eq(profilesTable.id, userId))
-          .limit(1);
-        const isPremium = profile?.subscriptionStatus === 'active';
 
         if (!isPremium) {
           const table = tableFor(entity);

@@ -334,6 +334,7 @@ export default function KeuanganPage() {
     requestBottomSheet({
       transactionType: parsed.type ?? 'expense',
       voiceTranscript: text,
+      voiceTransaction: parsed,
     });
   };
 

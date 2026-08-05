@@ -53,6 +53,9 @@ export default function BottomSheetNav() {
   const [screenH, setScreenH] = useState(() => window.visualViewport?.height ?? window.innerHeight);
   const [requestedTransactionType, setRequestedTransactionType] = useState<TransactionType | undefined>();
   const [requestedVoiceTranscript, setRequestedVoiceTranscript] = useState<string | undefined>();
+  const [requestedVoiceTransaction, setRequestedVoiceTransaction] = useState<
+    BottomSheetRequest['voiceTransaction']
+  >();
   useEffect(() => {
     let frame = 0;
     const update = () => {
@@ -257,6 +260,7 @@ export default function BottomSheetNav() {
       const transactionType = detail?.transactionType;
       setRequestedTransactionType(transactionType);
       setRequestedVoiceTranscript(detail?.voiceTranscript);
+      setRequestedVoiceTransaction(detail?.voiceTransaction);
       snapTo('half');
     };
     return subscribeToAppEvent(APP_EVENTS.openBottomSheet, handleOpenRequest);
@@ -401,7 +405,11 @@ export default function BottomSheetNav() {
                     path={location}
                     initialTransactionType={requestedTransactionType}
                     initialVoiceTranscript={requestedVoiceTranscript}
-                    onVoiceTranscriptApplied={() => setRequestedVoiceTranscript(undefined)}
+                    initialVoiceTransaction={requestedVoiceTransaction}
+                    onVoiceTranscriptApplied={() => {
+                      setRequestedVoiceTranscript(undefined);
+                      setRequestedVoiceTransaction(undefined);
+                    }}
                     onSuccess={() => {
                       haptic(HAPTIC.success);
                       snapTo('collapsed');

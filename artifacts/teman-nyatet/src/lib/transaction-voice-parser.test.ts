@@ -39,6 +39,7 @@ test('parses the amount after the description, including spaced speech units', (
   assert.deepEqual(parseTransactionVoiceTranscript('20rb beli kopi', NOW), expected);
   assert.deepEqual(parseTransactionVoiceTranscript('beli Kopi 20 rb', NOW), expected);
   assert.deepEqual(parseTransactionVoiceTranscript('beli Kopi 20 ribu', NOW), expected);
+  assert.deepEqual(parseTransactionVoiceTranscript('beli kopi, seharga 20rb.', NOW), expected);
 });
 
 test('supports income, numeric amounts, relative dates, and bank sources', () => {

@@ -1,4 +1,5 @@
 import type { TransactionType } from '@/lib/database.types';
+import type { ParsedTransactionVoice } from '@/lib/transaction-voice-parser';
 
 export const APP_EVENTS = {
   openBottomSheet: 'teman-nyatet:open-bottom-sheet',
@@ -9,6 +10,7 @@ export const APP_EVENTS = {
 export type BottomSheetRequest = {
   transactionType?: TransactionType;
   voiceTranscript?: string;
+  voiceTransaction?: ParsedTransactionVoice;
 };
 
 function dispatch<T>(name: string, detail?: T, options?: CustomEventInit<T>) {

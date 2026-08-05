@@ -44,6 +44,7 @@ import {
 } from '@/lib/transactions';
 import {
   parseTransactionVoiceTranscript,
+  type ParsedTransactionVoice,
 } from '@/lib/transaction-voice-parser';
 
 // ─── Shared input style helpers ───────────────────────────────────────────────
@@ -158,11 +159,13 @@ function KeuanganSheetForm({
   onSuccess,
   initialTransactionType = 'expense',
   initialVoiceTranscript,
+  initialVoiceTransaction,
   onVoiceTranscriptApplied,
 }: {
   onSuccess: () => void;
   initialTransactionType?: TransactionType;
   initialVoiceTranscript?: string;
+  initialVoiceTransaction?: ParsedTransactionVoice;
   onVoiceTranscriptApplied?: () => void;
 }) {
   const { user } = useAuthContext();
@@ -205,8 +208,9 @@ function KeuanganSheetForm({
   };
 
   useEffect(() => {
-    if (!initialVoiceTranscript) return;
-    const parsed = parseTransactionVoiceTranscript(initialVoiceTranscript);
+    if (!initialVoiceTranscript && !initialVoiceTransaction) return;
+    const parsed = initialVoiceTransaction
+      ?? parseTransactionVoiceTranscript(initialVoiceTranscript ?? '');
     if (parsed.type) {
       form.setValue('type', parsed.type, { shouldDirty: true, shouldValidate: true });
       setTxType(parsed.type);
@@ -231,7 +235,7 @@ function KeuanganSheetForm({
       });
     }
     onVoiceTranscriptApplied?.();
-  }, [initialVoiceTranscript]);
+  }, [initialVoiceTranscript, initialVoiceTransaction]);
 
   const cats = getTransactionCategories(txType);
   const cat  = form.watch('category');
@@ -494,6 +498,7 @@ interface Props {
   path: string;
   initialTransactionType?: TransactionType;
   initialVoiceTranscript?: string;
+  initialVoiceTransaction?: ParsedTransactionVoice;
   onVoiceTranscriptApplied?: () => void;
   onSuccess: () => void;
 }
@@ -502,6 +507,7 @@ export default function SheetFormContent({
   path,
   initialTransactionType,
   initialVoiceTranscript,
+  initialVoiceTransaction,
   onVoiceTranscriptApplied,
   onSuccess,
 }: Props) {
@@ -519,6 +525,7 @@ export default function SheetFormContent({
           <KeuanganSheetForm
             initialTransactionType={initialTransactionType}
             initialVoiceTranscript={initialVoiceTranscript}
+            initialVoiceTransaction={initialVoiceTransaction}
             onVoiceTranscriptApplied={onVoiceTranscriptApplied}
             onSuccess={onSuccess}
           />

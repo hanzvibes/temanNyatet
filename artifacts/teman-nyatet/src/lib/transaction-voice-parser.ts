@@ -328,8 +328,15 @@ function findSource(text: string): string | undefined {
 }
 
 function sentenceCase(value: string): string {
-  const trimmed = value.trim().replace(/\s+/g, ' ');
-  return trimmed ? trimmed.charAt(0).toLocaleUpperCase('id-ID') + trimmed.slice(1) : '';
+  const trimmed = value
+    .trim()
+    .replace(/\s+([,.;:!?])/g, '$1')
+    .replace(/\s+/g, ' ');
+  const cleaned = trimmed
+    .replace(/^[,.;:!?]+/, '')
+    .replace(/[,.;:!?]+$/, '')
+    .trim();
+  return cleaned ? cleaned.charAt(0).toLocaleUpperCase('id-ID') + cleaned.slice(1) : '';
 }
 
 function findNote(text: string, amount?: AmountMatch, source?: string, date?: string): string | undefined {
@@ -342,7 +349,7 @@ function findNote(text: string, amount?: AmountMatch, source?: string, date?: st
   if (source) fallback = fallback.replace(new RegExp(`\\b(?:pakai|dengan|menggunakan|via|lewat)\\s+${source.replace(/\s/g, '\\s*')}\\b`, 'i'), ' ');
   if (date) fallback = fallback.replace(/\b(?:hari ini|sekarang|kemarin|besok|tanggal)\b.*$/i, ' ');
   fallback = fallback
-    .replace(/\b(?:rp|pemasukan|pengeluaran|masuk|keluar|menerima|terima|dapat|bayar|beli|belanja|biaya|sebesar|nominal|uang|rupiah)\b/gi, ' ')
+    .replace(/\b(?:rp|pemasukan|pengeluaran|masuk|keluar|menerima|terima|dapat|bayar|beli|belanja|biaya|sebesar|nominal|seharga|uang|rupiah)\b/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
   return fallback ? sentenceCase(fallback) : undefined;

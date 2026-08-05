@@ -234,6 +234,118 @@
   --note-card-4-border: hsl(0 28% 34%);
 }
 
+/* ── Appearance palettes ──────────────────────────────────────────────────
+   Palette changes are intentionally token-only: components keep their
+   existing behavior while the selected accent travels through the whole UI.
+   Dark variants preserve readable contrast on the dark canvas. */
+:root[data-palette="ocean"] {
+  --primary: 199 89% 36%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 188 86% 43%;
+  --accent-foreground: 0 0% 100%;
+  --ring: 199 89% 48%;
+  --finance: 188 86% 43%;
+  --finance-text: 199 78% 28%;
+  --todo: 199 89% 48%;
+  --todo-text: 199 78% 28%;
+  --linksaver: 199 32% 54%;
+  --linksaver-text: 199 48% 28%;
+}
+
+.dark[data-palette="ocean"] {
+  --primary: 199 89% 62%;
+  --primary-foreground: 199 90% 10%;
+  --accent: 188 86% 54%;
+  --accent-foreground: 199 90% 10%;
+  --ring: 199 89% 62%;
+  --finance: 188 86% 54%;
+  --finance-text: 188 82% 72%;
+  --todo: 199 89% 62%;
+  --todo-text: 199 82% 72%;
+  --linksaver-text: 199 32% 74%;
+}
+
+:root[data-palette="forest"] {
+  --primary: 142 72% 29%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 84 81% 44%;
+  --accent-foreground: 90 50% 10%;
+  --ring: 142 72% 38%;
+  --finance: 84 81% 44%;
+  --finance-text: 142 55% 24%;
+  --todo: 142 72% 36%;
+  --todo-text: 142 55% 24%;
+  --linksaver: 142 24% 52%;
+  --linksaver-text: 142 42% 25%;
+}
+
+.dark[data-palette="forest"] {
+  --primary: 142 62% 58%;
+  --primary-foreground: 145 55% 10%;
+  --accent: 84 70% 55%;
+  --accent-foreground: 90 50% 10%;
+  --ring: 142 62% 58%;
+  --finance: 84 70% 55%;
+  --finance-text: 84 72% 72%;
+  --todo: 142 62% 58%;
+  --todo-text: 142 68% 72%;
+  --linksaver-text: 142 24% 72%;
+}
+
+:root[data-palette="lavender"] {
+  --primary: 262 70% 46%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 271 91% 65%;
+  --accent-foreground: 260 60% 14%;
+  --ring: 262 70% 56%;
+  --finance: 271 91% 65%;
+  --finance-text: 262 58% 30%;
+  --todo: 262 70% 56%;
+  --todo-text: 262 58% 30%;
+  --linksaver: 262 25% 58%;
+  --linksaver-text: 262 42% 30%;
+}
+
+.dark[data-palette="lavender"] {
+  --primary: 262 82% 72%;
+  --primary-foreground: 262 55% 14%;
+  --accent: 271 88% 76%;
+  --accent-foreground: 260 60% 14%;
+  --ring: 262 82% 72%;
+  --finance: 271 88% 76%;
+  --finance-text: 271 82% 82%;
+  --todo: 262 82% 72%;
+  --todo-text: 262 82% 82%;
+  --linksaver-text: 262 25% 76%;
+}
+
+:root[data-palette="sunset"] {
+  --primary: 17 88% 40%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 25 95% 53%;
+  --accent-foreground: 20 75% 12%;
+  --ring: 17 88% 50%;
+  --finance: 25 95% 53%;
+  --finance-text: 17 72% 27%;
+  --todo: 17 88% 48%;
+  --todo-text: 17 72% 27%;
+  --linksaver: 17 28% 54%;
+  --linksaver-text: 17 48% 28%;
+}
+
+.dark[data-palette="sunset"] {
+  --primary: 17 88% 64%;
+  --primary-foreground: 20 75% 12%;
+  --accent: 25 95% 62%;
+  --accent-foreground: 20 75% 12%;
+  --ring: 17 88% 64%;
+  --finance: 25 95% 62%;
+  --finance-text: 25 92% 78%;
+  --todo: 17 88% 64%;
+  --todo-text: 17 88% 78%;
+  --linksaver-text: 17 28% 74%;
+}
+
 @layer base {
   * {
     @apply border-border;

@@ -3,6 +3,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import {
   useAppearance,
   FONT_FAMILIES,
+  PALETTE_OPTIONS,
   RADIUS_VALUES,
   type AppFont,
   type AppRadius,
@@ -44,6 +45,54 @@ export default function AppearanceSection() {
           Tema
         </p>
         <ThemeToggle />
+      </div>
+
+      {/* ── Palet warna ───────────────────────────────────────────────────── */}
+      <div className="space-y-2">
+        <p className="text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-muted-foreground px-1">
+          Palet Warna
+        </p>
+        <div
+          role="radiogroup"
+          aria-label="Palet warna aplikasi"
+          className="grid grid-cols-2 gap-2"
+        >
+          {PALETTE_OPTIONS.map(({ value, label, description, swatches }) => {
+            const selected = prefs.palette === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                aria-label={`${label}, ${description}`}
+                onClick={() => setPrefs({ palette: value })}
+                className={`relative flex min-h-[5.25rem] flex-col items-start justify-between overflow-hidden rounded-2xl border px-3.5 py-3 text-left transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
+                  selected
+                    ? 'border-primary/40 bg-primary/5 shadow-elevation-1'
+                    : 'border-border bg-secondary/60 hover:bg-secondary active:bg-secondary/80'
+                }`}
+              >
+                {selected && (
+                  <span className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                    <Check size={10} strokeWidth={3.5} />
+                  </span>
+                )}
+                <span className="flex h-7 w-full overflow-hidden rounded-lg border border-black/5 shadow-inner dark:border-white/10" aria-hidden="true">
+                  {swatches.map((color) => (
+                    <span key={color} className="h-full flex-1" style={{ backgroundColor: color }} />
+                  ))}
+                </span>
+                <span className="mt-2 text-[0.8125rem] font-bold leading-none text-foreground">
+                  {label}
+                </span>
+                <span className="text-[0.6875rem] leading-snug text-muted-foreground">
+                  {description}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── Font ─────────────────────────────────────────────────────────── */}

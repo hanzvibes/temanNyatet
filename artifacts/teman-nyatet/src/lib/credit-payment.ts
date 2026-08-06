@@ -1,6 +1,6 @@
 import { apiPost } from './apiClient';
 
-export type CreditPackageId = 'credit_100' | 'credit_300' | 'credit_700' | 'credit_1500';
+export type CreditPackageId = 'credit_100' | 'credit_500' | 'credit_1000' | 'credit_5000' | 'credit_10000';
 
 export type CreditPaymentCheckout = {
   order_id: string;

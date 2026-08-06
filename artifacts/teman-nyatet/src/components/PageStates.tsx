@@ -165,7 +165,12 @@ export function SkeletonPage({ accent = 'catatan' }: SkeletonPageProps) {
   const t = SECTION_THEME[accent];
   const tint = t.spinnerText.replace('text-', 'bg-');
   return (
-    <div className="flex flex-col gap-4 px-5 sm:px-6 lg:px-10 pt-5 lg:pt-7 animate-in fade-in duration-300">
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label="Memuat catatan"
+      className="flex flex-col gap-4 px-5 sm:px-6 lg:px-10 pt-5 lg:pt-7 animate-in fade-in duration-200"
+    >
       <div className="flex items-center justify-between">
         <SkeletonShimmer className="h-8 w-36 rounded-lg" />
         <SkeletonShimmer className="h-10 w-10 rounded-full" />

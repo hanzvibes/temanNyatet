@@ -5,7 +5,7 @@ import { useCreate } from '@/contexts/CreateContext';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { Loader2, BookOpen, Plus, Sparkles, X, CreditCard, ArrowUpRight, Check } from 'lucide-react';
-import { FormError, PageEmpty, PageLoading } from '@/components/PageStates';
+import { FormError, PageEmpty, SkeletonPage } from '@/components/PageStates';
 import { Button } from '@/components/ui/button';
 import { NOTE_TAGS } from '@/lib/categoryIcons';
 import SearchBar from '@/components/SearchBar';
@@ -278,8 +278,8 @@ export default function CatatanPage() {
 
       {/* ── Body ── */}
       <div className="app-page-body">
-        {loading ? (
-          <PageLoading accent="catatan" label="Memuat catatan…" />
+        {loading && notes.length === 0 ? (
+          <SkeletonPage accent="catatan" />
         ) : (
           <div className="space-y-3">
 

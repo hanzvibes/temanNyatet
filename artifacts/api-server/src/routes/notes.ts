@@ -19,16 +19,57 @@ const SUMMARY_CONTENT_MAX = 50_000;
 const AI_BASE_URL = (process.env['OPENAI_BASE_URL'] ?? 'https://ai.sumopod.com').replace(/\/+$/, '');
 const AI_MODEL = process.env['OPENAI_MODEL'] ?? 'gpt-4o-mini';
 const OPENAI_TIMEOUT_MS = 30_000;
+const NOTES_CACHE_TTL_MS = 5_000;
+
+type NotesPayload = Record<string, unknown>[];
+type NotesCacheEntry = { data: NotesPayload; expiresAt: number };
+
+// The frontend can request notes from the page and the global sheet at nearly
+// the same time. Keep a short per-user cache and share in-flight loads so
+// those requests do not repeat the same auth/database work. Mutations below
+// invalidate the entry immediately, so this never becomes a source of stale
+// note data after a write.
+const notesCache = new Map<string, NotesCacheEntry>();
+const notesLoads = new Map<string, Promise<NotesPayload>>();
+
+function invalidateNotesCache(userId: string) {
+  notesCache.delete(userId);
+}
+
+function loadNotes(userId: string): Promise<NotesPayload> {
+  const now = Date.now();
+  const cached = notesCache.get(userId);
+  if (cached && cached.expiresAt > now) return Promise.resolve(cached.data);
+  notesCache.delete(userId);
+
+  const existing = notesLoads.get(userId);
+  if (existing) return existing;
+
+  const load = listData('notes', userId)
+    .then((rows) => {
+      rows.sort((a, b) => {
+        const posA = Number(a.position) || 0;
+        const posB = Number(b.position) || 0;
+        if (posA !== posB) return posB - posA;
+        return new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime();
+      });
+      notesCache.set(userId, {
+        data: rows,
+        expiresAt: Date.now() + NOTES_CACHE_TTL_MS,
+      });
+      return rows;
+    })
+    .finally(() => {
+      if (notesLoads.get(userId) === load) notesLoads.delete(userId);
+    });
+
+  notesLoads.set(userId, load);
+  return load;
+}
 
 router.get('/notes', requireAuth, userRateLimit, async (req, res) => {
   try {
-    const rows = await listData('notes', req.userId!);
-    rows.sort((a, b) => {
-      const posA = Number(a.position) || 0;
-      const posB = Number(b.position) || 0;
-      if (posA !== posB) return posB - posA;
-      return new Date(b.created_at as string).getTime() - new Date(a.created_at as string).getTime();
-    });
+    const rows = await loadNotes(req.userId!);
     res.status(200).json({ data: rows });
   } catch (err) {
     req.log.error({ err }, 'Failed to list notes');
@@ -49,6 +90,7 @@ router.post('/notes', requireAuth, userRateLimit, async (req, res) => {
       { title, content, tags, color },
       FREE_PLAN_LIMIT,
     );
+    invalidateNotesCache(req.userId!);
     res.status(201).json({ data: row });
     void syncNoteLinks(req.userId!, title, content, req.log).catch((syncError) => {
       req.log.warn({ err: syncError }, 'Automatic note link sync failed');
@@ -86,6 +128,7 @@ router.put('/notes/:id', requireAuth, userRateLimit, async (req, res) => {
       res.status(404).json({ error: 'Note not found' });
       return;
     }
+    invalidateNotesCache(req.userId!);
     res.status(200).json({ data: row });
     if ('title' in updates || 'content' in updates) {
       void syncNoteLinks(req.userId!, updates.title ?? row.title, updates.content ?? row.content, req.log).catch((syncError) => {
@@ -211,6 +254,7 @@ router.post('/notes/reorder', requireAuth, userRateLimit, async (req, res) => {
       return;
     }
     await reorderNotes(req.userId!, orderedIds);
+    invalidateNotesCache(req.userId!);
     res.status(204).send();
   } catch (err) {
     req.log.error({ err }, 'Failed to reorder notes');
@@ -225,6 +269,7 @@ router.delete('/notes/:id', requireAuth, userRateLimit, async (req, res) => {
       res.status(404).json({ error: 'Note not found' });
       return;
     }
+    invalidateNotesCache(req.userId!);
     res.status(204).send();
   } catch (err) {
     req.log.error({ err }, 'Failed to delete note');

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Session, User } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/database.types';
+import { prefetchNotes } from '@/hooks/useNotes';
 
 type AuthContextType = {
   user: User | null;
@@ -90,6 +91,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setProfile(null);
           } else {
             setUser(session.user);
+            // Start the protected notes request while the profile query is
+            // still running. Catatan can then render from cache immediately
+            // when the auth redirect finishes.
+            void prefetchNotes(session.user.id).catch(() => undefined);
             await fetchProfile(session.user.id, session.user.email);
           }
         } else {
@@ -119,6 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session.user.email_confirmed_at) {
         setUser(session.user);
         setProfile(null);
+        void prefetchNotes(session.user.id).catch(() => undefined);
         await fetchProfile(session.user.id, session.user.email);
       } else {
         console.warn('[AuthContext] Auth state changed to unverified email, signing out');

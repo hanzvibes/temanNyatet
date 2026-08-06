@@ -31,8 +31,10 @@ function refreshLinksAfterNoteSave() {
 // a tab populates the grid instantly with the last-known data, while polling
 // continues to keep it fresh in the background.
 const notesByUser = new Map<string, Note[]>();
+const notesFetchedAtByUser = new Map<string, number>();
 const notesFetchesByUser = new Map<string, Promise<Note[]>>();
 let cacheSubscriber: { unsubscribe: () => void } | null = null;
+const NOTES_CACHE_TTL_MS = 10_000;
 
 function sortNotes(notes: Note[]): Note[] {
   return notes.sort((a, b) => {
@@ -51,7 +53,12 @@ function fetchNotesForUser(userId: string): Promise<Note[]> {
   if (existing) return existing;
 
   const request = apiGet<Note[]>('/notes')
-    .then((data) => sortNotes(normalizeNotes(data)))
+    .then((data) => {
+      const safeNotes = sortNotes(normalizeNotes(data));
+      notesByUser.set(userId, safeNotes);
+      notesFetchedAtByUser.set(userId, Date.now());
+      return safeNotes;
+    })
     .finally(() => {
       if (notesFetchesByUser.get(userId) === request) {
         notesFetchesByUser.delete(userId);
@@ -61,13 +68,25 @@ function fetchNotesForUser(userId: string): Promise<Note[]> {
   return request;
 }
 
+/**
+ * Start loading notes before the Catatan route mounts. AuthContext uses this
+ * after it has a valid session so profile loading and notes loading overlap.
+ * The hook and this prefetch share the same in-flight promise.
+ */
+export function prefetchNotes(userId: string): Promise<Note[]> {
+  return fetchNotesForUser(userId);
+}
+
 // Drop cached data when the user signs out so the next sign-in (potentially
 // a different account on the same browser) cannot briefly read the previous
 // user's notes. Lazy-attached once on first useNotes call.
 function ensureCacheCleanupWired() {
   if (cacheSubscriber) return;
   const { data } = supabase.auth.onAuthStateChange((event) => {
-    if (event === 'SIGNED_OUT') notesByUser.clear();
+    if (event === 'SIGNED_OUT') {
+      notesByUser.clear();
+      notesFetchedAtByUser.clear();
+    }
   });
   cacheSubscriber = data.subscription;
 }
@@ -77,6 +96,11 @@ export function useNotes(userId?: string) {
 
   // Hydrate from cache so tab re-entry shows the existing grid immediately.
   const hasCachedNotes = Boolean(userId && notesByUser.has(userId));
+  const hasFreshCachedNotes = Boolean(
+    userId &&
+    hasCachedNotes &&
+    Date.now() - (notesFetchedAtByUser.get(userId) ?? 0) < NOTES_CACHE_TTL_MS,
+  );
   const [notes, setNotes] = useState<Note[]>(() =>
     userId ? notesByUser.get(userId) ?? [] : [],
   );
@@ -133,7 +157,14 @@ export function useNotes(userId?: string) {
     // A cached empty array is still a valid cache entry. It should not flash
     // the full-page loader while the background refresh is running.
     firstLoad.current = !hasCachedNotes;
-    void fetchNotes().catch(() => undefined);
+    // AuthContext may have prefetched notes before the route mounted. Avoid
+    // immediately fetching the same payload a second time; the regular poll
+    // still refreshes stale data shortly afterward.
+    if (!hasFreshCachedNotes) {
+      void fetchNotes().catch(() => undefined);
+    } else {
+      firstLoad.current = false;
+    }
     const interval = setInterval(() => {
       void fetchNotes().catch(() => undefined);
     }, POLL_INTERVAL_MS);
@@ -145,7 +176,7 @@ export function useNotes(userId?: string) {
       clearInterval(interval);
       window.removeEventListener(REFETCH_EVENT, onExternalChange);
     };
-  }, [userId, fetchNotes]);
+  }, [userId, fetchNotes, hasFreshCachedNotes]);
 
   const createNote = async (note: Omit<NoteInsert, 'user_id'>) => {
     if (!userId) return;

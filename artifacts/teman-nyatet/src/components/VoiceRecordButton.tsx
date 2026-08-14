@@ -90,13 +90,13 @@ function ButtonIcon({ status }: { status: RecorderStatus }) {
   switch (status) {
     case 'requesting_permission':
     case 'processing':
-      return <Loader2 size={20} className="animate-spin" />;
+      return <Loader2 size={22} className="animate-spin" />;
     case 'done':
-      return <Check size={20} strokeWidth={2.5} />;
+      return <Check size={22} strokeWidth={2.5} />;
     case 'error':
-      return <MicOff size={20} strokeWidth={2} />;
+      return <MicOff size={22} strokeWidth={2} />;
     default:
-      return <Mic size={20} strokeWidth={2} />;
+      return <Mic size={22} strokeWidth={2.1} />;
   }
 }
 
@@ -104,18 +104,23 @@ function ButtonIcon({ status }: { status: RecorderStatus }) {
 
 function buttonClasses(status: RecorderStatus): string {
   const base =
-    'relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 select-none touch-none';
+    'relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background select-none touch-none';
   switch (status) {
+    // Recording: unmistakable live state — solid red, red glow, expanding
+    // rings (RecordingRipple) and level bars (RecordingBars) on top.
     case 'recording':
-      return `${base} border-red-400/70 bg-red-500 text-white shadow-[0_8px_24px_rgba(239,68,68,0.35)] scale-110 focus-visible:ring-red-500`;
+      return `${base} border-red-500/60 bg-red-500 text-white shadow-[0_10px_28px_rgba(239,68,68,0.4)] scale-105 focus-visible:ring-red-500`;
     case 'processing':
-      return `${base} border-primary/20 bg-primary/10 text-primary cursor-wait`;
+      return `${base} border-transparent bg-primary/10 text-primary cursor-wait`;
     case 'done':
-      return `${base} border-green-500/20 bg-green-500/15 text-green-600 dark:text-green-400`;
+      return `${base} border-transparent bg-green-500 text-white shadow-[0_10px_28px_rgba(16,185,129,0.35)]`;
     case 'error':
-      return `${base} border-destructive/20 bg-destructive/10 text-destructive`;
+      return `${base} border-transparent bg-destructive text-destructive-foreground shadow-elevation-1`;
+    // Idle: solid primary — reads as the page's main voice action. Follows
+    // the app's primary button pattern (bg-primary / primary-foreground /
+    // primary-border) and lifts slightly on hover, presses in on tap.
     default:
-      return `${base} border-primary/15 bg-primary/10 text-primary shadow-sm hover:border-primary/25 hover:bg-primary/15 hover:shadow-md active:scale-95`;
+      return `${base} border-primary-border bg-primary text-primary-foreground shadow-elevation-2 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-elevation-3 active:scale-95`;
   }
 }
 
@@ -267,8 +272,21 @@ export default function VoiceRecordButton({
       >
         {isActive && <RecordingRipple />}
         {isActive && <RecordingBars />}
-        <span className="relative z-10">
-          <ButtonIcon status={status} />
+        <span className="relative z-10 flex h-6 w-6 items-center justify-center">
+          {/* Smooth cross-fade between idle / busy / done / error icons so the
+              state change reads as one continuous motion. */}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={status}
+              initial={{ scale: 0.4, opacity: 0, rotate: -20 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              exit={{ scale: 0.4, opacity: 0, rotate: 20 }}
+              transition={{ duration: 0.16, ease: [0.32, 0.72, 0, 1] }}
+              className="flex"
+            >
+              <ButtonIcon status={status} />
+            </motion.span>
+          </AnimatePresence>
         </span>
       </button>
 

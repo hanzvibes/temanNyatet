@@ -138,9 +138,9 @@ export default defineConfig({
     fs: {
       strict: true,
     },
-    // Notes/transactions/todos/links now live behind the api-server
-    // (backed by Google Sheets). Proxy so the browser can call relative
-    // "/api/..." paths without CORS/origin juggling in dev.
+    // Notes/transactions/todos/links live behind the api-server (stored in
+    // PostgreSQL). Proxy so the browser can call relative "/api/..." paths
+    // without CORS/origin juggling in dev.
     proxy: {
       '/api': {
         target: 'http://localhost:8080',

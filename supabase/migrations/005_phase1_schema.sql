@@ -4,9 +4,9 @@
 -- ============================================================
 --
 -- Phase 1 of the hardened architecture:
---   1. Adds any missing profile columns needed for sync/tracking.
---   2. Drops legacy tables that are no longer used (all app data lives in
---      each user's private Google Spreadsheet).
+--   1. Adds any missing profile columns needed for the app.
+--   2. Drops legacy tables that are no longer used (all app data now lives
+--      in PostgreSQL).
 --   3. Ensures RLS policies on profiles are consistent.
 --
 -- All statements are idempotent (IF EXISTS / IF NOT EXISTS) so they are safe
@@ -17,21 +17,7 @@
 ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS name                 TEXT,
   ADD COLUMN IF NOT EXISTS phone                TEXT,
-  ADD COLUMN IF NOT EXISTS avatar_url           TEXT,
-  ADD COLUMN IF NOT EXISTS spreadsheet_id       TEXT,
-  ADD COLUMN IF NOT EXISTS template_version     TEXT,
-  ADD COLUMN IF NOT EXISTS google_refresh_token TEXT,
-  ADD COLUMN IF NOT EXISTS last_sync_at         TIMESTAMPTZ,
-  ADD COLUMN IF NOT EXISTS sync_status          TEXT DEFAULT 'unknown'
-                  CHECK (sync_status IN ('unknown', 'ok', 'error', 'repair_needed')),
-  ADD COLUMN IF NOT EXISTS recovery_metadata    JSONB DEFAULT '{}'::jsonb;
-
-COMMENT ON COLUMN public.profiles.last_sync_at IS
-  'Timestamp of the last successful background sync with the user''s Google Spreadsheet.';
-COMMENT ON COLUMN public.profiles.sync_status IS
-  'Overall sync health: ok, error, repair_needed, or unknown.';
-COMMENT ON COLUMN public.profiles.recovery_metadata IS
-  'Structured metadata used for spreadsheet recovery (old id, backup id, etc).';
+  ADD COLUMN IF NOT EXISTS avatar_url           TEXT;
 
 -- Ensure subscription columns have correct constraints
 ALTER TABLE public.profiles
@@ -44,9 +30,9 @@ ALTER TABLE public.profiles
     CHECK (subscription_plan IS NULL OR subscription_plan IN ('monthly', 'yearly'));
 
 -- ─── 2. Drop legacy tables that are no longer used ──────────────────────────
--- All notes/transactions/todos/links data now lives in each user's private
--- Google Spreadsheet. These tables are empty in the current architecture and
--- dropping them removes confusion and DB bloat.
+-- All notes/transactions/todos/links data now lives in PostgreSQL. These
+-- tables are empty in the current architecture and dropping them removes
+-- confusion and DB bloat.
 DROP TABLE IF EXISTS public.links CASCADE;
 DROP TABLE IF EXISTS public.todos CASCADE;
 DROP TABLE IF EXISTS public.transactions CASCADE;

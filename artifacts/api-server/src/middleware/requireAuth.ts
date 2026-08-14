@@ -1,9 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
-import type { sheets_v4 } from 'googleapis';
 import * as rateLimitMod from 'express-rate-limit';
 import { ipKeyGenerator } from 'express-rate-limit';
 import { supabaseAdmin } from '../lib/supabase-admin.js';
-import { getUserSheetConnection } from '../lib/user-sheet.js';
 
 // express-rate-limit ships CJS UMD types (`export = X` in `dist/index.d.ts`)
 // alongside an ESM default-export shim. Vercel's tsc post-build type-check
@@ -30,9 +28,6 @@ declare global {
   namespace Express {
     interface Request {
       userId?: string;
-      // Only populated by requireSheetConnection — used by optional backup routes.
-      spreadsheetId?: string;
-      sheetsClient?: sheets_v4.Sheets;
     }
   }
 }
@@ -132,39 +127,5 @@ export async function requireUser(req: Request, res: Response, next: NextFunctio
 }
 
 // requireAuth is now identical to requireUser. PostgreSQL is always used for
-// app data (notes, transactions, todos, links). Google Sheets is an optional
-// backup feature handled separately.
+// app data (notes, transactions, todos, links).
 export const requireAuth = requireUser;
-
-// Verifies the caller's token AND resolves their Google Sheets client.
-// Used exclusively by optional backup management routes (spreadsheet repair /
-// validate). Returns 428 if Google OAuth has not been connected, so the
-// frontend can surface a helpful "connect backup" prompt instead of a generic
-// error. App data routes must NOT use this — they always read from PostgreSQL
-// and must never fail because Google is not connected.
-export async function requireSheetConnection(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const userId = await verifyToken(req, res);
-  if (!userId) return;
-
-  let connection: { spreadsheetId: string; sheets: sheets_v4.Sheets } | null;
-  try {
-    connection = await getUserSheetConnection(userId);
-  } catch (err) {
-    req.log.error({ err, userId }, 'Failed to resolve Google Sheets connection for user');
-    res.status(500).json({ error: 'Failed to resolve your spreadsheet connection' });
-    return;
-  }
-
-  if (!connection) {
-    res.status(428).json({
-      error: 'GOOGLE_NOT_CONNECTED',
-      message: 'Hubungkan Google Drive untuk menggunakan fitur backup spreadsheet.',
-    });
-    return;
-  }
-
-  req.userId = userId;
-  req.spreadsheetId = connection.spreadsheetId;
-  req.sheetsClient = connection.sheets;
-  next();
-}

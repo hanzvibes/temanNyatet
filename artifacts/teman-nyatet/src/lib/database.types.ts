@@ -1,11 +1,9 @@
 // TypeScript types for TemanNyatet Supabase schema
 // Structured to match @supabase/supabase-js v2 GenericSchema constraints
 //
-// Note: notes, transactions, todos, and links tables exist in the initial
-// Supabase migration but are NOT used — all app data lives in each user's
-// private Google Spreadsheet. The types below (Note, Transaction, etc.) are
-// kept for compatibility with the data hooks that use them as shapes for
-// API responses from the api-server (which reads from Google Sheets).
+// App data (notes, transactions, todos, links) lives in PostgreSQL via the
+// api-server. The types below (Note, Transaction, etc.) are kept for
+// compatibility with the data hooks that use them as shapes for API responses.
 
 export type SubscriptionStatus = 'pending' | 'active' | 'archived';
 export type SubscriptionPlan = 'monthly' | 'yearly';
@@ -24,12 +22,6 @@ export interface Database {
           subscription_status: SubscriptionStatus;
           subscription_plan: SubscriptionPlan | null;
           subscription_end: string | null;
-          spreadsheet_id: string | null;
-          template_version: string | null;
-          google_refresh_token: string | null;
-          last_sync_at: string | null;
-          sync_status: 'unknown' | 'ok' | 'error' | 'repair_needed' | null;
-          recovery_metadata: Record<string, unknown> | null;
           created_at: string;
         };
         Insert: {
@@ -41,12 +33,6 @@ export interface Database {
           subscription_status?: SubscriptionStatus;
           subscription_plan?: SubscriptionPlan | null;
           subscription_end?: string | null;
-          spreadsheet_id?: string | null;
-          template_version?: string | null;
-          google_refresh_token?: string | null;
-          last_sync_at?: string | null;
-          sync_status?: 'unknown' | 'ok' | 'error' | 'repair_needed' | null;
-          recovery_metadata?: Record<string, unknown> | null;
           created_at?: string;
         };
         Update: {
@@ -58,17 +44,11 @@ export interface Database {
           subscription_status?: SubscriptionStatus;
           subscription_plan?: SubscriptionPlan | null;
           subscription_end?: string | null;
-          spreadsheet_id?: string | null;
-          template_version?: string | null;
-          google_refresh_token?: string | null;
-          last_sync_at?: string | null;
-          sync_status?: 'unknown' | 'ok' | 'error' | 'repair_needed' | null;
-          recovery_metadata?: Record<string, unknown> | null;
           created_at?: string;
         };
         Relationships: [];
       };
-      // Legacy tables — exist in Supabase but data lives in Google Sheets.
+      // Legacy tables — exist in Supabase but app data lives in PostgreSQL.
       // Kept here so shared type imports don't break.
       notes: {
         Row: {

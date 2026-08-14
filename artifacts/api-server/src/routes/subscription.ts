@@ -8,7 +8,7 @@ const router: IRouter = Router();
 const SUBSCRIPTION_FEATURES = [
   'Catatan tanpa batas',
   'Akses Ringkas AI',
-  'Google Sheets pribadi',
+  'Penyimpanan data pribadi',
   'Sinkronisasi data',
 ];
 

@@ -24,9 +24,9 @@ const NOTES_CACHE_TTL_MS = 5_000;
 type NotesPayload = Record<string, unknown>[];
 type NotesCacheEntry = { data: NotesPayload; expiresAt: number };
 
-// The frontend can request notes from the page and the global sheet at nearly
-// the same time. Keep a short per-user cache and share in-flight loads so
-// those requests do not repeat the same auth/database work. Mutations below
+// The frontend can request notes from several places at nearly the same
+// time. Keep a short per-user cache and share in-flight loads so those
+// requests do not repeat the same auth/database work. Mutations below
 // invalidate the entry immediately, so this never becomes a source of stale
 // note data after a write.
 const notesCache = new Map<string, NotesCacheEntry>();

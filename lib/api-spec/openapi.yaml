@@ -2,18 +2,14 @@ openapi: 3.1.0
 info:
   # Do not change the title; generated import paths depend on it being "Api".
   title: Api
-  version: 0.2.0
-  description: TemanNyatet API — subscription, webhooks, Google OAuth, spreadsheet management, and app data (notes, transactions, todos, links) stored in each user's private Google Spreadsheet.
+  version: 0.3.0
+  description: TemanNyatet API — subscription, webhooks, and app data (notes, transactions, todos, links) stored in PostgreSQL.
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
-  - name: auth
-    description: Google OAuth connection
-  - name: spreadsheet
-    description: Spreadsheet management
   - name: data
     description: App data (notes, transactions, todos, links)
   - name: subscription
@@ -38,142 +34,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
-  /auth/google/initiate:
-    get:
-      operationId: initiateGoogleAuth
-      tags: [auth]
-      summary: Get Google OAuth consent URL
-      description: Returns the URL the frontend should redirect the browser to in order to start the Google OAuth consent flow.
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Authorization URL generated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AuthUrlResponse"
-        "401":
-          description: Missing or invalid bearer token
-        "500":
-          description: Failed to generate authorization URL
-
-  /auth/google/callback:
-    get:
-      operationId: googleAuthCallback
-      tags: [auth]
-      summary: Google OAuth callback
-      description: Browser redirect endpoint called by Google after the user consents. Exchanges the authorization code for tokens, auto-creates a spreadsheet in the user's Drive, and redirects back to the frontend.
-      parameters:
-        - name: code
-          in: query
-          schema: { type: string }
-        - name: state
-          in: query
-          schema: { type: string }
-        - name: error
-          in: query
-          schema: { type: string }
-      responses:
-        "302":
-          description: Redirects to frontend connect page with ?connected=true or ?error=...
-
-  /auth/google/status:
-    get:
-      operationId: getGoogleAuthStatus
-      tags: [auth]
-      summary: Get Google connection status
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Connection status
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GoogleAuthStatus"
-        "401":
-          description: Unauthorized
-
-  /auth/google/disconnect:
-    delete:
-      operationId: disconnectGoogleAuth
-      tags: [auth]
-      summary: Disconnect Google account and revoke tokens
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Disconnected successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DisconnectResponse"
-        "401":
-          description: Unauthorized
-
-  /spreadsheet/status:
-    get:
-      operationId: getSpreadsheetStatus
-      tags: [spreadsheet]
-      summary: Get spreadsheet connection status
-      description: Can be polled before the user has connected Google.
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Spreadsheet status
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SpreadsheetStatus"
-        "401":
-          description: Unauthorized
-
-  /spreadsheet/validate:
-    post:
-      operationId: validateSpreadsheet
-      tags: [spreadsheet]
-      summary: Validate spreadsheet structure
-      description: Checks that the connected spreadsheet has the required tabs and correct header rows.
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Validation report
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SpreadsheetValidation"
-        "401":
-          description: Unauthorized
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
-
-  /spreadsheet/repair:
-    post:
-      operationId: repairSpreadsheet
-      tags: [spreadsheet]
-      summary: Repair spreadsheet headers
-      description: Re-writes correct header rows to all required tabs without touching data rows.
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Repair result
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RepairResult"
-        "401":
-          description: Unauthorized
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
-
   /notes:
     get:
       operationId: listNotes
@@ -195,10 +55,6 @@ paths:
                       $ref: "#/components/schemas/Note"
         "401":
           description: Unauthorized
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
     post:
       operationId: createNote
       tags: [data]
@@ -225,10 +81,6 @@ paths:
           description: Validation error
         "401":
           description: Unauthorized
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
 
   /notes/{id}:
     put:
@@ -264,10 +116,6 @@ paths:
           description: Unauthorized
         "404":
           description: Note not found
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
     delete:
       operationId: deleteNote
       tags: [data]
@@ -286,10 +134,6 @@ paths:
           description: Unauthorized
         "404":
           description: Note not found
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
 
   /transactions:
     get:
@@ -312,10 +156,6 @@ paths:
                       $ref: "#/components/schemas/Transaction"
         "401":
           description: Unauthorized
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
     post:
       operationId: createTransaction
       tags: [data]
@@ -342,10 +182,6 @@ paths:
           description: Validation error
         "401":
           description: Unauthorized
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
 
   /transactions/{id}:
     put:
@@ -381,10 +217,6 @@ paths:
           description: Unauthorized
         "404":
           description: Transaction not found
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
     delete:
       operationId: deleteTransaction
       tags: [data]
@@ -403,10 +235,6 @@ paths:
           description: Unauthorized
         "404":
           description: Transaction not found
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
 
   /todos:
     get:
@@ -429,10 +257,6 @@ paths:
                       $ref: "#/components/schemas/Todo"
         "401":
           description: Unauthorized
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
     post:
       operationId: createTodo
       tags: [data]
@@ -459,10 +283,6 @@ paths:
           description: Validation error
         "401":
           description: Unauthorized
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
 
   /todos/{id}:
     put:
@@ -498,10 +318,6 @@ paths:
           description: Unauthorized
         "404":
           description: Todo not found
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
     delete:
       operationId: deleteTodo
       tags: [data]
@@ -520,10 +336,6 @@ paths:
           description: Unauthorized
         "404":
           description: Todo not found
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
 
   /links:
     get:
@@ -546,10 +358,6 @@ paths:
                       $ref: "#/components/schemas/Link"
         "401":
           description: Unauthorized
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
     post:
       operationId: createLink
       tags: [data]
@@ -576,10 +384,6 @@ paths:
           description: Validation error
         "401":
           description: Unauthorized
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
 
   /links/{id}:
     put:
@@ -615,10 +419,6 @@ paths:
           description: Unauthorized
         "404":
           description: Link not found
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
     delete:
       operationId: deleteLink
       tags: [data]
@@ -637,10 +437,6 @@ paths:
           description: Unauthorized
         "404":
           description: Link not found
-        "428":
-          description: Google not connected
-        "503":
-          description: Spreadsheet access error
 
   /subscription/status:
     get:
@@ -722,110 +518,6 @@ components:
       properties:
         status:
           type: string
-
-    AuthUrlResponse:
-      type: object
-      required: [data]
-      properties:
-        data:
-          type: object
-          required: [url]
-          properties:
-            url:
-              type: string
-              format: uri
-
-    GoogleAuthStatus:
-      type: object
-      required: [data]
-      properties:
-        data:
-          type: object
-          required: [connected, spreadsheetId, spreadsheetUrl]
-          properties:
-            connected:
-              type: boolean
-            spreadsheetId:
-              type: ["string", "null"]
-            spreadsheetUrl:
-              type: ["string", "null"]
-            redirectUri:
-              type: ["string", "null"]
-
-    DisconnectResponse:
-      type: object
-      required: [data]
-      properties:
-        data:
-          type: object
-          required: [disconnected]
-          properties:
-            disconnected:
-              type: boolean
-
-    SpreadsheetStatus:
-      type: object
-      required: [data]
-      properties:
-        data:
-          type: object
-          required: [connected, googleConnected, spreadsheetId, spreadsheetUrl]
-          properties:
-            connected:
-              type: boolean
-            googleConnected:
-              type: boolean
-            spreadsheetId:
-              type: ["string", "null"]
-            spreadsheetUrl:
-              type: ["string", "null"]
-
-    SpreadsheetValidation:
-      type: object
-      required: [data]
-      properties:
-        data:
-          type: object
-          required: [valid, spreadsheetId, spreadsheetUrl, missingSheets, headerMismatches]
-          properties:
-            valid:
-              type: boolean
-            spreadsheetId:
-              type: string
-            spreadsheetUrl:
-              type: string
-            missingSheets:
-              type: array
-              items:
-                type: string
-            headerMismatches:
-              type: array
-              items:
-                type: object
-                properties:
-                  sheet:
-                    type: string
-                  expected:
-                    type: array
-                    items:
-                      type: string
-                  actual:
-                    type: array
-                    items:
-                      type: string
-
-    RepairResult:
-      type: object
-      required: [data]
-      properties:
-        data:
-          type: object
-          required: [repaired]
-          properties:
-            repaired:
-              type: array
-              items:
-                type: string
 
     Note:
       type: object

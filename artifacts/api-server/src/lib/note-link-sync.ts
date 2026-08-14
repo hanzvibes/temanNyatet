@@ -1,5 +1,3 @@
-import { createData, listData } from './data-store.js';
-
 const URL_PATTERN = /\bhttps?:\/\/[^\s<>"'`]+/gi;
 const FETCH_TIMEOUT_MS = 4_000;
 const MAX_HTML_BYTES = 512_000;
@@ -100,6 +98,10 @@ export async function syncNoteLinks(
   const urls = extractHttpUrls(title, content);
   if (urls.length === 0) return 0;
 
+  // Import lazily so loading this module (e.g. for the pure extractHttpUrls
+  // tests) does not require a database connection at import time. The server
+  // still resolves the data store normally when sync actually runs.
+  const { createData, listData } = await import('./data-store.js');
   const existing = await listData('links', userId);
   const existingUrls = new Set(
     existing

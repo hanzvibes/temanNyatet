@@ -20,6 +20,7 @@ import { getNoteColor, NOTE_COLOR_PALETTE } from '@/lib/noteColors';
 import { apiGet, apiPost } from '@/lib/apiClient';
 import { formatNoteDate } from '@/lib/noteData';
 import VoiceRecordButton from '@/components/VoiceRecordButton';
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 import { requestSettingsSubscription } from '@/lib/app-events';
 import NoteColorPicker from '@/components/NoteColorPicker';
 import NoteFormSheet from '@/components/NoteFormSheet';
@@ -44,6 +45,7 @@ export default function CatatanPage() {
     useNotes(user?.id);
   const { pendingCreate, clearCreate } = useCreate();
   const [search, setSearch] = useState('');
+  const keyboardHeight = useKeyboardHeight();
 
   const [selectedNote, setSelectedNote]         = useState<Note | null>(null);
   const [selectedNoteColor, setSelectedNoteColor] = useState<string>(PALETTE[0]);
@@ -342,7 +344,17 @@ export default function CatatanPage() {
       </div>
 
       {/* Voice AI — owned by the Catatan page, not by either bottom sheet. */}
-      <div className="pointer-events-auto fixed bottom-[calc(7.5rem+env(safe-area-inset-bottom))] right-3 z-[60] sm:right-6 lg:bottom-6">
+      {/* Fixed FAB: stays put while scrolling, clears the bottom nav (7.5rem +
+          safe-area), floats above every sheet/modal (z-60 > z-50), and lifts
+          above the on-screen keyboard while a text field is focused. */}
+      <div
+        className="pointer-events-auto fixed bottom-[calc(7.5rem+env(safe-area-inset-bottom))] right-3 z-[60] transition-[bottom] duration-300 ease-out sm:right-6 lg:bottom-6"
+        style={
+          keyboardHeight > 0
+            ? { bottom: `calc(7.5rem + env(safe-area-inset-bottom) + ${keyboardHeight}px)` }
+            : undefined
+        }
+      >
         <VoiceRecordButton
           onTranscript={handleVoiceTranscript}
           className="flex-row-reverse rounded-full border border-border/60 bg-card/95 py-1 pl-2 pr-1 shadow-elevation-2 backdrop-blur-xl sm:pl-3"

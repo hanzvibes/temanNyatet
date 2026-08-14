@@ -1,8 +1,7 @@
 // Small, dependency-free request validation helpers shared by the data
-// routes (notes/todos/links/transactions). Google Sheets has no schema
-// enforcement of its own, so the API is the only place bounding what gets
-// written — these guard against oversized payloads and wrong-typed fields
-// slipping through as raw strings into the sheet.
+// routes (notes/todos/links/transactions). The API is the only place that
+// bounds what gets written to PostgreSQL — these guard against oversized
+// payloads, wrong-typed fields, and malformed values.
 
 export class ValidationError extends Error {}
 

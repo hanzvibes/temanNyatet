@@ -1,14 +1,10 @@
-import { newId } from './google-sheets.js';
+import crypto from 'crypto';
 import { postgresRepository } from './postgres-repository.js';
 import type { LimitedFreeEntity } from './plan-limits.js';
 
 export type DataEntity = 'notes' | 'transactions' | 'todos' | 'links';
 
-/**
- * PostgreSQL adalah satu-satunya sumber data utama.
- * Google Sheets hanya berfungsi sebagai backup/restore opsional
- * dan dikelola lewat routes/auth-google.ts + routes/spreadsheet.ts.
- */
+/** PostgreSQL adalah satu-satunya sumber data. */
 
 /** Always true — PostgreSQL is the only data store. */
 export function usesPostgresDataStore(): boolean {
@@ -32,7 +28,7 @@ export async function createData(
   userId: string,
   fields: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
-  return postgresRepository.create(entity, userId, newId(), fields);
+  return postgresRepository.create(entity, userId, crypto.randomUUID(), fields);
 }
 
 export async function createLimitedData(
@@ -41,7 +37,7 @@ export async function createLimitedData(
   fields: Record<string, unknown>,
   limit: number,
 ): Promise<Record<string, unknown>> {
-  return postgresRepository.createWithFreePlanLimit(entity, userId, newId(), fields, limit);
+  return postgresRepository.createWithFreePlanLimit(entity, userId, crypto.randomUUID(), fields, limit);
 }
 
 export async function updateData(

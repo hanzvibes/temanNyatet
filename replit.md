@@ -1,6 +1,6 @@
 # TemanNyatet Workspace
 
-A pnpm monorepo containing the TemanNyatet productivity app — notes, todos, finance tracking, and AI transcription — backed by Supabase auth and a Google Sheets data layer.
+A pnpm monorepo containing the TemanNyatet productivity app — notes, todos, finance tracking, and AI transcription — backed by Supabase auth and a PostgreSQL data layer.
 
 ## Project structure
 
@@ -35,9 +35,6 @@ All secrets are stored as Replit Secrets (never in `.env` files):
 
 **API Server**
 - `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` — Supabase project credentials
-- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_OAUTH_STATE_SECRET` — Google OAuth for Sheets backup
-- `GOOGLE_SERVICE_ACCOUNT_KEY` — Service account JSON for Google Sheets access
-- `GOOGLE_SHEETS_SPREADSHEET_ID` — Target spreadsheet
 - `OPENAI_API_KEY` / `OPENAI_BASE_URL` / `OPENAI_MODEL` — AI transcription
 - `MAYAR_WEBHOOK_SECRET` / `CRON_SECRET` — Webhook and cron authentication
 - `DATABASE_URL` — PostgreSQL connection string
@@ -48,7 +45,7 @@ All secrets are stored as Replit Secrets (never in `.env` files):
 ## Stack
 
 - **Frontend**: React 18, Vite, Tailwind CSS, Radix UI, TanStack Query, Wouter, Supabase JS, Framer Motion, PWA
-- **Backend**: Node.js, Express 5, Drizzle ORM, Supabase Admin SDK, Google APIs, Pino logging
+- **Backend**: Node.js, Express 5, Drizzle ORM, Supabase Admin SDK, Pino logging
 - **Package manager**: pnpm 10 (required — yarn/npm blocked by preinstall check)
 
 ## User preferences

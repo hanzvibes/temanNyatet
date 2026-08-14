@@ -1,3 +1,6 @@
+// Must be the first import: loads .env/.env.local into process.env before
+// any other module (e.g. lib/db) runs its startup environment checks.
+import "./lib/load-env.js";
 import app from "./app.js";
 import { logger } from "./lib/logger.js";
 
@@ -10,18 +13,6 @@ const REQUIRED_ENV = [
   {
     key: "SUPABASE_SERVICE_ROLE_KEY",
     hint: "Supabase service role key — Dashboard → Project Settings → API",
-  },
-  {
-    key: "GOOGLE_CLIENT_ID",
-    hint: "Google OAuth 2.0 client ID — Cloud Console → APIs & Services → Credentials",
-  },
-  {
-    key: "GOOGLE_CLIENT_SECRET",
-    hint: "Google OAuth 2.0 client secret — same credentials page as above",
-  },
-  {
-    key: "GOOGLE_OAUTH_STATE_SECRET",
-    hint: "Random HMAC signing secret — generate with: openssl rand -hex 32",
   },
 ] as const;
 

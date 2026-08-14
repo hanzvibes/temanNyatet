@@ -24,6 +24,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import SearchBar from '@/components/SearchBar';
 import VoiceRecordButton from '@/components/VoiceRecordButton';
+import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 import TransactionSummaryCard from '@/components/TransactionSummaryCard';
 import BalanceHero from '@/components/BalanceHero';
 import TransactionList from '@/components/TransactionList';
@@ -74,6 +75,7 @@ export default function KeuanganPage() {
   const [summaryBalance, setSummaryBalance] = useState<number | null>(null);
   const summaryRequestId = useRef<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const keyboardHeight = useKeyboardHeight();
   const [sheetViewportHeight, setSheetViewportHeight] = useState(() =>
     typeof window !== 'undefined'
       ? (window.visualViewport?.height ?? window.innerHeight)
@@ -341,8 +343,8 @@ export default function KeuanganPage() {
   const { groupedTx, sortedDates } = useMemo(() => {
     const grouped = filteredTransactions.reduce(
       (acc, tx) => {
-        // Normalize to YYYY-MM-DD so PostgreSQL ISO timestamps and
-        // Google Sheets date-only strings both group by the same key.
+        // Normalize to YYYY-MM-DD so ISO timestamps and date-only strings
+        // both group by the same key.
         const d = tx.date.slice(0, 10);
         if (!acc[d]) acc[d] = [];
         acc[d].push(tx);
@@ -466,7 +468,17 @@ export default function KeuanganPage() {
       </div>
 
       {/* Voice recording — page-owned and floating above BottomSheetNav. */}
-      <div className="pointer-events-auto fixed bottom-[calc(7.5rem+env(safe-area-inset-bottom))] right-3 z-[60] sm:right-6 lg:bottom-6">
+      {/* Fixed FAB: stays put while scrolling, clears the bottom nav (7.5rem +
+          safe-area), floats above every sheet/modal (z-60 > z-50), and lifts
+          above the on-screen keyboard while a text field is focused. */}
+      <div
+        className="pointer-events-auto fixed bottom-[calc(7.5rem+env(safe-area-inset-bottom))] right-3 z-[60] transition-[bottom] duration-300 ease-out sm:right-6 lg:bottom-6"
+        style={
+          keyboardHeight > 0
+            ? { bottom: `calc(7.5rem + env(safe-area-inset-bottom) + ${keyboardHeight}px)` }
+            : undefined
+        }
+      >
         <VoiceRecordButton
           onTranscript={handleVoiceTranscript}
           className="flex-row-reverse rounded-full border border-finance/25 bg-card/95 py-1 pl-2 pr-1 shadow-elevation-2 backdrop-blur-xl sm:pl-3"

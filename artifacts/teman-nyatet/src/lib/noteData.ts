@@ -44,9 +44,9 @@ function asDate(value: unknown): string {
 }
 
 /**
- * Normalize the untrusted row shape returned by Google Sheets before it
- * reaches the render tree. Old or manually edited rows can contain empty
- * cells, JSON strings, invalid dates, or duplicate IDs.
+ * Normalize the untrusted row shape returned by the API before it reaches
+ * the render tree. Rows can contain empty cells, JSON strings, invalid
+ * dates, or duplicate IDs.
  */
 export function normalizeNotes(input: unknown): Note[] {
   if (!Array.isArray(input)) return [];

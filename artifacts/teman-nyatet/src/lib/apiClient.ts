@@ -48,25 +48,6 @@ if (import.meta.env.DEV && !API_BASE) {
 
 let refreshPromise: Promise<string | null> | null = null;
 
-// ─── Typed error for spreadsheet access failures ────────────────────────────
-// Thrown when the API server returns a 503/428 with a spreadsheet-related
-// error code. Google Sheets is an optional backup feature; these errors are
-// surfaced to the caller rather than triggering forced redirects.
-
-export class SpreadsheetApiError extends Error {
-  constructor(
-    public readonly code:
-      | 'SPREADSHEET_NOT_FOUND'
-      | 'SPREADSHEET_ACCESS_DENIED'
-      | 'GOOGLE_NOT_CONNECTED'
-      | 'SPREADSHEET_NOT_CONNECTED',
-    message: string,
-  ) {
-    super(message);
-    this.name = 'SpreadsheetApiError';
-  }
-}
-
 // ─── Internal helpers ────────────────────────────────────────────────────────
 
 async function getToken(): Promise<string | null> {
@@ -123,21 +104,6 @@ async function handle<T>(res: Response): Promise<T> {
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const code = body?.error as string | undefined;
-    // Spreadsheet access errors get a typed error so hooks can trigger
-    // the global recovery flow instead of just showing a toast.
-    if (
-      res.status === 503 &&
-      (code === 'SPREADSHEET_NOT_FOUND' || code === 'SPREADSHEET_ACCESS_DENIED')
-    ) {
-      throw new SpreadsheetApiError(code, body?.message ?? code);
-    }
-    // 428 = precondition required — user hasn't connected Google OAuth yet.
-    if (
-      res.status === 428 &&
-      (code === 'GOOGLE_NOT_CONNECTED' || code === 'SPREADSHEET_NOT_CONNECTED')
-    ) {
-      throw new SpreadsheetApiError(code, body?.message ?? code);
-    }
     throw new ApiError(body?.message ?? `Request failed with status ${res.status}`, code ?? 'HTTP_ERROR', res.status);
   }
   return (body?.data ?? body) as T;

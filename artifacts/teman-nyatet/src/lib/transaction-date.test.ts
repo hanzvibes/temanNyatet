@@ -11,7 +11,7 @@ test('normalizes a PostgreSQL ISO timestamp for period filtering', () => {
   assert.equal(date.getDate(), 29);
 });
 
-test('normalizes a Google Sheets date-only value', () => {
+test('normalizes a date-only value', () => {
   const date = transactionDateValue('2026-07-29');
 
   assert.equal(Number.isNaN(date.getTime()), false);

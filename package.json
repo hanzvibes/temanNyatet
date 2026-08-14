@@ -5,6 +5,7 @@
   "packageManager": "pnpm@10.26.1",
   "scripts": {
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
+    "preview": "sh -c 'if [ -f ./.env.local ]; then . ./.env.local; fi; export VITE_SUPABASE_URL VITE_SUPABASE_ANON_KEY DATABASE_URL; PORT=8080 pnpm --filter @workspace/api-server run dev & pnpm --filter @workspace/teman-nyatet run dev'",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --if-present run typecheck"

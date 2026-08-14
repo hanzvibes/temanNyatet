@@ -5,7 +5,7 @@ import { useLocation } from 'wouter';
 import { supabase } from '@/lib/supabase';
 import { apiGet, apiUpload } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, Sheet, MessageSquare, Crown, Calendar, Sparkles, Database, CheckCircle2, CircleAlert, Paintbrush } from 'lucide-react';
+import { ChevronRight, ArrowLeft, LogOut, User, Lock, Phone, Camera, Loader2, MessageSquare, Crown, Calendar, Sparkles, Paintbrush } from 'lucide-react';
 import { toast } from 'sonner';
 import AppearanceSection from '@/components/AppearanceSection';
 import { Button } from '@/components/ui/button';
@@ -27,11 +27,6 @@ interface SubscriptionStatus {
   subscription_end: string | null;
   days_remaining: number | null;
   credit_balance: number;
-}
-
-interface GoogleBackupStatus {
-  connected: boolean;
-  spreadsheetId: string | null;
 }
 
 interface SettingsSheetProps {
@@ -84,8 +79,6 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
   const settingsScrollRef = useRef<HTMLDivElement>(null);
   const initialMenuHeightRef = useRef<number | null>(null);
   const [menuMinHeight, setMenuMinHeight] = useState<number | null>(null);
-  const [backupStatus, setBackupStatus] = useState<GoogleBackupStatus | null>(null);
-  const [backupStatusLoading, setBackupStatusLoading] = useState(false);
 
   // Form state
   const [nameInput, setNameInput] = useState('');
@@ -99,18 +92,6 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
     : user?.email?.substring(0, 2).toUpperCase() || 'TN';
 
   const isPro = profile?.subscription_status === 'active';
-
-  const loadBackupStatus = async () => {
-    setBackupStatusLoading(true);
-    try {
-      const data = await apiGet<{ connected: boolean; spreadsheetId: string | null }>('/auth/google/status');
-      setBackupStatus(data);
-    } catch {
-      setBackupStatus(null);
-    } finally {
-      setBackupStatusLoading(false);
-    }
-  };
 
   const handleSubscriptionCheckout = async (plan: PaymentPlan) => {
     setCheckoutLoading(true);
@@ -166,10 +147,6 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
     if (activeSection === 'subscription') loadSubscription();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSection]);
-
-  useEffect(() => {
-    if (open && activeSection === null) void loadBackupStatus();
-  }, [open, activeSection]);
 
   useEffect(() => {
     const openSubscription = (event: Event) => {
@@ -425,7 +402,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
               {activeSection ? 'Detail pengaturan' : 'Pengaturan akun'}
             </Drawer.Title>
             <Drawer.Description className="sr-only">
-              Kelola profil, langganan, backup data, dan preferensi aplikasi.
+              Kelola profil, langganan, dan preferensi aplikasi.
             </Drawer.Description>
             <div className="mx-auto mt-[clamp(0.5rem,1.5vw,0.75rem)] mb-0 h-[clamp(0.25rem,0.8vw,0.375rem)] w-[clamp(2.5rem,8vw,3rem)] flex-shrink-0 rounded-full bg-muted-foreground/20" />
 
@@ -517,36 +494,6 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                       {/* Divider */}
                       <div className="mb-[clamp(0.375rem,1.5vw,0.625rem)] h-px bg-border" />
 
-                      <div className={`mb-4 rounded-2xl border p-3.5 ${
-                        backupStatus?.connected
-                          ? 'border-primary/20 bg-primary/[0.06]'
-                          : 'border-border bg-secondary/50'
-                      }`}>
-                        <div className="flex items-start gap-3">
-                          <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                            backupStatus?.connected ? 'bg-primary/12 text-primary' : 'bg-muted text-muted-foreground'
-                          }`}>
-                            <Database size={18} />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold text-foreground">Penyimpanan Data</p>
-                            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                              Data utama tersimpan aman di server kami.
-                              {backupStatusLoading
-                                ? ' Memeriksa status backup…'
-                                : backupStatus?.connected
-                                  ? ' Backup Google Spreadsheet aktif.'
-                                  : ' Backup Google Spreadsheet belum aktif.'}
-                            </p>
-                          </div>
-                          {backupStatus?.connected ? (
-                            <CheckCircle2 size={16} aria-label="Backup aktif" className="mt-1 shrink-0 text-primary" />
-                          ) : (
-                            <CircleAlert size={16} aria-label="Backup belum aktif" className="mt-1 shrink-0 text-muted-foreground" />
-                          )}
-                        </div>
-                      </div>
-
                       {/* Account actions */}
                       <div className="space-y-1">
                         <p className="px-3 text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-muted-foreground">
@@ -597,21 +544,6 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                             <ChevronRight size={16} className="text-muted-foreground/50" strokeWidth={2.5} />
                           </button>
                         ))}
-                        <button
-                          onClick={() => { setOpen(false); setLocation('/connect-sheet'); }}
-                           className="flex min-h-14 w-full items-center gap-[clamp(0.625rem,2.5vw,0.875rem)] rounded-[clamp(0.625rem,2.5vw,1rem)] px-[clamp(0.625rem,2.5vw,1rem)] py-2 hover:bg-secondary active:bg-secondary/80 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
-                        >
-                          <div className="flex h-[clamp(2.25rem,7vw,2.5rem)] w-[clamp(2.25rem,7vw,2.5rem)] flex-shrink-0 items-center justify-center rounded-xl border border-border bg-secondary">
-                            <Sheet size={18} className="text-muted-foreground w-[clamp(1rem,3.5vw,1.125rem)] h-[clamp(1rem,3.5vw,1.125rem)]" strokeWidth={2.2} />
-                          </div>
-                          <span className="min-w-0 flex-1">
-                            <span className="block font-bold text-foreground text-[clamp(0.875rem,3vw,1.125rem)]">Backup Spreadsheet</span>
-                            <span className="mt-0.5 block truncate text-xs font-medium text-muted-foreground">
-                              {backupStatus?.connected ? 'Google Spreadsheet terhubung' : 'Simpan salinan ke Google Spreadsheet'}
-                            </span>
-                          </span>
-                          <ChevronRight size={16} className="text-muted-foreground/50 w-[clamp(1rem,3vw,1.25rem)] h-[clamp(1rem,3vw,1.25rem)]" strokeWidth={2.5} />
-                        </button>
                       </div>
 
                       {/* Tampilan — navigates to the Appearance section */}

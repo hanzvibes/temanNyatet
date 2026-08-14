@@ -34,8 +34,8 @@ const policies: Record<PolicyKind, Policy> = {
         id: 'informasi-yang-dikumpulkan',
         title: '1. Informasi yang kami kumpulkan',
         paragraphs: [
-          'Saat kamu membuat akun, kami menerima informasi akun seperti alamat email dan data profil yang kamu pilih untuk diberikan. Kami tidak meminta password Google kamu dan tidak dapat melihatnya.',
-          'Saat kamu menggunakan TemanNyatet, kamu dapat menyimpan catatan, transaksi keuangan, tugas, dan tautan. Isi yang kamu masukkan diproses untuk menampilkan fitur-fitur tersebut dan menyinkronkannya dengan spreadsheet yang kamu hubungkan.',
+          'Saat kamu membuat akun, kami menerima informasi akun seperti alamat email dan data profil yang kamu pilih untuk diberikan.',
+          'Saat kamu menggunakan TemanNyatet, kamu dapat menyimpan catatan, transaksi keuangan, tugas, dan tautan. Isi yang kamu masukkan diproses untuk menampilkan fitur-fitur tersebut.',
         ],
       },
       {
@@ -48,67 +48,49 @@ const policies: Record<PolicyKind, Policy> = {
         ],
       },
       {
-        id: 'google-sheets-drive',
-        title: '3. Google Sheets dan Google Drive',
-        paragraphs: [
-          'TemanNyatet menggunakan akses Google OAuth agar dapat terhubung ke akun Google milikmu. Setelah kamu memberikan izin, aplikasi dapat membuat atau mengelola spreadsheet TemanNyatet di Google Drive milikmu dan membaca atau memperbarui data yang diperlukan untuk menjalankan fitur aplikasi.',
-          'Spreadsheet tersebut berada di akun Google kamu. TemanNyatet tidak mengambil alih kepemilikan spreadsheet dan tidak meminta akses ke seluruh file Drive kamu. Akses dibatasi pada izin yang diperlukan untuk membuat atau menggunakan file yang terhubung dengan TemanNyatet.',
-          'Kamu dapat memutuskan akses Google kapan saja melalui TemanNyatet atau pengaturan akun Google. Setelah akses diputus, fitur yang memerlukan sinkronisasi spreadsheet mungkin tidak dapat digunakan sampai kamu menghubungkannya kembali.',
-        ],
-      },
-      {
-        id: 'penggunaan-data-google',
-        title: '4. Penggunaan data dari Google API',
-        paragraphs: [
-          'Penggunaan informasi yang diterima dari Google API mengikuti Google API Services User Data Policy, termasuk persyaratan Limited Use. Data Google hanya digunakan untuk menyediakan atau meningkatkan fitur TemanNyatet yang kamu minta, seperti sinkronisasi dengan spreadsheet yang terhubung.',
-          'Kami tidak menggunakan data Google untuk menampilkan iklan, menjualnya, atau memindahkannya kepada pihak lain untuk tujuan yang tidak berkaitan dengan layanan. Akses dapat diberikan kepada penyedia layanan yang membantu mengoperasikan TemanNyatet hanya sejauh diperlukan, dengan kewajiban menjaga kerahasiaan, atau ketika diwajibkan oleh hukum.',
-        ],
-      },
-      {
         id: 'penyedia-layanan',
-        title: '5. Penyedia layanan',
+        title: '3. Penyedia layanan',
         paragraphs: [
           'Untuk mengoperasikan TemanNyatet, kami dapat menggunakan penyedia layanan untuk autentikasi, hosting, penyimpanan atau sinkronisasi data, keamanan, analitik teknis yang diperlukan, dan pemrosesan pembayaran bila fitur berbayar digunakan. Penyedia tersebut hanya menerima data yang diperlukan untuk tujuan layanan terkait.',
         ],
       },
       {
         id: 'keamanan-retensi',
-        title: '6. Keamanan dan penyimpanan',
+        title: '4. Keamanan dan penyimpanan',
         paragraphs: [
           'Kami menerapkan perlindungan teknis dan organisasi yang wajar untuk menjaga akun dan data dari akses, perubahan, atau pengungkapan yang tidak sah. Tidak ada layanan internet yang dapat menjamin keamanan absolut, jadi gunakan password yang unik dan jangan membagikan kredensial akun.',
-          'Data disimpan selama akun atau fitur terkait masih digunakan, selama diperlukan untuk tujuan yang dijelaskan dalam kebijakan ini, atau selama diwajibkan oleh hukum. Data yang kamu simpan di Google Spreadsheet juga mengikuti penyimpanan dan pengaturan akun Google kamu.',
+          'Data disimpan selama akun atau fitur terkait masih digunakan, selama diperlukan untuk tujuan yang dijelaskan dalam kebijakan ini, atau selama diwajibkan oleh hukum.',
         ],
       },
       {
         id: 'pilihan-pengguna',
-        title: '7. Pilihan dan hak kamu',
+        title: '5. Pilihan dan hak kamu',
         bullets: [
           'Mengakses atau memperbarui informasi akun yang tersedia di TemanNyatet.',
-          'Memutuskan koneksi Google dan menghapus spreadsheet atau data di Drive kamu sesuai kontrol yang tersedia di Google.',
           'Meminta penghapusan akun dan data TemanNyatet dengan menghubungi kami melalui email.',
           'Menghubungi kami untuk pertanyaan, koreksi, atau permintaan terkait privasi.',
         ],
         paragraphs: [
-          'Permintaan penghapusan dapat memerlukan verifikasi kepemilikan akun. Penghapusan dari TemanNyatet tidak otomatis menghapus file yang sudah berada di Google Drive kamu; file tersebut dapat kamu kelola sendiri dari Google Drive.',
+          'Permintaan penghapusan dapat memerlukan verifikasi kepemilikan akun.',
         ],
       },
       {
         id: 'anak-anak',
-        title: '8. Privasi anak',
+        title: '6. Privasi anak',
         paragraphs: [
           'TemanNyatet tidak ditujukan untuk anak-anak yang belum memenuhi usia minimum yang berlaku untuk membuat akun secara mandiri. Jika kamu mengetahui bahwa seorang anak memberikan data pribadi tanpa persetujuan yang sesuai, silakan hubungi kami.',
         ],
       },
       {
         id: 'perubahan-kebijakan',
-        title: '9. Perubahan kebijakan ini',
+        title: '7. Perubahan kebijakan ini',
         paragraphs: [
           'Kami dapat memperbarui kebijakan ini ketika fitur, praktik, atau kewajiban hukum berubah. Tanggal pembaruan di bagian atas akan ikut berubah. Jika perubahan berdampak penting, kami akan memberikan pemberitahuan yang wajar melalui aplikasi atau email bila memungkinkan.',
         ],
       },
       {
         id: 'kontak-privasi',
-        title: '10. Hubungi kami',
+        title: '8. Hubungi kami',
         paragraphs: [
           'Untuk pertanyaan atau permintaan privasi, hubungi pengelola TemanNyatet melalui alamat email berikut:',
         ],
@@ -133,7 +115,7 @@ const policies: Record<PolicyKind, Policy> = {
         id: 'deskripsi-layanan',
         title: '2. Tentang TemanNyatet',
         paragraphs: [
-          'TemanNyatet adalah aplikasi pencatatan pribadi yang menyediakan fitur catatan, pencatatan keuangan, daftar tugas, penyimpanan tautan, dan sinkronisasi dengan spreadsheet Google yang kamu hubungkan.',
+          'TemanNyatet adalah aplikasi pencatatan pribadi yang menyediakan fitur catatan, pencatatan keuangan, daftar tugas, dan penyimpanan tautan untuk kebutuhan pribadimu.',
           'TemanNyatet bukan layanan Google resmi dan bukan pengganti nasihat keuangan, akuntansi, hukum, atau profesional lainnya. Informasi keuangan yang kamu catat adalah untuk membantu pengorganisasian pribadi.',
         ],
       },
@@ -154,16 +136,8 @@ const policies: Record<PolicyKind, Policy> = {
         ],
       },
       {
-        id: 'integrasi-google',
-        title: '5. Integrasi Google',
-        paragraphs: [
-          'Jika kamu menghubungkan Google, kamu memberi izin kepada TemanNyatet untuk menggunakan akses Google yang kamu setujui guna membuat atau menggunakan spreadsheet dan menyinkronkan data aplikasi. Spreadsheet tetap berada dalam akun Google kamu.',
-          'Kamu dapat memutus koneksi kapan saja. Perubahan kebijakan, akses, atau ketersediaan layanan Google dapat memengaruhi sinkronisasi TemanNyatet. TemanNyatet tidak bertanggung jawab atas gangguan yang berasal dari layanan Google di luar kendali kami.',
-        ],
-      },
-      {
         id: 'pembayaran',
-        title: '6. Pembayaran dan langganan',
+        title: '5. Pembayaran dan langganan',
         paragraphs: [
           'Jika TemanNyatet menyediakan fitur berbayar atau langganan, harga, periode, metode pembayaran, dan ketentuan pembatalan akan ditampilkan sebelum pembayaran dilakukan. Kamu mengizinkan penyedia pembayaran yang digunakan untuk memproses transaksi sesuai ketentuannya.',
           AI_SUMMARY_COPY.termsParagraph,
@@ -172,10 +146,10 @@ const policies: Record<PolicyKind, Policy> = {
       },
       {
         id: 'penggunaan-dilarang',
-        title: '7. Penggunaan yang dilarang',
+        title: '6. Penggunaan yang dilarang',
         paragraphs: ['Kamu tidak boleh:'],
         bullets: [
-          'Mengakses akun, spreadsheet, atau data milik orang lain tanpa izin.',
+          'Mengakses akun atau data milik orang lain tanpa izin.',
           'Menggunakan layanan untuk melanggar hukum, menipu, mengancam, melecehkan, atau merugikan orang lain.',
           'Mencoba mengganggu, memindai, membebani, membalikkan rekayasa, atau melewati pengamanan layanan.',
           'Mengunggah malware atau konten yang dapat merusak layanan maupun perangkat pengguna lain.',
@@ -184,14 +158,14 @@ const policies: Record<PolicyKind, Policy> = {
       },
       {
         id: 'ketersediaan-perubahan',
-        title: '8. Ketersediaan dan perubahan layanan',
+        title: '7. Ketersediaan dan perubahan layanan',
         paragraphs: [
           'Kami berusaha menjaga TemanNyatet tetap tersedia, tetapi layanan dapat mengalami pemeliharaan, gangguan jaringan, kesalahan, atau keterbatasan perangkat. Kami dapat memperbarui, menambah, atau menghapus fitur untuk memperbaiki layanan atau memenuhi kewajiban hukum.',
         ],
       },
       {
         id: 'penghentian',
-        title: '9. Penghentian akun',
+        title: '8. Penghentian akun',
         paragraphs: [
           'Kamu dapat berhenti menggunakan TemanNyatet dan meminta penghapusan akun dengan menghubungi kami. Kami dapat membatasi atau menghentikan akses jika ada pelanggaran ketentuan, risiko keamanan, kewajiban hukum, atau aktivitas yang dapat merugikan pengguna atau layanan.',
           'Setelah akun dihentikan, hak penggunaan layanan berakhir. Ketentuan yang secara wajar perlu tetap berlaku, termasuk kepemilikan konten, disclaimer, batas tanggung jawab, dan penyelesaian sengketa, tetap berlaku sejauh diizinkan hukum.',
@@ -199,7 +173,7 @@ const policies: Record<PolicyKind, Policy> = {
       },
       {
         id: 'disclaimer-tanggung-jawab',
-        title: '10. Disclaimer dan batas tanggung jawab',
+        title: '9. Disclaimer dan batas tanggung jawab',
         paragraphs: [
           'TemanNyatet disediakan “sebagaimana tersedia” dan tanpa jaminan bahwa layanan selalu bebas gangguan, selalu tersedia, atau cocok untuk setiap kebutuhan. Kamu tetap bertanggung jawab atas keputusan yang dibuat berdasarkan data atau catatanmu dan sebaiknya menyimpan cadangan data penting.',
           'Sejauh diizinkan hukum, TemanNyatet dan pengelolanya tidak bertanggung jawab atas kerugian tidak langsung, kehilangan data akibat faktor di luar kendali kami, atau gangguan dari layanan pihak ketiga. Tidak ada bagian ketentuan ini yang menghapus tanggung jawab yang tidak dapat dikesampingkan menurut hukum yang berlaku.',
@@ -207,14 +181,14 @@ const policies: Record<PolicyKind, Policy> = {
       },
       {
         id: 'perubahan-ketentuan',
-        title: '11. Perubahan ketentuan',
+        title: '10. Perubahan ketentuan',
         paragraphs: [
           'Kami dapat memperbarui ketentuan ini ketika layanan atau hukum yang berlaku berubah. Perubahan akan dicantumkan di halaman ini dengan tanggal pembaruan yang baru. Dengan terus menggunakan TemanNyatet setelah perubahan berlaku, kamu menyetujui ketentuan yang diperbarui.',
         ],
       },
       {
         id: 'kontak-terms',
-        title: '12. Kontak',
+        title: '11. Kontak',
         paragraphs: [
           'Jika kamu memiliki pertanyaan tentang ketentuan ini, ingin meminta penghapusan akun, atau perlu menghubungi pengelola TemanNyatet, kirim email ke:',
         ],

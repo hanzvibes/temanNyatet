@@ -293,26 +293,28 @@ export default function AuthPage() {
                     </div>
 
                     {/* Password */}
-                    <div className="relative">
+                    <div>
                       <label htmlFor="auth-password" className="text-pill-label mb-2 ml-1 block">
                         Password
                       </label>
-                      <input
-                        id="auth-password"
-                        {...form.register('password')}
-                        type={showPassword ? 'text' : 'password'}
-                        autoComplete={isLogin ? 'current-password' : 'new-password'}
-                        placeholder="Minimal 6 karakter"
-                        className={`${INPUT_CLASS} pr-12`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
-                        className="absolute right-1 top-8 flex min-h-11 min-w-11 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
-                      >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
+                      <div className="relative">
+                        <input
+                          id="auth-password"
+                          {...form.register('password')}
+                          type={showPassword ? 'text' : 'password'}
+                          autoComplete={isLogin ? 'current-password' : 'new-password'}
+                          placeholder="Minimal 6 karakter"
+                          className={`${INPUT_CLASS} pr-12`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                          className="absolute right-1 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
                       {form.formState.errors.password && (
                         <FormError className="ml-1 mt-1">{form.formState.errors.password.message}</FormError>
                       )}
@@ -344,7 +346,7 @@ export default function AuthPage() {
                         <button
                           type="button"
                           onClick={handleResetPassword}
-                          className="min-h-9 px-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-primary"
+                          className="min-h-11 px-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-primary"
                         >
                           Lupa password?
                         </button>

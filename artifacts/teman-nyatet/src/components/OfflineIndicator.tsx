@@ -23,12 +23,15 @@ export default function OfflineIndicator() {
       role="status"
       aria-live="assertive"
       aria-atomic="true"
-      className="fixed top-0 inset-x-0 z-50 flex items-center justify-center gap-2
-                 bg-amber-500 text-white px-4 py-2 text-xs font-medium
+      className="fixed top-0 inset-x-0 z-50 bg-amber-500 text-white text-xs font-medium
                  animate-in slide-in-from-top-2"
     >
-      <WifiOff className="w-3.5 h-3.5" />
-      <span>Tidak ada koneksi internet</span>
+      {/* Inner row pushes the banner below the notch / Dynamic Island on
+          iPhone via the top safe-area inset. */}
+      <div className="flex items-center justify-center gap-2 px-4 pb-2 pt-[calc(0.5rem+env(safe-area-inset-top))]">
+        <WifiOff className="w-3.5 h-3.5 shrink-0" />
+        <span>Tidak ada koneksi internet</span>
+      </div>
     </div>
   );
 }

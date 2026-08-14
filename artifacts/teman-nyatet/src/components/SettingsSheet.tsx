@@ -425,7 +425,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
 
             <div
               ref={settingsScrollRef}
-              className="flex-1 overflow-y-auto px-[clamp(1rem,4vw,1.75rem)] pb-[clamp(1rem,3vw,1.5rem)]"
+              className="flex-1 overflow-y-auto px-[clamp(1rem,4vw,1.75rem)] pb-[calc(clamp(1rem,3vw,1.5rem)+env(safe-area-inset-bottom))]"
             >
 
               <AnimatePresence mode="wait" initial={false}>

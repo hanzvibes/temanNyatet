@@ -100,6 +100,15 @@ export default function BottomSheetNav() {
     () => getActiveOverlaySources().length > 0,
   );
   const [snapState, setSnapState] = useState<SnapState>(initialSnap);
+  // The form content mounts only after the open spring settles (see snapTo),
+  // so its heavy initial layout never lands on a moving frame. On close it
+  // unmounts immediately so its exit fade runs while the pill shrinks.
+  const [contentVisible, setContentVisible] = useState(() => snapState !== 'collapsed');
+  // backdrop-blur is expensive to re-sample while the pill resizes, so it is
+  // disabled for the duration of every snap/drag animation and restored once
+  // the sheet settles. The card is 95% opaque, so the swap is invisible.
+  const [animating, setAnimating] = useState(false);
+  const animToken = useRef(0);
 
   useEffect(() => { h.set(SNAP[snapState]); }, [screenH, screenW]);
 
@@ -155,19 +164,38 @@ export default function BottomSheetNav() {
     }
   }, [location]);
 
-  // Stiffness 280 / damping 32 / mass 0.85 → damping ratio ζ ≈ 0.96 (just below
-  // critical). The release-side velocity passthrough lets a flick carry straight
-  // through release instead of restarting from rest, which previously felt like
-  // a brief hesitation before the pill settled on its snap target.
+  // Stiffness 420 / damping 26 / mass 0.55 → damping ratio ζ ≈ 0.85: a light,
+  // fast rise (~270 ms to settle) with a barely-there overshoot that reads as
+  // alive rather than bouncy. The release-side velocity passthrough lets a
+  // flick carry straight through release instead of restarting from rest.
   const snapTo = (state: SnapState, initialVelocity = 0) => {
+    if (prefersReducedMotion) {
+      h.set(SNAP[state]);
+      setAnimating(false);
+      setContentVisible(state !== 'collapsed');
+      setSnapState(state);
+      return;
+    }
+    const token = ++animToken.current;
+    const isOpen = state !== 'collapsed';
+    setAnimating(true);
+    // Unmount on close right away so the exit fade overlaps the shrink; on
+    // open, mount only once the spring has settled so the form's initial
+    // layout never hits a moving frame.
+    if (!isOpen) setContentVisible(false);
     animate(h, SNAP[state], {
       type: 'spring',
-      stiffness: 280,
-      damping: 32,
-      mass: 0.85,
+      stiffness: 420,
+      damping: 26,
+      mass: 0.55,
       restDelta: 0.5,
       restSpeed: 0.01,
       velocity: initialVelocity,
+    }).then(() => {
+      // A newer snapTo (or drag) superseded this animation — don't touch state.
+      if (animToken.current !== token) return;
+      setAnimating(false);
+      if (isOpen) setContentVisible(true);
     });
     setSnapState(state);
   };
@@ -278,6 +306,8 @@ export default function BottomSheetNav() {
     dragStartH.current       = h.get();
     samples.current = [{ t: Date.now(), y: e.clientY }];
     isDragging.current = false;
+    // Live drag — drop the backdrop blur while the pill is being resized.
+    setAnimating(true);
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
@@ -349,7 +379,7 @@ export default function BottomSheetNav() {
         className="fixed left-1/2 z-50
                    w-[calc(100%-1rem)] min-[380px]:w-[calc(100%-1.5rem)]
                    sm:w-[calc(100%-2.5rem)] max-w-[28rem]
-                   will-change-[height,transform,opacity]"
+                   will-change-[transform,opacity]"
         style={{
           bottom: 'max(12px, env(safe-area-inset-bottom))',
           height: h,
@@ -368,12 +398,12 @@ export default function BottomSheetNav() {
         }
       >
         <div
-            className="bg-card/95 border border-border/70 shadow-[0_14px_36px_-16px_rgba(15,35,25,0.34),0_4px_12px_-6px_rgba(15,35,25,0.16)] h-full flex flex-col backdrop-blur-xl"
+          className={`bg-card/95 border border-border/70 shadow-[0_14px_36px_-16px_rgba(15,35,25,0.34),0_4px_12px_-6px_rgba(15,35,25,0.16)] h-full relative ${animating ? '' : 'backdrop-blur-xl'}`}
           style={{ borderRadius: 30 }}
         >
           {/* Drag Handle — wider, more prominent, with subtle pulse on idle */}
           <div
-            className="flex-shrink-0 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none pt-2.5 pb-1.5"
+            className="absolute top-0 inset-x-0 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none pt-2.5 pb-1.5"
             style={{ height: HANDLE_H }}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
@@ -390,7 +420,7 @@ export default function BottomSheetNav() {
           </div>
 
           {/* Inline form — only rendered when sheet is open */}
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="absolute inset-x-0 overflow-hidden" style={{ top: HANDLE_H, bottom: NAV_H }}>
             <AnimatePresence>
               {isOpen && (
                 <motion.div
@@ -422,7 +452,7 @@ export default function BottomSheetNav() {
 
           {/* Nav Tabs — always pinned at the bottom of the pill */}
           <div
-            className="flex-shrink-0 border-t border-border/60 flex items-center gap-1 px-2 bg-card/90"
+            className="absolute bottom-0 inset-x-0 border-t border-border/60 flex items-center gap-1 px-2 bg-card/90"
             style={{ height: NAV_H, borderRadius: '0 0 30px 30px' }}
           >
             {NAV_ITEMS.map((item) => {

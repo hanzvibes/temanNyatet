@@ -55,7 +55,7 @@ export default function BalanceHero({
           initial={{ opacity: 0.5, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-          className="mt-5 max-w-full break-words text-[clamp(2.15rem,10vw,3.5rem)] font-black leading-[1] tracking-[-0.06em] text-foreground tabular-nums"
+          className="mt-5 max-w-full break-words text-[clamp(1.85rem,10vw,3.5rem)] font-black leading-[1] tracking-[-0.06em] text-foreground tabular-nums"
         >
           {formatRupiah(balance)}
         </motion.p>

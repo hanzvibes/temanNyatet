@@ -36,7 +36,7 @@ export default function TransactionPeriodFilter({
               key={filterValue}
               type="button"
               onClick={() => onChange(filterValue)}
-              className={`min-h-9 shrink-0 rounded-xl px-3.5 text-xs font-bold transition-all ${
+              className={`min-h-11 shrink-0 rounded-xl px-3.5 text-xs font-bold transition-all ${
                 value === filterValue
                   ? 'bg-card text-foreground shadow-sm'
                   : 'text-muted-foreground hover:bg-card/60 hover:text-foreground'

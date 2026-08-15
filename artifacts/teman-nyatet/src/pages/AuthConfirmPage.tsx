@@ -81,7 +81,7 @@ export default function AuthConfirmPage() {
 
         {status === 'success' && (
           <>
-            <CheckCircle2 className="h-12 w-12 text-success mx-auto mb-4" />
+            <CheckCircle2 className="h-12 w-12 text-income mx-auto mb-4" />
             <h1 className="text-section-title">Email Terverifikasi</h1>
             <p className="text-muted-foreground mt-2 font-medium">Kamu akan diarahkan ke halaman login.</p>
           </>

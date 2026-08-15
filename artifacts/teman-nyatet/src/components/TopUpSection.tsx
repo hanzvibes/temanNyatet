@@ -135,7 +135,7 @@ function BadgeChip({ pkg }: { pkg: CreditPackage }) {
     pkg.badgeVariant === 'primary'
       ? 'bg-primary/15 text-primary border-primary/25'
       : pkg.badgeVariant === 'finance'
-        ? 'bg-[hsl(var(--finance))] text-[hsl(var(--finance-text))] border-transparent bg-opacity-20'
+        ? 'bg-[hsl(var(--finance)/0.2)] text-[hsl(var(--finance-text))] border-transparent'
         : 'bg-muted text-muted-foreground border-border';
   return (
     <span

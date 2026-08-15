@@ -463,11 +463,11 @@ export default function TodoPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="flex min-h-dvh h-full flex-col bg-background pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
+    <div className="app-page">
 
       {/* ── Header ── */}
-      <div className="sticky top-0 z-10 bg-background/90 backdrop-blur-xl border-b border-border/40">
-        <div className="mx-auto max-w-screen-xl px-5 py-3 sm:px-6 sm:py-4 lg:px-10 lg:py-5">
+      <div className="app-page-header">
+        <div className="app-page-header-inner">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
@@ -493,7 +493,7 @@ export default function TodoPage() {
       </div>
 
       {/* ── Body ── */}
-      <div className="mx-auto w-full max-w-screen-xl px-5 pt-4 pb-6 sm:px-6 sm:pt-5 lg:px-10 lg:pt-6">
+      <div className="app-page-body">
         {loading ? (
           <PageLoading accent="todo" label="Memuat to-do…" />
         ) : (

@@ -373,32 +373,28 @@ export default function KeuanganPage() {
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-background">
 
       {/* ── Header ── */}
-      <div className="sticky top-0 z-20 border-b border-border/45 bg-background/90 backdrop-blur-xl">
-        <div className="mx-auto max-w-5xl px-4 py-3.5 sm:px-6 sm:py-4 lg:px-8 lg:py-5">
-          <div className="flex min-w-0 items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/70">TemanNyatet</p>
-              <h1 className="mt-1 text-[clamp(1.25rem,4vw,1.6rem)] font-black tracking-[-0.04em] text-foreground">
-                Keuangan
-              </h1>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => handleOpenForm('expense')}
-                className="min-h-10 gap-1.5 rounded-xl bg-finance px-3.5 font-bold text-finance-text shadow-sm transition-transform hover:bg-finance/90 active:scale-[0.98] sm:px-4"
-                aria-label="Tambah transaksi"
-              >
-                <Plus size={16} strokeWidth={2.7} />
-                <span className="hidden min-[380px]:inline">Tambah</span>
-              </Button>
-              <SettingsSheet
-                avatarBg="bg-finance/15"
-                avatarTextColor="text-finance-text"
-                viewport="mobile"
-              />
-            </div>
+      <div className="app-page-header">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3.5 sm:px-6 sm:py-4 lg:px-8 lg:py-5">
+          <div className="min-w-0">
+            <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
+            <h1 className="text-page-title">Keuangan</h1>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => handleOpenForm('expense')}
+              className="min-h-10 gap-1.5 rounded-xl bg-finance px-3.5 font-bold text-finance-text shadow-sm transition-transform hover:bg-finance/90 active:scale-[0.98] sm:px-4"
+              aria-label="Tambah transaksi"
+            >
+              <Plus size={16} strokeWidth={2.7} />
+              <span className="hidden min-[380px]:inline">Tambah</span>
+            </Button>
+            <SettingsSheet
+              avatarBg="bg-finance/15"
+              avatarTextColor="text-finance-text"
+              viewport="mobile"
+            />
           </div>
         </div>
       </div>

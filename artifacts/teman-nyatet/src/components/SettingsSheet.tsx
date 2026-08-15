@@ -560,7 +560,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                           </div>
                           <span className="min-w-0 flex-1">
                             <span className="block font-bold text-foreground text-[clamp(0.875rem,3vw,1.125rem)]">Tampilan</span>
-                            <span className="mt-0.5 block truncate text-xs font-medium text-muted-foreground">Font, sudut, dan tema</span>
+                            <span className="mt-0.5 block truncate text-xs font-medium text-muted-foreground">Tema, warna, font &amp; ukuran</span>
                           </span>
                           <ChevronRight size={16} className="text-muted-foreground/50 w-[clamp(1rem,3vw,1.25rem)] h-[clamp(1rem,3vw,1.25rem)]" strokeWidth={2.5} />
                         </button>

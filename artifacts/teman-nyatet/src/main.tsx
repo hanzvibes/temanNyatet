@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import App from './App';
 import type { ThemeMode } from '@/hooks/useTheme';
 import { resolveTheme } from '@/hooks/useTheme';
-import { applyAppearanceToDom, FONT_FAMILIES, PALETTE_OPTIONS, RADIUS_VALUES, type AppearancePrefs } from '@/hooks/useAppearance';
+import { applyAppearanceToDom, readStoredPrefs } from '@/hooks/useAppearance';
 import './index.css';
 
 // ── Theme bootstrap (runs synchronously before first paint) ─────────────────
@@ -28,25 +28,13 @@ import './index.css';
 })();
 
 // ── Appearance bootstrap (runs synchronously before first paint) ─────────────
-// Reads font and radius preferences from localStorage and applies CSS variable
-// overrides to <html> so the first paint uses the user's chosen font and
-// corner radius without any flash.
+// Reads all appearance preferences (font, radius, palette, text scale, density,
+// motion, glass, custom accent) from localStorage and applies the CSS variable
+// overrides to <html> so the first paint matches the user's choices with no
+// flash. `readStoredPrefs` performs the same validation the hook does, so the
+// boot and the runtime always agree on defaults.
 (function bootAppearance() {
-  const prefs: AppearancePrefs = { font: 'inter', radius: 'default', palette: 'classic' };
-  try {
-    const raw = window.localStorage.getItem('teman-nyatet:appearance');
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<AppearancePrefs>;
-      if (parsed.font && parsed.font in FONT_FAMILIES) prefs.font = parsed.font;
-      if (parsed.radius && parsed.radius in RADIUS_VALUES) prefs.radius = parsed.radius;
-      if (parsed.palette && PALETTE_OPTIONS.some(({ value }) => value === parsed.palette)) {
-        prefs.palette = parsed.palette;
-      }
-    }
-  } catch {
-    // Ignore storage / parse errors; defaults apply.
-  }
-  applyAppearanceToDom(prefs);
+  applyAppearanceToDom(readStoredPrefs());
 })();
 
 // Attach Supabase access token to all generated API hook requests.

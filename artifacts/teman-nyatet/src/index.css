@@ -162,6 +162,18 @@
   --note-card-4: hsl(239 42% 90%);         /* soft indigo — todo */
   --note-card-4-foreground: hsl(239 42% 22%);
   --note-card-4-border: hsl(239 38% 72%);
+
+  /* ── Runtime appearance knobs ────────────────────────────────────────
+     Driven by data-* attributes on <html> set from Settings → Appearance
+     (hooks/useAppearance). Defaults match the curated look above. */
+  --text-scale: 1;            /* typography multiplier (roles in @layer components) */
+  --glass-blur: 24px;         /* backdrop blur for glass surfaces */
+  --glass-alpha: 0.88;        /* background opacity for glass surfaces */
+
+  /* Tailwind v4 exposes its default blur tokens as runtime CSS vars, so the
+     app's backdrop-blur-* surfaces follow --glass-blur with zero component
+     edits. The same override pattern is used for --spacing (density). */
+  --blur-xl: var(--glass-blur);
 }
 
 /* ── Dark mode ─────────────────────────────────────────────────────────
@@ -350,6 +362,71 @@
   --linksaver-text: 17 28% 74%;
 }
 
+/* ── Custom accent (Settings → Appearance → Warna Aksen) ────────────────
+   The user picks any hue; JS writes it as --custom-h on <html>. Section
+   colors (keuangan/todo/linksaver) keep their identity hues — only the
+   interactive accent (primary/ring/accent/button borders) follows the pick,
+   which is what “dynamic theme” needs: buttons, icons, active states,
+   switches, focus rings, and progress indicators all use --primary/--ring. */
+:root[data-palette="custom"] {
+  --primary: var(--custom-h) 72% 38%;
+  --primary-foreground: 0 0% 100%;
+  --ring: var(--custom-h) 70% 46%;
+  --accent: var(--custom-h) 50% 90%;
+  --accent-foreground: var(--custom-h) 60% 18%;
+  --primary-border: hsl(var(--custom-h) 68% 32%);
+}
+
+.dark[data-palette="custom"] {
+  --primary: var(--custom-h) 65% 60%;
+  --primary-foreground: var(--custom-h) 70% 10%;
+  --ring: var(--custom-h) 70% 66%;
+  --accent: var(--custom-h) 35% 26%;
+  --accent-foreground: var(--custom-h) 60% 92%;
+  --primary-border: hsl(var(--custom-h) 62% 68%);
+}
+
+/* ── Text scale (Settings → Appearance → Ukuran Teks) ───────────────────
+   Typography roles multiply their size by --text-scale (see @layer
+   components). Small micro-labels stay fixed, like the real iOS behavior. */
+:root[data-text-scale="small"] { --text-scale: 0.9; }
+:root[data-text-scale="large"] { --text-scale: 1.08; }
+:root[data-text-scale="xl"] { --text-scale: 1.16; }
+
+/* ── Display density ────────────────────────────────────────────────────
+   Tailwind v4 derives every spacing utility (p-*, m-*, gap-*, w-*, h-*,
+   space-*) from --spacing, so overriding it on <html> tightens or loosens
+   the whole UI — cards, lists, touch targets, gaps — uniformly. */
+:root[data-density="compact"] { --spacing: 0.22rem; }
+:root[data-density="spacious"] { --spacing: 0.3rem; }
+
+/* ── Animation & motion (Settings → Appearance → Animasi) ───────────────
+   CSS-level kill switch. JS-driven framer-motion is handled by
+   MotionConfigProvider (reducedMotion/transition), which reads the same pref. */
+:root[data-motion="reduced"] *,
+:root[data-motion="reduced"] *::before,
+:root[data-motion="reduced"] *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+:root[data-motion="off"] *,
+:root[data-motion="off"] *::before,
+:root[data-motion="off"] *::after {
+  scroll-behavior: auto !important;
+  animation: none !important;
+  transition: none !important;
+}
+
+/* ── Blur & transparency (Settings → Appearance → Transparansi & Blur) ──
+   --glass-blur drives backdrop-blur-xl surfaces (header, sidebar, nav pill)
+   via the --blur-xl token; --glass-alpha drives the page-header background. */
+:root[data-glass="minimal"] { --glass-blur: 12px; --glass-alpha: 0.93; }
+:root[data-glass="none"] { --glass-blur: 0px; --glass-alpha: 0.97; }
+:root[data-glass="heavy"] { --glass-blur: 36px; --glass-alpha: 0.76; }
+
 @layer base {
   * {
     @apply border-border;
@@ -421,31 +498,31 @@
    spacing than on heavy weights, so the UI stays light and easy to scan. */
 @layer components {
   .text-display {
-    @apply font-display text-3xl font-semibold leading-[1.08] tracking-[-0.03em] text-foreground;
+    @apply font-display text-[calc(1.875rem*var(--text-scale))] font-semibold leading-[1.08] tracking-[-0.03em] text-foreground;
   }
 
   .text-page-title {
-    @apply font-display text-[1.7rem] sm:text-[1.85rem] lg:text-3xl font-semibold leading-[1.08] tracking-[-0.035em] text-foreground;
+    @apply font-display text-[calc(1.7rem*var(--text-scale))] sm:text-[calc(1.85rem*var(--text-scale))] lg:text-[calc(1.875rem*var(--text-scale))] font-semibold leading-[1.08] tracking-[-0.035em] text-foreground;
   }
 
   .text-modal-title {
-    @apply font-display text-2xl font-semibold leading-tight text-foreground;
+    @apply font-display text-[calc(1.5rem*var(--text-scale))] font-semibold leading-tight text-foreground;
   }
 
   .text-section-title {
-    @apply font-display text-xl font-semibold leading-snug tracking-[-0.01em] text-foreground;
+    @apply font-display text-[calc(1.25rem*var(--text-scale))] font-semibold leading-snug tracking-[-0.01em] text-foreground;
   }
 
   .text-input-title {
-    @apply font-display text-2xl font-medium leading-[1.2] text-foreground;
+    @apply font-display text-[calc(1.5rem*var(--text-scale))] font-medium leading-[1.2] text-foreground;
   }
 
   .text-input-content {
-    @apply text-base font-normal leading-relaxed text-foreground;
+    @apply text-[calc(1rem*var(--text-scale))] font-normal leading-relaxed text-foreground;
   }
 
   .text-body {
-    @apply text-sm font-normal leading-[1.65] text-foreground;
+    @apply text-[calc(0.875rem*var(--text-scale))] font-normal leading-[1.65] text-foreground;
   }
 
   .text-pill-label {
@@ -523,7 +600,10 @@
   }
 
   .app-page-header {
-    @apply sticky top-0 z-10 border-b border-border/50 bg-background/85 backdrop-blur-xl;
+    @apply sticky top-0 z-10 border-b border-border/50;
+    background-color: hsl(var(--background) / var(--glass-alpha));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    backdrop-filter: blur(var(--glass-blur));
   }
 
   .app-page-header-inner {
@@ -546,7 +626,7 @@
       padding-inline: 1rem;
     }
     .text-page-title {
-      font-size: 1.55rem;
+      font-size: calc(1.55rem * var(--text-scale));
     }
   }
 

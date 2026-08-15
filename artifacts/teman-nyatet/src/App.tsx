@@ -11,6 +11,7 @@ import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import PwaUpdatePrompt from '@/components/PwaUpdatePrompt';
 import OfflineIndicator from '@/components/OfflineIndicator';
 import FreePlanLimitDialog from '@/components/FreePlanLimitDialog';
+import MotionConfigProvider from '@/components/MotionConfigProvider';
 
 // Lazy load pages so the initial JS bundle stays small. This improves first
 // paint on slow mobile networks (especially iPhone on 3G/4G) and avoids a
@@ -333,6 +334,7 @@ function RouteSlot({
 
 function AppContent() {
   return (
+    <MotionConfigProvider>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CreateProvider>
@@ -352,6 +354,7 @@ function AppContent() {
         <Toaster />
       </Suspense>
     </QueryClientProvider>
+    </MotionConfigProvider>
   );
 }
 

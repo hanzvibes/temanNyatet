@@ -88,11 +88,11 @@ function SummaryDetails({
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-xl bg-income/8 px-3 py-3">
           <p className="text-[10px] font-bold uppercase tracking-wide text-income/75">Pemasukan</p>
-          <p className="mt-1 text-sm font-black tabular-nums text-income">{formatRupiah(summary.totals.income)}</p>
+          <p className="mt-1 font-mono text-sm font-bold tabular-nums text-income">{formatRupiah(summary.totals.income)}</p>
         </div>
         <div className="rounded-xl bg-expense/8 px-3 py-3">
           <p className="text-[10px] font-bold uppercase tracking-wide text-expense/75">Pengeluaran</p>
-          <p className="mt-1 text-sm font-black tabular-nums text-expense">{formatRupiah(summary.totals.expense)}</p>
+          <p className="mt-1 font-mono text-sm font-bold tabular-nums text-expense">{formatRupiah(summary.totals.expense)}</p>
         </div>
       </div>
 
@@ -105,7 +105,7 @@ function SummaryDetails({
             {summary.top_expense_categories.length > 0 ? summary.top_expense_categories.map((category) => (
               <div key={category.category} className="flex items-center justify-between gap-3 text-xs">
                 <span className="min-w-0 truncate font-semibold text-foreground">{category.category}</span>
-                <span className="shrink-0 font-bold tabular-nums text-muted-foreground">
+                <span className="shrink-0 font-mono font-medium tabular-nums text-muted-foreground">
                   {formatRupiah(category.amount)} · {category.percentage.toFixed(1)}%
                 </span>
               </div>

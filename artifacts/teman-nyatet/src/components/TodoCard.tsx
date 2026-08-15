@@ -86,13 +86,13 @@ export function TodoCard({
       role="button"
       aria-label={`Buka to-do: ${todo.title}`}
       className={[
-        'flex cursor-pointer select-none items-center gap-3 rounded-2xl border bg-card px-4 py-3.5 transition-[border-color,box-shadow,background-color]',
+        'flex cursor-pointer select-none items-center gap-3 rounded-[1.25rem] border bg-card px-4 py-3.5 shadow-elevation-1 transition-[border-color,box-shadow,background-color]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-todo focus-visible:ring-offset-2',
         isDragOverlay
           ? 'border-todo/30 shadow-elevation-3 ring-1 ring-todo/15'
           : todo.is_done
-            ? 'border-border/40 opacity-50'
-            : 'border-border/55 hover:border-todo/35 hover:shadow-elevation-1',
+            ? 'border-border/40 opacity-50 hover:shadow-elevation-1'
+            : 'border-border/55 hover:border-todo/35 hover:shadow-elevation-2',
         isDragging ? 'shadow-elevation-2' : '',
       ].join(' ')}
     >
@@ -106,11 +106,11 @@ export function TodoCard({
         }
         onClick={onToggle}
         className={[
-          'flex h-10 w-10 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border-2 transition-[border-color,background-color,box-shadow] duration-200',
+          'flex h-10 w-10 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border-2 transition-[border-color,background-color,box-shadow] duration-200 active:scale-95',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-todo focus-visible:ring-offset-2',
           todo.is_done
             ? 'border-todo bg-todo text-white shadow-sm'
-            : 'border-muted-foreground/20 bg-background hover:border-todo',
+            : 'border-muted-foreground/25 bg-background hover:border-todo hover:shadow-sm',
         ].join(' ')}
       >
         {todo.is_done ? (

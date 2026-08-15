@@ -414,7 +414,9 @@ export default function BottomSheetNav() {
           >
             <div
               className={`rounded-full transition-all duration-200 ${
-                isOpen ? 'w-2.5 h-1 bg-muted-foreground/70' : 'w-10 h-1.5 bg-muted-foreground/45'
+                isOpen
+                  ? 'w-2.5 h-1 bg-muted-foreground/70'
+                  : 'w-12 h-1.5 bg-muted-foreground/60 shadow-[0_1px_2px_rgba(0,0,0,0.12)] ring-1 ring-black/5 dark:ring-white/10'
               }`}
             />
           </div>

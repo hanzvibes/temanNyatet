@@ -41,6 +41,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { TodoCard, TodoCardOverlay } from '@/components/TodoCard';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import type { Todo as TodoType } from '@/lib/database.types';
 
 // ─── Schema ─────────────────────────────────────────────────────────────────
@@ -204,35 +205,45 @@ function FilterBar({
     { key: 'done',   label: 'Selesai', count: counts.done },
   ];
 
+  const reducedMotion = usePrefersReducedMotion();
+
   return (
     <div className="flex gap-1 rounded-[1rem] bg-muted/50 p-1" role="tablist" aria-label="Filter to-do">
-      {tabs.map(({ key, label, count }) => (
-        <button
-          key={key}
-          role="tab"
-          aria-selected={active === key}
-          onClick={() => onChange(key)}
-          className={[
-            'flex flex-1 items-center justify-center gap-1.5 rounded-[0.75rem] px-3 py-2.5 text-xs font-bold transition-all select-none',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-todo/40 focus-visible:ring-offset-2',
-            active === key
-              ? 'bg-card text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground/80',
-          ].join(' ')}
-        >
-          {label}
-          <span
+      {tabs.map(({ key, label, count }) => {
+        const isActive = active === key;
+        return (
+          <button
+            key={key}
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => onChange(key)}
             className={[
-              'rounded-md px-1.5 py-0.5 text-[10px] font-bold tabular-nums transition-all',
-              active === key
-                ? 'bg-todo/10 text-todo-text'
-                : 'bg-muted-foreground/10 text-muted-foreground',
+              'relative flex flex-1 items-center justify-center gap-1.5 rounded-[0.75rem] px-3 py-2.5 text-xs font-bold transition-colors select-none active:scale-[0.97]',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-todo/40 focus-visible:ring-offset-2',
+              isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80',
             ].join(' ')}
           >
-            {count}
-          </span>
-        </button>
-      ))}
+            {isActive && (
+              <motion.span
+                layoutId="todo-filter-pill"
+                className="absolute inset-0 rounded-[0.75rem] bg-card shadow-sm"
+                transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 40, mass: 0.8 }}
+              />
+            )}
+            <span className="relative z-10">{label}</span>
+            <span
+              className={[
+                'relative z-10 rounded-md px-1.5 py-0.5 text-[10px] font-bold tabular-nums transition-colors',
+                isActive
+                  ? 'bg-todo/10 text-todo-text'
+                  : 'bg-muted-foreground/10 text-muted-foreground',
+              ].join(' ')}
+            >
+              {count}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }

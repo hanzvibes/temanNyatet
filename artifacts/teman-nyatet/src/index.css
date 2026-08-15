@@ -52,11 +52,15 @@
   --color-expense: hsl(var(--expense));
 
   --font-sans: var(--app-font-sans);
+  --font-display: var(--app-font-display);
+  --font-mono: var(--app-font-mono);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-card: 1.25rem;
+  --radius-input: 0.875rem;
 
   --shadow-elevation-1: var(--shadow-1);
   --shadow-elevation-2: var(--shadow-2);
@@ -64,69 +68,74 @@
 }
 
 :root {
-  /* ── Bills on Chain Design Tokens ─────────────────────────────────────
-     Primary palette: dark charcoal (#1a1a1a) + gold accent (#d4af37).
-     Semantic: success green (#10b981), blockchain blue (#0066ff),
-               warning amber (#f59e0b), error red (#ef4444).            */
+  /* ── TemanNyatet Design Tokens ────────────────────────────────────────
+     Character: hangat, produktif, personal — seperti buku catatan premium.
+     Primary: sage teal (#18A07A) — personal & notebook-like, bukan
+              charcoal korporat. Accent: warm cream (kertas) untuk hover.
+     Sections: catatan=sage teal, keuangan=amber, todo=indigo,
+               linksaver=violet.                                      */
 
-  --background: 210 20% 98%;   /* #f9fafb — grey canvas */
-  --foreground: 215 28% 17%;   /* #1f2937 — dark ink */
+  --background: 42 32% 97%;    /* #faf7f1 — warm paper canvas */
+  --foreground: 168 22% 14%;   /* #1c2e28 — deep teal ink */
 
-  --surface: 0 0% 96%;         /* #f5f5f5 — grouping surface */
-  --surface-foreground: 0 0% 20%; /* #333333 */
+  --surface: 40 25% 94%;       /* grouping surface */
+  --surface-foreground: 168 18% 22%;
 
-  --border: 220 13% 91%;       /* #e5e7eb */
+  --border: 168 14% 86%;       /* soft sage border */
 
   --card: 0 0% 100%;           /* #ffffff */
-  --card-foreground: 215 28% 17%;
-  --card-border: 220 13% 91%;
+  --card-foreground: 168 22% 14%;
+  --card-border: 168 14% 86%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 215 28% 17%;
-  --popover-border: 220 13% 91%;
+  --popover-foreground: 168 22% 14%;
+  --popover-border: 168 14% 86%;
 
-  --primary: 0 0% 10%;         /* #1a1a1a — charcoal */
+  --primary: 168 72% 36%;      /* #18A07A — sage teal */
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 0 0% 96%;       /* #f5f5f5 */
-  --secondary-foreground: 0 0% 20%; /* #333333 */
+  --secondary: 40 22% 94%;
+  --secondary-foreground: 168 18% 22%;
 
-  --muted: 0 0% 96%;
-  --muted-foreground: 220 9% 46%; /* #6b7280 */
+  --muted: 40 22% 94%;
+  --muted-foreground: 165 10% 42%;
 
-  --accent: 43 64% 52%;        /* #d4af37 — diamond gold */
-  --accent-foreground: 0 0% 10%;
+  --accent: 42 45% 92%;        /* warm cream — notebook hover fill */
+  --accent-foreground: 168 35% 18%;
 
   --destructive: 0 84% 60%;    /* #ef4444 */
   --destructive-foreground: 0 0% 100%;
 
-  --input: 220 13% 82%;        /* #d1d5db */
-  --ring: 217 100% 50%;        /* #0066ff — blockchain blue focus ring */
+  --input: 168 12% 78%;
+  --ring: 168 72% 42%;         /* sage focus ring */
 
   /* Button border accents */
-  --primary-border: hsl(0 0% 5%);         /* near-black rim on primary */
-  --secondary-border: hsl(220 13% 82%);   /* soft grey rim */
-  --muted-border: hsl(220 13% 85%);
-  --accent-border: hsl(43 64% 40%);       /* deeper gold rim */
+  --primary-border: hsl(168 65% 30%);
+  --secondary-border: hsl(168 14% 80%);
+  --muted-border: hsl(40 15% 84%);
+  --accent-border: hsl(42 40% 80%);
   --destructive-border: hsl(0 72% 50%);
 
-  /* Semantic app section colors */
-  --finance: 43 64% 52%;       /* gold — finance/keuangan */
-  --finance-text: 43 76% 28%;
-  --todo: 217 100% 50%;        /* blockchain blue — todos */
-  --todo-text: 217 80% 30%;
-  --linksaver: 220 9% 55%;     /* neutral muted — links */
-  --linksaver-text: 220 9% 28%;
+  /* Semantic app section colors — satu hue per section, kohesif */
+  --finance: 38 92% 50%;       /* #F59E0B — amber warm */
+  --finance-text: 30 75% 30%;
+  --todo: 239 84% 67%;         /* #6366F1 — indigo */
+  --todo-text: 239 60% 40%;
+  --linksaver: 258 90% 66%;    /* #8B5CF6 — violet */
+  --linksaver-text: 258 65% 40%;
   --income: 160 84% 39%;       /* #10b981 — success green */
   --expense: 0 84% 60%;        /* #ef4444 — error red */
 
   --app-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --radius: 0.75rem;            /* 12px — consistent rounded scale */
+  --app-font-display: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --app-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --radius: 1rem;               /* 16px base — lebih mobile-native */
 
-  /* Ultra-soft, warm-tinted layered shadows for a clean premium feel */
-  --shadow-1: 0 1px 3px rgba(30, 41, 59, 0.04), 0 1px 2px rgba(30, 41, 59, 0.03);
-  --shadow-2: 0 4px 16px rgba(30, 41, 59, 0.07), 0 2px 6px rgba(30, 41, 59, 0.04);
-  --shadow-3: 0 8px 32px rgba(30, 41, 59, 0.09), 0 4px 12px rgba(30, 41, 59, 0.06);
+  /* Layered depth: elevation-1 daftar, elevation-2 interaktif,
+     elevation-3 modal/sheet. Warm sage-tinted so cards "mengangkat". */
+  --shadow-1: 0 1px 2px rgba(20, 60, 50, 0.05), 0 1px 3px rgba(20, 60, 50, 0.04);
+  --shadow-2: 0 2px 6px rgba(20, 60, 50, 0.05), 0 10px 24px -10px rgba(20, 60, 50, 0.14);
+  --shadow-3: 0 6px 16px -6px rgba(20, 60, 50, 0.10), 0 18px 44px -12px rgba(20, 60, 50, 0.22);
 
   /* Bottom-nav clearance.
      BottomSheetNav is anchored `bottom: 20px` with
@@ -137,101 +146,96 @@
      overrun by the pill. Same value used here and in PwaInstallPrompt. */
   --bottom-nav-collapsed-h: 96px;
 
-  /* Sticky-note palette — Bills on Chain tints.
-     Warm neutral pastels matching the gold + charcoal palette. */
-  --note-card-1: hsl(43 60% 92%);          /* warm cream — gold tint */
-  --note-card-1-foreground: hsl(43 50% 18%);
-  --note-card-1-border: hsl(43 50% 78%);
-  --note-card-2: hsl(217 60% 93%);         /* soft blue — blockchain tint */
-  --note-card-2-foreground: hsl(217 40% 20%);
-  --note-card-2-border: hsl(217 40% 78%);
-  --note-card-3: hsl(160 50% 91%);         /* soft green — success tint */
-  --note-card-3-foreground: hsl(160 40% 18%);
-  --note-card-3-border: hsl(160 38% 74%);
-  --note-card-4: hsl(0 60% 93%);           /* soft red — error tint */
-  --note-card-4-foreground: hsl(0 38% 22%);
-  --note-card-4-border: hsl(0 42% 78%);
+  /* Sticky-note palette — kertas premium.
+     Hue mengikuti identitas section (sage, amber, indigo) + cream kertas,
+     dengan saturasi lebih berani dan border tegas supaya kartu tidak
+     tenggelam ke background. */
+  --note-card-1: hsl(42 55% 90%);          /* warm cream — paper */
+  --note-card-1-foreground: hsl(40 45% 20%);
+  --note-card-1-border: hsl(42 48% 74%);
+  --note-card-2: hsl(160 38% 88%);         /* sage mint — catatan */
+  --note-card-2-foreground: hsl(162 40% 18%);
+  --note-card-2-border: hsl(160 36% 68%);
+  --note-card-3: hsl(38 62% 88%);          /* soft amber — keuangan */
+  --note-card-3-foreground: hsl(34 48% 22%);
+  --note-card-3-border: hsl(38 48% 72%);
+  --note-card-4: hsl(239 42% 90%);         /* soft indigo — todo */
+  --note-card-4-foreground: hsl(239 42% 22%);
+  --note-card-4-border: hsl(239 38% 72%);
 }
 
 /* ── Dark mode ─────────────────────────────────────────────────────────
    Same token names, different HSL values, so anything bound to theme
-   tokens (background / foreground / card / border / muted / primary /
-   secondary / input / ring) flips automatically.
+   tokens flips automatically.
 
    Tone:
-   - Base canvas: deep slate (`hsl(222 25% 7%)`).
-   - Cards: slightly lighter slate so they read "lifted" off the
-     canvas without harsh edges.
-   - Borders: mid-slate so the chrome stays visible on dark cards
-     without looking heavy.
-   - Sage primary: 90→38% / 54→62% L — lifts the green so it remains
-     a brand signal at dark-mode contrast (WCAG AA on the dark fg).
-*/
+   - Canvas: very dark sage-tinted slate (bukan hitam abu yang flat).
+   - Cards: satu langkah lebih terang, tetap "lifted" tanpa tepi keras.
+   - Borders: mid-sage supaya chrome tetap terlihat.
+   - Primary: sage terang (L 52%) agar tetap jadi sinyal brand di dark
+     mode dengan kontras WCAG AA terhadap foreground gelap.        */
 .dark {
-  /* ── Dark mode — Bills on Chain dark palette ──────────────────────────
-     Deep charcoal canvas, lifted card surfaces, gold accent stays. */
+  --background: 168 22% 6%;       /* deep sage-slate canvas */
+  --foreground: 42 20% 94%;       /* warm off-white text */
 
-  --background: 0 0% 4%;          /* #0a0a0a — near-black canvas */
-  --foreground: 0 0% 96%;         /* #f5f5f5 — light text */
+  --surface: 168 18% 11%;
+  --surface-foreground: 40 15% 80%;
 
-  --surface: 0 0% 10%;            /* #1a1a1a — lifted surface */
-  --surface-foreground: 0 0% 83%; /* #d4d4d4 */
+  --border: 168 12% 19%;
 
-  --border: 0 0% 20%;             /* #333333 */
+  --card: 168 18% 10%;
+  --card-foreground: 42 20% 94%;
+  --card-border: 168 12% 19%;
 
-  --card: 0 0% 10%;               /* #1a1a1a */
-  --card-foreground: 0 0% 96%;
-  --card-border: 0 0% 20%;
+  --popover: 168 20% 13%;
+  --popover-foreground: 42 20% 94%;
+  --popover-border: 168 12% 22%;
 
-  --popover: 0 0% 13%;            /* #222222 */
-  --popover-foreground: 0 0% 96%;
-  --popover-border: 0 0% 20%;
+  --primary: 168 60% 52%;         /* #3DBFA0 — sage terang */
+  --primary-foreground: 168 70% 10%;
 
-  --primary: 0 0% 96%;            /* #f5f5f5 — inverted in dark */
-  --primary-foreground: 0 0% 10%;
+  --secondary: 168 16% 17%;
+  --secondary-foreground: 42 18% 84%;
 
-  --secondary: 0 0% 20%;          /* #333333 */
-  --secondary-foreground: 0 0% 83%;
+  --muted: 168 16% 17%;
+  --muted-foreground: 165 12% 66%;
 
-  --muted: 0 0% 20%;
-  --muted-foreground: 216 12% 64%; /* #9ca3af */
-
-  --accent: 43 64% 52%;           /* #d4af37 — gold stays same in dark */
-  --accent-foreground: 0 0% 10%;
+  --accent: 42 30% 24%;           /* dark warm cream hover */
+  --accent-foreground: 42 45% 90%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 0 0% 22%;              /* slightly lighter than border */
-  --ring: 217 100% 50%;           /* #0066ff */
+  --input: 168 10% 24%;
+  --ring: 168 60% 62%;
 
-  --primary-border: hsl(0 0% 85%);
-  --secondary-border: hsl(0 0% 28%);
-  --muted-border: hsl(0 0% 26%);
-  --accent-border: hsl(43 64% 42%);
+  --primary-border: hsl(168 55% 62%);
+  --secondary-border: hsl(168 12% 26%);
+  --muted-border: hsl(168 10% 24%);
+  --accent-border: hsl(42 30% 34%);
   --destructive-border: hsl(0 72% 50%);
 
-  --finance-text: 43 80% 68%;
-  --todo-text: 217 80% 72%;
-  --linksaver-text: 220 9% 70%;
+  --finance-text: 38 95% 62%;
+  --todo-text: 239 80% 80%;
+  --linksaver-text: 258 85% 82%;
 
-  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
-  --shadow-2: 0 4px 16px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.20);
-  --shadow-3: 0 8px 32px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.28);
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.28), 0 1px 2px rgba(0, 0, 0, 0.18);
+  --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.32), 0 12px 28px -10px rgba(0, 0, 0, 0.5);
+  --shadow-3: 0 8px 20px -6px rgba(0, 0, 0, 0.42), 0 22px 52px -14px rgba(0, 0, 0, 0.62);
 
-  /* Dark note cards — same hue as light but dark tints */
-  --note-card-1: hsl(43 30% 20%);
-  --note-card-1-foreground: hsl(43 50% 90%);
-  --note-card-1-border: hsl(43 34% 32%);
-  --note-card-2: hsl(217 30% 20%);
-  --note-card-2-foreground: hsl(217 48% 90%);
-  --note-card-2-border: hsl(217 28% 34%);
-  --note-card-3: hsl(160 28% 20%);
-  --note-card-3-foreground: hsl(160 38% 90%);
-  --note-card-3-border: hsl(160 26% 34%);
-  --note-card-4: hsl(0 28% 20%);
-  --note-card-4-foreground: hsl(0 40% 90%);
-  --note-card-4-border: hsl(0 28% 34%);
+  /* Dark note cards — hue sama dengan light, versi gelap dengan fg terang */
+  --note-card-1: hsl(42 32% 18%);
+  --note-card-1-foreground: hsl(42 55% 90%);
+  --note-card-1-border: hsl(42 38% 30%);
+  --note-card-2: hsl(160 32% 18%);
+  --note-card-2-foreground: hsl(160 45% 90%);
+  --note-card-2-border: hsl(160 34% 30%);
+  --note-card-3: hsl(38 36% 18%);
+  --note-card-3-foreground: hsl(38 55% 90%);
+  --note-card-3-border: hsl(38 40% 30%);
+  --note-card-4: hsl(239 34% 18%);
+  --note-card-4-foreground: hsl(239 50% 90%);
+  --note-card-4-border: hsl(239 36% 30%);
 }
 
 /* ── Appearance palettes ──────────────────────────────────────────────────
@@ -417,23 +421,23 @@
    spacing than on heavy weights, so the UI stays light and easy to scan. */
 @layer components {
   .text-display {
-    @apply text-3xl font-semibold leading-[1.08] tracking-[-0.03em] text-foreground;
+    @apply font-display text-3xl font-semibold leading-[1.08] tracking-[-0.03em] text-foreground;
   }
 
   .text-page-title {
-    @apply text-[1.7rem] sm:text-[1.85rem] lg:text-3xl font-semibold leading-[1.08] tracking-[-0.035em] text-foreground;
+    @apply font-display text-[1.7rem] sm:text-[1.85rem] lg:text-3xl font-semibold leading-[1.08] tracking-[-0.035em] text-foreground;
   }
 
   .text-modal-title {
-    @apply text-2xl font-semibold leading-tight text-foreground;
+    @apply font-display text-2xl font-semibold leading-tight text-foreground;
   }
 
   .text-section-title {
-    @apply text-xl font-medium leading-snug text-foreground;
+    @apply font-display text-xl font-semibold leading-snug tracking-[-0.01em] text-foreground;
   }
 
   .text-input-title {
-    @apply text-2xl font-medium leading-[1.2] text-foreground;
+    @apply font-display text-2xl font-medium leading-[1.2] text-foreground;
   }
 
   .text-input-content {
@@ -454,8 +458,7 @@
 }
 
 @layer utilities {
-  /* Font weights follow Bills on Chain spec:
-     semibold = 600, bold = 700, extrabold = 800 — no override needed. */
+  /* Font weights: semibold = 600, bold = 700, extrabold = 800. */
 }
 
 @layer base {

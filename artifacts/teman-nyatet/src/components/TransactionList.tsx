@@ -100,7 +100,7 @@ export default function TransactionList({
                       <CalendarDays size={13} strokeWidth={2.3} className="shrink-0 text-muted-foreground/65" />
                       <span className="text-xs font-bold text-foreground/75">{getFormatDate(dateStr)}</span>
                     </div>
-                    <span className={`text-xs font-bold tabular-nums ${dayNet >= 0 ? 'text-income' : 'text-expense'}`}>
+                    <span className={`font-mono text-xs font-medium tabular-nums ${dayNet >= 0 ? 'text-income' : 'text-expense'}`}>
                       {dayNet >= 0 ? '+' : ''}{formatRupiahCompact(dayNet)}
                     </span>
                   </div>
@@ -145,7 +145,7 @@ export default function TransactionList({
                                 </div>
 
                                 <div className="min-w-0 max-w-full shrink-0 overflow-hidden text-right">
-                                  <p className={`break-words text-[clamp(11px,3.2vw,14px)] font-black tabular-nums leading-5 ${tx.type === 'income' ? 'text-income' : 'text-foreground'}`}>
+                                  <p className={`break-words font-mono text-[clamp(11px,3.2vw,14px)] font-semibold tabular-nums leading-5 ${tx.type === 'income' ? 'text-income' : 'text-foreground'}`}>
                                     {tx.type === 'income' ? '+' : '−'}{formatRupiahCompact(tx.amount)}
                                   </p>
                                   <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/55">

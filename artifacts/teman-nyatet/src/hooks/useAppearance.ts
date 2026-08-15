@@ -21,8 +21,8 @@ export const FONT_FAMILIES: Record<AppFont, string> = {
 
 export const RADIUS_VALUES: Record<AppRadius, string> = {
   'compact': '0.375rem',
-  'default': '0.75rem',
-  'rounded': '1rem',
+  'default': '1rem',
+  'rounded': '1.25rem',
   'pill': '1.5rem',
 };
 
@@ -32,7 +32,7 @@ export const PALETTE_OPTIONS: ReadonlyArray<{
   description: string;
   swatches: readonly [string, string, string];
 }> = [
-  { value: 'classic', label: 'Klasik', description: 'Charcoal & gold', swatches: ['#1a1a1a', '#d4af37', '#f5f5f5'] },
+  { value: 'classic', label: 'Klasik', description: 'Teal sage & amber', swatches: ['#18a07a', '#f59e0b', '#eef7f3'] },
   { value: 'ocean', label: 'Ocean', description: 'Biru & cyan', swatches: ['#0369a1', '#06b6d4', '#e0f2fe'] },
   { value: 'forest', label: 'Forest', description: 'Hijau & sage', swatches: ['#166534', '#65a30d', '#ecfccb'] },
   { value: 'lavender', label: 'Lavender', description: 'Ungu & violet', swatches: ['#6d28d9', '#c084fc', '#f3e8ff'] },
@@ -66,7 +66,11 @@ function readStoredPrefs(): AppearancePrefs {
 export function applyAppearanceToDom(prefs: AppearancePrefs): void {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
+  // The chosen font drives both the body stack and the display stack, so the
+  // "satu font untuk seluruh app" preference keeps working; the default
+  // pairing (Plus Jakarta Sans headings + Inter body) comes from index.css.
   root.style.setProperty('--app-font-sans', FONT_FAMILIES[prefs.font]);
+  root.style.setProperty('--app-font-display', FONT_FAMILIES[prefs.font]);
   root.style.setProperty('--radius', RADIUS_VALUES[prefs.radius]);
   root.dataset.palette = prefs.palette;
 }

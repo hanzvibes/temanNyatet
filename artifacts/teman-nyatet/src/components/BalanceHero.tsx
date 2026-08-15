@@ -28,7 +28,7 @@ export default function BalanceHero({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
       aria-label="Ringkasan saldo bulan ini"
-      className="relative overflow-hidden rounded-[1.75rem] border border-finance/25 bg-card p-5 shadow-elevation-1 sm:p-6"
+      className="relative overflow-hidden rounded-[1.75rem] border border-finance/25 bg-card p-5 shadow-elevation-2 sm:p-6"
     >
       <div className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-finance/10 blur-2xl" />
 
@@ -55,7 +55,7 @@ export default function BalanceHero({
           initial={{ opacity: 0.5, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-          className="mt-5 max-w-full break-words text-[clamp(1.85rem,10vw,3.5rem)] font-black leading-[1] tracking-[-0.06em] text-foreground tabular-nums"
+          className="mt-5 max-w-full break-words font-mono text-[clamp(1.85rem,10vw,3.5rem)] font-bold leading-[1] tracking-[-0.045em] text-foreground tabular-nums"
         >
           {formatRupiah(balance)}
         </motion.p>
@@ -71,7 +71,7 @@ export default function BalanceHero({
               <ArrowDownLeft size={15} strokeWidth={2.5} />
               <span className="text-[10px] font-bold uppercase tracking-[0.13em]">Pemasukan</span>
             </div>
-            <p className="mt-2 truncate text-sm font-black tabular-nums text-foreground">
+            <p className="mt-2 truncate font-mono text-sm font-bold tabular-nums text-foreground">
               {formatRupiahCompact(income)}
             </p>
           </div>
@@ -80,7 +80,7 @@ export default function BalanceHero({
               <ArrowUpRight size={15} strokeWidth={2.5} />
               <span className="text-[10px] font-bold uppercase tracking-[0.13em]">Pengeluaran</span>
             </div>
-            <p className="mt-2 truncate text-sm font-black tabular-nums text-foreground">
+            <p className="mt-2 truncate font-mono text-sm font-bold tabular-nums text-foreground">
               {formatRupiahCompact(expense)}
             </p>
           </div>

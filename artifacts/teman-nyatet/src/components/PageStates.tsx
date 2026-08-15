@@ -8,7 +8,7 @@ import { AlertCircle, Loader2, type LucideIcon } from 'lucide-react';
 function SkeletonShimmer({ className = '' }: { className?: string }) {
   return (
     <div className={`relative overflow-hidden rounded-xl bg-muted/60 ${className}`}>
-      <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-muted-foreground/10 to-transparent" />
+      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2.4s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-muted-foreground/[0.07] to-transparent" />
     </div>
   );
 }
@@ -75,12 +75,13 @@ export function PageEmpty({ icon: Icon, title, description, accent = 'catatan', 
     <div
       role="status"
       aria-live="polite"
-      className="flex min-h-[42vh] flex-col items-center justify-center gap-4 px-6 py-12 text-center sm:py-14"
+      className="flex min-h-[42vh] flex-col items-center justify-center gap-5 px-6 py-12 text-center sm:py-14"
     >
       <div
-        className={`flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-[1.35rem] border ${t.containerBg} ${t.containerBorder} shadow-elevation-1 animate-in fade-in zoom-in-95 duration-300`}
+        className={`relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border ${t.containerBg} ${t.containerBorder} shadow-elevation-1 animate-in fade-in zoom-in-95 duration-300`}
       >
-        <Icon size={28} strokeWidth={2} className={t.iconText} />
+        <Icon size={24} strokeWidth={2.1} className={t.iconText} />
+        <span className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-b from-white/40 to-transparent dark:from-white/[0.06]" aria-hidden="true" />
       </div>
       <div className="max-w-xs space-y-1.5">
         <p className={`text-base font-semibold leading-snug tracking-[-0.015em] ${t.iconText}`}>{title}</p>
@@ -134,7 +135,7 @@ interface PageLoadingProps {
  *   - 28×28 spinner in the section accent color.
  *   - Small label underneath using normal letter spacing so it remains readable.
  */
-export function PageLoading({ accent = 'catatan', label = 'Memuat…' }: PageLoadingProps) {
+export function PageLoading({ accent = 'catatan', label = 'Menyiapkan halaman…' }: PageLoadingProps) {
   const t = SECTION_THEME[accent];
   return (
     <div

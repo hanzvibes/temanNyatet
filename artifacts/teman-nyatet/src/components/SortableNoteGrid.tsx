@@ -202,7 +202,7 @@ function SortableNoteCard({
       tabIndex={0}
       role="listitem"
       aria-label={note.title ? `Catatan: ${note.title}. Tekan Enter untuk membuka.` : 'Catatan tanpa judul. Tekan Enter untuk membuka.'}
-      className="relative cursor-pointer select-none rounded-[1.5rem] border p-5 shadow-elevation-1 transition-[box-shadow,filter] duration-200 hover:shadow-elevation-2 hover:brightness-[1.015] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background will-change-transform"
+      className="relative cursor-pointer select-none rounded-[1.25rem] border p-5 shadow-elevation-2 transition-[box-shadow,filter] duration-200 hover:shadow-elevation-3 hover:brightness-[1.02] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background will-change-transform"
     >
       <NoteCardBody note={note} handle={handle} />
     </div>
@@ -215,7 +215,7 @@ const MemoSortableNoteCard = memo(SortableNoteCard);
 function DragOverlayCard({ note, color }: { note: Note; color: string }) {
   return (
     <div
-      className="w-[min(80vw,22rem)] rounded-[1.5rem] border p-5 cursor-grabbing"
+      className="w-[min(80vw,22rem)] rounded-[1.25rem] border p-5 cursor-grabbing"
       style={{
         backgroundColor: color,
         color: getNoteColor(color).foreground,
@@ -377,11 +377,17 @@ export function SortableNoteGrid({
           data-notes-version={itemsKey}
         >
           <AnimatePresence>
-            {notes.map((note) => (
+            {notes.map((note, idx) => (
               <motion.div
                 key={note.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.45, y: 40 }}
-                transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+                transition={{
+                  duration: 0.25,
+                  delay: Math.min(idx * 0.03, 0.18),
+                  ease: [0.32, 0.72, 0, 1],
+                }}
                 className="contents"
               >
                 <MemoSortableNoteCard

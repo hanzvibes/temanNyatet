@@ -10,15 +10,15 @@ interface SearchBarProps {
 
 export default function SearchBar({ value, onChange, placeholder = 'Cari...', className = '' }: SearchBarProps) {
   return (
-    <div className={`relative flex items-center w-full ${className}`}>
-      <Search className="absolute left-4 text-muted-foreground/75" size={18} strokeWidth={2.25} aria-hidden="true" />
+    <div className={`group relative flex items-center w-full ${className}`}>
+      <Search className="absolute left-4 text-muted-foreground/70 transition-colors duration-200 group-focus-within:text-primary" size={18} strokeWidth={2.25} aria-hidden="true" />
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="w-full min-h-12 rounded-2xl border border-border/70 bg-card pl-12 pr-12 py-3 text-sm font-medium text-foreground shadow-elevation-1 outline-none transition-[border-color,box-shadow,background-color,transform] placeholder:text-muted-foreground/75 hover:border-border focus:border-primary/45 focus:bg-card focus:shadow-elevation-2 focus-visible:ring-2 focus-visible:ring-primary/20"
+        className="w-full min-h-12 rounded-[0.875rem] border border-border/70 bg-card pl-12 pr-12 py-3 text-sm font-medium text-foreground shadow-elevation-1 outline-none transition-[border-color,box-shadow,background-color,transform] placeholder:text-muted-foreground/75 hover:border-border focus:border-primary/45 focus:bg-card focus:shadow-elevation-2 focus-visible:ring-2 focus-visible:ring-primary/20"
       />
       {value && (
         <button

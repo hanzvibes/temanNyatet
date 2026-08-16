@@ -30,7 +30,7 @@ export default function AiSummaryDetails({ variant = 'compact', className = '' }
           <Sparkles size={18} />
         </div>
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary/75">AI Credit</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">AI Credit</p>
           <h2 className="mt-1 text-lg font-black tracking-tight text-foreground">{AI_SUMMARY_COPY.title}</h2>
         </div>
       </div>

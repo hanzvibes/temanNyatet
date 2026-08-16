@@ -138,6 +138,20 @@ export default function DraggableSheet() {
 
   const showBackdrop = snapState !== 'collapsed';
   const isPeek = snapState === 'collapsed';
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Keyboard: ESC closes the expanded sheet, and focus moves to the close
+  // button when the sheet opens so keyboard users land inside the dialog.
+  useEffect(() => {
+    if (!showBackdrop) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') snapTo('collapsed');
+    };
+    window.addEventListener('keydown', onKey);
+    closeBtnRef.current?.focus();
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showBackdrop]);
 
   return (
     <>
@@ -165,6 +179,9 @@ export default function DraggableSheet() {
           y,
         }}
         draggable={isPeek ? 'false' : undefined}
+        role={showBackdrop ? 'dialog' : undefined}
+        aria-modal={showBackdrop ? 'true' : undefined}
+        aria-label={showBackdrop ? 'Panel aksi cepat' : undefined}
       >
         <div className="bg-card rounded-t-[36px] shadow-[0_-12px_60px_-12px_rgba(0,0,0,0.35),0_-4px_24px_-8px_rgba(0,0,0,0.18)] h-full flex flex-col overflow-hidden border-t border-border/50">
 
@@ -200,6 +217,7 @@ export default function DraggableSheet() {
               {/* Close button only when open — gives a clear dismiss affordance. */}
               {!isPeek && (
                 <motion.button
+                  ref={closeBtnRef}
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -265,7 +283,7 @@ export default function DraggableSheet() {
             </div>
 
             {/* Footer hint — discoverability for the swipe gesture. */}
-            <p className="mt-6 text-center text-[10px] uppercase tracking-[0.18em] font-semibold text-muted-foreground/70">
+            <p className="mt-6 text-center text-[10px] uppercase tracking-[0.18em] font-semibold text-muted-foreground">
               Tarik ke atas untuk melihat semua aksi
             </p>
           </div>

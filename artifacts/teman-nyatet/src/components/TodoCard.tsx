@@ -142,7 +142,7 @@ export function TodoCard({
         </p>
 
         {todo.description && !todo.is_done && (
-          <p className="mt-0.5 line-clamp-1 text-xs font-medium leading-relaxed text-muted-foreground/70">
+          <p className="mt-0.5 line-clamp-1 text-xs font-medium leading-relaxed text-muted-foreground">
             {todo.description}
           </p>
         )}

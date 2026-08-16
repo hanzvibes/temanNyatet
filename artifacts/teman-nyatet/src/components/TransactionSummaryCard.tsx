@@ -98,7 +98,7 @@ function SummaryDetails({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.13em] text-muted-foreground/70">
+          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.13em] text-muted-foreground">
             Top kategori pengeluaran
           </p>
           <div className="space-y-2">
@@ -113,7 +113,7 @@ function SummaryDetails({
           </div>
         </div>
         <div>
-          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.13em] text-muted-foreground/70">
+          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.13em] text-muted-foreground">
             Perbandingan
           </p>
           <div className="space-y-2 text-xs">
@@ -253,19 +253,19 @@ export default function TransactionSummaryCard({
               )}
             </div>
             {loadError ? (
-              <Button type="button" size="sm" variant="ghost" onClick={onRetryLoad} disabled={loading} className="h-8 shrink-0 px-2 text-[11px]">
+              <Button type="button" size="sm" variant="ghost" onClick={onRetryLoad} disabled={loading} className="min-h-11 shrink-0 px-3 text-xs">
                 Coba lagi
               </Button>
             ) : generateError ? (
-              <Button type="button" size="sm" variant="ghost" onClick={onGenerate} disabled={generating} className="h-8 shrink-0 px-2 text-[11px]">
+              <Button type="button" size="sm" variant="ghost" onClick={onGenerate} disabled={generating} className="min-h-11 shrink-0 px-3 text-xs">
                 Coba lagi
               </Button>
             ) : summary ? (
-              <Button type="button" size="sm" variant="ghost" onClick={() => setDetailsOpen(true)} className="h-8 shrink-0 px-2 text-[11px] font-black text-primary hover:bg-primary/10">
+              <Button type="button" size="sm" variant="ghost" onClick={() => setDetailsOpen(true)} className="min-h-11 shrink-0 px-3 text-xs font-black text-primary hover:bg-primary/10">
                 Detail
               </Button>
             ) : !empty ? (
-              <Button type="button" size="sm" variant="ghost" onClick={onGenerate} disabled={generating} className="h-8 shrink-0 px-2 text-[11px] font-black text-primary hover:bg-primary/10">
+              <Button type="button" size="sm" variant="ghost" onClick={onGenerate} disabled={generating} className="min-h-11 shrink-0 px-3 text-xs font-black text-primary hover:bg-primary/10">
                 Buat
               </Button>
             ) : null}

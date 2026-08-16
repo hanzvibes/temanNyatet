@@ -138,7 +138,7 @@ function QuickAddForm({ onSubmit }: { onSubmit: (data: TodoFormValues) => Promis
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Catatan tambahan (opsional)"
                 rows={2}
-                className="w-full resize-none rounded-xl border border-border/60 bg-background p-3 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
+                className="w-full resize-none rounded-xl border border-border bg-background p-3 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
               />
               <div className="flex items-end gap-3">
                 <div className="flex-1">
@@ -147,7 +147,7 @@ function QuickAddForm({ onSubmit }: { onSubmit: (data: TodoFormValues) => Promis
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full min-h-10 rounded-xl border border-border/60 bg-background px-3 py-2 text-sm font-semibold text-foreground outline-none focus:border-todo transition-all [color-scheme:light] dark:[color-scheme:dark]"
+                    className="w-full min-h-10 rounded-xl border border-border bg-background px-3 py-2 text-sm font-semibold text-foreground outline-none focus:border-todo transition-all [color-scheme:light] dark:[color-scheme:dark]"
                   />
                 </div>
                 <div className="flex-1">
@@ -156,7 +156,7 @@ function QuickAddForm({ onSubmit }: { onSubmit: (data: TodoFormValues) => Promis
                     type="time"
                     value={dueTime}
                     onChange={(e) => setDueTime(e.target.value)}
-                    className="w-full min-h-10 rounded-xl border border-border/60 bg-background px-3 py-2 text-sm font-semibold text-foreground outline-none focus:border-todo transition-all [color-scheme:light] dark:[color-scheme:dark]"
+                    className="w-full min-h-10 rounded-xl border border-border bg-background px-3 py-2 text-sm font-semibold text-foreground outline-none focus:border-todo transition-all [color-scheme:light] dark:[color-scheme:dark]"
                   />
                 </div>
                 <Button
@@ -695,7 +695,7 @@ export default function TodoPage() {
                         placeholder="Catatan tambahan (opsional)"
                         aria-label="Deskripsi to-do"
                         rows={3}
-                        className="w-full resize-none rounded-xl border border-border/60 bg-background p-3 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
+                        className="w-full resize-none rounded-xl border border-border bg-background p-3 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
                       />
 
                       <div className="flex gap-3">
@@ -704,7 +704,7 @@ export default function TodoPage() {
                           <input
                             {...editForm.register('due_date')}
                             type="date"
-                            className="w-full min-h-11 rounded-xl border border-border/60 bg-background px-3.5 py-2.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-todo [color-scheme:light] dark:[color-scheme:dark]"
+                            className="w-full min-h-11 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-todo [color-scheme:light] dark:[color-scheme:dark]"
                           />
                         </div>
                         <div className="min-w-0 flex-1">
@@ -712,7 +712,7 @@ export default function TodoPage() {
                           <input
                             {...editForm.register('due_time')}
                             type="time"
-                            className="w-full min-h-11 rounded-xl border border-border/60 bg-background px-3.5 py-2.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-todo [color-scheme:light] dark:[color-scheme:dark]"
+                            className="w-full min-h-11 rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-todo [color-scheme:light] dark:[color-scheme:dark]"
                           />
                         </div>
                       </div>
@@ -782,7 +782,7 @@ export default function TodoPage() {
                 <textarea
                   {...newForm.register('description')}
                   placeholder="Catatan tambahan (opsional)"
-                  className="h-20 w-full resize-none rounded-xl border border-border/60 bg-background p-3.5 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
+                  className="h-20 w-full resize-none rounded-xl border border-border bg-background p-3.5 text-sm font-medium text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-todo focus:ring-2 focus:ring-todo/20 transition-all"
                 />
 
                 <div className="flex gap-4">

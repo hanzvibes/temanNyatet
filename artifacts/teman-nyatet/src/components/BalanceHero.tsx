@@ -35,7 +35,7 @@ export default function BalanceHero({
       <div className="relative">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/75">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
               Saldo bulan ini
             </p>
             <p className="mt-1 text-xs font-medium text-muted-foreground">
@@ -99,7 +99,7 @@ export default function BalanceHero({
               className="h-full rounded-full bg-income"
             />
           </div>
-          <div className="mt-1.5 flex justify-between text-[10px] font-semibold text-muted-foreground/65">
+          <div className="mt-1.5 flex justify-between text-[10px] font-semibold text-muted-foreground">
             <span>Pemasukan</span>
             <span>{100 - incomeRatio}% pengeluaran</span>
           </div>

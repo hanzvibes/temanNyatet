@@ -417,7 +417,7 @@ export default function CatatanPage() {
                           >
                             Batal
                           </button>
-                          <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground/70">
+                          <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                             Edit Catatan
                           </span>
                           <button

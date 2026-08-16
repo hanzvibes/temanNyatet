@@ -43,8 +43,8 @@ export default function TransactionList({
   return (
     <>
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">Aktivitas</p>
-        <span className="text-[11px] font-medium text-muted-foreground/65">
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Aktivitas</p>
+        <span className="text-[11px] font-medium text-muted-foreground">
           {filteredTransactions.length} transaksi
         </span>
       </div>
@@ -134,11 +134,11 @@ export default function TransactionList({
                                 <div className="min-w-0">
                                   <p className="truncate text-sm font-bold leading-5 text-foreground">{tx.category}</p>
                                   <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
-                                    <span className="shrink-0 text-[11px] font-medium text-muted-foreground/75">{tx.source}</span>
+                                    <span className="shrink-0 text-[11px] font-medium text-muted-foreground">{tx.source}</span>
                                     {tx.note && (
                                       <>
                                         <span className="text-[10px] text-muted-foreground/30">·</span>
-                                        <span className="min-w-0 truncate text-[11px] text-muted-foreground/65">{tx.note}</span>
+                                        <span className="min-w-0 truncate text-[11px] text-muted-foreground">{tx.note}</span>
                                       </>
                                     )}
                                   </div>

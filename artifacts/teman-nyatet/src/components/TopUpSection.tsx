@@ -544,7 +544,7 @@ export default function TopUpSection({ creditBalance, onRequestTopUp }: TopUpSec
       </div>
 
       {/* ── Security badge ── */}
-      <div className="flex items-center justify-center gap-2 py-2 text-muted-foreground/60">
+      <div className="flex items-center justify-center gap-2 py-2 text-muted-foreground">
         <ShieldCheck size={13} strokeWidth={2} />
         <span className="text-[11px] font-medium">Pembayaran aman & terenkripsi</span>
         <ShieldCheck size={13} strokeWidth={2} />

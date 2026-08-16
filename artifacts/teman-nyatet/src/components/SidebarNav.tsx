@@ -39,7 +39,7 @@ export default function SidebarNav() {
     <aside className="sticky top-0 hidden h-dvh min-h-dvh w-64 shrink-0 flex-col border-r border-border/70 bg-card/75 backdrop-blur-xl lg:flex xl:w-72 2xl:w-80">
       {/* Brand */}
       <div className="px-6 pb-6 pt-8">
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/70">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
           TemanNyatet
         </p>
         <h1 className="text-xl font-bold leading-tight tracking-[-0.03em] text-foreground xl:text-[1.4rem]">

@@ -91,7 +91,7 @@
   --popover-foreground: 168 22% 14%;
   --popover-border: 168 14% 86%;
 
-  --primary: 168 72% 36%;      /* #18A07A — sage teal */
+  --primary: 168 65% 28%;      /* ≈#197663 — sage teal, 5.0:1 vs white (AA) */
   --primary-foreground: 0 0% 100%;
 
   --secondary: 40 22% 94%;

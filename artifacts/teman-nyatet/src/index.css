@@ -546,6 +546,12 @@
   textarea::placeholder {
     @apply text-muted-foreground/75;
   }
+
+  /* Smooth anchor navigation on the landing page. Reduced-motion users are
+     covered by the data-motion kill-switch below (scroll-behavior: auto). */
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 @layer utilities {

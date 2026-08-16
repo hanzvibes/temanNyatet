@@ -16,7 +16,7 @@ import MotionConfigProvider from '@/components/MotionConfigProvider';
 // Lazy load pages so the initial JS bundle stays small. This improves first
 // paint on slow mobile networks (especially iPhone on 3G/4G) and avoids a
 // long white screen during PWA launch.
-const AuthPage = React.lazy(() => import('@/pages/AuthPage'));
+const LandingPage = React.lazy(() => import('@/pages/LandingPage'));
 const AuthConfirmPage = React.lazy(() => import('@/pages/AuthConfirmPage'));
 const LegalPage = React.lazy(() => import('@/pages/LegalPage'));
 const PaymentPage = React.lazy(() => import('@/pages/PaymentPage'));
@@ -123,7 +123,8 @@ function TermsOfServicePage() {
 }
 
 const ROUTE_ENTRIES: Array<{ path: string; component: React.ComponentType }> = [
-  { path: '/login',         component: AuthPage         },
+  { path: '/',              component: LandingPage      },
+  { path: '/login',         component: LandingPage      },
   { path: '/auth/confirm',  component: AuthConfirmPage  },
   { path: '/privacy-policy', component: PrivacyPolicyPage },
   { path: '/terms-of-service', component: TermsOfServicePage },
@@ -139,7 +140,9 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuthContext();
   const [location, setLocation] = useLocation();
 
-  const PUBLIC_ROUTES = new Set(['/login', '/auth/confirm', '/privacy-policy', '/terms-of-service']);
+  // The landing page (/) is public and hosts the login/sign-up dialog itself;
+  // /login renders the same landing page with the dialog auto-open.
+  const PUBLIC_ROUTES = new Set(['/', '/login', '/auth/confirm', '/privacy-policy', '/terms-of-service']);
   const PUBLIC_LEGAL_ROUTES = new Set(['/privacy-policy', '/terms-of-service']);
 
   // Legal pages do not require a session. Render them while Supabase is still
@@ -157,7 +160,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     if (profile) {
       if (
         profile.subscription_status === 'pending'
-        && location === '/payment'
+        && (location === '/' || location === '/login' || location === '/payment')
       ) {
         setLocation('/catatan');
       } else if (
@@ -170,7 +173,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
         // Auth-only pages that active users must be redirected away from.
         // These exist in ROUTE_ENTRIES (so !matched alone won't catch them),
         // but an active user has no reason to be on them.
-        const AUTH_ONLY_ROUTES = new Set(['/login', '/payment', '/archived']);
+        const AUTH_ONLY_ROUTES = new Set(['/', '/login', '/payment', '/archived']);
         const matched = ROUTE_ENTRIES.find((e) => e.path === location);
         if (!matched || AUTH_ONLY_ROUTES.has(location)) {
           setLocation('/catatan');
@@ -193,12 +196,12 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   // Supabase can finish signing in before the route redirect effect above has
-  // updated the URL. Do not render /login during that small transition:
+  // updated the URL. Do not render / or /login during that small transition:
   // MainLayout would otherwise see an authenticated user and mount the app
-  // navigation while Router is still rendering the login page underneath it.
+  // navigation while Router is still rendering the landing page underneath it.
   // Keep this guard here (rather than navigating during render) so Wouter
   // remains responsible for the actual URL change.
-  if (user && location === '/login') {
+  if (user && (location === '/' || location === '/login')) {
     return (
       <div className="min-h-dvh w-full flex flex-col items-center justify-center gap-3 bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
@@ -215,8 +218,9 @@ function MainLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   // Keep app navigation out of public/auth routes. During a successful login,
   // auth state can update one render before the router moves from /login to
-  // /catatan; without this route check the bottom sheet appears over AuthPage.
-  const isPublicRoute = location === '/login' || location === '/auth/confirm';
+  // /catatan; without this route check the bottom sheet appears over the
+  // landing page.
+  const isPublicRoute = location === '/' || location === '/login' || location === '/auth/confirm';
   const showNav = Boolean(
     user &&
     profile &&
@@ -226,11 +230,17 @@ function MainLayout({ children }: { children: React.ReactNode }) {
   const { isLandscape } = useOrientation();
   const isSubscriptionPage = location === '/subscription';
 
+  // Landing page (/, /login) is full-bleed marketing — no app frame.
+  const isLandingRoute = location === '/' || location === '/login';
+
   // Unauthenticated / onboarding pages (login, payment, archived):
   // narrow centered card — keeps the mobile-app feel on all screen sizes.
   // In landscape, allow the card to scroll if the viewport is short instead of
   // centering with huge margins that can push content off-screen.
   if (!showNav && !isSubscriptionPage) {
+    if (isLandingRoute) {
+      return <>{children}</>;
+    }
     return (
       <div className={`
         max-w-md mx-auto bg-background min-h-dvh sm:shadow-2xl relative overflow-x-hidden

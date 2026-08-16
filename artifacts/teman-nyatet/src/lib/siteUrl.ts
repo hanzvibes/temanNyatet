@@ -9,10 +9,31 @@
  * This keeps the app free of hardcoded localhost URLs and lets the same build
  * run in development, preview, and production without recompilation.
  */
+/**
+ * Read VITE_SITE_URL from whichever runtime is active.
+ *
+ * Vite injects `import.meta.env` in the browser build, but it does not exist in
+ * other runtimes (unit tests, SSR), so the optional chain keeps this safe
+ * everywhere. Non-Vite runtimes can inject the same variable via process.env.
+ */
+function getConfiguredSiteUrl(): string | undefined {
+  const viteValue = (import.meta as { env?: Record<string, unknown> }).env?.VITE_SITE_URL;
+  if (typeof viteValue === 'string' && viteValue.trim()) {
+    return viteValue.trim();
+  }
+  if (typeof process !== 'undefined') {
+    const procValue = (process.env as Record<string, string | undefined>).VITE_SITE_URL;
+    if (typeof procValue === 'string' && procValue.trim()) {
+      return procValue.trim();
+    }
+  }
+  return undefined;
+}
+
 export function getSiteUrl(): string {
-  const configured = import.meta.env.VITE_SITE_URL as string | undefined;
-  if (configured && typeof configured === 'string' && configured.trim()) {
-    return configured.trim().replace(/\/$/, '');
+  const configured = getConfiguredSiteUrl();
+  if (configured) {
+    return configured.replace(/\/$/, '');
   }
 
   if (typeof window !== 'undefined') {

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Lock, LogOut } from 'lucide-react';
+import { Loader2, Lock, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { openPaymentCheckout } from '@/lib/payment';
+import { Button } from '@/components/ui/button';
 
 export default function ArchivedPage() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -34,14 +35,19 @@ export default function ArchivedPage() {
           Subscription kamu sudah berakhir. Perpanjang untuk melanjutkan mencatat dengan TemanNyatet.
         </p>
 
-        <button
+        <Button
           type="button"
           onClick={() => void handleCheckout()}
           disabled={checkoutLoading}
-          className="w-full min-h-12 bg-primary text-primary-foreground font-semibold py-3 px-4 rounded-xl shadow-elevation-1 hover:opacity-90 transition-opacity disabled:opacity-50"
+          size="lg"
+          className="w-full rounded-xl"
         >
-          {checkoutLoading ? 'Menyiapkan pembayaran…' : 'Perpanjang Subscription'}
-        </button>
+          {checkoutLoading ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            'Perpanjang Subscription'
+          )}
+        </Button>
       </div>
 
       <button 

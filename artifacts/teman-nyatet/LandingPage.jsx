@@ -1,3 +1,10 @@
+/*
+ * ⚠️ REFERENCE-ONLY ARTIFACT — tidak di-import oleh aplikasi.
+ * Desain yang sama sudah hidup di src/pages/LandingPage.tsx (terintegrasi auth
+ * + design system). File ini standalone (React + Tailwind + framer-motion)
+ * untuk direferensikan / disalin. Sintaks Tailwind ditulis untuk v4
+ * (important = suffix, mis. `px-5!`).
+ */
 import React, { useRef, useState, useEffect } from 'react';
 import {
   motion, AnimatePresence,
@@ -376,7 +383,7 @@ export default function LandingPage() {
                   </svg>
                 )}
               </motion.button>
-              <PrimaryButton onClick={() => scrollTo('harga')} className="!px-5 !py-2.5 !text-sm hidden sm:inline-flex">
+              <PrimaryButton onClick={() => scrollTo('harga')} className="px-5! py-2.5! text-sm! hidden sm:inline-flex">
                 {CTA_TEXT}
               </PrimaryButton>
             </div>

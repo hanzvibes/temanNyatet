@@ -22,8 +22,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AuthDialog from '@/components/AuthDialog';
-import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
-import { formatIDR } from '@/lib/format';
+import { prefersReducedMotion, usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
+import { getPriceLabel } from '@/lib/pricing';
 
 /* ────────────────────────────────────────────────────────────────
    SPRING CONFIG
@@ -99,7 +99,7 @@ const FAQS = [
 const STATS = [
   { v: 12000, suffix: '+', label: 'Pengguna' },
   { v: 240000, suffix: '+', label: 'Catatan' },
-  { v: 49, label: 'Rating 4,9/5', decimals: true },
+  { v: 49, label: 'Rating pengguna', decimals: true },
 ];
 
 const TRUST_POINTS = ['Gratis untuk memulai', 'Tanpa kartu kredit', 'Data tetap milikmu'];
@@ -107,8 +107,7 @@ const TRUST_POINTS = ['Gratis untuk memulai', 'Tanpa kartu kredit', 'Data tetap 
 const scrollTo = (id: string) => {
   const el = document.getElementById(id);
   if (!el) return;
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+  el.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
 };
 
 /* ────────────────────────────────────────────────────────────────
@@ -228,7 +227,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
         type="button"
         onClick={() => setOpen(!open)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-4 py-4 text-left"
+        className="flex w-full items-center justify-between gap-4 rounded-lg py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
       >
         <span className="text-sm font-semibold text-foreground sm:text-base">{question}</span>
         <motion.span
@@ -443,7 +442,7 @@ export default function LandingPage() {
                     <p className="font-display text-lg font-semibold tracking-[-0.02em] text-foreground sm:text-xl">
                       {stat.decimals ? (
                         <>
-                          <CountUp target={49} suffix="," />9<span className="text-primary">★</span>
+                          <CountUp target={stat.v} suffix="," />9<span className="text-primary">★</span>
                         </>
                       ) : (
                         <CountUp target={stat.v} suffix={stat.suffix} />
@@ -577,11 +576,11 @@ export default function LandingPage() {
                 role="switch"
                 aria-checked={annual}
                 aria-label="Beralih billing tahunan"
-                className={`relative h-7 w-12 rounded-full transition-colors ${annual ? 'bg-primary' : 'bg-muted'}`}
+                className={`relative h-8 w-14 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${annual ? 'bg-primary' : 'bg-muted'}`}
               >
                 <motion.span
-                  className="absolute left-1 top-1 h-5 w-5 rounded-full bg-card shadow-elevation-1"
-                  animate={{ x: annual ? 20 : 0 }}
+                  className="absolute left-1 top-1 h-6 w-6 rounded-full bg-card shadow-elevation-1"
+                  animate={{ x: annual ? 28 : 0 }}
                   transition={reduced ? { duration: 0 } : SPRING_BOUNCY}
                 />
               </motion.button>
@@ -597,7 +596,12 @@ export default function LandingPage() {
           <StaggerParent className="mx-auto mt-8 grid max-w-2xl gap-3 sm:grid-cols-2">
             {[PRICING.free, PRICING.pro].map((tier) => {
               const isPro = tier.name === 'Pro';
-              const displayPrice = isPro ? (annual ? tier.yearly : tier.price) : tier.price;
+              const { amount: priceAmount, period: pricePeriod } = getPriceLabel({
+                isPro,
+                price: tier.price,
+                yearly: tier.yearly,
+                annual,
+              });
               return (
                 <motion.div
                   key={tier.name}
@@ -628,11 +632,11 @@ export default function LandingPage() {
                         transition={reduced ? { duration: 0 } : SPRING_SNAPPY}
                         className="font-display text-2xl font-semibold tracking-[-0.03em]"
                       >
-                        {isPro ? formatIDR(displayPrice) : 'Rp 0'}
+                        {priceAmount}
                       </motion.span>
                     </AnimatePresence>
                     <span className={`pb-0.5 text-xs ${isPro ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
-                      {isPro ? (annual ? '/ tahun' : '/ bulan') : 'selamanya'}
+                      {pricePeriod}
                     </span>
                   </div>
 

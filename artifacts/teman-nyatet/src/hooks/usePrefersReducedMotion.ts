@@ -30,12 +30,18 @@ function osPrefersReducedMotion(): boolean {
   return window.matchMedia(QUERY).matches;
 }
 
+/**
+ * Non-hook variant for plain functions (e.g. scroll helpers): same logic as
+ * `usePrefersReducedMotion` — app pref (Full/Reduced/Off) ahead of the OS.
+ */
+export function prefersReducedMotion(): boolean {
+  const pref = readMotionPref();
+  if (pref) return pref !== 'full';
+  return osPrefersReducedMotion();
+}
+
 export function usePrefersReducedMotion(): boolean {
-  const [reducedMotion, setReducedMotion] = useState(() => {
-    const pref = readMotionPref();
-    if (pref) return pref !== 'full';
-    return osPrefersReducedMotion();
-  });
+  const [reducedMotion, setReducedMotion] = useState(() => prefersReducedMotion());
 
   useEffect(() => {
     const pref = readMotionPref();

@@ -75,7 +75,7 @@
      Sections: catatan=sage teal, keuangan=amber, todo=indigo,
                linksaver=violet.                                      */
 
-  --background: 42 32% 97%;    /* #faf7f1 — warm paper canvas */
+  --background: 0 0% 100%;     /* #ffffff — clean white canvas */
   --foreground: 168 22% 14%;   /* #1c2e28 — deep teal ink */
 
   --surface: 40 25% 94%;       /* grouping surface */

@@ -492,7 +492,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                       </div>
 
                       {/* Divider */}
-                      <div className="mb-[clamp(0.375rem,1.5vw,0.625rem)] h-px bg-border" />
+                      <div className="mb-[clamp(0.375rem,1.5vw,0.625rem)] h-px bg-border dark:bg-border/40" />
 
                       {/* Account actions */}
                       <div className="space-y-1">
@@ -567,7 +567,7 @@ export default function SettingsSheet({ avatarBg, avatarTextColor, viewport }: S
                       </div>
 
                       {/* Divider */}
-                      <div className="my-2 h-px bg-border" />
+                      <div className="my-2 h-px bg-border dark:bg-border/40" />
 
                       {/* Logout */}
                       <button

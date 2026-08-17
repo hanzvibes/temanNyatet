@@ -468,7 +468,6 @@ export default function TodoPage() {
       {/* ── Header ── */}
       <div className="app-page-header">
         <div className="app-page-header-inner">
-          <div className="flex items-center justify-between">
             <div>
               <div className="text-pill-label mb-1 lg:hidden">TEMAN NYATET</div>
               <h1 className="text-page-title">To-Do List</h1>
@@ -488,7 +487,6 @@ export default function TodoPage() {
                 viewport="mobile"
               />
             </div>
-          </div>
         </div>
       </div>
 

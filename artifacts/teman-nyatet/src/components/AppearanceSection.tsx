@@ -92,7 +92,7 @@ function Segmented<T extends string>({
 
 /* ─── Theme mode previews ─────────────────────────────────────────────────── */
 
-const THEME_LIGHT = { bg: '#faf7f1', card: '#ffffff', text: '#1c2e28', accent: '#18a07a', border: 'rgba(28,46,40,0.14)' };
+const THEME_LIGHT = { bg: '#ffffff', card: '#ffffff', text: '#1c2e28', accent: '#197663', border: 'rgba(28,46,40,0.14)' };
 const THEME_DARK = { bg: '#0a120f', card: '#101b17', text: '#eef4f1', accent: '#3dbfa0', border: 'rgba(238,244,241,0.14)' };
 
 interface ThemeColors {

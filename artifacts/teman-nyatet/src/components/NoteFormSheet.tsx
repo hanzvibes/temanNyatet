@@ -5,6 +5,7 @@ import { FormError } from '@/components/PageStates';
 import { NOTE_TAGS } from '@/lib/categoryIcons';
 import type { NoteFormValues } from '@/lib/notes';
 import NoteColorPicker from '@/components/NoteColorPicker';
+import RichTextEditor from '@/components/RichTextEditor';
 
 interface NoteFormSheetProps {
   open: boolean;
@@ -23,6 +24,7 @@ export default function NoteFormSheet({
 }: NoteFormSheetProps) {
   const formColor = form.watch('color');
   const currentTags = form.watch('tags');
+  const content = form.watch('content');
 
   return (
     <Drawer.Root open={open} onOpenChange={onOpenChange}>
@@ -65,12 +67,18 @@ export default function NoteFormSheet({
                 aria-label="Judul catatan"
                 className="w-full border-b border-border/60 bg-transparent pb-2 text-2xl font-bold text-foreground outline-none placeholder:text-muted-foreground/55 transition-colors focus:border-primary/60"
               />
-              <textarea
-                {...form.register('content')}
+              <RichTextEditor
+                value={content}
+                onChange={(html) =>
+                  form.setValue('content', html, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
                 placeholder="Apa yang ingin kamu catat?"
-                aria-label="Isi catatan"
-                className="h-48 w-full resize-none bg-transparent text-lg font-medium leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/55"
+                ariaLabel="Isi catatan"
                 autoFocus
+                className="min-h-48 text-lg text-foreground"
               />
               {form.formState.errors.content && (
                 <FormError>{form.formState.errors.content.message}</FormError>

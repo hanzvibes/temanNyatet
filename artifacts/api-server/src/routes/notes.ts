@@ -10,6 +10,7 @@ import {
 } from '../lib/validate.js';
 import { consumeCredit, CreditsExhaustedError, getCreditBalance } from '../lib/credit-service.js';
 import { syncNoteLinks } from '../lib/note-link-sync.js';
+import { stripHtmlForSummary } from '../lib/note-text.js';
 import { FREE_PLAN_LIMIT, FreePlanLimitError } from '../lib/plan-limits.js';
 
 const router: IRouter = Router();
@@ -166,7 +167,11 @@ router.post('/notes/:id/summarize', requireAuth, userRateLimit, async (req, res)
       return;
     }
 
-    const content = requireString(note.content, 'content', SUMMARY_CONTENT_MAX);
+    // Note bodies may be stored as rich-text HTML; the summarizer only needs
+    // the readable text so formatting markup never reaches the prompt.
+    const content = stripHtmlForSummary(
+      requireString(note.content, 'content', SUMMARY_CONTENT_MAX),
+    );
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
 

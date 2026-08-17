@@ -730,6 +730,104 @@
   }
 }
 
+/* ── Rich text editor & read view ───────────────────────────────────────────
+   Content produced by the RichTextEditor (sanitized HTML) plus the read-only
+   rendering of the same markup in the note detail modal. Inline color/highlight
+   styling lives on <span> elements, so it carries over untouched. */
+.rich-editor {
+  word-break: break-word;
+  caret-color: currentColor;
+}
+
+.rich-editor:focus {
+  outline: none;
+}
+
+.rich-editor:empty::before {
+  content: attr(data-placeholder);
+  display: block;
+  color: hsl(var(--muted-foreground) / 0.55);
+  pointer-events: none;
+}
+
+.rich-editor b,
+.rich-editor strong { font-weight: 700; }
+.rich-editor i,
+.rich-editor em { font-style: italic; }
+.rich-editor u { text-decoration: underline; }
+.rich-editor s,
+.rich-editor strike,
+.rich-editor del { text-decoration: line-through; }
+
+.rich-editor ul { list-style: disc; padding-left: 1.4em; margin: 0.35em 0; }
+.rich-editor ol { list-style: decimal; padding-left: 1.4em; margin: 0.35em 0; }
+.rich-editor li { margin: 0.15em 0; }
+.rich-editor p { margin: 0.35em 0; }
+.rich-editor h1 { font-size: 1.5em; font-weight: 700; margin: 0.5em 0 0.25em; }
+.rich-editor h2 { font-size: 1.3em; font-weight: 700; margin: 0.45em 0 0.25em; }
+.rich-editor h3 { font-size: 1.15em; font-weight: 700; margin: 0.4em 0 0.2em; }
+.rich-editor a { color: hsl(var(--primary)); text-decoration: underline; }
+.rich-editor blockquote {
+  border-left: 3px solid hsl(var(--primary) / 0.4);
+  padding-left: 0.75rem;
+  margin: 0.4em 0;
+  color: hsl(var(--muted-foreground));
+}
+.rich-editor pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.875em;
+  background: hsl(var(--muted) / 0.6);
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  overflow-x: auto;
+  margin: 0.4em 0;
+}
+.rich-editor code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+}
+.rich-editor hr {
+  border: 0;
+  border-top: 1px solid hsl(var(--border));
+  margin: 0.8em 0;
+}
+
+.rich-text-read {
+  word-break: break-word;
+}
+.rich-text-read p { margin: 0 0 0.6rem; }
+.rich-text-read ul { list-style: disc; padding-left: 1.4em; margin: 0 0 0.6rem; }
+.rich-text-read ol { list-style: decimal; padding-left: 1.4em; margin: 0 0 0.6rem; }
+.rich-text-read li { margin: 0.15em 0; }
+.rich-text-read h1 { font-size: 1.5em; font-weight: 700; margin: 0.6em 0 0.3em; }
+.rich-text-read h2 { font-size: 1.3em; font-weight: 700; margin: 0.5em 0 0.25em; }
+.rich-text-read h3 { font-size: 1.15em; font-weight: 700; margin: 0.45em 0 0.2em; }
+.rich-text-read a { color: hsl(var(--primary)); text-decoration: underline; }
+.rich-text-read blockquote {
+  border-left: 3px solid hsl(var(--primary) / 0.4);
+  padding-left: 0.75rem;
+  margin: 0 0 0.6rem;
+  color: hsl(var(--muted-foreground));
+}
+.rich-text-read pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.875em;
+  background: hsl(var(--muted) / 0.6);
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  overflow-x: auto;
+  margin: 0 0 0.6rem;
+}
+.rich-text-read code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+}
+.rich-text-read hr {
+  border: 0;
+  border-top: 1px solid hsl(var(--border));
+  margin: 0.8em 0;
+}
+
 /* Shimmer keyframe used by SkeletonShimmer in PageStates.tsx. */
 @keyframes shimmer {
   100% { transform: translateX(100%); }

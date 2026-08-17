@@ -28,6 +28,7 @@ import type { Note } from '@/lib/database.types';
 import { getNoteColor, NOTE_COLOR_PALETTE } from '@/lib/noteColors';
 import { DeleteTarget } from './DeleteTarget';
 import { formatNoteDate } from '@/lib/noteData';
+import { richHtmlToText } from '@/lib/richText';
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 const PALETTE = NOTE_COLOR_PALETTE;
@@ -124,7 +125,7 @@ function NoteCardBody({
         </h3>
       )}
       <p className="text-sm text-current/90 line-clamp-5 whitespace-pre-wrap leading-relaxed font-medium">
-        {note.content}
+        {richHtmlToText(note.content)}
       </p>
       {note.tags && note.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-4">

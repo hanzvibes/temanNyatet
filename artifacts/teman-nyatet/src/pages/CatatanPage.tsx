@@ -24,7 +24,14 @@ import { useKeyboardHeight } from '@/hooks/useKeyboardHeight';
 import { requestSettingsSubscription } from '@/lib/app-events';
 import NoteColorPicker from '@/components/NoteColorPicker';
 import NoteFormSheet from '@/components/NoteFormSheet';
+import RichTextEditor from '@/components/RichTextEditor';
 import { noteSchema, type NoteFormValues } from '@/lib/notes';
+import {
+  isRichText,
+  richHtmlToText,
+  sanitizeRichHtml,
+  appendTextToRichContent,
+} from '@/lib/richText';
 import {
   Dialog,
   DialogContent,
@@ -75,7 +82,7 @@ export default function CatatanPage() {
     return notes.filter(
       (n) =>
         (n.title?.toLowerCase().includes(lower)) ||
-        n.content.toLowerCase().includes(lower),
+        richHtmlToText(n.content).toLowerCase().includes(lower),
     );
   }, [notes, search]);
 
@@ -182,23 +189,26 @@ export default function CatatanPage() {
 
   const onSubmitForm = async (data: NoteFormValues) => {
     try {
+      // The editor produces sanitized HTML; sanitize again at the boundary so
+      // a stale or crafted payload can never reach the database.
+      const content = sanitizeRichHtml(data.content);
       if (selectedNote) {
         await updateNote(selectedNote.id, {
           title:   data.title,
-          content: data.content,
+          content,
           tags:    data.tags,
           color:   data.color || null,
         });
         setSelectedNote((prev) =>
           prev
-            ? { ...prev, title: data.title || null, content: data.content, tags: data.tags, color: data.color || null }
+            ? { ...prev, title: data.title || null, content, tags: data.tags, color: data.color || null }
             : prev,
         );
         setIsEditing(false);
       } else {
         await createNote({
           title:   data.title,
-          content: data.content,
+          content,
           tags:    data.tags,
           color:   data.color || null,
         });
@@ -253,7 +263,7 @@ export default function CatatanPage() {
     // note drawer is opened. In that case, open a fresh note editor first.
     if (!isFormOpen) handleOpenForm();
     const current = form.getValues('content');
-    const next = current ? `${current}\n${text}` : text;
+    const next = appendTextToRichContent(current, text);
     form.setValue('content', next, {
       shouldValidate: true,
       shouldDirty: true,
@@ -435,12 +445,18 @@ export default function CatatanPage() {
                             aria-label="Judul catatan"
                             className="w-full border-b border-current/20 bg-transparent pb-2 text-2xl font-bold outline-none placeholder:opacity-60 transition-colors focus:border-current/45"
                           />
-                          <textarea
-                            {...form.register('content')}
+                          <RichTextEditor
+                            value={form.watch('content')}
+                            onChange={(html) =>
+                              form.setValue('content', html, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                              })
+                            }
                             placeholder="Apa yang ingin kamu catat?"
-                            aria-label="Isi catatan"
-                            className="w-full min-h-[120px] resize-none bg-transparent text-base font-medium leading-relaxed outline-none placeholder:opacity-60"
+                            ariaLabel="Isi catatan"
                             autoFocus
+                            className="min-h-[120px] text-base text-foreground"
                           />
                           {form.formState.errors.content && (
                             <FormError size="xs">
@@ -517,9 +533,18 @@ export default function CatatanPage() {
                               id,
                             )}
                           </p>
-                          <p className="mb-5 text-base font-medium leading-relaxed text-foreground/90 whitespace-pre-wrap">
-                            {selectedNote.content}
-                          </p>
+                          {isRichText(selectedNote.content) ? (
+                            <div
+                              className="rich-text-read mb-5 text-base font-medium leading-relaxed text-foreground/90"
+                              dangerouslySetInnerHTML={{
+                                __html: sanitizeRichHtml(selectedNote.content),
+                              }}
+                            />
+                          ) : (
+                            <p className="mb-5 text-base font-medium leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                              {selectedNote.content}
+                            </p>
+                          )}
 
                           {/* AI summary */}
                           <AnimatePresence initial={false}>
